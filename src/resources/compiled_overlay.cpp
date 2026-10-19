@@ -109,7 +109,7 @@ screen_overlay compiled_overlay::image(int const horizontal_bytes, int const ver
     if(address < 0 || address >= render::screen_width * render::screen_height / 4) continue;
     for(unsigned int plane{0}; plane != 4; ++plane) if(pixel.planes & (1u << plane)) {
       auto const destination{static_cast<unsigned int>(address) * 4 + plane};
-      result.image.pixels[destination] = pixel.colour;
+      result.image.write(destination,pixel.colour);
       result.coverage.pixels[destination] = 255;
     }
   }

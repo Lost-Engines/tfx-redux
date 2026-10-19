@@ -23,7 +23,7 @@ void rectangle(render::framebuffer &target, vec2<int> const &low, vec2<int> cons
   if(low.y >= render::screen_height) return;
   for(int y{std::max(0,low.y)}; y <= std::min(render::screen_height - 1,high.y); ++y) for(int x{std::max(0,low.x)}; x <= std::min(render::screen_width - 1,high.x); ++x) {
     auto const index{static_cast<unsigned int>(y * render::screen_width + x)};
-    target.pixels[index] = colour;
+    target.write(index,colour);
     if(coverage) coverage->pixels[index] = 255;
   }
 }

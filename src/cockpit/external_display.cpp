@@ -11,10 +11,10 @@ void external_display::draw(render::software_renderer &renderer, external_view_s
   // the low palette bits of the scenery behind this small status strip.
   for(int y{panel_top}; y <= panel_bottom; ++y) for(int x{0}; x != render::screen_width; ++x) {
     auto const pixel{static_cast<unsigned int>(y * render::screen_width + x)};
-    renderer.output.pixels[pixel] = static_cast<uint8_t>((renderer.output.pixels[pixel] & 15) | 128);
+    renderer.output.write(pixel,static_cast<uint8_t>((renderer.output.pixels[pixel] & 15) | 128));
     if(coverage) coverage->pixels[pixel] = 255;
   }
-  auto const paint{[&](int const x, int const y, uint8_t const colour) { renderer.output.pixels[static_cast<unsigned int>(y * render::screen_width + x)] = colour; }};
+  auto const paint{[&](int const x, int const y, uint8_t const colour) { renderer.output.write(static_cast<unsigned int>(y * render::screen_width + x),colour); }};
   for(int x{0}; x != render::screen_width; ++x) { paint(x,panel_top,2);paint(x,panel_bottom,5); }
   for(int y{panel_top + 1}; y != panel_bottom; ++y) { paint(0,y,2);paint(render::screen_width - 1,y,5); }
   auto const text{[&](int const x, std::string const &message) {

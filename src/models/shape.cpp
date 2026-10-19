@@ -330,8 +330,10 @@ shape_geometry interpret(shape const &program, shape_context const &context) {
       if(opcode == 88) { constant_ink.reset();face_depth_palette = false;continue; }
       if(opcode == 89) { drawing_mode = -1;continue; }
       if(opcode == 74) {
-        if(a[0] >= vertex_slots || !camera_vertices[a[0]]) throw std::runtime_error{"distance selection references an unavailable camera vertex"};
-        distance = static_cast<int16_t>((*camera_vertices[a[0]]).z >> 16);
+        if(a[0] >= vertex_slots) throw std::runtime_error{"distance selection references an unavailable camera vertex"};
+        if(camera_vertices[a[0]]) distance = static_cast<int16_t>((*camera_vertices[a[0]]).z >> 16);
+        else if(world[a[0]] && context.camera_depth) distance = static_cast<int16_t>(std::clamp(context.camera_depth(*world[a[0]]),-32768.0,32767.0));
+        else throw std::runtime_error{"distance selection references an unavailable camera vertex"};
         continue;
       }
       if(opcode == 118) {

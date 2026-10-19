@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "render/framebuffer.h"
+#include "render/camera.h"
 
 namespace tfx::render {
 
@@ -32,5 +33,6 @@ struct horizon_surface {
 std::vector<horizon_surface> horizon_surfaces(horizon_context const &context);
 
 void paint_horizon(framebuffer &output, horizon_context const &context);
+void paint_horizon(framebuffer &output, camera const &view, int16_t ground_phase);
 
 } // namespace tfx::render

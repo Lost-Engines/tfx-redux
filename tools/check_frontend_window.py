@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-frontend-window-') as temporary:
                 game=subprocess.Popen([str((args.build/'tfx').resolve()),'--data-dir',str(install),'--skip-intro','--scale','2'],env=environment,stdout=log,stderr=subprocess.STDOUT)
                 deadline=time.monotonic()+10
                 while time.monotonic()<deadline and game.poll() is None:
-                    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=environment,capture_output=True,text=True,timeout=5)
+                    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=environment,capture_output=True,text=True,timeout=5)
                     if found.stdout.strip():
                         window=found.stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window);time.sleep(1);return window
                     time.sleep(.05)

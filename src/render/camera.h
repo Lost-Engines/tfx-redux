@@ -19,6 +19,7 @@ struct camera {
   double focal_distance{focal_length};
   projection_mode projection{projection_mode::continuous};
   aperture opening{aperture::normal};
+  std::optional<double> point_focal_distance{};
   double near_distance{16};
   double far_distance{20000};
   vec2<int16_t> viewport_minimum{0,0};

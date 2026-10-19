@@ -114,7 +114,7 @@ void pilot_panel::draw(std::optional<vec2<int16_t>> const &position) {
       int const y{90 + static_cast<int>(row) * 10};
       if(row == selected) {
         int const half{font_data.measure(9,options[row]) / 2};
-        for(int py{y - 2}; py <= y + 7; ++py) for(int px{158 - half}; px <= 162 + half; ++px) display.pixels[static_cast<unsigned int>(py * 320 + px)] = 14;
+        for(int py{y - 2}; py <= y + 7; ++py) for(int px{158 - half}; px <= 162 + half; ++px) display.write(static_cast<unsigned int>(py * 320 + px),14);
       }
       centred(options[row],y,row == selected ? 159 : 215);
     }
@@ -122,7 +122,7 @@ void pilot_panel::draw(std::optional<vec2<int16_t>> const &position) {
     for(unsigned int row{0}; row != assets.introduction.size(); ++row) centred(assets.introduction[row].text,10 + static_cast<int>(row) * 10,assets.introduction[row].colour);
     for(unsigned int index{0}; index != name_field; ++index) centred(text(state,name_variables[index]),120 + static_cast<int>(index) * 30,215);
     int const y{120 + static_cast<int>(name_field) * 30};
-    for(int py{y - 2}; py <= y + 7; ++py) for(int px{80}; px <= 240; ++px) display.pixels[static_cast<unsigned int>(py * 320 + px)] = 14;
+    for(int py{y - 2}; py <= y + 7; ++py) for(int px{80}; px <= 240; ++px) display.write(static_cast<unsigned int>(py * 320 + px),14);
     centred(editing->value(),y,215);
   } else if(slots) {
     // Native slot rows and prompts use the small-font painters D2AFC/D2B54.

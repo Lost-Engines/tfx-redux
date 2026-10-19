@@ -62,7 +62,7 @@ for override in (False,True):
     game=subprocess.Popen(['gdb','--quiet','--batch','-x',str(debugger),'--args',*args],env=env,stdout=log,stderr=subprocess.STDOUT)
     deadline=time.monotonic()+20;window=None
     while time.monotonic()<deadline and game.poll() is None:
-     found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True)
+     found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True)
      if found.stdout.strip():window=found.stdout.splitlines()[0];break
      time.sleep(.05)
     if window is None:raise RuntimeError('window did not appear:\n'+output()[-5000:])

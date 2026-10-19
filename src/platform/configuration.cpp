@@ -53,7 +53,7 @@ presentation::configuration_action configure_flight(window &window, resources::e
     }
     auto image{background};
     menu.draw(image);
-    window.title(menu.page() == presentation::configuration_page::confirm_quit ? "TFX C++ — Quit" : menu.page() == presentation::configuration_page::realism ? "TFX C++ — Realism" : "TFX C++ — Configuration");
+    window.title(menu.page() == presentation::configuration_page::confirm_quit ? "TFX Redux — Quit" : menu.page() == presentation::configuration_page::realism ? "TFX Redux — Realism" : "TFX Redux — Configuration");
     window.present(image.colourise(palette));
     glfwWaitEventsTimeout(.01);
   }

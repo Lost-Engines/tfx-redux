@@ -35,7 +35,7 @@ void widget_font::draw(render::framebuffer &target, vec2<int> const &position, s
       int64_t const px{x + column}, py{top + row};
       if((glyph.rows[row] & (1u << column)) && px >= 0 && px < render::screen_width && py >= 0 && py < render::screen_height) {
         unsigned int const offset{static_cast<unsigned int>(py * render::screen_width + px)};
-        target.pixels[offset] = colour;
+        target.write(offset,colour);
         if(coverage) coverage->pixels[offset] = 255;
       }
     }

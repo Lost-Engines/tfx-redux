@@ -10,6 +10,7 @@ point_projection camera::projector() const {
     .origin{static_cast<int16_t>(projection_origin.x),static_cast<int16_t>(projection_origin.y)},
     .maximum{vec2<int16_t>{viewport_maximum}},
     .opening{opening},
+    .focal_distance{point_focal_distance},
   };
   for(unsigned int row{0}; row != 3; ++row) {
     auto const &axis{row == 0 ? right : row == 1 ? down : forward};

@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-x11-palettes-') as temporary:
                 game=subprocess.Popen([str(executable),'--data-dir',str(data),'--mission','501','--environment',lighting,'--control','keyboard','--flight-model','arcade','--scale','2'],env=env,stdout=log,stderr=subprocess.STDOUT)
                 deadline=time.monotonic()+15;window=None
                 while time.monotonic()<deadline and game.poll() is None:
-                    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True)
+                    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True)
                     if found.stdout.strip():window=found.stdout.splitlines()[0];break
                     time.sleep(.05)
                 if window is None:

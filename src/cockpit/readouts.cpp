@@ -34,7 +34,7 @@ bool clear_panel(render::software_renderer &renderer, vec2<int> const &minimum, 
   for(int y{std::max(0,low.y)}; y <= std::min(last_row,high.y); ++y) {
     for(int x{std::max(0,low.x)}; x <= std::min(render::screen_width - 1,high.x); ++x) {
       auto const index{static_cast<unsigned int>(y * render::screen_width + x)};
-      renderer.output.pixels[index] = panel_colour;
+      renderer.output.write(index,panel_colour);
       if(coverage) coverage->pixels[index] = 255;
     }
   }

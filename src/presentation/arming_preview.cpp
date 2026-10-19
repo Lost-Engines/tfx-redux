@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <utility>
 #include "render/integer_model_polygon.h"
+#include "render/view_settings.h"
 #include "render/model_transform.h"
 #include "render/model_metrics.h"
 #include "world/model_placement.h"
@@ -18,9 +19,12 @@ int32_t constexpr aircraft_distance{1200};
 template<typename Draw> void clipped(render::software_renderer &renderer, Draw const &draw) {
   auto const previous{renderer.output};
   draw();
-  for(int y{0}; y != render::screen_height; ++y) for(int x{0}; x != render::screen_width; ++x) {
-    if(x >= viewport_minimum.x && x <= viewport_maximum.x && y >= viewport_minimum.y && y <= viewport_maximum.y) continue;
-    unsigned int const offset{static_cast<unsigned int>(y * render::screen_width + x)};
+  render::interface_layout const layout{renderer.output.size};
+  auto const minimum{layout.project(vec2d{viewport_minimum})};
+  auto const maximum{layout.project(vec2d{viewport_maximum} + vec2d{1,1})};
+  for(int y{0}; y != renderer.output.size.y; ++y) for(int x{0}; x != renderer.output.size.x; ++x) {
+    if(x >= minimum.x && x < maximum.x && y >= minimum.y && y < maximum.y) continue;
+    auto const offset{static_cast<size_t>(y * renderer.output.size.x + x)};
     renderer.output.pixels[offset] = previous.pixels[offset];
   }
 }
@@ -58,6 +62,21 @@ std::optional<unsigned int> arming_preview::pick(vec3<int16_t> const &previous, 
   })};
   return result.zone >= 0 && result.zone < static_cast<int>(flight::store_slots) ? std::optional{static_cast<unsigned int>(result.zone)} : std::nullopt;
 }
+vec3<int16_t> arming_preview::cursor_point(vec2<int16_t> const &position, arming_state const &state) {
+  auto const view{aircraft_view(state)};
+  auto const ray{view.forward + view.right * ((position.x - view.projection_origin.x) / view.focal_distance) + view.down * ((position.y - view.projection_origin.y) / view.focal_distance)};
+  double constexpr mount_plane{130};
+  double const distance{std::abs(ray.y) > 1e-9 ? (mount_plane - view.position.y) / ray.y : aircraft_distance};
+  auto const point{view.position + ray * std::clamp(distance,16.0,aircraft_distance * 4.0)};
+  return vec3<int16_t>{point};
+}
+std::optional<unsigned int> arming_preview::pick_cursor(vec2<int16_t> const &position, arming_state const &state) {
+  auto const view{aircraft_view(state)};
+  auto const ray{view.forward + view.right * ((position.x - view.projection_origin.x) / view.focal_distance) + view.down * ((position.y - view.projection_origin.y) / view.focal_distance)};
+  // Intersect the displayed aircraft's authored mount volumes along the actual
+  // cursor ray. Sweeping a previous mouse sample made picks depend on motion.
+  return pick(vec3<int16_t>{view.position + ray * 16.0},vec3<int16_t>{view.position + ray * (aircraft_distance * 4.0)});
+}
 void arming_preview::advance() {
   // Arming explicitly holds native AAC90 at one: these streams advance per model draw.
   aircraft.animate();
@@ -66,6 +85,13 @@ uint8_t arming_preview::bay_position() const { return aircraft.parts.front().par
 void arming_preview::shape(render::software_renderer &renderer, models::shape const &program, render::camera const &view,
   vec3<int32_t> const &origin, vec3<math::angle> const &angles, std::span<uint8_t const> const parameters,
   std::span<models::shape const *const> const attachments) {
+  auto raster_view{view};
+  if(renderer.output.size != vec2<int>{render::screen_width,render::screen_height}) {
+    render::interface_layout const layout{renderer.output.size};
+    raster_view.projection = render::projection_mode::continuous;
+    raster_view.projection_origin = layout.project(view.projection_origin);
+    raster_view.focal_distance = view.focal_distance * layout.scale;
+  }
   auto const projection{view.projector()};
   render::model_transform const transform{projection.matrix,angles,origin};
   models::shape_context context;
@@ -102,7 +128,7 @@ void arming_preview::shape(render::software_renderer &renderer, models::shape co
     uint8_t colour_row{render::distance_colour_row(origin.z)};
     if(primitive.palette == models::palette_source::fixed) colour_row = 0;
     else if(primitive.palette == models::palette_source::face_depth) colour_row = render::distance_colour_row(static_cast<int32_t>(primitive.palette_depth) * 65536);
-    renderer.primitive(primitive,vertices,view,primitive.texture ? resources.texture(*primitive.texture) : std::span<uint8_t const>{},primitive.palette == models::palette_source::direct ? nullptr : &resources.model_colours(colour_row));
+    renderer.primitive(primitive,vertices,raster_view,primitive.texture ? resources.texture(*primitive.texture) : std::span<uint8_t const>{},primitive.palette == models::palette_source::direct ? nullptr : &resources.model_colours(colour_row));
   }
 }
 void arming_preview::object(render::software_renderer &renderer, world::instance &actor, render::camera const &view,
@@ -141,10 +167,10 @@ void arming_preview::draw_cursor(render::software_renderer &renderer, arming_sta
   if(state.mode == arming_mode::placing && state.selected) {
     auto const weapon{std::to_underlying(*state.selected)};
     auto const view{aircraft_view(state)};
-    clipped(renderer,[&] { shape(renderer,resources.shape(definitions[weapon].carried),view,view.projector().camera_fixed(vec3<int32_t>{pointer_point(pointer)} * 65536),{0,0,weapon_rotations[weapon]},{}); });
+    clipped(renderer,[&] { shape(renderer,resources.shape(definitions[weapon].carried),view,view.projector().camera_fixed(vec3<int32_t>{cursor_point(pointer,state)} * 65536),{0,0,weapon_rotations[weapon]},{}); });
   } else if(state.mode == arming_mode::clearing) {
     auto const view{aircraft_view(state)};
-    clipped(renderer,[&] { shape(renderer,resources.shape(assets.empty_model),view,view.projector().camera_fixed(vec3<int32_t>{pointer_point(pointer)} * 65536),{0,0,0},{}); });
+    clipped(renderer,[&] { shape(renderer,resources.shape(assets.empty_model),view,view.projector().camera_fixed(vec3<int32_t>{cursor_point(pointer,state)} * 65536),{0,0,0},{}); });
   } else if(state.mode == arming_mode::idle) {
     auto const miniature_view{render::orbit_camera({0,0x4000,0x2000},8000,vec2d{pointer})};
     object(renderer,miniature,miniature_view,{0,0,0},{0,0,static_cast<math::angle>(state.pulse << 8)});

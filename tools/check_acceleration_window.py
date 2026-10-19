@@ -53,7 +53,7 @@ run
     game=subprocess.Popen(['gdb','--quiet','--batch','--return-child-result','-x',str(observer),'--args',str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission',str(mission),'--control','keyboard','--flight-model',a.flight_model,'--scale','2'],env=env,cwd=root,stdout=log,stderr=subprocess.STDOUT)
     window=None;deadline=time.monotonic()+30
     while time.monotonic()<deadline and game.poll() is None:
-     found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True)
+     found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True)
      if found.stdout.strip():window=found.stdout.splitlines()[0];break
      time.sleep(.05)
     if window is None:

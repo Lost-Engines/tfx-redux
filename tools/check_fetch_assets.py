@@ -64,7 +64,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-fetch-test-') as temporary:
         run();verify()
         assert (destination/'keep.rom').stat().st_mtime_ns==original.st_mtime_ns,'valid existing ROM was replaced'
         assert requests=={'/cd/track01.bin':1,'/cd/track02.bin':1,'/repair.rom':2,'/new.rom':1,'/bundle.zip':1},requests
-        assert set(agents)=={'Lost Engines TFX CPP'},agents
+        assert set(agents)=={'Lost Engines TFX Redux'},agents
         before=requests.copy();run();assert requests==before,'verified ROMs were downloaded again'
         print('Fetch: missing/damaged ROM repair, HTTP retry, user agent, one shared archive, selective extraction, CRLF manifest, spaced paths and cached reuse passed')
         corrupt=True;(destination/'repair.rom').write_bytes(b'old damaged copy')

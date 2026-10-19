@@ -319,14 +319,32 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       if(native && delivery == part_delivery::queued) model_parameters = item.parameters;
       if(native) item.camera_origin = render::scale_model_cache(item.camera_origin,item.rotation_scale);
       item.metrics.distance = render::measure_model(item.camera_origin,item.shape->sort_depth_bias).distance;
-      auto const *detail{native ? item.shape->detail_for_distance(item.metrics.distance) : nullptr};
-      if(native && !detail) return;
+      int16_t const visual_distance{native && visual_lod_scale == 1 ? item.metrics.distance : static_cast<int16_t>(std::clamp((native ? item.metrics.distance : item.depth) * visual_lod_scale,0.0,32767.0))};
+      auto const *detail{visual_lod_scale == 0 ? &item.shape->details.front() : item.shape->detail_for_distance(visual_distance)};
+      if(!detail) return;
+      double const fog_distance{std::isfinite(view.far_distance) ? view.far_distance : std::hypot(static_cast<double>(map_width),static_cast<double>(map_height)) * cell_units};
+      uint8_t const distance_row{native ? item.metrics.colour_row : static_cast<uint8_t>(std::clamp(item.depth * 15 / fog_distance,0.0,15.0))};
       bool const shadow{path == render::model_render_path::ground_shadow};
       // Native shadows retain coloured distant-point LOD. Ordinary
       // silhouettes take the forced-black drawing path below.
       if(detail && detail->kind >= models::detail_kind::pixel_block) {
         unsigned int const size{detail->kind == models::detail_kind::pixel_block ? 2u : 1u};
-        render::model_point(renderer.output,item.camera_origin,view,size,resources.model_colours(item.metrics.colour_row)[detail->colour]);
+        uint8_t const colour{resources.model_colours(distance_row)[detail->colour]};
+        if(native && renderer.output.size == vec2<int>{render::screen_width,render::screen_height}) render::model_point(renderer.output,item.camera_origin,view,size,colour);
+        else {
+          models::primitive dot{
+            .kind{models::primitive_kind::point},
+            .vertices{},
+            .colour{colour},
+            .pixel_size{size},
+            .attachment_slot{},
+          };
+          std::array<models::model_vertex,1> const point{{{
+            .position{native ? vec3d{item.camera_origin} / 65536.0 : view.transform(item.origin)},
+            .uv{0,0},
+          }}};
+          renderer.primitive(dot,point,view,{});
+        }
         ++parts_drawn;++primitives_drawn;
         return;
       }
@@ -346,8 +364,9 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       context.attachments = carried_models;
       context.status = terrain.lighting.status;
       context.jitter = &jitter.state();
-      context.distance = native ? item.metrics.distance : static_cast<int16_t>(std::clamp(item.depth,-32768.0,32767.0));
+      context.distance = visual_distance;
       if(detail) context.entry_address = detail->offset + 2;
+      context.camera_depth = [&](vec3d const &point) { return camera_point(point,1).z * visual_lod_scale; };
       context.project = [&view, &camera_point, native](vec3d const &v, double const scale){
         auto point{native ? vec3d{v} : camera_point(v,scale)};
         if(std::abs(point.z) < view.near_distance * scale) point.z = std::copysign(view.near_distance * scale,point.z);
@@ -384,10 +403,10 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         }
         auto const texture{primitive.texture ? resources.texture(*primitive.texture) : std::span<uint8_t const>{}};
         if(primitive.texture && texture.empty()) warnings.insert("unresolved runtime texture: " + item.name);
-        uint8_t colour_row{item.metrics.colour_row};
+        uint8_t colour_row{distance_row};
         if(primitive.palette == models::palette_source::fixed) colour_row = 0;
-        else if(primitive.palette == models::palette_source::face_depth) colour_row = render::distance_colour_row(static_cast<int32_t>(primitive.palette_depth) * 65536);
-        renderer.primitive(primitive,vertices,view,texture,native && primitive.palette != models::palette_source::direct ? &resources.model_colours(colour_row) : nullptr);
+        else if(native && primitive.palette == models::palette_source::face_depth) colour_row = render::distance_colour_row(static_cast<int32_t>(primitive.palette_depth) * 65536);
+        renderer.primitive(primitive,vertices,view,texture,primitive.palette != models::palette_source::direct ? &resources.model_colours(colour_row) : nullptr);
         ++primitives_drawn;
       }
     } catch(std::exception const &error) {
@@ -480,13 +499,23 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
   // Native 0x7589a binds SSD range queries to the player, independently of the
   // camera. Standalone inspection scenes use their camera as the reference.
   auto const reference{reference_words(view.position)};
+  auto const visible{[&](vec3d const &position, double const radius) {
+    auto const point{view.transform(position)};
+    if(point.z + radius <= 0 || point.z - radius > view.far_distance) return false;
+    double const depth{std::max(0.0,point.z)};
+    double const horizontal{std::max(view.projection_origin.x,renderer.output.size.x - view.projection_origin.x) / view.focal_distance};
+    double const vertical{std::max(view.projection_origin.y,renderer.output.size.y - view.projection_origin.y) / view.focal_distance};
+    return std::abs(point.x) <= depth * horizontal + radius * (1 + horizontal) && std::abs(point.y) <= depth * vertical + radius * (1 + vertical);
+  }};
+  auto const lod_distance{[&](int16_t const distance) { return visual_lod_scale == 1 ? distance : static_cast<int16_t>(std::clamp(distance * visual_lod_scale,0.0,32767.0)); }};
   int const centre_x{static_cast<int>(std::floor(view.position.x / cell_units))}, centre_z{static_cast<int>(std::floor(view.position.z / cell_units))};
-  int const first_x{std::max(0, centre_x - static_cast<int>(radius))}, last_x{std::min(static_cast<int>(map_width) - 1, centre_x + static_cast<int>(radius))};
-  int const first_z{std::max(0, centre_z - static_cast<int>(radius))}, last_z{std::min(static_cast<int>(map_height) - 1, centre_z + static_cast<int>(radius))};
+  int const first_x{radius ? std::max(0, centre_x - static_cast<int>(radius)) : 0}, last_x{radius ? std::min(static_cast<int>(map_width) - 1, centre_x + static_cast<int>(radius)) : static_cast<int>(map_width) - 1};
+  int const first_z{radius ? std::max(0, centre_z - static_cast<int>(radius)) : 0}, last_z{radius ? std::min(static_cast<int>(map_height) - 1, centre_z + static_cast<int>(radius)) : static_cast<int>(map_height) - 1};
   auto const layer{select_terrain_layer(upper_terrain && terrain.lighting.cloud_layer,terrain.lighting.layer_y,terrain.lighting.layer_offset_y,camera_anchor_y.value_or(static_cast<int32_t>(std::floor(view.position.y))))};
   auto const &grid{layer.upper ? *upper_terrain : terrain};
   auto &states{layer.upper ? upper_instances : instances};
   auto const submit{[&](moving_instance &actor, vec3d const &position, vec3<math::angle> const &angles, animation_policy const policy = animation_policy::when_visible) {
+    if(!native && !visible(position,std::max(256,static_cast<int>(actor.state.bounding_radius())))) return;
     auto const rotation{math::rotation(angles)};
     // Native moving SSD effect placement retains quarter-turn zero; its full
     // visual Euler transform is separate from the request callback.
@@ -498,8 +527,8 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
     auto const actor_reference{reference_words(view.position)};
     instance_context const context{
       .status{terrain.lighting.status},
-      .distance{instance_point_distance({0,0,0},origin,0,actor_reference)},
-      .anchor_distance{[&](vec3d const &anchor) { return instance_point_distance(word_position(anchor),origin,0,actor_reference); }},
+      .distance{lod_distance(instance_point_distance({0,0,0},origin,0,actor_reference))},
+      .anchor_distance{[&](vec3d const &anchor) { return lod_distance(instance_point_distance(word_position(anchor),origin,0,actor_reference)); }},
       .request_output{requests},
     };
     auto const output{actor.state.execute(1,context)};
@@ -567,6 +596,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
     auto const col{cell.source.x}, row{cell.source.y};
     auto const &tile{grid.tile(col,row)};
     vec3d const centre{(x + .5) * cell_units,static_cast<double>(layer.height),(z + .5) * cell_units};
+    if(!native && !visible(centre,cell_units * 1.5)) continue;
     auto const camera_centre{view.transform(centre)};
     if(!native && (camera_centre.z < -cell_units || camera_centre.z > view.far_distance + cell_units)) continue;
     try {
@@ -578,8 +608,8 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       auto const origin{word_position(centre)};
       instance_context const context{
         .status{terrain.lighting.status},
-        .distance{instance_point_distance({0,0,0},origin,tile.rotation,reference)},
-        .anchor_distance{[&](vec3d const &anchor) { return instance_point_distance(word_position(anchor),origin,tile.rotation,reference); }},
+        .distance{lod_distance(instance_point_distance({0,0,0},origin,tile.rotation,reference))},
+        .anchor_distance{[&](vec3d const &anchor) { return lod_distance(instance_point_distance(word_position(anchor),origin,tile.rotation,reference)); }},
         .request_output{requests},
       };
       auto const output{instance.execute(1,context)};

@@ -29,7 +29,7 @@ void score_player::draw() {
     unsigned int const offset{static_cast<unsigned int>(y * render::screen_width + x)};
     // Native 0xa6c3c expands its text clip rectangle for 46 retraces, then pulses the newly ranked pilot.
     int const width{static_cast<int>(std::min(reveal,45u))};
-    if(x >= 160 - width * 3 && x < 160 + width * 3 && y >= 104 - width && y <= 104 + width && coverage.pixels[offset]) display.pixels[offset] = text.pixels[offset];
+    if(x >= 160 - width * 3 && x < 160 + width * 3 && y >= 104 - width && y <= 104 + width && coverage.pixels[offset]) display.write(offset,text.pixels[offset]);
   }
 }
 void score_player::press(uint8_t const scan) {

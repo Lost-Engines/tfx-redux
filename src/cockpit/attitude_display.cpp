@@ -1,5 +1,6 @@
 #include "attitude_display.h"
 #include <algorithm>
+#include <cmath>
 #include "presentation/drawing.h"
 #include "render/sprites.h"
 
@@ -55,7 +56,9 @@ void attitude_display::draw_pitch(render::software_renderer &renderer, attitude_
     int32_t const divisor{std::max(16,wrapped_sum(point.y * depth.x,point.x * depth.y) >> 16)};
     auto const project{[&](vec2<int32_t> const &axis, int const centre) {
       int32_t const numerator{wrapped_sum(point.y * axis.x,point.x * axis.y) >> 8};
-      return word(std::clamp(numerator / divisor,-32000,32000) + centre);
+      double constexpr original_focal_distance{render::projection_focal_length(render::aperture::normal)};
+      int const displacement{state.focal_distance == original_focal_distance ? numerator / divisor : static_cast<int>(std::lround(numerator / static_cast<double>(divisor) * state.focal_distance / original_focal_distance))};
+      return word(std::clamp(displacement,-32000,32000) + centre);
     }};
     vec2<int> const origin{word(project(horizontal,state.projection_origin.x) + state.offset.x),project(vertical,state.projection_origin.y)};
     auto const rotate{[&](vec2<int16_t> const &vertex) {

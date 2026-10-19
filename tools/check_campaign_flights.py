@@ -135,8 +135,8 @@ run
       if predicate():return
       time.sleep(.05)
      raise AssertionError((case,label,text()[-6000:]))
-    wait(lambda:bool(subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True).stdout.strip()),'window')
-    window=run('xdotool','search','--onlyvisible','--name','TFX C').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
+    wait(lambda:bool(subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True).stdout.strip()),'window')
+    window=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
     def tap(key):run('xdotool','keydown',key);time.sleep(.15);run('xdotool','keyup',key);time.sleep(.2)
     def title():return run('xdotool','getwindowname',window).stdout
     def click(x,y):

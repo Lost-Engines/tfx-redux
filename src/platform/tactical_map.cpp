@@ -11,7 +11,7 @@ auto show_tactical_map(window &window, cockpit::tactical_map &map,
   std::array<bool,GLFW_KEY_LAST + 1> held{};
   for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = glfwGetKey(host,key) == GLFW_PRESS;
   map.open(state);
-  window.title("TFX C++ — Tactical map");
+  window.title("TFX Redux — Tactical map");
   double previous{glfwGetTime()}, accumulated{0};
   while(window.poll()) {
     double const now{glfwGetTime()};

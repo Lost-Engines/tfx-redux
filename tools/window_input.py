@@ -29,7 +29,7 @@ def confirm_flight_quit(environment,window):
  while time.monotonic()<deadline:
   result=subprocess.run(['xdotool','getwindowname',str(window)],env=environment,capture_output=True,text=True,timeout=5)
   if result.returncode:return # Presentation/result quit already closed its window.
-  if 'TFX C++ — Quit' in result.stdout:
+  if any(name in result.stdout for name in ('TFX C++ — Quit','TFX Redux — Quit')):
    click_game_pixel(environment,window,132,108)
    return
   time.sleep(.05)

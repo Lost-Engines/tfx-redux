@@ -35,7 +35,7 @@ auto tactical_map::point(vec3<int32_t> const &position, uint8_t const colour)->v
   // Native 0x86c70 divides signed world coordinates towards zero, then passes
   // unsigned screen words to the point painter. Targets use shifts separately.
   unsigned int const x{static_cast<uint16_t>(position.x / world::cell_units)}, y{static_cast<uint16_t>(map_last_row - position.z / world::cell_units)};
-  if(x < render::screen_width && y < render::screen_height) renderer.output.pixels[static_cast<unsigned int>(y * render::screen_width + x)] = colour;
+  if(x < render::screen_width && y < render::screen_height) renderer.output.write(static_cast<unsigned int>(y * render::screen_width + x),colour);
 }
 auto tactical_map::target_points()->void {
   for(auto const &target : snapshot.targets) point({(target.x >> world::cell_shift) * world::cell_units,0,(target.z >> world::cell_shift) * world::cell_units},animation.target_colour);

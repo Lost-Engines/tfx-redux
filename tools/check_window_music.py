@@ -49,7 +49,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-music-window-') as temporary:
    assert routed,log.read_text()
    window=None;deadline=time.monotonic()+20
    while time.monotonic()<deadline and game.poll() is None:
-    windows=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True).stdout.splitlines()
+    windows=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True).stdout.splitlines()
     if windows:window=windows[0];break
     time.sleep(.05)
    assert window,log.read_text();run('xdotool','windowfocus','--sync',window)

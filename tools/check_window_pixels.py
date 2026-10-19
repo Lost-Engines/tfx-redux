@@ -43,7 +43,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-square-pixels-') as temporary:
             game=subprocess.Popen([str((args.build/'tfx').resolve()),'--data-dir',str(args.data_dir.resolve()),'--menu','mastopts','--scale',str(requested)],env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
             deadline=time.monotonic()+10;window=None
             while time.monotonic()<deadline and game.poll() is None:
-                result=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True,timeout=5)
+                result=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True,timeout=5)
                 if result.stdout.strip():window=result.stdout.splitlines()[0];break
                 time.sleep(.05)
             if window is None:raise RuntimeError('menu did not open')

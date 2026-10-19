@@ -30,6 +30,7 @@ software_renderer::software_renderer(resources::executable_tables const &source_
 }
 
 void software_renderer::ink(int const x, int const y, uint8_t const colour, int const mode) {
+  if(x < clipping.glyph_minimum.x || x >= clipping.glyph_limit.x || y < clipping.glyph_minimum.y || y >= clipping.glyph_limit.y) return;
   pattern_pixel(output,x,y,colour,mode);
 }
 
@@ -43,10 +44,10 @@ void software_renderer::patterned_span(int const y, double const left, double co
 
 void software_renderer::background(camera const &view, uint8_t const sky, uint8_t const ground) {
   /// Independent free-inspection backdrop; live flight uses the original banded horizon
-  for(int y{0}; y != screen_height; ++y) {
+  for(int y{0}; y != output.size.y; ++y) {
     auto const ray_y{view.forward.y + (y + .5 - view.projection_origin.y) / view.focal_distance * view.down.y};
     auto const colour{ray_y > 0 ? ground : sky};
-    std::fill_n(output.pixels.begin() + y * screen_width, screen_width, colour);
+    std::fill_n(output.pixels.begin() + y * output.size.x, output.size.x, colour);
   }
 }
 
@@ -54,9 +55,9 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
   /// Half-open software spans; interpolate palette indices and UVs in screen space, preserving authored paint order
   if(vertices.size() < 3) return;
   bool const shaded{texture.empty() && std::ranges::all_of(vertices,[](auto const &v){ return v.shade >= 0; })};
-  double top{screen_height}, bottom{0};
+  double top{static_cast<double>(output.size.y)}, bottom{0};
   for(auto const &v : vertices) { top = std::min(top, v.position.y); bottom = std::max(bottom, v.position.y); }
-  int const first{std::max(0, static_cast<int>(std::ceil(top - .5)))}, last{std::min(screen_height, static_cast<int>(std::ceil(bottom - .5)))};
+  int const first{std::max(clipping.glyph_minimum.y, static_cast<int>(std::ceil(top - .5)))}, last{std::min(clipping.glyph_limit.y, static_cast<int>(std::ceil(bottom - .5)))};
   std::vector<screen_vertex> hits;
   hits.reserve(vertices.size());
   int const bottom_row{static_cast<int>(std::lround(bottom))}, top_row{static_cast<int>(std::lround(top))};
@@ -72,7 +73,7 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
       if(shaded) {
         double const height{b->position.y - a->position.y};
         int const first_colour{static_cast<int>(a->shade * 256)};
-        int const difference{math::signed_word(static_cast<uint16_t>(static_cast<int>(b->shade * 256) - first_colour))};
+        int const difference{static_cast<int>(b->shade * 256) - first_colour};
         double const step{difference * 2 * std::floor(32768 / std::max(1.0,height)) / 65536};
         shade = std::floor(first_colour + .5 + (std::abs(difference) >= height ? step / 2 : 0) + step * (y - a->position.y)) / 256;
       }
@@ -85,7 +86,7 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
     std::ranges::sort(hits, {}, [](auto const &v){ return v.position.x; });
     for(size_t pair{0}; pair + 1 < hits.size(); pair += 2) {
       auto const &left{hits[pair]}, &right{hits[pair + 1]};
-      int const start{std::max(0, static_cast<int>(std::ceil(left.position.x - .5)))}, end{std::min(screen_width, static_cast<int>(std::ceil(right.position.x - .5)))};
+      int const start{std::max(clipping.glyph_minimum.x, static_cast<int>(std::ceil(left.position.x - .5)))}, end{std::min(clipping.glyph_limit.x, static_cast<int>(std::ceil(right.position.x - .5)))};
       if(mode >= 0 && texture.empty() && left.shade < 0) {
         patterned_span(y,left.position.x,right.position.x,colour,mode,bottom_row,false,y >= first && y < last);
         continue;
@@ -122,6 +123,14 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
 
 void software_renderer::circle(int const x, int const y, unsigned int const radius, uint8_t const colour, int const mode) {
   /// Use the actual native integer span table; the original rejects radii outside 1..99
+  if(output.size != vec2<int>{screen_width,screen_height} || radius >= 100) {
+    int const r{static_cast<int>(std::min<unsigned int>(radius,static_cast<unsigned int>(std::max(output.size.x,output.size.y)) * 2u))};
+    for(int row{std::max(-r,-y)}; row <= std::min(r,output.size.y - 1 - y); ++row) {
+      int const extent{static_cast<int>(std::sqrt(static_cast<double>(r) * r - static_cast<double>(row) * row))};
+      patterned_span(y + row,x - extent,x + extent,colour,mode,y + r,true);
+    }
+    return;
+  }
   auto const table{tables.circle(radius)};
   if(table.empty()) return;
   auto const r{static_cast<int>(radius)}, bottom{y + r};
@@ -146,7 +155,14 @@ void software_renderer::line(vec2d const &a, vec2d const &b, uint8_t const colou
   }
 }
 
-void software_renderer::primitive(models::primitive const &source, std::span<models::model_vertex const> const camera_vertices, camera const &view, std::span<uint8_t const> const texture, colour_map const *const remap) {
+void software_renderer::primitive(models::primitive const &source, std::span<models::model_vertex const> const camera_vertices, camera const &source_view, std::span<uint8_t const> const texture, colour_map const *const remap) {
+  auto view{source_view};
+  if(output.size != vec2<int>{screen_width,screen_height} && view.projection == projection_mode::original_model) {
+    double const scale{std::min(output.size.x / static_cast<double>(screen_width),output.size.y / static_cast<double>(screen_height))};
+    view.projection_origin = view.projection_origin * scale + vec2d{(output.size.x - screen_width * scale) / 2,(output.size.y - screen_height * scale) / 2};
+    view.focal_distance *= scale;
+    view.projection = projection_mode::continuous;
+  }
   /// Clip a complete authored primitive before projection, including its attributes
   if(camera_vertices.empty()) return;
   uint8_t const source_index{static_cast<uint8_t>(source.colour)};
@@ -156,7 +172,7 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
     auto const &v{camera_vertices[0].position};
     if(v.z <= view.near_distance * camera_vertices.front().projection_scale || v.z > view.far_distance) return;
     auto const point{view.project(v,camera_vertices.front().projection_scale)};
-    if(point.x < -100 || point.x > screen_width + 100 || point.y < -100 || point.y > screen_height + 100) return;
+    if(point.x < -100 || point.x > output.size.x + 100 || point.y < -100 || point.y > output.size.y + 100) return;
     int const x{static_cast<int>(std::lround(point.x))}, y{static_cast<int>(std::lround(point.y))};
     if(source.pixel_size) {
       for(unsigned int row{0}; row != source.pixel_size; ++row) for(unsigned int col{0}; col != source.pixel_size; ++col) ink(x + static_cast<int>(col),y + static_cast<int>(row),ink_index,source.mode);
@@ -166,15 +182,15 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
   if(source.kind == models::primitive_kind::line && camera_vertices.size() == 2) {
     auto a{camera_vertices[0]}, b{camera_vertices[1]};
     for(unsigned int plane{0}; plane != 6; ++plane) {
-      auto const distance{[&view, plane](models::model_vertex const &vertex){
+      auto const distance{[this, &view, plane](models::model_vertex const &vertex){
         auto const &v{vertex.position};
         switch(plane) {
         case 0: return v.z - view.near_distance * vertex.projection_scale;
         case 1: return view.far_distance - v.z;
         case 2: return v.x + view.projection_origin.x / view.focal_distance * v.z;
-        case 3: return -v.x + (screen_width - view.projection_origin.x) / view.focal_distance * v.z;
+        case 3: return -v.x + (output.size.x - view.projection_origin.x) / view.focal_distance * v.z;
         case 4: return v.y + view.projection_origin.y / view.focal_distance * v.z;
-        default: return -v.y + (screen_height - view.projection_origin.y) / view.focal_distance * v.z;
+        default: return -v.y + (output.size.y - view.projection_origin.y) / view.focal_distance * v.z;
         }
       }};
       double const da{distance(a)}, db{distance(b)};
@@ -187,15 +203,15 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
   }
   std::vector<models::model_vertex> clipped(camera_vertices.begin(),camera_vertices.end());
   for(unsigned int plane{0}; plane != 6; ++plane) {
-    auto const distance{[&view, plane](models::model_vertex const &vertex){
+    auto const distance{[this, &view, plane](models::model_vertex const &vertex){
       auto const &v{vertex.position};
       switch(plane) {
       case 0: return v.z - view.near_distance * vertex.projection_scale;
       case 1: return view.far_distance - v.z;
       case 2: return v.x + view.projection_origin.x / view.focal_distance * v.z;
-      case 3: return -v.x + (screen_width - view.projection_origin.x) / view.focal_distance * v.z;
+      case 3: return -v.x + (output.size.x - view.projection_origin.x) / view.focal_distance * v.z;
       case 4: return v.y + view.projection_origin.y / view.focal_distance * v.z;
-      default: return -v.y + (screen_height - view.projection_origin.y) / view.focal_distance * v.z;
+      default: return -v.y + (output.size.y - view.projection_origin.y) / view.focal_distance * v.z;
       }
     }};
     if(clipped.empty()) return;
@@ -262,7 +278,7 @@ void software_renderer::text(int x, int const y, std::string_view const message,
       for(int column{0}; column != 8; ++column) {
         if((glyph->rows[static_cast<unsigned int>(row)] & (128 >> column)) && x + column >= clipping.glyph_minimum.x && x + column < clipping.glyph_limit.x && y + row >= clipping.glyph_minimum.y && y + row < clipping.glyph_limit.y) {
           ink(x + column,y + row,colour,-1);
-          if(coverage && x + column >= 0 && x + column < screen_width && y + row >= 0 && y + row < screen_height) coverage->pixels[static_cast<unsigned int>((y + row) * screen_width + x + column)] = 255;
+          if(coverage && x + column >= 0 && x + column < output.size.x && y + row >= 0 && y + row < output.size.y) coverage->pixels[static_cast<unsigned int>((y + row) * output.size.x + x + column)] = 255;
         }
       }
     }

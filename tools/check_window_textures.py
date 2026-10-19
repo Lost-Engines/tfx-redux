@@ -43,7 +43,7 @@ run
    def run(*command):return subprocess.run(command,env=env,check=True,capture_output=True,text=True,timeout=5)
    deadline=time.monotonic()+30;window=None
    while time.monotonic()<deadline and game.poll() is None:
-    windows=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True).stdout.splitlines()
+    windows=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True).stdout.splitlines()
     if windows:window=windows[0];break
     time.sleep(.05)
    if not window:raise RuntimeError('no flight window:\n'+log.read_text()[-6000:])

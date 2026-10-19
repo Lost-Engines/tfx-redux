@@ -28,7 +28,7 @@ data_directory = str(args.data_dir.resolve())
 with tempfile.TemporaryDirectory(prefix='tfx-wayland-test-') as directory:
     runtime = Path(directory)
     config = runtime / 'sway.conf'
-    config.write_text('output * mode 1280x800\nfor_window [title="^TFX C"] floating enable\n')
+    config.write_text('output * mode 1280x800\nfor_window [title="^TFX "] floating enable\n')
     environment = os.environ.copy()
     for name in ['DISPLAY', 'WAYLAND_DISPLAY', 'SWAYSOCK']:
         environment.pop(name, None)
@@ -61,7 +61,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-wayland-test-') as directory:
                 raise RuntimeError('headless Wayland startup failed:\n' + log.read()[-4000:])
             environment['WAYLAND_DISPLAY'] = socket.name
             def find_window(node):
-                if (node.get('name') or '').startswith('TFX C++'):
+                if (node.get('name') or '').startswith(('TFX C++','TFX Redux')):
                     return node
                 for child in node.get('nodes', []) + node.get('floating_nodes', []):
                     found = find_window(child)
