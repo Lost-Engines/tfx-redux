@@ -31,6 +31,7 @@ struct framebuffer {
   vec2<int> size{screen_width,screen_height};
   pixel_buffer pixels{static_cast<size_t>(size.x) * static_cast<size_t>(size.y)};
   std::vector<uint8_t> coverage{};
+  static size_t pixel_count(vec2<int> const &dimensions);
   void resize(vec2<int> const &dimensions);
   void track_writes();
   void write(size_t offset, uint8_t colour) {

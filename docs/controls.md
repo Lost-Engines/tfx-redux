@@ -2,7 +2,7 @@
 
 These follow the original September 1994 TFX 2.05 controls. Start the game with `--data-dir /path/to/TFX`; use `--help` for command-line options.
 
-In the arming screen, click the aircraft to rotate it with the mouse; click again or right-click to stop. Rotation captures the mouse inside the window and releases it on focus loss. Select a weapon, then click an available pylon to mount it; right-click ends placement.
+In the arming screen, click the aircraft to rotate it with the mouse; click again or right-click to stop. Rotation captures the mouse inside the window and releases it on focus loss. Select a weapon, then click an available pylon to mount it; right-click ends placement. Escape cancels the active operation first. From idle preflight arming it returns to the preceding choice screen; during in-flight rearming it asks before returning without applying changes.
 
 The saved `LANG` values are 1 English, 2 French, 3 German, 4 Italian and 5 Spanish. `--language=NAME` overrides the saved choice for this run.
 
@@ -26,7 +26,9 @@ Apostrophe toggles aerial refuelling: the nearest allied tanker supplies the ori
 
 The original cheat is available: hold **right Shift** and type **PLOP** to toggle it. Its original damage protection and collision behaviour are retained. With the cheat enabled, Ctrl+D opens in-flight arming; missions that require default stores refit those immediately.
 
-The 320×200 image is shown with square pixels and nearest-neighbour scaling. The initial floating window uses the largest integer scale that fits the available desktop; `--scale=3` overrides this. Mouse capture is released on focus loss.
+The 3D render size is selected with `--resolution=WIDTHxHEIGHT`, the main camera’s horizontal field of view with `--fov=DEGREES`, and visibility with `--draw-distance=CELLS` (`0` or `infinite` for the whole map). Cockpit artwork and text use nearest-neighbour scaling with square pixels; MFD scenes render at their displayed pixel size. The floating window fits the available desktop; `--scale=2` requests twice the render size. Mouse capture is released on focus loss.
+
+Alt+V starts or stops a lossless video recording of the displayed view, without changing those rendering settings. `--replay FILE` opens a saved recording directly; add `--skip-intro` to omit its WNN prelude. See [recording details](recording.md).
 
 
 ## Sound

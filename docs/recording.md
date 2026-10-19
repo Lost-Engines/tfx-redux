@@ -1,4 +1,71 @@
-# Original flight-recording format
+# Flight recordings
+
+Redux records the displayed palette-index image and its complete DAC palette,
+including the cockpit, HUD and full-resolution MFD cameras. Starting Alt+V
+preserves the chosen resolution, FOV, draw distance and detail settings. Video
+is lossless and retains frame timing; pauses, focus loss and modal menus are
+omitted. Audio is not recorded. The WNN prelude still precedes automatic replay
+after a completed mission. A recording can also be opened with
+`--replay FILE`; `--skip-intro` omits the prelude for that direct playback.
+
+## Redux video, version 1
+
+`src/recording/video.*` implements streaming capture/playback. Only the current
+and previous indexed frame need to be resident. Files use the existing chosen
+filename, normally `video.rec`, and are recognised by their signature. They
+are not DOS-compatible model-queue files. There is no 348-model, 1,000-resource,
+32-bit file-offset or 16-bit frame-count limit. Files can be larger than the
+original scene recordings, depending on resolution and image complexity.
+
+All integers are little-endian. The 24-byte file header contains:
+
+| Offset | Type | Meaning |
+| --- | --- | --- |
+| 0 | 8 bytes | `TFXRVID` followed by NUL |
+| 8 | u32 | Version, currently 1 |
+| 12 | u32 | Reserved, zero |
+| 16 | u64 | Frame count, patched when closed |
+
+Each frame has a 24-byte header, followed by 768 DAC bytes and the compressed
+pixel payload:
+
+| Offset | Type | Meaning |
+| --- | --- | --- |
+| 0 | u32 | Width |
+| 4 | u32 | Height |
+| 8 | u64 | Display duration in microseconds |
+| 16 | u32 | Compressed payload length |
+| 20 | u8 | 0: full indexed image; 1: XOR with previous indexed image |
+| 21 | 3 bytes | Reserved, zero |
+
+The dimensions can change between frames. An XOR frame must match the previous
+frame's dimensions. The encoder chooses the shorter of full-image and XOR
+compression. Each packet uses the ByteRun/PackBits convention: controls 0–127
+copy the next 1–128 literal bytes; controls 129–255 repeat the next byte 128–2
+times. Control 128 is reserved and rejected. Runs can cross scanline boundaries.
+The decoded stream must contain exactly width × height indices.
+
+The reader validates dimensions, allocation limits, durations, reserved fields,
+packet lengths, frame counts and trailing data. Unit checks include changing
+palettes/resolution, noisy literals, sparse deltas, malformed files and 65,537
+streamed frames. The private-window check independently decodes captured files,
+compares every pixel index and DAC byte against read-only observations of the
+live frame, then compares every RGBA pixel submitted to the production replay
+window. It also checks that main and MFD cameras keep the selected draw distance
+and that recording does not change the main FOV.
+
+```sh
+ctest --test-dir build --output-on-failure -R '^recording\.'
+python3 tools/check_redux_recording.py --data-dir /path/to/TFX
+# Under ASan/GDB, allow slower polled flight input:
+python3 tools/check_redux_recording.py --build build-san --data-dir /path/to/TFX --key-hold=.8
+```
+
+## Original DOS format and baseline research
+
+The original codec and reader remain available for legacy playback and analytical
+checks. The original-code comparisons below describe the TFX C++ baseline;
+they do not assert that Redux Alt+V writes the old format.
 
 The retail 2.05 Alt+V recorder stores model submissions rather than rendered
 pixels or simulation inputs. Original C5AC0 opens the file, C5BEC appends a
@@ -6,12 +73,10 @@ frame, C5B3C closes it and patches its header, and C5DAC writes the resource
 dictionary. C5FF0 reads a frame and C6178 remaps model handles for playback.
 These are executable file offsets in the September 1994 reference.
 
-The standalone codec is implemented in `src/recording/file.*`. Alt+V now starts
-and stops live capture to `video.rec` in the selected installation directory.
-`recording::recorder` streams each frame and retains only its bounded resource
-dictionary. Starting again replaces the previous recording, as in the original.
-After a completed mission, the original WNN/press-room introduction precedes
-automatic playback. Any new key press leaves the recorded flight.
+The standalone original codec is implemented in `src/recording/file.*`.
+`recording::recorder` and `recording::playback` retain the native model-queue
+streaming format for research and legacy playback. Live Redux capture uses the
+video format above; the playback wrapper detects either signature automatically.
 
 The configuration menu's original filename field is editable. Its application
 state survives menu and mission returns but is not added to `TFX.CFG`, whose

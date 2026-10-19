@@ -57,7 +57,7 @@ The defaults are **1280×800**, the original **64.01° horizontal FOV**, a **16-
 ```
 
 - `--resolution WIDTHxHEIGHT` sets the actual 3D render resolution, including aircraft and weapons in the arming screen. Widescreen and other aspect ratios use square pixels.
-- `--fov DEGREES` sets the horizontal field of view, from 10° to 170°. The missile-nose camera retains its wider view; the HUD pitch ladder and target markers follow the selected projection.
+- `--fov DEGREES` sets the horizontal field of view, from 10° to 170°. The main camera uses this angle. The missile-nose camera retains its wider view; the HUD pitch ladder and target markers follow the selected projection.
 - `--draw-distance CELLS` controls the terrain radius; `0` or `infinite` removes the far plane and includes the whole finite map. The original radius is 8 cells. Whole-map rendering can be expensive in the software renderer.
 - `--lod-scale FACTOR` controls visual detail cutoffs. The default, `0`, keeps the most detailed models and disables drawing-distance tests in scenery scripts. `1` restores the original LOD thresholds; values between 0 and 1 postpone detail reductions. Gameplay and collision ranges are unaffected.
 
@@ -67,13 +67,22 @@ The following departures from the original are intentional:
 
 - World rendering uses a wider coordinate range, an unrestricted visible-model queue and resolution-independent clipping and projection. Terrain, buildings, aircraft and effects can remain visible beyond the original limits. The original palette colours, quantised lighting and authored model drawing order remain in use; exact DOS pixel matching is no longer the rendering target.
 - Distance shading extends across the selected draw distance (the map diagonal for whole-map views), retaining the original palette lookup rather than introducing blended colours. Sky and ground bands are projected for the actual view instead of relying on the original narrow-view shortcuts.
-- Cockpit artwork, HUD text, menus and presentations retain their original pixel detail and use nearest-neighbour scaling. Cockpits stay centred, with black margins where needed. Cockpit MFD scene views still use their original small resolution and local draw radius.
+- Cockpit artwork, HUD text, menus and presentations retain their original pixel detail and use nearest-neighbour scaling. Cockpits stay centred, with black margins where needed. Embedded MFD scenes render at their displayed pixel size and use the chosen draw distance and LOD settings, while retaining their authored camera framing.
 - Arming picks the aircraft's pylon volumes along the cursor ray, including after rotating the aircraft. The held weapon follows that cursor ray instead of mapping mouse movement to fixed aircraft axes. Buttons use the actual cursor position, without the original miniature-aircraft hotspot offset.
 - Escape cancels an active arming operation first. At the idle preflight arming screen, it returns to the preceding choice screen (or pilot enrolment when none exists). During an in-flight rearm, it asks before returning to the mission. Cancelling restores the loadout held before opening the arming screen.
 - Distant point models use the same missile-view projection as polygons. Two-pixel models are clipped at the screen edge instead of wrapping a pixel onto the next row.
 - In-flight screenshots capture the full render resolution and declare square pixels in their ILBM metadata.
+- Pixel clipping includes the complete render target; MFD target reticles stay within their display. Rendering also avoids unnecessary polygon allocation and clipping work without changing the palette or drawing style.
 
-**Flight recordings:** the DOS-compatible recorder still uses the original draw radius, LOD rules and field of view while recording; these limits are restored only for that period. Recorded-flight playback retains its original resolution and is scaled for the window.
+**Flight recordings:** Alt+V records the view as displayed, including its resolution, FOV, distance shading, cockpit and MFDs. Recording preserves your rendering settings. Replay uses the recorded colours and viewpoint instead of the original infrared model-queue replay. New files use a compressed, lossless Redux format; existing DOS recordings remain playable. Recordings contain video only and omit pauses, focus loss and menus.
+
+To replay a saved flight directly:
+
+```sh
+./build/tfx --replay /path/to/video.rec --skip-intro
+```
+
+Omit `--skip-intro` to include the original WNN prelude. [Recording details](docs/recording.md) describe both file formats.
 
 ## Sound
 
@@ -121,13 +130,16 @@ ctest --test-dir build --output-on-failure
 
 For a minimal installation, `cmake --install build-rel --component Runtime --prefix /path/to/output` copies the executable and the matching platform’s fetch script and asset manifests from a Release build. Original game data and ROMs remain separate.
 
-The Redux regressions cover resolution, FOV, UI opacity, screenshot dimensions and the corrected distant-point projection. With the reference data available, the arming probe checks cursor-ray picking before and after rotation, and weapon attachment for all three aircraft:
+The Redux regressions cover resolution, FOV, MFD framing, UI opacity, screenshots, lossless recording and the corrected distant-point projection. With the reference data available, the arming probe checks cursor-ray picking before and after rotation, and weapon attachment for all three aircraft:
 
 ```sh
 python3 tools/check_redux_points.py
 ./build/redux_arming_probe /path/to/TFX /tmp/tfx-arming-check
 python3 tools/check_redux_arming.py --data-dir /path/to/TFX
+python3 tools/check_redux_recording.py --data-dir /path/to/TFX
 ```
+
+[Renderer profiling](docs/rendering-performance.md) records the measured optimisation results and how to reproduce them.
 
 The [verification matrix](docs/verification.md) records the inherited baseline’s complete-session evidence, persistent campaign checks and long-session audio/lifetime coverage; its original-renderer comparisons are historical evidence rather than a promise of identical Redux pixels. [Implementation notes](docs/implementation.md) retain the research details. The research tree is the sibling `tfx-reverse` directory.
 

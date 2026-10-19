@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include <numbers>
 #include <limits>
+#include <numbers>
+#include <utility>
 #include "render/camera.h"
 
 namespace tfx::render {
@@ -36,25 +37,68 @@ inline camera scene_camera(camera const &source, view_settings const &settings) 
   return result;
 }
 
+struct scene_region {
+  vec2<int> position;
+  vec2<int> size;
+  camera view;
+};
+
+// Embedded cameras retain their authored lens. Only their raster resolution
+// and visibility settings change, independently of the main camera's FOV.
+inline std::optional<scene_region> instrument_camera(camera const &source, view_settings const &settings, vec2<int> const &minimum, vec2<int> const &maximum) {
+  interface_layout const layout{settings.resolution};
+  auto const low{layout.project(vec2d{minimum})};
+  auto const high{layout.project(vec2d{maximum} + vec2d{1,1})};
+  vec2<int> const begin{std::clamp(static_cast<int>(std::ceil(low.x)),0,settings.resolution.x),std::clamp(static_cast<int>(std::ceil(low.y)),0,settings.resolution.y)};
+  vec2<int> const end{std::clamp(static_cast<int>(std::ceil(high.x)),0,settings.resolution.x),std::clamp(static_cast<int>(std::ceil(high.y)),0,settings.resolution.y)};
+  if(end.x <= begin.x || end.y <= begin.y) return {};
+  auto view{source};
+  view.projection = projection_mode::continuous;
+  view.projection_origin = layout.project(source.projection_origin) - vec2d{begin};
+  view.focal_distance = source.focal_distance * layout.scale;
+  view.viewport_minimum = {0,0};view.viewport_maximum = vec2<int16_t>{end - begin - vec2<int>{1,1}};
+  view.far_distance = settings.draw_distance ? settings.draw_distance * 2048.0 : std::numeric_limits<double>::infinity();
+  return scene_region{
+    .position{vec2<int>{begin}},
+    .size{end - begin},
+    .view{std::move(view)},
+  };
+}
+
+inline std::vector<int> interface_columns(interface_layout const &layout, int const width) {
+  std::vector<int> columns(static_cast<size_t>(width));
+  for(int x{0}; x != width; ++x) columns[static_cast<size_t>(x)] = static_cast<int>(std::floor((x - layout.offset.x) / layout.scale));
+  return columns;
+}
+
 inline framebuffer scale_image(framebuffer const &source, vec2<int> const &size) {
   framebuffer result;result.resize(size);
   interface_layout const layout{size};
-  for(int y{0}; y != size.y; ++y) for(int x{0}; x != size.x; ++x) {
-    int const column{static_cast<int>(std::floor((x - layout.offset.x) / layout.scale))};
+  auto const columns{interface_columns(layout,size.x)};
+  for(int y{0}; y != size.y; ++y) {
     int const row{static_cast<int>(std::floor((y - layout.offset.y) / layout.scale))};
-    if(column >= 0 && column < screen_width && row >= 0 && row < screen_height) result.pixels[static_cast<size_t>(y * size.x + x)] = source.pixels[static_cast<size_t>(row * screen_width + column)];
+    if(row < 0 || row >= screen_height) continue;
+    for(int x{0}; x != size.x; ++x) {
+      int const column{columns[static_cast<size_t>(x)]};
+      if(column >= 0 && column < screen_width) result.pixels[static_cast<size_t>(y * size.x + x)] = source.pixels[static_cast<size_t>(row * screen_width + column)];
+    }
   }
   return result;
 }
 
 inline void composite_interface(framebuffer &target, framebuffer const &source) {
+  if(source.coverage.empty()) return;
   interface_layout const layout{target.size};
-  for(int y{0}; y != target.size.y; ++y) for(int x{0}; x != target.size.x; ++x) {
-    int const column{static_cast<int>(std::floor((x - layout.offset.x) / layout.scale))};
+  auto const columns{interface_columns(layout,target.size.x)};
+  for(int y{0}; y != target.size.y; ++y) {
     int const row{static_cast<int>(std::floor((y - layout.offset.y) / layout.scale))};
-    if(column < 0 || column >= screen_width || row < 0 || row >= screen_height) continue;
-    auto const at{static_cast<size_t>(row * screen_width + column)};
-    if(!source.coverage.empty() && source.coverage[at]) target.pixels[static_cast<size_t>(y * target.size.x + x)] = source.pixels[at];
+    if(row < 0 || row >= screen_height) continue;
+    for(int x{0}; x != target.size.x; ++x) {
+      int const column{columns[static_cast<size_t>(x)]};
+      if(column < 0 || column >= screen_width) continue;
+      auto const at{static_cast<size_t>(row * screen_width + column)};
+      if(source.coverage[at]) target.pixels[static_cast<size_t>(y * target.size.x + x)] = source.pixels[at];
+    }
   }
 }
 

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include "render/clipping.h"
 #include "render/horizon.h"
 #include "render/model_point.h"
 #include "render/view_settings.h"
@@ -14,6 +15,8 @@ void require(bool const value, char const *message) {
 
 int main() try {
   using namespace tfx::render;
+  auto const clip{raster_clip::pixels({0,0},{1000,602})};
+  require(clip.glyph_limit == vec2<int>{1001,603},"last render column or row was excluded");
   framebuffer image;image.resize({1001,603});
   require(image.pixels.size() == 1001u * 603u,"non-integer render dimensions were lost");
   bool rejected{false};try { image.resize({0,100}); } catch(std::invalid_argument const&) { rejected = true; }
@@ -44,6 +47,15 @@ int main() try {
   require(std::isinf(view.far_distance),"whole-map rendering retained a far plane");
   source.opening = aperture::missile_nose;
   require(std::abs(scene_camera(source,settings).focal_distance - 400) < 1e-8,"missile camera did not retain its wider FOV");
+  source.opening = aperture::normal;source.projection_origin = {44,150};source.focal_distance = 256;
+  auto const region{instrument_camera(source,settings,{20,135},{70,169})};
+  require(region && region->size.x > 51 && region->size.y > 35,"MFD kept its original small raster");
+  require(std::isinf(region->view.far_distance),"MFD retained its local draw-distance limit");
+  interface_layout const layout{settings.resolution};
+  auto const local{region->view.project({2,3,100}) + vec2d{region->position}};
+  auto const expected{layout.project(source.project({2,3,100}))};
+  require((local - expected).length_sq() < 1e-12,"MFD raster scaling changed camera framing");
+  require(!instrument_camera(source,settings,{20,240},{70,269}),"offscreen MFD allocated a visible target");
   image.resize(settings.resolution);paint_horizon(image,view,0);
   require(image.pixels[10] >= 240 && image.pixels.back() < 240,"wide-FOV horizon lost its sky/ground division");
   std::cout << "Variable targets, square-pixel FOV, explicit UI opacity and wide horizon passed\n";

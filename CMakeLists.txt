@@ -50,6 +50,8 @@ add_library(tfx_audio
 configure_first_party(tfx_audio)
 
 add_library(tfx_core
+  src/recording/video.cpp
+  src/recording/video.h
   src/recording/file.cpp
   src/recording/file.h
   src/recording/recorder.cpp
@@ -475,6 +477,13 @@ configure_first_party(tfx)
 include(cmake/install.cmake)
 
 if(BUILD_TESTING)
+  add_executable(redux_video_tests tests/redux_video_test.cpp)
+  target_link_libraries(redux_video_tests PRIVATE tfx_core)
+  configure_first_party(redux_video_tests)
+  add_test(NAME recording.redux_lossless_video COMMAND redux_video_tests)
+  add_executable(redux_render_benchmark tests/redux_render_benchmark.cpp)
+  target_link_libraries(redux_render_benchmark PRIVATE tfx_core)
+  configure_first_party(redux_render_benchmark)
   add_executable(redux_view_test tests/redux_view_test.cpp)
   target_link_libraries(redux_view_test PRIVATE tfx_core)
   configure_first_party(redux_view_test)

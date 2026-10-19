@@ -18,6 +18,7 @@
 #include "audio/sc55_synth.h"
 #include "platform/audio_output.h"
 #include "platform/flight.h"
+#include "platform/recording.h"
 #include "platform/presentations.h"
 #include "resources/installation.h"
 #include "world/environment.h"
@@ -52,7 +53,7 @@ auto main(int const argc, char const *const argv[])->int try {
   std::optional<unsigned int> joystick;
   std::string presentation, presentation_function, language{"english"};
   std::optional<vec2<unsigned int>> override_cell;
-  std::optional<std::filesystem::path> screenshot;
+  std::optional<std::filesystem::path> screenshot, replay;
   for(int i{1}; i != argc; ++i) {
     std::string_view const argument{argv[i]};
     auto const equals{argument.find('=')};
@@ -67,6 +68,7 @@ auto main(int const argc, char const *const argv[])->int try {
                    "Usage: tfx [--data-dir DIRECTORY] [--mission 501] [--scale N]\n"
                    "  --data-dir DIRECTORY  Original TFX 2.05 installation (DID.DAT and TFX.DAT)\n"
                    "  --mission N           Enter a mission directly instead of the original front end\n"
+                   "  --replay FILE         Play a saved flight recording; --skip-intro omits the WNN prelude\n"
                    "  --skip-intro          Start at pilot enrolment without the opening sequence\n"
                    "  --language NAME       english, french, german, italian or spanish\n"
                    "  --flight-model NAME   arcade, simple, military-spec or realistic; overrides TFX.CFG\n"
@@ -141,6 +143,7 @@ auto main(int const argc, char const *const argv[])->int try {
       language_selected = true;
       if(std::ranges::find(language_names,language) == language_names.end()) throw std::runtime_error{"unknown TFX language: " + language};
     }
+    else if(key == "--replay") replay = value();
     else if(key == "--skip-intro") skip_intro = true;
     else if(key == "--mission") {
       direct_mission = true;
@@ -233,7 +236,7 @@ auto main(int const argc, char const *const argv[])->int try {
   tfx::resources::executable_tables const tables{archive_path.parent_path() / "TFX.DAT"};
   std::unique_ptr<tfx::audio::runtime> sound;
   std::unique_ptr<tfx::platform::audio_output> output;
-  if(!screenshot && !inspect) {
+  if(!screenshot && !inspect && !replay) {
     std::unique_ptr<tfx::audio::cd_player> cd;
     if(preferences.music == 1) {
       if(cd_cue || cd_audio_directory) cd = std::make_unique<tfx::audio::cd_player>(cd_cue ? *cd_cue : *cd_audio_directory,tfx::platform::audio_output::sample_rate);
@@ -363,7 +366,16 @@ auto main(int const argc, char const *const argv[])->int try {
     .inspect{inspect},
     .video{video},
   };
-  if(direct_mission || inspect || flight_steps || flight_frames || !override_environment.empty() || !override_grid.empty()) {
+  if(replay) {
+    tfx::world::mission const selected{game,mission_name};
+    tfx::world::environment const environment{game,selected.grid_name(),selected.environment};
+    tfx::world::assets assets{game};tfx::world::scene scene{environment,assets};
+    tfx::render::software_renderer renderer{tables};tfx::platform::window window{scale,video.resolution};
+    tfx::render::dac_palette infrared{};
+    auto const colours{game.read("colours/" + environment.lighting.infrared_palette_name + ".col")};
+    std::ranges::copy(colours,infrared.begin());
+    tfx::platform::replay_recording(window,game,tables,scene,renderer,*replay,0,0,infrared,!skip_intro);
+  } else if(direct_mission || inspect || flight_steps || flight_frames || !override_environment.empty() || !override_grid.empty()) {
     auto const mission_digits{std::string_view{mission_name}.substr(std::string_view{"miss"}.size())};
     tfx::missions::variables campaign{
       {"mission",static_cast<int32_t>(number(mission_digits))},
