@@ -18,6 +18,7 @@ from window_input import move_game_pointer, confirm_flight_quit
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--build', type=Path, default=Path('build'))
 parser.add_argument('--data-dir', type=Path, required=True)
+parser.add_argument('--flight-key-hold', type=float, default=.25, help='seconds to hold polled flight keys; increase for instrumented builds')
 args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix='tfx-redux-arming-') as temporary:
     root = Path(temporary)
@@ -45,11 +46,11 @@ with tempfile.TemporaryDirectory(prefix='tfx-redux-arming-') as temporary:
         environment['ASAN_OPTIONS'] = environment.get('ASAN_OPTIONS', '') + ':detect_leaks=0'
         def run(*command):
             return subprocess.run(command, env=environment, capture_output=True, text=True, check=True, timeout=5)
-        def tap(key):
+        def tap(key, hold=.18):
             run('xdotool', 'keydown', key)
-            time.sleep(.18)
+            time.sleep(hold)
             run('xdotool', 'keyup', key)
-            time.sleep(.18)
+            time.sleep(hold)
         log = root / 'game.log'
         script = root / 'observe.gdb'
         script.write_text('''set pagination off
@@ -162,10 +163,10 @@ run
             # The existing cheat gates in-flight rearming; no debugger writes.
             run('xdotool', 'keydown', 'Shift_R')
             for key in ('p', 'l', 'o', 'p'):
-                tap(key)
+                tap(key, args.flight_key_hold)
             run('xdotool', 'keyup', 'Shift_R')
             before = frames()[-1]
-            tap('ctrl+d')
+            tap('ctrl+d', args.flight_key_hold)
             wait(lambda: 'Arming' in title(), 'developer rearming did not open')
             time.sleep(1)
             stopped = len(frames())
@@ -180,7 +181,7 @@ run
             tap('y')
             wait(lambda: len(frames()) > stopped, 'Yes did not return to flight')
             assert frames()[-1] == before, ('cancelled rearm changed inventory', before, frames()[-1])
-            tap('shift+q')
+            tap('shift+q', args.flight_key_hold)
             confirm_flight_quit(environment, window)
             game.wait(timeout=15)
             assert game.returncode == 0 and 'exited normally' in output(), output()[-5000:]
