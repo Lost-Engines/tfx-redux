@@ -58,7 +58,7 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
   double top{static_cast<double>(output.size.y)}, bottom{0};
   for(auto const &v : vertices) { top = std::min(top, v.position.y); bottom = std::max(bottom, v.position.y); }
   int const first{std::max(clipping.glyph_minimum.y, static_cast<int>(std::ceil(top - .5)))}, last{std::min(clipping.glyph_limit.y, static_cast<int>(std::ceil(bottom - .5)))};
-  std::vector<screen_vertex> hits;
+  auto &hits{scanline_hits};
   hits.reserve(vertices.size());
   int const bottom_row{static_cast<int>(std::lround(bottom))}, top_row{static_cast<int>(std::lround(top))};
   for(int y{mode == 4 ? bottom_row : last - 1}; y >= (mode == 4 ? top_row : first); --y) {
@@ -201,7 +201,8 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
     line(view.project(a.position,a.projection_scale),view.project(b.position,b.projection_scale),ink_index);
     return;
   }
-  std::vector<models::model_vertex> clipped(camera_vertices.begin(),camera_vertices.end());
+  auto clipped{camera_vertices};
+  unsigned int buffer{0};
   for(unsigned int plane{0}; plane != 6; ++plane) {
     auto const distance{[this, &view, plane](models::model_vertex const &vertex){
       auto const &v{vertex.position};
@@ -214,8 +215,14 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
       default: return -v.y + (output.size.y - view.projection_origin.y) / view.focal_distance * v.z;
       }
     }};
-    if(clipped.empty()) return;
-    std::vector<models::model_vertex> next;
+    bool inside{false}, outside{false};
+    for(auto const &vertex : clipped) {
+      if(distance(vertex) >= 0) inside = true;
+      else outside = true;
+    }
+    if(!inside) return;
+    if(!outside) continue;
+    auto &next{clip_vertices[buffer]};next.clear();next.reserve(clipped.size() + 1);
     auto previous{clipped.back()};
     auto previous_distance{distance(previous)};
     for(auto const &current : clipped) {
@@ -225,9 +232,9 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
       previous = current;
       previous_distance = current_distance;
     }
-    clipped = std::move(next);
+    clipped = next;buffer ^= 1;
   }
-  std::vector<screen_vertex> projected;
+  auto &projected{projected_vertices};projected.clear();projected.reserve(clipped.size());
   for(auto const &v : clipped) projected.push_back({
     .position{view.project(v.position,v.projection_scale)},
     .uv{vec2d{v.uv}},

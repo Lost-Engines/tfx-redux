@@ -24,6 +24,9 @@ class software_renderer {
 private:
   resources::executable_tables const &tables;
   uint16_t procedural_seed{0x4321};
+  // Reused within each synchronous draw; no allocation per polygon/scanline.
+  std::array<std::vector<models::model_vertex>,2> clip_vertices;
+  std::vector<screen_vertex> projected_vertices, scanline_hits;
   void ink(int x, int y, uint8_t colour, int mode);
   void patterned_span(int y, double left, double right, uint8_t colour, int mode, int bottom, bool inclusive, bool paint = true);
 

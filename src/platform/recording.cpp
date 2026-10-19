@@ -4,6 +4,7 @@
 #include <cmath>
 #include "presentation/player.h"
 #include "recording/playback.h"
+#include "recording/video.h"
 #include "render/horizon.h"
 #include "simulation/timing.h"
 
@@ -22,16 +23,19 @@ presentation::scene_counters counters(double const seconds) {
 void replay_recording(window &window, resources::archive const &game,
   resources::executable_tables const &tables, world::scene &scene,
   render::software_renderer &renderer, std::filesystem::path const &path,
-  int16_t const camera_y, int16_t const ground_phase, render::dac_palette const &infrared) {
-  recording::playback movie{path};
-  if(!movie.frame_count()) return;
+  int16_t const camera_y, int16_t const ground_phase, render::dac_palette const &infrared, bool const introduction) {
+  std::optional<recording::video_playback> video;
+  std::optional<recording::playback> movie;
+  if(recording::video_playback::recognises(path)) video.emplace(path);
+  else movie.emplace(path);
+  if(!(video ? video->frame_count() : movie->frame_count())) return;
   auto *const host{window.get()};
   glfwSetInputMode(host,GLFW_CURSOR,GLFW_CURSOR_HIDDEN);
   render::dac_palette palette{};
   // Native DAVE_FADE loads the first block without its own ramp. The
   // wrapper then performs one 40-retrace fade and one complete traversal.
   // Neither introduction polls the keyboard; the replay clears make codes.
-  for(auto const *name : {"wwn","prtv2"}) {
+  if(introduction) for(auto const *name : {"wwn","prtv2"}) {
     presentation::clip const clip{
       .resource{name},
       .fade_in{1},
@@ -42,7 +46,7 @@ void replay_recording(window &window, resources::archive const &game,
     presentation::sequence_controls sequence;
     double const started{glfwGetTime()};
     double next{started}, paused{0};
-    presentation::scene_player introduction{presentation::node_kind::animation,clip,
+    presentation::scene_player sequence_player{presentation::node_kind::animation,clip,
       game.read("anim/" + clip.resource + ".256"),tables.presentation_fonts(),{},
       {},palette,tables.text_palette,counters(0),input};
     window.title("TFX Redux — WNN — " + clip.resource);
@@ -57,12 +61,12 @@ void replay_recording(window &window, resources::archive const &game,
       }
       if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
       next = now + 1.0 / 70;
-      bool const complete{introduction.advance(counters(now - started - paused),input,sequence)};
-      window.present(introduction.image().colourise(introduction.colours()));
+      bool const complete{sequence_player.advance(counters(now - started - paused),input,sequence)};
+      window.present(sequence_player.image().colourise(sequence_player.colours()));
       if(complete) break;
     }
     if(glfwWindowShouldClose(host)) return;
-    palette = introduction.palette();
+    palette = sequence_player.palette();
   }
   window.title("TFX Redux — Flight recording");
   auto const colours{render::expand_dac_palette(infrared)};
@@ -91,7 +95,14 @@ void replay_recording(window &window, resources::archive const &game,
     }
     if(sample_keys()) break;
     if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
-    auto const frame{movie.next()};
+    if(video) {
+      auto const frame{video->next()};
+      if(!frame) break;
+      window.present(frame->image.colourise(render::expand_dac_palette(frame->palette)),frame->image.size);
+      next = now + std::chrono::duration<double>{frame->duration}.count();
+      continue;
+    }
+    auto const frame{movie->next()};
     if(!frame) break;
     auto const &angles{frame->data.camera_angles};
     auto const view{render::orbit_camera(angles,0,{159,99})};

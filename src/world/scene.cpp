@@ -385,9 +385,9 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       auto const geometry{models::interpret(*item.shape,context)};
       warnings.insert(geometry.warnings.begin(),geometry.warnings.end());
       ++parts_drawn;
+      std::vector<models::model_vertex> vertices;
       for(auto const &primitive : geometry.primitives) {
-        std::vector<models::model_vertex> vertices;
-        vertices.reserve(primitive.vertices.size());
+        vertices.clear();vertices.reserve(primitive.vertices.size());
         for(auto const &vertex : primitive.vertices) vertices.push_back({
           .position{native ? vec3d{vertex.position} : camera_point(vertex.position,vertex.projection_scale)},
           .uv{vec2d{vertex.uv}},
