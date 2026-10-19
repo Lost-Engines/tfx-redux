@@ -78,6 +78,7 @@ private:
   };
   std::optional<player_rendering> player_model;
   std::optional<render::camera> installed_camera;
+  double visual_lod_scale{1};
 
 public:
   std::set<std::string> warnings;
@@ -86,6 +87,7 @@ public:
   scene(environment const &terrain, assets &resources, environment const *upper = nullptr, animation_clock *retained_clock = nullptr);
   scene(scene const&) = delete;
   scene &operator=(scene const&) = delete;
+  void set_visual_lod_scale(double scale) { visual_lod_scale = scale; }
   void set_effect_sink(std::function<void(effect_record const&)> sink);
   void set_query_reference(vec3<int32_t> const *position);
   void set_carried_models(std::span<models::shape const *const> models);

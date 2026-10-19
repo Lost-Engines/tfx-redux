@@ -90,7 +90,7 @@ bool paint_model_primitive(framebuffer &output, models::primitive const &source,
     if(!inside) return true;
     for(unsigned int y{0}; y != source.pixel_size; ++y) for(unsigned int x{0}; x != source.pixel_size; ++x) {
       int const at{(point->y + static_cast<int>(y)) * screen_width + point->x + static_cast<int>(x)};
-      if(at >= 0 && at < static_cast<int>(output.pixels.size())) output.pixels[static_cast<unsigned int>(at)] = ink;
+      if(at >= 0 && at < static_cast<int>(output.pixels.size())) output.write(static_cast<unsigned int>(at),ink);
     }
     return true;
   }

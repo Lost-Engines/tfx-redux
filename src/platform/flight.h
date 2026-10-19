@@ -17,6 +17,7 @@
 #include "world/sky.h"
 #include "render/horizon.h"
 #include "render/precipitation.h"
+#include "render/view_settings.h"
 #include "weapons/loadout.h"
 
 namespace tfx::platform {
@@ -51,8 +52,9 @@ struct flight_options {
   math::random_state &session_random;
   audio::runtime *sound{nullptr};
   bool inspect{false};
+  render::view_settings video{};
 };
-enum class flight_result { finished, quit, enrol };
+enum class flight_result { finished, quit, enrol, cancelled };
 // FINISH resumes the authored campaign; the settings dialog can return to enrolment.
 flight_result fly_mission(resources::archive const &game, resources::executable_tables const &tables,
   flight_options const &options, missions::variables &campaign, window *shared_window = nullptr);

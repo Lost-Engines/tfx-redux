@@ -1,5 +1,10 @@
 # Native reference verification
 
+This records the TFX C++ baseline inherited by Redux. Rendering now intentionally
+differs; see the [Redux changes and checks](../README.md#redux-improvements).
+The original-code pixel comparisons below apply to the baseline, not the new
+resolution-independent renderer.
+
 Current coverage: 19 October 2026, reference **TFX 2.05, September 1994 CD**.
 This is the current coverage summary. [Implementation notes](implementation.md)
 retain the chronological research and reproducible subsystem checks; their

@@ -5,7 +5,7 @@
 
 namespace tfx::presentation {
 
-enum class arming_mode { idle, rotating, placing, clearing, overview, unavailable, scrolling, complete, mission_incomplete };
+enum class arming_mode { idle, rotating, placing, clearing, overview, unavailable, scrolling, complete, mission_incomplete, confirm_return, cancelled };
 struct arming_state {
   arming_mode mode{arming_mode::idle};
   unsigned int first_store{1};
@@ -19,6 +19,7 @@ private:
   weapons::armament &inventory;
   arming_assets const &assets;
   unsigned int default_fit;
+  arming_entry entry;
   arming_state current;
   std::array<bool,flight::store_slots> preview_slots{};
   bool held{false};

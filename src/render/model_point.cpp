@@ -7,8 +7,8 @@ bool model_point(framebuffer &output, vec3<int32_t> const &camera_origin, camera
   int32_t const depth{camera_origin.z >> 16};
   int16_t constexpr near_depth{16};
   if(depth <= near_depth) return true;
-  // These distant-point handlers retain SAR 8 even in the missile-nose view.
-  unsigned int constexpr shift{8};
+  // Redux uses the same aperture for distant points and polygon models.
+  unsigned int const shift{projection_shift(view.opening)};
   vec2<int32_t> const quotient{(camera_origin.x >> shift) / depth,(camera_origin.y >> shift) / depth};
   if(quotient.x < std::numeric_limits<int16_t>::min() || quotient.x > std::numeric_limits<int16_t>::max() || quotient.y < std::numeric_limits<int16_t>::min() || quotient.y > std::numeric_limits<int16_t>::max()) return false;
   vec2<int16_t> const point{
@@ -17,10 +17,10 @@ bool model_point(framebuffer &output, vec3<int32_t> const &camera_origin, camera
   };
   if(point.x < view.viewport_minimum.x || point.x > view.viewport_maximum.x || point.y < view.viewport_minimum.y || point.y > view.viewport_maximum.y) return true;
   for(unsigned int y{0}; y != pixel_size; ++y) for(unsigned int x{0}; x != pixel_size; ++x) {
-    // The native two-pixel callback clips its anchor only. A right-edge second
-    // pixel can therefore wrap to the following VGA row; retain linear writes.
-    int const offset{(point.y + static_cast<int>(y)) * screen_width + point.x + static_cast<int>(x)};
-    if(offset >= 0 && offset < static_cast<int>(output.pixels.size())) output.pixels[static_cast<unsigned int>(offset)] = colour;
+    // Clip the complete block: the original clips only its anchor, allowing
+    // a right-edge second pixel to wrap into the following VGA row.
+    int const offset{(point.y + static_cast<int>(y)) * output.size.x + point.x + static_cast<int>(x)};
+    if(point.x + static_cast<int>(x) < output.size.x && point.y + static_cast<int>(y) < output.size.y && offset >= 0 && offset < static_cast<int>(output.pixels.size())) output.write(static_cast<unsigned int>(offset),colour);
   }
   return true;
 }

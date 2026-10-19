@@ -31,7 +31,7 @@ void draw_sprite(framebuffer &target, resources::indexed_image const &image, vec
       auto const pixel{image.pixels.at(source)};
       if(!pixel) continue;
       auto const destination{static_cast<unsigned int>(y * screen_width + x)};
-      target.pixels[destination] = pixel;
+      target.write(destination,pixel);
       if(coverage) coverage->pixels[destination] = 255;
     }
   }
@@ -46,7 +46,7 @@ void draw_monochrome(framebuffer &target, resources::monochrome_image const &ima
       unsigned int const column{static_cast<unsigned int>(x - origin.x)}, row{static_cast<unsigned int>(y - origin.y)};
       if(!(image.rows.at(row * stride + column / 8) & (128u >> (column % 8)))) continue;
       auto const destination{static_cast<unsigned int>(y * screen_width + x)};
-      target.pixels[destination] = colour;
+      target.write(destination,colour);
       if(coverage) coverage->pixels[destination] = 255;
     }
   }

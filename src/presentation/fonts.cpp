@@ -149,7 +149,7 @@ void fonts::draw(render::framebuffer &target, font_id const style, vec2<int> con
       int const px{x + glyph.offset.x + static_cast<int>(column)}, py{position.y + glyph.offset.y + static_cast<int>(row)};
       if(px < 0 || px >= render::screen_width || py < 0 || py >= render::screen_height) continue;
       auto const index{static_cast<unsigned int>(py * render::screen_width + px)};
-      target.pixels[index] = colour;
+      target.write(index,colour);
       if(coverage) coverage->pixels[index] = 255;
     }
     // The fixed eight-pixel renderer special-cases a following uppercase I as a four-pixel cell.
@@ -168,7 +168,7 @@ void fonts::draw_driver(render::framebuffer &target, vec2<int> const &position, 
       int const px{x + static_cast<int>(column)}, py{position.y + static_cast<int>(row)};
       if(px < 0 || px >= render::screen_width || py < 0 || py >= render::screen_height) continue;
       auto const index{static_cast<unsigned int>(py * render::screen_width + px)};
-      target.pixels[index] = colour;
+      target.write(index,colour);
       if(coverage) coverage->pixels[index] = 255;
     }
     x += static_cast<int>(driver_advance);

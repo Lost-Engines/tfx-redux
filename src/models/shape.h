@@ -89,6 +89,7 @@ struct shape_context {
   bool facing{true};
   std::optional<shape_camera> camera{};
   std::function<vec2d(vec3d const&, double)> project{};
+  std::function<double(vec3d const&)> camera_depth{};
   std::function<std::optional<bool>(std::span<model_vertex const>,facing_test)> face_visibility{};
   math::jitter_state *jitter{nullptr};
   std::span<shape const *const> attachments{};

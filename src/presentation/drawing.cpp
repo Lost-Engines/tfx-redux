@@ -10,7 +10,7 @@ void draw_line(render::framebuffer &image, vec2<int> from, vec2<int> const &to, 
   if(from.x > to.x) { draw_line(image,vec2<int>{to},from,colour);return; }
   int const dx{to.x - from.x}, dy{std::abs(to.y - from.y)}, direction{from.y <= to.y ? 1 : -1};
   auto const pixel{[&] {
-    if(from.x >= 0 && from.x < render::screen_width && from.y >= 0 && from.y < render::screen_height) image.pixels[from.y * render::screen_width + from.x] = colour;
+    if(from.x >= 0 && from.x < render::screen_width && from.y >= 0 && from.y < render::screen_height) image.write(from.y * render::screen_width + from.x,colour);
   }};
   int error{std::max(dx,dy) / 2};
   for(int step{0}; step <= std::max(dx,dy); ++step) {
@@ -63,7 +63,7 @@ void draw_patterned_line(render::framebuffer &image, vec2<int> from, vec2<int> t
   int error{std::max(dx,dy) / 2};
   for(int step{0}; step <= std::max(dx,dy); ++step) {
     // The X-major loop paints its final endpoint regardless of the pattern.
-    if((pattern & 128) || (dx > dy && step == dx)) image.pixels[from.y * render::screen_width + from.x] = colour;
+    if((pattern & 128) || (dx > dy && step == dx)) image.write(from.y * render::screen_width + from.x,colour);
     rotate(1);
     if(dx > dy) { ++from.x;error -= dy;if(error < 0) { from.y += direction;error += dx; } }
     else { from.y += direction;error -= dx;if(error < 0) { ++from.x;error += dy; } }
@@ -84,7 +84,7 @@ unsigned int draw_partial_line(render::framebuffer &image, vec2<int> from, vec2<
   int const direction{to[axis] >= from[axis] ? 1 : -1};
   for(unsigned int step{0}; step != visible; ++step) {
     from[1 - axis] = minor >> 16;
-    image.pixels[from.y * render::screen_width + from.x] = colour;
+    image.write(from.y * render::screen_width + from.x,colour);
     from[axis] += direction;
     minor += slope;
   }

@@ -14,6 +14,12 @@ std::optional<vec2<int16_t>> point_projection::project(vec3<int32_t> const &came
   int constexpr minimum_depth{16}, maximum_depth{20000};
   int32_t const depth{camera_point.z >> 16};
   if(depth < minimum_depth || depth > maximum_depth) return std::nullopt;
+  if(focal_distance) {
+    double const z{camera_point.z / 65536.0};
+    vec2d const projected{origin.x + camera_point.x / 65536.0 * *focal_distance / z,origin.y + camera_point.y / 65536.0 * *focal_distance / z};
+    if(projected.x < -32768 || projected.x > 32767 || projected.y < -32768 || projected.y > 32767) return std::nullopt;
+    return vec2<int16_t>{projected};
+  }
   auto const reciprocal{static_cast<int32_t>((uint64_t{1} << 32) / static_cast<uint32_t>(depth))};
   auto const coordinate{[&](int32_t const value, int16_t const offset) {
     auto const high{(static_cast<int64_t>(value >> 8) * reciprocal) >> 32};

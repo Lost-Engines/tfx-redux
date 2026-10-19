@@ -11,6 +11,7 @@ struct attitude_display_state {
   vec2<math::angle> projection_angles{0,0};
   vec2<int16_t> projection_origin{159,56};
   vec2<int16_t> offset{0,0};
+  double focal_distance{render::projection_focal_length(render::aperture::normal)};
 };
 class attitude_display {
 private:

@@ -22,7 +22,7 @@ void menu_player::compose(vec2<int16_t> const &position, bool const pointer_visi
     auto const rectangle{[&](int const offset, uint8_t const colour) {
       int const left{choice.minimum.x + offset}, right{choice.maximum.x + offset}, top{choice.minimum.y + offset}, bottom{choice.maximum.y + offset};
       auto const pixel{[&](int const x, int const y) {
-        if(x >= 0 && x < render::screen_width && y >= 0 && y < render::screen_height) display.pixels[static_cast<unsigned int>(y * render::screen_width + x)] = colour;
+        if(x >= 0 && x < render::screen_width && y >= 0 && y < render::screen_height) display.write(static_cast<unsigned int>(y * render::screen_width + x),colour);
       }};
       for(int x{std::max(0,left)}; x <= std::min(render::screen_width - 1,right); ++x) { pixel(x,top);pixel(x,bottom); }
       for(int y{std::max(0,top)}; y <= std::min(render::screen_height - 1,bottom); ++y) { pixel(left,y);pixel(right,y); }

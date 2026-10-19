@@ -28,6 +28,8 @@ public:
   arming_preview &operator=(arming_preview const&) = delete;
   static vec3<int16_t> pointer_point(vec2<int16_t> const &position);
   std::optional<unsigned int> pick(vec3<int16_t> const &previous, vec3<int16_t> const &current);
+  static vec3<int16_t> cursor_point(vec2<int16_t> const &position, arming_state const &state);
+  std::optional<unsigned int> pick_cursor(vec2<int16_t> const &position, arming_state const &state);
   void start();
   void advance();
   uint8_t bay_position() const;

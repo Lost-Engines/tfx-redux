@@ -56,7 +56,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-audio-menu-') as temporary:
    game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501','--music','cd','--cd-audio-dir',str(tracks),'--scale','2'],env=env,cwd=root,stdout=logging,stderr=subprocess.STDOUT)
    deadline=time.monotonic()+30;window=None
    while time.monotonic()<deadline and game.poll() is None:
-    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True).stdout.splitlines()
+    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True).stdout.splitlines()
     if found and 'PCM output:' in log.read_text():window=found[0];break
     time.sleep(.05)
    assert window,log.read_text()

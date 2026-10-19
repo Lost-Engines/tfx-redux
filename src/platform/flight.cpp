@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <format>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <ranges>
 #include <stdexcept>
@@ -150,7 +151,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto const &override_grid{options.grid};
   auto const &override_cell{options.cell};
   auto const &screenshot{options.screenshot};
-  unsigned int const scene_radius{options.inspect ? options.scene_radius : tfx::world::terrain_neighbourhood_width / 2u};
+  unsigned int constexpr original_draw_radius{tfx::world::terrain_neighbourhood_width / 2u};
+  unsigned int const scene_radius{options.inspect && options.scene_radius != 6 ? options.scene_radius : options.video.draw_distance};
   auto const scale{options.scale}, frame_limit{options.frame_limit}, flight_steps{options.flight_steps}, flight_frames{options.flight_frames};
   bool inspect{options.inspect};
   tfx::world::mission const selected{game,mission_name};
@@ -185,7 +187,11 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto &sky_state{options.sky};
   auto &ground_phase{options.ground_phase};
   bool sky_animation{false};
-  tfx::render::software_renderer renderer{tables}, camera_renderer{tables};
+  tfx::render::software_renderer renderer{tables}, camera_renderer{tables}, world_renderer{tables};
+  world_renderer.output.resize(options.video.resolution);
+  tfx::render::framebuffer display_frame;
+  display_frame.resize(options.video.resolution);
+  scene.set_visual_lod_scale(options.video.lod_scale);
   tfx::render::display_pages frame_pages;
   tfx::missions::timeline mission_time{mission_setup};
   tfx::missions::progress mission_progress{mission_setup};
@@ -283,7 +289,9 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   inventory_handoff const remember_inventory{inspect ? nullptr : &options.launch_inventory,armament};
   armament.fit_default(mission_setup.weapons);
   if(frontend_flight && !inspect && !mission_setup.default_weapons) {
-    if(!arm_mission(*shared_window,game,tables,armament,mission_setup.aircraft,mission_setup.weapons)) return flight_result::quit;
+    auto const result{arm_mission(*shared_window,game,tables,armament,mission_setup.aircraft,mission_setup.weapons)};
+    if(result == arming_result::closed) return flight_result::quit;
+    if(result == arming_result::cancelled) return flight_result::cancelled;
   }
   if(frontend_flight && !inspect && !show_loading_screen(*shared_window,game)) return flight_result::quit;
   if(!mission_setup.default_weapons) {
@@ -841,11 +849,11 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       scene.show_actor(*air_visuals[index],
         !(actor->flight.pose.flags & std::to_underlying(tfx::actors::air_flag::retired))
         && actor->actions != std::to_underlying(tfx::actors::air_action::retire_crashed)
-        && tfx::actors::aircraft_in_draw_region(actor->flight.pose.position,reference));
+        && (options.video.lod_scale == 0 || scene_radius == 0 || scene_radius > original_draw_radius || tfx::actors::aircraft_in_draw_region(actor->flight.pose.position,reference)));
     }
     for(auto const &actor : surface_actors) scene.show_actor(actor.visual,
       !(actor.state.pose.flags & std::to_underlying(tfx::actors::surface_flag::retired))
-      && tfx::actors::surface_in_draw_region(actor.state.pose.position,reference));
+      && (options.video.lod_scale == 0 || scene_radius == 0 || scene_radius > original_draw_radius || tfx::actors::surface_in_draw_region(actor.state.pose.position,reference)));
   }};
   tfx::cockpit::hud instruments{tables.instruments(),game,tables.weapons,environment.lighting.schematic_name};
   tfx::cockpit::scene_displays scene_displays{tables.instruments()};
@@ -1403,7 +1411,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       else {
         if(!active_window) throw std::runtime_error{"ground rearming requires a window for the original arming screen"};
         glfwSetInputMode(active_window->get(),GLFW_CURSOR,GLFW_CURSOR_NORMAL);
-        if(!arm_mission(*active_window,game,tables,armament,player.aircraft,mission_setup.weapons,tfx::presentation::arming_entry::mission_incomplete)) return;
+        if(arm_mission(*active_window,game,tables,armament,player.aircraft,mission_setup.weapons,tfx::presentation::arming_entry::mission_incomplete) == arming_result::closed) return;
         auto const &thumbnail{tables.arming_art().rows.back()};
         options.projection_origin = (thumbnail.minimum + thumbnail.maximum) / int16_t{2};
         service_modal_closed = true;
@@ -1776,7 +1784,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       scene_displays.draw(renderer,side,page,display.offset,camera_state,[&](tfx::cockpit::scene_camera_request const &request) {
         if(request.minimum.y >= tfx::render::screen_height) return vec2<int16_t>{0,0};
         auto camera{request.view()};
-        camera.far_distance = scene_radius * tfx::world::cell_units;
+        camera.far_distance = original_draw_radius * tfx::world::cell_units;
         tfx::render::paint_horizon(camera_renderer.output,{
           .pitch{request.angles.x},
           .roll{request.angles.z},
@@ -1789,7 +1797,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         queue_projectiles(request.position);
         select_actor_draw_region(request.position);
         options.projection_origin = vec2<int16_t>{camera.projection_origin};
-        auto const rendered{scene.draw(camera_renderer,camera,scene_radius,[&] { queue_effects(camera); },request.position.y,ground.height,tfx::world::scene_pass::instrument)};
+        auto const rendered{scene.draw(camera_renderer,camera,original_draw_radius,[&] { queue_effects(camera); },request.position.y,ground.height,tfx::world::scene_pass::instrument)};
         clean_trails();
         if(rendered.eject_player) ejection.request();
         // The current world painter renders a whole software target; copy its viewport
@@ -1798,7 +1806,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         int const bottom{std::min(tfx::render::screen_height - 1,request.maximum.y - 1)};
         for(int y{std::max(0,top)}; y <= bottom; ++y) for(int x{std::max(0,request.minimum.x)}; x <= std::min(tfx::render::screen_width - 1,request.maximum.x); ++x) {
           unsigned int const pixel{static_cast<unsigned int>(y * tfx::render::screen_width + x)};
-          renderer.output.pixels[pixel] = camera_renderer.output.pixels[pixel];
+          renderer.output.write(pixel,camera_renderer.output.pixels[pixel]);
         }
         renderer.clipping = tfx::render::raster_clip::viewport({0,0},{tfx::render::screen_width - 1,tfx::render::screen_height - 1});
         if(!request.tracked_position) return vec2<int16_t>{0,0};
@@ -1860,6 +1868,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         .projection_angles{static_cast<tfx::math::angle>(-player.angles.x),static_cast<tfx::math::angle>(-player.angles.z)},
         .projection_origin{static_cast<int16_t>(view.projection_origin.x),static_cast<int16_t>(view.projection_origin.y)},
         .offset{vec2<int16_t>{offset}},
+        .focal_distance{view.point_focal_distance.value_or(view.focal_distance)},
       },
       .flight{
         .height{player.position.y},
@@ -1916,6 +1925,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       .matrix{mat3<int32_t>{pose.matrix}},
       .position_q16{vec3<int32_t>{pose.position_q16}},
       .origin{static_cast<int16_t>(view.projection_origin.x),static_cast<int16_t>(view.projection_origin.y)},
+      .focal_distance{view.point_focal_distance},
     };
     if(!mission_setup.targets.empty()) {
       auto const &target{mission_setup.targets[ground_target_page].position};
@@ -1966,6 +1976,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(paused && !inspect) {
       renderer.output = flight_frame;
       renderer.text(140,80,"PAUSED",15);
+      tfx::render::composite_interface(display_frame,renderer.output);
       return;
     }
     if(!inspect) frame_pages.begin_frame(renderer.output);
@@ -2047,7 +2058,30 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       tfx::recording::scene_frame recording_frame;
       recording_frame.data.camera_angles = vec3<tfx::math::angle>{view.view_angles};
       std::function<void()> const effects{primary ? std::function<void()>{[&] { queue_effects(view); }} : std::function<void()>{}};
-      auto const rendered{scene.draw(renderer,view,scene_radius,effects,inspect ? std::nullopt : std::optional<int32_t>{reference.y},ground.height,primary ? tfx::world::scene_pass::primary : tfx::world::scene_pass::instrument,primary && flight_recorder.active() ? &recording_frame : nullptr)};
+      auto render_view{tfx::render::scene_camera(view,options.video)};
+      if(flight_recorder.active()) {
+        render_view = view;
+        render_view.projection = tfx::render::projection_mode::original_model;
+        render_view.focal_distance = tfx::render::projection_focal_length(view.opening);
+        render_view.far_distance = original_draw_radius * tfx::world::cell_units;
+      }
+      scene.set_visual_lod_scale(flight_recorder.active() ? 1 : options.video.lod_scale);
+      if(flight_recorder.active()) {
+        tfx::render::framebuffer native_horizon;
+        tfx::render::paint_horizon(native_horizon,{
+          .pitch{view.view_angles.x},
+          .roll{view.view_angles.z},
+          .camera_y{static_cast<int16_t>(view.position.y)},
+          .ground_phase{ground_phase.sample()},
+          .maximum{vec2<int16_t>{view.viewport_maximum}},
+          .origin_y{static_cast<int16_t>(view.projection_origin.y)},
+          .projection_shift{tfx::render::projection_shift(view.opening),tfx::render::projection_shift(view.opening)},
+        });
+        world_renderer.output = tfx::render::scale_image(native_horizon,options.video.resolution);
+      } else tfx::render::paint_horizon(world_renderer.output,render_view,ground_phase.sample());
+      world_renderer.clipping = tfx::render::raster_clip::viewport({0,0},vec2<int>{render_view.viewport_maximum});
+      if(flight_recorder.active()) world_renderer.clipping = tfx::render::raster_clip::viewport({0,0},{options.video.resolution.x - 1,options.video.resolution.y - 1});
+      auto const rendered{scene.draw(world_renderer,render_view,flight_recorder.active() ? original_draw_radius : scene_radius,effects,inspect ? std::nullopt : std::optional<int32_t>{reference.y},ground.height,primary ? tfx::world::scene_pass::primary : tfx::world::scene_pass::instrument,primary && flight_recorder.active() ? &recording_frame : nullptr)};
       if(primary) {
         clean_trails();
         if(flight_recorder.active()) {
@@ -2114,11 +2148,13 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(!inspect) {
       auto const &layout{tables.instruments().viewports[view_index()]};
       view.viewport_maximum = {tfx::render::screen_width - 1,static_cast<int16_t>(layout.bottom + (layout.panel.empty() ? 0 : cockpit_position.value().y))};
-      auto const projected_view{view.projector()};
-      impact_projection.emplace(projected_view);
+      tfx::render::interface_layout const interface{options.video.resolution};
+      auto const actual_view{tfx::render::scene_camera(view,options.video)};
+      view.point_focal_distance = flight_recorder.active() ? view.focal_distance : actual_view.focal_distance / interface.scale;
+      impact_projection.emplace(view.projector());
       if(!designator_view) prepare_lighting(view);
     }
-    view.far_distance = scene_radius * tfx::world::cell_units;
+    view.far_distance = scene_radius ? scene_radius * tfx::world::cell_units : std::numeric_limits<double>::infinity();
     if(inspect) renderer.background(view,0,32);
     else if(designator_view || view_motion.last_pose().horizon_angles) {
       auto const angles{designator_view ? vec2<tfx::math::angle>{static_cast<tfx::math::angle>(-designator.pitch),0} : vec2<tfx::math::angle>{*view_motion.last_pose().horizon_angles}};
@@ -2139,6 +2175,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(!inspect && !designator_view) advance_air_tracking(*impact_projection);
     vec3<int32_t> const draw_reference{inspect ? vec3<int32_t>{view.position} : designator_view ? vec3<int32_t>{designator.camera} : vec3<int32_t>{view_motion.last_pose().anchor}};
     paint_scene(view,draw_reference,!designator_view);
+    renderer.output.pixels.fill(0);
+    renderer.output.track_writes();
     if(!designator_view) paint_precipitation(view);
     if(!inspect && result_evaluated) {
       // Diagnostic result display until the original presentation/menu graph supplies its result page.
@@ -2157,8 +2195,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       // They neither draw nor advance the retained radio ticker.
       auto const radio_window{!callback || designator_view || callback == 0x80704 || hide_external_information ? std::optional<std::string>{} : radio.advance(launch_elapsed,acceleration.active)};
       auto const paint_cockpit{[&] {
-        bool const refresh{frame_pages.refresh_panel(physical_player.powerplant.afterburner_control,requested_offset_y)};
-        cockpit_frame.paint(renderer.output,view_index(),cockpit_position.value(),nullptr,refresh ? cockpit::panel_copy::refresh : cockpit::panel_copy::preserve);
+        frame_pages.refresh_panel(physical_player.powerplant.afterburner_control,requested_offset_y);
+        cockpit_frame.paint(renderer.output,view_index(),cockpit_position.value(),nullptr,cockpit::panel_copy::refresh);
       }};
       if(!designator_view && view_index() == tfx::cockpit::forward_cockpit) {
         paint_cockpit();
@@ -2193,6 +2231,9 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       physical_player.powerplant.afterburner_control = views.value().redraw;
     }
     if(!inspect) frame_pages.finish_frame(renderer.output);
+    display_frame = world_renderer.output;
+    if(result_evaluated) display_frame = tfx::render::scale_image(renderer.output,options.video.resolution);
+    else tfx::render::composite_interface(display_frame,renderer.output);
   }};
   // A diagnostic still/inspector can draw an unadvanced scene. Ordinary
   // flight first advances the simulation, then consumes camera/HUD/SSD state.
@@ -2215,16 +2256,16 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(scene.warnings.size() > 6) std::cerr << "Preview notes: " << scene.warnings.size() << " distinct limitations; this is a flight-integration build" << std::endl;
   }
   if(screenshot) {
-    renderer.output.screenshot(*screenshot,*frame_colours);
+    display_frame.screenshot(*screenshot,*frame_colours);
     std::cout << "Scene screenshot: " << *screenshot << std::endl;
     return flight_result::finished;
   }
   std::unique_ptr<tfx::platform::window> owned_window;
-  if(!shared_window) owned_window = std::make_unique<tfx::platform::window>(scale);
+  if(!shared_window) owned_window = std::make_unique<tfx::platform::window>(scale,options.video.resolution);
   auto &window{shared_window ? *shared_window : *owned_window};
   active_window = &window;
   // Wayland maps the window after its first buffer: present before waiting for focus.
-  window.present(renderer.output.colourise(*frame_colours));
+  window.present(display_frame.colourise(*frame_colours),display_frame.size);
   auto *const host{window.get()};
   std::optional<int> joystick;
   tfx::flight::joystick_buttons stick_buttons;
@@ -2296,7 +2337,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(result_evaluated && (pressed(GLFW_KEY_ENTER) || pressed(GLFW_KEY_KP_ENTER))) break;
     if(!inspect && pressed(GLFW_KEY_4)) {
       try {
-        auto const path{save_screenshot(options.data_directory,renderer.output,palette_selection.value().infrared ? infrared_dac : palette_lighting.colours())};
+        auto const path{save_screenshot(options.data_directory,display_frame,palette_selection.value().infrared ? infrared_dac : palette_lighting.colours())};
         std::cout << "Screenshot: " << path << '\n';
       } catch(std::exception const &error) {
         std::cerr << "Cannot save screenshot: " << error.what() << '\n';
@@ -2356,7 +2397,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         show_tactical_map(window,tactical_map,state,map_colours);
       } else if(rearm_prompt) {
         glfwSetInputMode(host,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
-        if(!arm_mission(window,game,tables,armament,player.aircraft,mission_setup.weapons)) break;
+        if(arm_mission(window,game,tables,armament,player.aircraft,mission_setup.weapons,tfx::presentation::arming_entry::rearming) == arming_result::closed) break;
         auto const &last_thumbnail{tables.arming_art().rows.back()};
         options.projection_origin = (last_thumbnail.minimum + last_thumbnail.maximum) / int16_t{2};
         reset_weapon_targets();
@@ -2886,7 +2927,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }
     if(paused || result_evaluated) glfwWaitEventsTimeout(.01);
     draw();
-    window.present(renderer.output.colourise(*frame_colours));
+    window.present(display_frame.colourise(*frame_colours),display_frame.size);
     if(frame_ticks) {
       finish_world(*frame_ticks);
       projectiles.finish_frame();
@@ -2895,7 +2936,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     ++frames;
     ++interval_frames;
     if(now - title_time >= .5) {
-      window.title(std::string{inspect ? "TFX C++ — scene inspection — " : "TFX C++ — " + std::string{simple_mode ? "Simple" : arcade_mode ? "Arcade" : preferences.model == simulation::flight_model::realistic ? "Realistic" : "Military-spec"} + " flight — "} + mission_name + " / " + environment.name + " / " + environment.lighting_name + " — " + std::to_string(static_cast<int>(interval_frames / (now - title_time))) + " fps");
+      window.title(std::string{inspect ? "TFX Redux — scene inspection — " : "TFX Redux — " + std::string{simple_mode ? "Simple" : arcade_mode ? "Arcade" : preferences.model == simulation::flight_model::realistic ? "Realistic" : "Military-spec"} + " flight — "} + mission_name + " / " + environment.name + " / " + environment.lighting_name + " — " + std::to_string(static_cast<int>(interval_frames / (now - title_time))) + " fps");
       title_time = now;
       interval_frames = 0;
     }

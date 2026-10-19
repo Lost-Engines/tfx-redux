@@ -49,7 +49,7 @@ bool show_loading_screen(window &window, resources::archive const &game) {
   std::ranges::copy(std::span{bytes}.subspan(4,palette.size()),palette.begin());
   unsigned int constexpr fade_stages{40};
   double constexpr retrace_hz{70};
-  window.title("TFX C++ — Loading");
+  window.title("TFX Redux — Loading");
   double next{glfwGetTime()};
   for(unsigned int level{1}; level <= fade_stages; ++level) {
     for(;;) {
@@ -103,6 +103,7 @@ void play_game(resources::archive const &game, resources::executable_tables cons
         glfwSetWindowUserPointer(window->get(),&controls);
         glfwSetKeyCallback(window->get(),frontend_keys::key);
         controls.input = {};
+        if(completed == flight_result::cancelled) { frontend.cancel_launch();return; }
         if(completed == flight_result::enrol) { frontend.return_to_enrolment();return; }
         if(completed == flight_result::quit) { finished = true;return; }
         for(auto const &[name,value] : campaign) frontend.values()[name] = std::bit_cast<uint32_t>(value);
@@ -117,7 +118,7 @@ void play_game(resources::archive const &game, resources::executable_tables cons
     frontend.image().screenshot(*options.screenshot,frontend.colours());
     return;
   }
-  window window{options.scale};
+  window window{options.scale,options.video.resolution};
   auto *const host{window.get()};
   glfwSetWindowUserPointer(host,&controls);
   glfwSetKeyCallback(host,frontend_keys::key);
@@ -141,7 +142,7 @@ void play_game(resources::archive const &game, resources::executable_tables cons
     controls.input.mouse_buttons = static_cast<uint8_t>((glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0));
     glfwSetInputMode(host,GLFW_CURSOR,frontend.pointer_visible() ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
     step(now - started,window.cursor_position(),&window);
-    window.title("TFX C++ — " + frontend.function_name());
+    window.title("TFX Redux — " + frontend.function_name());
     window.present(frontend.image().colourise(frontend.colours()));
     if(options.frame_limit && ++frames >= options.frame_limit) break;
   }
@@ -235,7 +236,7 @@ void play_presentation(resources::archive const &game, resources::executable_tab
     controls.input.mouse_buttons = static_cast<uint8_t>((glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0));
     glfwSetInputMode(host,GLFW_CURSOR,menu ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
     step(now - started,window.cursor_position());
-    window.title("TFX C++ — " + name + " / " + (session ? session->function_name() : std::string{"menu"}));
+    window.title("TFX Redux — " + name + " / " + (session ? session->function_name() : std::string{"menu"}));
     window.present(display.colourise(colours));
     if(frame_limit && ++frames >= frame_limit) break;
   }

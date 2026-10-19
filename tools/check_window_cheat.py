@@ -55,7 +55,7 @@ run
      time.sleep(.03)
     raise RuntimeError('missing cheat frame '+str(value)+'\n'+output()[-5000:])
    await_frame(0,0)
-   window=run('xdotool','search','--onlyvisible','--name','TFX C').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
+   window=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
    for enabled in (1,0):
     run('xdotool','keydown','Shift_R');before=len(frames());tap('p');await_frame(1-enabled,before)
     for key in ('l','o','p'):tap(key)

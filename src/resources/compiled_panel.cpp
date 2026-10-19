@@ -6,7 +6,7 @@
 namespace tfx::resources {
 
 void screen_overlay::paint(render::framebuffer &target) const {
-  for(unsigned int pixel{0}; pixel != target.pixels.size(); ++pixel) if(coverage.pixels[pixel]) target.pixels[pixel] = image.pixels[pixel];
+  for(unsigned int pixel{0}; pixel != target.pixels.size(); ++pixel) if(coverage.pixels[pixel]) target.write(pixel,image.pixels[pixel]);
 }
 screen_overlay decode_planner_panel(std::span<uint8_t const> const executable) {
   binary_view const source{executable};
@@ -21,7 +21,7 @@ screen_overlay decode_planner_panel(std::span<uint8_t const> const executable) {
   auto const write{[&](unsigned int const at, uint8_t const value) {
     if(at >= plane_pixels) throw std::runtime_error{"compiled panel writes outside its image"};
     for(unsigned int plane{0}; plane != 4; ++plane) if(enabled_planes & (1u << plane)) {
-      result.image.pixels[at * 4 + plane] = value;
+      result.image.write(at * 4 + plane,value);
       result.coverage.pixels[at * 4 + plane] = 255;
     }
   }};

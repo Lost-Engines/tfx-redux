@@ -30,7 +30,7 @@ void moving_map::draw(render::software_renderer &renderer, map_state const &stat
   renderer.clipping = render::raster_clip::viewport(clipped_low,clipped_high);
   for(int y{clipped_low.y}; y <= clipped_high.y; ++y) for(int x{std::max(0,low.x)}; x <= std::min(render::screen_width - 1,high.x); ++x) {
     auto const index{static_cast<unsigned int>(y * render::screen_width + x)};
-    renderer.output.pixels[index] = 128;
+    renderer.output.write(index,128);
     if(coverage) coverage->pixels[index] = 255;
   }
   vec2<int> const player_cell{state.player.x / world::cell_units,state.player.z / world::cell_units};
@@ -54,7 +54,7 @@ void moving_map::draw(render::software_renderer &renderer, map_state const &stat
     if(pixel.x <= low.x || pixel.x >= high.x || pixel.y <= low.y || pixel.y >= high.y || pixel.y < 0 || pixel.y >= render::screen_height - 1) return;
     if(pixel.x < 0 || pixel.x >= render::screen_width) return;
     auto const index{static_cast<unsigned int>(pixel.y * render::screen_width + pixel.x)};
-    renderer.output.pixels[index] = colour;
+    renderer.output.write(index,colour);
     if(coverage) coverage->pixels[index] = 255;
   }};
   auto const aircraft{[&](std::span<vec3<int32_t> const> const contacts, uint8_t const colour) {

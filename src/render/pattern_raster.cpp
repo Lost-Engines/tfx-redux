@@ -6,21 +6,22 @@
 namespace tfx::render {
 
 void pattern_pixel(framebuffer &output, int const x, int const y, uint8_t const colour, int const mode) {
-  if(x < 0 || y < 0 || x >= screen_width || y >= screen_height) return;
+  if(x < 0 || y < 0 || x >= output.size.x || y >= output.size.y) return;
   if(mode == 0 && ((x + y) & 1) == 0) return;
   if(mode == 1 && (x & 3) != (y & 1 ? 3 : 1)) return;
   if(mode == 7 && (y & 1)) return;
-  auto &destination{output.pixels[static_cast<unsigned int>(y * screen_width + x)]};
+  auto &destination{output.pixels[static_cast<unsigned int>(y * output.size.x + x)]};
   if(mode == 10) destination ^= colour;
   else if(mode == 11) destination &= colour;
   else if(mode == 12) destination |= colour;
   else destination = colour;
+  if(!output.coverage.empty()) output.coverage[static_cast<size_t>(y * output.size.x + x)] = 255;
 }
 
 
 void pattern_span(framebuffer &output, uint16_t &procedural_seed, int const y, double const left, double const right, uint8_t const colour, int const mode, int const bottom, bool const inclusive, bool const paint) {
   /// Preserve native VGA byte-group masks, including sparse dots beyond the nominal right edge
-  int const first{std::max(0,static_cast<int>(std::ceil(left - .5)))}, last{std::min(screen_width,inclusive ? static_cast<int>(std::floor(right)) + 1 : static_cast<int>(std::ceil(right - .5)))};
+  int const first{std::max(0,static_cast<int>(std::ceil(left - .5)))}, last{std::min(output.size.x,inclusive ? static_cast<int>(std::floor(right)) + 1 : static_cast<int>(std::ceil(right - .5)))};
   int const first_byte{static_cast<int>(std::floor(left / 4))}, last_byte{static_cast<int>(std::floor(right / 4))};
   if(mode == 4) {
     for(int byte{first_byte}; byte <= last_byte; ++byte) {
@@ -73,7 +74,7 @@ void pattern_polygon(framebuffer &output, uint16_t &seed, std::span<polygon_span
       for(int byte{first}; byte <= last; ++byte) for(int plane{0}; plane != 4; ++plane) {
         if((byte == first && plane < (span.left & 3)) || (byte == last && plane > (span.right & 3))) continue;
         int const at{span.row * screen_width + byte * 4 + plane};
-        if(at >= 0 && at < screen_width * screen_height) output.pixels[static_cast<unsigned int>(at)] = colour;
+        if(at >= 0 && at < screen_width * screen_height) output.write(static_cast<unsigned int>(at),colour);
       }
       narrow = first == last;
     }
@@ -122,7 +123,7 @@ void pattern_polygon(framebuffer &output, uint16_t &seed, std::span<polygon_span
         // Plane-three writes may cross the nominal right edge or wrap into
         // the next physical row, as in the original mode-X aperture.
         int const at{span.row * screen_width + x};
-        if(at >= 0 && at < screen_width * screen_height) output.pixels[static_cast<unsigned int>(at)] = colour;
+        if(at >= 0 && at < screen_width * screen_height) output.write(static_cast<unsigned int>(at),colour);
       }
       offset = !offset;advance();
     }

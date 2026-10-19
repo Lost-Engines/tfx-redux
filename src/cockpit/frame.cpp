@@ -55,7 +55,7 @@ void frame::paint(render::framebuffer &target, unsigned int const view, vec2<int
     for(int x{std::max(0,static_cast<int>(offset.x))}; x < std::min(render::screen_width,render::screen_width + offset.x); ++x) {
       auto const source{static_cast<unsigned int>((y - top) * render::screen_width + x - offset.x)};
       auto const destination{static_cast<unsigned int>(y * render::screen_width + x)};
-      target.pixels[destination] = panel.pixels.at(source);
+      target.write(destination,panel.pixels.at(source));
       if(coverage) coverage->pixels[destination] = 255;
     }
   }

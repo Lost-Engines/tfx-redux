@@ -116,7 +116,7 @@ run
      time.sleep(.03)
     raise RuntimeError(message+'\n'+output()[-5000:])
    wait_for(lambda:bool(frames()),'flight did not start')
-   window=run('xdotool','search','--onlyvisible','--name','TFX C').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
+   window=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
    def title():return run('xdotool','getwindowname',window).stdout
    tap('Control_L+d');assert 'Arming'not in title(),'rearming worked without the original cheat'
    run('xdotool','keydown','Shift_R')

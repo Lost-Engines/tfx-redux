@@ -45,7 +45,7 @@ void replay_recording(window &window, resources::archive const &game,
     presentation::scene_player introduction{presentation::node_kind::animation,clip,
       game.read("anim/" + clip.resource + ".256"),tables.presentation_fonts(),{},
       {},palette,tables.text_palette,counters(0),input};
-    window.title("TFX C++ — WNN — " + clip.resource);
+    window.title("TFX Redux — WNN — " + clip.resource);
     while(window.poll()) {
       double const now{glfwGetTime()};
       if(!window.focused()) {
@@ -64,7 +64,7 @@ void replay_recording(window &window, resources::archive const &game,
     if(glfwWindowShouldClose(host)) return;
     palette = introduction.palette();
   }
-  window.title("TFX C++ — Flight recording");
+  window.title("TFX Redux — Flight recording");
   auto const colours{render::expand_dac_palette(infrared)};
   renderer.output.pixels.fill(0);
   std::array<bool,GLFW_KEY_LAST + 1> held{};

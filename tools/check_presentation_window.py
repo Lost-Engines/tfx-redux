@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-presentation-input-') as temporary:
             game=subprocess.Popen([str((args.build/'tfx').resolve()),'--data-dir',str(args.data_dir.resolve()),'--presentation','cdintro','--scale','2'],env=environment,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
             deadline=time.monotonic()+10;window=None
             while time.monotonic()<deadline and game.poll() is None:
-                found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=environment,capture_output=True,text=True,timeout=5)
+                found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=environment,capture_output=True,text=True,timeout=5)
                 if found.stdout.strip():window=found.stdout.splitlines()[0];break
                 time.sleep(.05)
             if window is None:raise RuntimeError('presentation window did not appear')
@@ -41,7 +41,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-presentation-input-') as temporary:
         game=subprocess.Popen([str((args.build/'tfx').resolve()),'--data-dir',str(args.data_dir.resolve()),'--menu','mastopts','--scale','2'],env=environment,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
         deadline=time.monotonic()+10;window=None
         while time.monotonic()<deadline and game.poll() is None:
-            found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=environment,capture_output=True,text=True,timeout=5)
+            found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=environment,capture_output=True,text=True,timeout=5)
             if found.stdout.strip():window=found.stdout.splitlines()[0];break
             time.sleep(.05)
         if window is None:raise RuntimeError('native menu window did not appear')

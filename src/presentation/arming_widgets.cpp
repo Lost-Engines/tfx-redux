@@ -40,7 +40,7 @@ void panel(render::software_renderer &renderer, std::array<vec2<int16_t>,4> cons
   top = std::max(top,0);
   bottom = std::min(bottom,render::screen_height - 1);
   if(left > right || top > bottom) return;
-  for(int y{top}; y <= bottom; ++y) std::fill_n(renderer.output.pixels.begin() + y * render::screen_width + left,right - left + 1,colour);
+  for(int y{top}; y <= bottom; ++y) for(int x{left}; x <= right; ++x) renderer.output.write(static_cast<size_t>(y * render::screen_width + x),colour);
 }
 } // anonymous namespace
 

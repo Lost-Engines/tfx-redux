@@ -361,6 +361,7 @@ add_library(tfx_core
   src/render/aperture.h
   src/render/camera.cpp
   src/render/camera.h
+  src/render/view_settings.h
   src/render/markers.cpp
   src/render/markers.h
   src/render/clipping.h
@@ -474,6 +475,13 @@ configure_first_party(tfx)
 include(cmake/install.cmake)
 
 if(BUILD_TESTING)
+  add_executable(redux_view_test tests/redux_view_test.cpp)
+  target_link_libraries(redux_view_test PRIVATE tfx_core)
+  configure_first_party(redux_view_test)
+  add_test(NAME render.redux_resolution_fov_and_ui COMMAND redux_view_test)
+  add_executable(redux_arming_probe tests/redux_arming_probe.cpp)
+  target_link_libraries(redux_arming_probe PRIVATE tfx_core)
+  configure_first_party(redux_arming_probe)
   add_executable(campaign_journey_probe tests/campaign_journey_probe.cpp)
   target_link_libraries(campaign_journey_probe PRIVATE tfx_core)
   configure_first_party(campaign_journey_probe)
@@ -533,7 +541,7 @@ if(BUILD_TESTING)
   add_executable(screenshot_tests tests/screenshot_test.cpp)
   target_link_libraries(screenshot_tests PRIVATE tfx_core)
   configure_first_party(screenshot_tests)
-  add_test(NAME render.original_ilbm_capture COMMAND screenshot_tests)
+  add_test(NAME render.ilbm_capture COMMAND screenshot_tests)
 
   add_executable(cheat_probe tests/cheat_probe.cpp)
   target_link_libraries(cheat_probe PRIVATE tfx_core)
@@ -763,7 +771,7 @@ if(BUILD_TESTING)
   add_executable(model_lod_probe tests/model_lod_probe.cpp)
   target_link_libraries(model_lod_probe PRIVATE tfx_core)
   configure_first_party(model_lod_probe)
-  add_test(NAME render.native_complete_detail_models COMMAND model_lod_probe ${PROJECT_SOURCE_DIR}/tests/reference/model_lod.txt)
+  add_test(NAME render.consistent_complete_detail_models COMMAND model_lod_probe ${PROJECT_SOURCE_DIR}/tests/reference/redux_model_lod.txt)
 
   add_executable(model_placement_probe tests/model_placement_probe.cpp)
   target_link_libraries(model_placement_probe PRIVATE tfx_core)
@@ -772,7 +780,7 @@ if(BUILD_TESTING)
   add_executable(model_point_probe tests/model_point_probe.cpp)
   target_link_libraries(model_point_probe PRIVATE tfx_core)
   configure_first_party(model_point_probe)
-  add_test(NAME render.native_distant_points COMMAND model_point_probe ${PROJECT_SOURCE_DIR}/tests/reference/model_points.txt)
+  add_test(NAME render.consistent_distant_points COMMAND model_point_probe ${PROJECT_SOURCE_DIR}/tests/reference/redux_model_points.txt)
 
   add_executable(model_metrics_probe tests/model_metrics_probe.cpp)
   target_link_libraries(model_metrics_probe PRIVATE tfx_core)

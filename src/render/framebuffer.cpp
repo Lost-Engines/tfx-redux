@@ -5,6 +5,18 @@
 
 namespace tfx::render {
 
+void framebuffer::resize(vec2<int> const &dimensions) {
+  size_t constexpr maximum_pixels{64 * 1024 * 1024};
+  if(dimensions.x <= 0 || dimensions.y <= 0 || dimensions.x > 16384 || dimensions.y > 16384 || static_cast<size_t>(dimensions.x) * static_cast<size_t>(dimensions.y) > maximum_pixels) throw std::invalid_argument{"render resolution must have dimensions 1..16384 and at most 64 million pixels"};
+  size = vec2<int>{dimensions};
+  pixels.assign(static_cast<size_t>(size.x) * static_cast<size_t>(size.y),0);
+  coverage.clear();
+}
+void framebuffer::track_writes() {
+  coverage.assign(pixels.size(),0);
+}
+
+
 std::vector<rgba_pixel> framebuffer::colourise(palette const &colours) const {
   /// Keep palette indices through software drawing; RGB conversion happens only at presentation
   std::vector<rgba_pixel> result;
@@ -19,7 +31,7 @@ std::vector<rgba_pixel> framebuffer::colourise(palette const &colours) const {
 void framebuffer::screenshot(std::filesystem::path const &path, palette const &colours) const {
   std::ofstream stream{path, std::ios::binary};
   stream.exceptions(std::ios::failbit | std::ios::badbit);
-  stream << "P6\n" << screen_width << ' ' << screen_height << "\n255\n";
+  stream << "P6\n" << size.x << ' ' << size.y << "\n255\n";
   for(auto const index : pixels) {
     auto const &colour{colours[index]};
     stream.write(reinterpret_cast<char const*>(colour.data()), 3);

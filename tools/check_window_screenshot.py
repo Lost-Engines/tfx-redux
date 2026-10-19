@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-screenshot-window-')as temporary:
    game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501','--environment','yugos_n','--scale','2'],env=env,stdout=log,stderr=subprocess.STDOUT)
    deadline=time.monotonic()+20;window=None
    while time.monotonic()<deadline and game.poll()is None:
-    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX C'],env=env,capture_output=True,text=True)
+    found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True)
     if found.stdout.strip():window=found.stdout.splitlines()[0];break
     time.sleep(.05)
    assert window is not None,(root/'game.log').read_text()

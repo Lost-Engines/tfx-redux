@@ -99,7 +99,7 @@ exit /b 0
 
 :download
 rem Keeping the URL in a variable avoids CALL re-expanding percent escapes.
-curl.exe --user-agent "Lost Engines TFX CPP" --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 30 --output "%download_target%" "%url%"
+curl.exe --user-agent "Lost Engines TFX Redux" --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 30 --output "%download_target%" "%url%"
 exit /b %errorlevel%
 
 :matches

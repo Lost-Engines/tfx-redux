@@ -32,7 +32,7 @@ matches() {
   [[ "${digest%% *}" == "$expected" ]]
 }
 download() {
-  curl --user-agent 'Lost Engines TFX CPP' --fail --location \
+  curl --user-agent 'Lost Engines TFX Redux' --fail --location \
     --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
     --output "$2" "$1"
 }

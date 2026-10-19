@@ -57,7 +57,7 @@ void precipitation::paint(framebuffer &output, precipitation_view const &view, i
     // This particle projection is independent of the model driver's FOV mode.
     int32_t const depth{wrap(static_cast<uint32_t>(camera.z) + (1u << 24)) >> 8};
     vec2<int16_t> const point{depth <= 16 ? vec2<int16_t>{-1,-1} : vec2<int16_t>{word(camera.x / depth + view.origin.x),word(camera.y / depth + view.origin.y)}};
-    if(point.x >= view.minimum.x && point.y >= view.minimum.y && point.x <= view.maximum.x && point.y <= view.maximum.y && point.x >= 0 && point.y >= 0 && point.x < screen_width && point.y < screen_height) output.pixels[static_cast<unsigned int>(point.y * screen_width + point.x)] = colour;
+    if(point.x >= view.minimum.x && point.y >= view.minimum.y && point.x <= view.maximum.x && point.y <= view.maximum.y && point.x >= 0 && point.y >= 0 && point.x < screen_width && point.y < screen_height) output.write(static_cast<unsigned int>(point.y * screen_width + point.x),colour);
   }
   offset.x = advect(offset.x,wind_xz.x);
   offset.z = advect(offset.z,wind_xz.y);

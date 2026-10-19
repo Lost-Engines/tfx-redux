@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-x11-input-') as temporary:
             game=subprocess.Popen([str(executable),'--data-dir',str(data),'--mission','501','--control','keyboard','--flight-model','arcade','--scale','2'],env=environment,stdout=log,stderr=subprocess.STDOUT)
             deadline=time.monotonic()+10;window=None
             while time.monotonic()<deadline and game.poll() is None:
-                found=run('xdotool','search','--onlyvisible','--name','TFX C',capture_output=True,text=True)
+                found=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)',capture_output=True,text=True)
                 if found.stdout.strip():window=found.stdout.splitlines()[0];break
                 time.sleep(.05)
             if window is None:
@@ -93,7 +93,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-x11-input-') as temporary:
             game=subprocess.Popen([str(executable),'--data-dir',str(data),'--mission','601','--control','keyboard','--flight-model','arcade','--scale','2'],env=environment,stdout=log,stderr=subprocess.STDOUT)
             deadline=time.monotonic()+10;window=None
             while time.monotonic()<deadline and game.poll() is None:
-                found=run('xdotool','search','--onlyvisible','--name','TFX C',capture_output=True,text=True)
+                found=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)',capture_output=True,text=True)
                 if found.stdout.strip():window=found.stdout.splitlines()[0];break
                 time.sleep(.05)
             if window is None:raise RuntimeError('ground-targeting window did not appear')
@@ -115,7 +115,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-x11-input-') as temporary:
             game=subprocess.Popen([str(executable),'--data-dir',str(data),'--mission','605','--flight-steps','1024','--control','keyboard','--flight-model','arcade','--scale','2'],env=environment,stdout=log,stderr=subprocess.STDOUT)
             deadline=time.monotonic()+10;window=None
             while time.monotonic()<deadline and game.poll() is None:
-                found=run('xdotool','search','--onlyvisible','--name','TFX C',capture_output=True,text=True)
+                found=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)',capture_output=True,text=True)
                 if found.stdout.strip():window=found.stdout.splitlines()[0];break
                 time.sleep(.05)
             if window is None:raise RuntimeError('mission-result window did not appear')

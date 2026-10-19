@@ -9,7 +9,7 @@
 
 namespace tfx::presentation {
 
-enum class arming_entry { normal, mission_incomplete };
+enum class arming_entry { normal, mission_incomplete, preflight, rearming };
 enum class arming_action { rotate, idle, defaults, done, clear_all, clear_mount, overview, scroll_up, scroll_down, scroll_thumb, select_store };
 struct arming_region {
   vec2<int16_t> minimum;

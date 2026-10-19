@@ -168,7 +168,7 @@ void shaded_span(framebuffer &output, int const y, int const left, int const rig
   uint32_t const bias{magnitude >= extent ? static_cast<uint32_t>(sign * (product >> 1)) : 0u};
   palette_accumulator colour{(static_cast<uint32_t>(left_shade) << 16) + 32768u + bias,product,sign < 0};
   for(int x{left}; x <= right; ++x) {
-    if(x >= 0 && x < screen_width) output.pixels[static_cast<unsigned int>(y * screen_width + x)] = remap[colour.colour()];
+    if(x >= 0 && x < screen_width) output.write(static_cast<unsigned int>(y * screen_width + x),remap[colour.colour()]);
     colour.advance();
   }
 }
@@ -308,7 +308,7 @@ void integer_texture_polygon(framebuffer &output, std::span<textured_vertex cons
     for(int x{span.left}; x <= span.right; ++x) {
       unsigned int const index{((coordinate.y >> 24) << 8) | (coordinate.x >> 24)};
       uint8_t const ink{remap[index < texture.size() ? texture[index] : uint8_t{0}]};
-      if(ink && x >= 0 && x < screen_width) output.pixels[static_cast<unsigned int>(span.row * screen_width + x)] = ink;
+      if(ink && x >= 0 && x < screen_width) output.write(static_cast<unsigned int>(span.row * screen_width + x),ink);
       coordinate.x += step.x;
       // The original VGA loop holds V in EAX and overwrites AL with the
       // remapped texel before ADD. Retain that otherwise tiny fraction change.

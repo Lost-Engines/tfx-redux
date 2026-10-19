@@ -19,6 +19,7 @@ void frontend::seek_enrolment() {
   parser.seek({0,static_cast<unsigned int>(entry - main.begin())});
 }
 void frontend::return_to_enrolment() {
+  last_menu.reset();
   menu.reset();
   pilot.reset();
   scores.reset();
@@ -27,6 +28,11 @@ void frontend::return_to_enrolment() {
   mouse_held = false;
   parser.restart("tfx");
   seek_enrolment();
+}
+
+void frontend::cancel_launch() {
+  if(last_menu) { parser.restore(*last_menu);mouse_held = false; }
+  else return_to_enrolment();
 }
 
 statement const *frontend::advance(scene_counters const counters, scene_input &input,
@@ -89,6 +95,7 @@ statement const *frontend::advance(scene_counters const counters, scene_input &i
       if(play_audio) play_audio(std::get<audio_request>(action->data));
       parser.complete();
     } else if(action->kind == node_kind::options) {
+      last_menu = parser.snapshot();
       auto const bytes{game.read("lev/" + std::get<host_action>(action->data).resource + ".opt")};
       menu_program script{std::string_view{reinterpret_cast<char const*>(bytes.data()),bytes.size()}};
       auto const media{game.read(script.animation.empty() ? "iff/raw/" + script.backdrop : "anim/" + script.animation + ".256")};

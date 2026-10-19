@@ -10,7 +10,7 @@ void draw_marker(framebuffer &target, vec2<uint16_t> const &position, uint8_t co
   for(unsigned int row{0}; row != size; ++row) for(unsigned int column{0}; column != size; ++column) {
     unsigned int const destination{(position.y + row) * screen_width + position.x + column};
     if(destination >= target.pixels.size()) continue;
-    target.pixels[destination] = colour;
+    target.write(destination,colour);
     if(coverage) coverage->pixels[destination] = 255;
   }
 }

@@ -1,6 +1,6 @@
-# TFX C++
+# TFX Redux
 
-A native C++26 reconstruction of Digital Image Design’s **TFX: Tactical Fighter Experiment**, using the September 1994 CD release, **version 2.05**, as its reference.
+An enhanced native C++26 version of Digital Image Design’s **TFX: Tactical Fighter Experiment**, based on the [TFX C++ reconstruction](https://github.com/Lost-Engines/tfx-cpp) of the September 1994 CD release, **version 2.05**. Redux adds higher-resolution rendering, configurable views and arming-screen improvements while retaining the original game data, flight models and mission logic.
 
 The supplied fetch script downloads the reference game CD and synthesiser ROMs. You can also use your own TFX 2.05 installation. Research exports are neither required nor bundled.
 
@@ -33,7 +33,7 @@ Normal startup plays the introduction and opens pilot enrolment. `--skip-intro` 
 ./build/tfx --mission=501
 ```
 
-Mission 501 is the first Fighter Weapons School engagement. Direct launches use the mission’s preset stores; campaign launches open the original arming screen. Choose **DEFAULT** for its preset, then **DONE** to fly.
+Mission 501 is the first Fighter Weapons School engagement. Direct launches use the mission’s preset stores; campaign launches open the original arming screen. Choose **DEFAULT** for its preset, then **OK** to fly.
 
 ## Playing
 
@@ -43,9 +43,37 @@ Arcade uses mouse steering. The other flight models support keyboard and joystic
 
 **Alt+V** starts or stops a flight recording. Its default filename is `video.rec`, editable in the configuration menu. A new recording replaces that file. After a campaign flight, the original WNN sequence and recorded flight play automatically.
 
-The 320×200 image uses nearest-neighbour scaling and square pixels. The initial floating window chooses the largest integer scale that fits the desktop; `--scale=3` overrides it. Focus loss releases mouse capture.
+The floating window fits the desktop automatically, with square pixels and nearest-neighbour presentation. `--scale=2` requests a window twice the render size. Focus loss releases mouse capture.
 
 See [controls and configuration](docs/controls.md) for weapons, autopilot, cameras, MFDs, joystick bindings, recordings and developer commands. The original manual remains the best guide to flying the missions.
+
+## Redux improvements
+
+The defaults are **1280×800**, the original **64.01° horizontal FOV**, a **16-cell draw radius** and **highest-detail models**. For example:
+
+```sh
+./build/tfx --resolution=1920x1080 --fov=90 --draw-distance=64
+./build/tfx --resolution=1280x800 --draw-distance=infinite
+```
+
+- `--resolution WIDTHxHEIGHT` sets the actual 3D render resolution, including aircraft and weapons in the arming screen. Widescreen and other aspect ratios use square pixels.
+- `--fov DEGREES` sets the horizontal field of view, from 10° to 170°. The missile-nose camera retains its wider view; the HUD pitch ladder and target markers follow the selected projection.
+- `--draw-distance CELLS` controls the terrain radius; `0` or `infinite` removes the far plane and includes the whole finite map. The original radius is 8 cells. Whole-map rendering can be expensive in the software renderer.
+- `--lod-scale FACTOR` controls visual detail cutoffs. The default, `0`, keeps the most detailed models and disables drawing-distance tests in scenery scripts. `1` restores the original LOD thresholds; values between 0 and 1 postpone detail reductions. Gameplay and collision ranges are unaffected.
+
+These display settings are command-line options for now.
+
+The following departures from the original are intentional:
+
+- World rendering uses a wider coordinate range, an unrestricted visible-model queue and resolution-independent clipping and projection. Terrain, buildings, aircraft and effects can remain visible beyond the original limits. The original palette colours, quantised lighting and authored model drawing order remain in use; exact DOS pixel matching is no longer the rendering target.
+- Distance shading extends across the selected draw distance (the map diagonal for whole-map views), retaining the original palette lookup rather than introducing blended colours. Sky and ground bands are projected for the actual view instead of relying on the original narrow-view shortcuts.
+- Cockpit artwork, HUD text, menus and presentations retain their original pixel detail and use nearest-neighbour scaling. Cockpits stay centred, with black margins where needed. Cockpit MFD scene views still use their original small resolution and local draw radius.
+- Arming picks the aircraft's pylon volumes along the cursor ray, including after rotating the aircraft. The held weapon follows that cursor ray instead of mapping mouse movement to fixed aircraft axes. Buttons use the actual cursor position, without the original miniature-aircraft hotspot offset.
+- Escape cancels an active arming operation first. At the idle preflight arming screen, it returns to the preceding choice screen (or pilot enrolment when none exists). During an in-flight rearm, it asks before returning to the mission. Cancelling restores the loadout held before opening the arming screen.
+- Distant point models use the same missile-view projection as polygons. Two-pixel models are clipped at the screen edge instead of wrapping a pixel onto the next row.
+- In-flight screenshots capture the full render resolution and declare square pixels in their ILBM metadata.
+
+**Flight recordings:** the DOS-compatible recorder still uses the original draw radius, LOD rules and field of view while recording; these limits are restored only for that period. Recorded-flight playback retains its original resolution and is scaled for the window.
 
 ## Sound
 
@@ -83,9 +111,9 @@ and so on, using the original physical CD track numbers (audio starts at 02).
 Names such as `track-02` and uppercase extensions are also accepted. Playback
 uses the original track selection, stop and flight-loop behaviour.
 
-## Development status
+## Development and verification
 
-The original and C++ launch/flight loops match across all 128 retail mission setups and their first sixteen Arcade frames. Longer controlled comparisons cover successful interception and ground attack, incoming fire and aircraft loss, refuelling, mission return, ejection and recording. Subsystem checks execute the original code independently, with compact regressions runnable without game data:
+The inherited TFX C++ baseline matched across all 128 retail mission setups and their first sixteen Arcade frames. Longer controlled comparisons cover successful interception and ground attack, incoming fire and aircraft loss, refuelling, mission return, ejection and recording. Subsystem checks execute the original code independently, with compact regressions runnable without game data:
 
 ```sh
 ctest --test-dir build --output-on-failure
@@ -93,6 +121,14 @@ ctest --test-dir build --output-on-failure
 
 For a minimal installation, `cmake --install build-rel --component Runtime --prefix /path/to/output` copies the executable and the matching platform’s fetch script and asset manifests from a Release build. Original game data and ROMs remain separate.
 
-The [verification matrix](docs/verification.md) distinguishes complete-session evidence, persistent campaign checks and long-session audio/lifetime coverage. [Implementation notes](docs/implementation.md) retain the research details. The research tree is the sibling `tfx-reverse` directory.
+The Redux regressions cover resolution, FOV, UI opacity, screenshot dimensions and the corrected distant-point projection. With the reference data available, the arming probe checks cursor-ray picking before and after rotation, and weapon attachment for all three aircraft:
+
+```sh
+python3 tools/check_redux_points.py
+./build/redux_arming_probe /path/to/TFX /tmp/tfx-arming-check
+python3 tools/check_redux_arming.py --data-dir /path/to/TFX
+```
+
+The [verification matrix](docs/verification.md) records the inherited baseline’s complete-session evidence, persistent campaign checks and long-session audio/lifetime coverage; its original-renderer comparisons are historical evidence rather than a promise of identical Redux pixels. [Implementation notes](docs/implementation.md) retain the research details. The research tree is the sibling `tfx-reverse` directory.
 
 GPL-3.0-or-later; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).

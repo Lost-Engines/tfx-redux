@@ -98,7 +98,7 @@ run
      time.sleep(.03)
     raise RuntimeError('missing '+marker+'\n'+output()[-5000:])
    await_count('MAP_TICK',1)
-   window=run('xdotool','search','--onlyvisible','--name','TFX C').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
+   window=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)').stdout.splitlines()[0];run('xdotool','windowfocus','--sync',window)
    def title():return run('xdotool','getwindowname',window).stdout
    def open_map():
     wanted=count('MAP_OPEN')+1;tap('m');await_count('MAP_OPEN',wanted)

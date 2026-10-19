@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-x11-configuration-') as temporary:
     raise RuntimeError('missing '+text+'\n'+output()[-5000:])
    game=subprocess.Popen(['gdb','--quiet','--batch','-x',str(script),'--args',str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','513','--scale','2'],env=env,stdout=log,stderr=subprocess.STDOUT)
    await_text('TFX_WINDOW_TICK')
-   found=run('xdotool','search','--onlyvisible','--name','TFX C').stdout.splitlines();assert found
+   found=run('xdotool','search','--onlyvisible','--name','TFX (C|Redux)').stdout.splitlines();assert found
    window=found[0];run('xdotool','windowfocus','--sync',window)
    def title():return run('xdotool','getwindowname',window).stdout
    def await_title(text):

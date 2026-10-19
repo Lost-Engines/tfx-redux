@@ -30,6 +30,7 @@ private:
   render::framebuffer display;
   render::palette palette{};
   bool mouse_held{false};
+  std::optional<saved_state> last_menu;
   void seek_enrolment();
 
 public:
@@ -40,6 +41,7 @@ public:
   void press(uint8_t scan, bool control);
   void complete();
   void return_to_enrolment();
+  void cancel_launch();
   variables &values();
   variables const &values() const;
   bool finished() const;

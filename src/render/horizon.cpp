@@ -4,6 +4,7 @@
 #include <array>
 #include <bit>
 #include <cstdlib>
+#include <cmath>
 #include <utility>
 
 namespace tfx::render {
@@ -252,6 +253,34 @@ void paint_horizon(framebuffer &output, horizon_context const &context) {
       int const top{std::max(0,static_cast<int>(context.minimum.y))},bottom{std::min(screen_height - 1,static_cast<int>(context.maximum.y))};
       if(left <= right) for(int y{top}; y <= bottom; ++y) std::fill_n(output.pixels.begin() + y * screen_width + left,right - left + 1,surface.colour);
     } else integer_polygon(output,surface.vertices,surface.colour,context.minimum,context.maximum);
+  }
+}
+
+void paint_horizon(framebuffer &output, camera const &view, int16_t const ground_phase) {
+  double const height{std::max(100.0,-view.position.y / 4)};
+  std::array<vec2d,10> const sky_bands{{
+    {698,21998},{940,21979},{1270,21963},{1714,21933},{2315,21878},
+    {3119,21778},{4198,21595},{5638,21265},{7542,20666},{10013,19509},
+  }};
+  output.pixels.fill(0);
+  int const bottom{std::min(output.size.y - 1,static_cast<int>(view.viewport_maximum.y))};
+  for(int y{std::max(0,static_cast<int>(view.viewport_minimum.y))}; y <= bottom; ++y) {
+    auto const row{view.forward + view.down * ((y + .5 - view.projection_origin.y) / view.focal_distance)};
+    for(int x{0}; x != output.size.x; ++x) {
+      auto const ray{row + view.right * ((x + .5 - view.projection_origin.x) / view.focal_distance)};
+      double const horizontal{std::hypot(ray.x,ray.z)};
+      uint8_t colour{240};
+      if(ray.y > 0) {
+        double const distance{height * horizontal / ray.y};
+        int const band{static_cast<int>(std::min(16.0,(distance + ground_phase) / 1375))};
+        colour = static_cast<uint8_t>(224 + std::clamp(band,0,15));
+        if(distance < 300) colour = 253;
+      } else {
+        double const slope{-ray.y / std::max(1e-9,horizontal)};
+        for(auto const &band : sky_bands) if(slope >= (band.x - height - 350) / band.y) ++colour;
+      }
+      output.pixels[static_cast<size_t>(y * output.size.x + x)] = colour;
+    }
   }
 }
 
