@@ -449,6 +449,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
           ++primitives_drawn;continue;
         }
         auto const texture{primitive.texture ? resources.texture(*primitive.texture) : std::span<uint8_t const>{}};
+        auto const overlay{primitive.texture && texture_overlay ? texture_overlay(item.name,*primitive.texture) : std::span<uint16_t const>{}};
         if(primitive.texture && texture.empty()) warnings.insert("unresolved runtime texture: " + item.name);
         uint8_t colour_row{distance_row};
         if(primitive.palette == models::palette_source::fixed) colour_row = 0;
@@ -457,7 +458,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         if(primitive.pixel_size && (item.name=="smokecld" || (item.shape->has_surfaces && geometry.primitives.size()==1))) {
           auto point{primitive};point.point_role=item.name=="smokecld" ? models::point_role::particle : models::point_role::object;
           renderer.primitive(point,vertices,view,texture,remap);
-        } else renderer.primitive(primitive,vertices,view,texture,remap);
+        } else renderer.primitive(primitive,vertices,view,texture,remap,overlay);
         ++primitives_drawn;
       }
     } catch(std::exception const &error) {

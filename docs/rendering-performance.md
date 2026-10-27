@@ -126,3 +126,48 @@ true-colour ILBM files; ordinary indexed screenshots retain the original format.
 The isolated three-layout HUD probe measured about 0.26 ms at 320×200, 0.81 ms at
 1001×603 and 1.99 ms at 1920×1080, including coverage composition but excluding
 final colour conversion. These are local CPU measurements, not gameplay rates.
+
+## Virtual cockpit textures and live MFDs
+
+The continuous texture painter now writes clipped spans directly. Its ordinary
+opaque mode avoids two general pixel calls, repeated clipping checks, and unused
+pattern/coverage branches for every texel. UV interpolation, palette remapping,
+transparency and painter order are unchanged. The general painter remains for
+patterned polygons; the probe compares it pixel for pixel with the fast path.
+
+An isolated F-22 canopy render, looking down at the full panel, measured:
+
+| Resolution | Previous texture path | Direct spans |
+| --- | ---: | ---: |
+| 1920×1080 | 18.77 ms | 12.11 ms |
+| 3840×2160 | 79.39 ms | 48.07 ms |
+
+These are local CPU timings for an isolated model with facing disabled, excluding
+world rendering, simulation and presentation. They show a 35–39% reduction in
+that rendering cost, not an equivalent increase in overall game frame rate.
+The indexed image hashes match before and after at both sizes.
+
+The live MFDs reuse the existing instrument renderer once per frame, on a small
+320×200 canvas. Only display regions replace texels in `global_1` and `global_2`,
+and only for the six front-canopy models. The port panel is in `global_2`; the
+centre screen spans both pages. Replacement texels bypass the model's lighting
+lookup, and black is opaque rather than transparent. The original panel art and
+lighting remain everywhere else. The regular and refuelling models share these
+UVs; external aircraft and other users of the texture pages are unaffected.
+
+Camera MFDs render at their native screen dimensions before projection onto the
+panel, avoiding oversized intermediate images. These additional world passes
+sample scene animation without advancing it. The primary scene remains responsible
+for advancing model effects. Paused displays use the existing copied instrument
+state, so radar sweeps, map markers and camera orbits remain frozen.
+
+```sh
+cmake --build build --target virtual_cockpit_probe -j
+./build/virtual_cockpit_probe /path/to/TFX /tmp/tfx-cockpits
+python3 tools/check_window_virtual_cockpit.py --data-dir /path/to/TFX
+```
+
+The asset probe checks all six models, left/right mapping, the centre seam,
+opaque black, palette handling, clipping and coverage, and prints static/live
+canopy timings. Static and live texture sampling costs were close (within roughly
+1 ms locally); active camera pages still require their own scene passes.

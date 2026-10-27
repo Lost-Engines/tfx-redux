@@ -53,13 +53,13 @@ void software_renderer::background(camera const &view, uint8_t const sky, uint8_
   }
 }
 
-void software_renderer::polygon(std::span<screen_vertex const> const vertices, uint8_t const colour, int const mode, std::span<uint8_t const> const texture, colour_map const *const remap) {
+void software_renderer::polygon(std::span<screen_vertex const> const vertices, uint8_t const colour, int const mode, std::span<uint8_t const> const texture, colour_map const *const remap, std::span<uint16_t const> const overlay) {
   /// Half-open software spans; interpolate palette indices and UVs in screen space, preserving authored paint order
   if(vertices.size() < 3) return;
   bool const shaded{texture.empty() && std::ranges::all_of(vertices,[](auto const &v){ return v.shade >= 0; })};
   double top{static_cast<double>(output.size.y)}, bottom{0};
   for(auto const &v : vertices) { top = std::min(top, v.position.y); bottom = std::max(bottom, v.position.y); }
-  int const first{std::max(clipping.glyph_minimum.y, static_cast<int>(std::ceil(top - .5)))}, last{std::min(clipping.glyph_limit.y, static_cast<int>(std::ceil(bottom - .5)))};
+  int const first{std::max({0,clipping.glyph_minimum.y,static_cast<int>(std::ceil(top - .5))})}, last{std::min({output.size.y,clipping.glyph_limit.y,static_cast<int>(std::ceil(bottom - .5))})};
   auto &hits{scanline_hits};
   hits.reserve(vertices.size());
   int const bottom_row{static_cast<int>(std::lround(bottom))}, top_row{static_cast<int>(std::lround(top))};
@@ -88,7 +88,7 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
     std::ranges::sort(hits, {}, [](auto const &v){ return v.position.x; });
     for(size_t pair{0}; pair + 1 < hits.size(); pair += 2) {
       auto const &left{hits[pair]}, &right{hits[pair + 1]};
-      int const start{std::max(clipping.glyph_minimum.x, static_cast<int>(std::ceil(left.position.x - .5)))}, end{std::min(clipping.glyph_limit.x, static_cast<int>(std::ceil(right.position.x - .5)))};
+      int const start{std::max({0,clipping.glyph_minimum.x,static_cast<int>(std::ceil(left.position.x - .5))})}, end{std::min({output.size.x,clipping.glyph_limit.x,static_cast<int>(std::ceil(right.position.x - .5))})};
       if(mode >= 0 && texture.empty() && left.shade < 0) {
         patterned_span(y,left.position.x,right.position.x,colour,mode,bottom_row,false,y >= first && y < last);
         continue;
@@ -106,17 +106,53 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
         colour_start = first_colour / 256.0 + bias;
       }
       double const inverse_width{1 / (right.position.x - left.position.x)};
+      if(!texture.empty() && mode == -1) {
+        // These spans are already clipped. Avoid two out-of-line pixel calls,
+        // repeated bounds/mode checks and optional coverage work per texel.
+        auto const paint{[&]<bool mapped, bool live, bool covered>() {
+          double const du{right.uv.x-left.uv.x}, dv{right.uv.y-left.uv.y};
+          auto *destination{output.pixels.data() + y * output.size.x};
+          for(int x=start; x<end; ++x) {
+            double const t{(x + .5 - left.position.x) * inverse_width};
+            int const u{std::clamp(static_cast<int>(left.uv.x + du*t),0,255)};
+            int const v{std::clamp(static_cast<int>(left.uv.y + dv*t),0,191)};
+            auto const at{static_cast<unsigned int>(v*256+u)};
+            uint8_t index{texture[at]};
+            if constexpr(mapped) index=(*remap)[index];
+            if constexpr(live) {
+              if(overlay[at]) index=static_cast<uint8_t>(overlay[at]);
+              else if(!index) continue;
+            } else if(!index) continue;
+            destination[x]=index;
+            if constexpr(covered) output.coverage[static_cast<size_t>(y*output.size.x+x)]=255;
+          }
+        }};
+        auto const dispatch{[&]<bool mapped, bool live>() {
+          if(output.coverage.empty()) paint.template operator()<mapped,live,false>();
+          else paint.template operator()<mapped,live,true>();
+        }};
+        if(overlay.empty()) {
+          if(remap) dispatch.template operator()<true,false>();else dispatch.template operator()<false,false>();
+        } else {
+          if(remap) dispatch.template operator()<true,true>();else dispatch.template operator()<false,true>();
+        }
+        continue;
+      }
       for(int x{start}; x != end; ++x) {
         auto const t{(x + .5 - left.position.x) * inverse_width};
         uint8_t index{colour};
+        uint16_t replacement{0};
         if(!texture.empty()) {
           auto const uv{left.uv + (right.uv - left.uv) * t};
           int const u{std::clamp(static_cast<int>(uv.x),0,255)}, v{std::clamp(static_cast<int>(uv.y),0,191)};
-          index = texture[static_cast<unsigned int>(v * 256 + u)];
+          auto const at{static_cast<unsigned int>(v * 256 + u)};
+          index = texture[at];
+          if(!overlay.empty()) replacement=overlay[at];
         } else if(shaded) index = static_cast<uint8_t>(static_cast<int>(std::floor(colour_start + colour_step * (x - colour_origin))));
         if(remap && (!texture.empty() || shaded)) index = (*remap)[index];
         // Original texture transparency is tested after its lighting lookup.
-        if(!texture.empty() && !index) continue;
+        if(replacement) index=static_cast<uint8_t>(replacement);
+        else if(!texture.empty() && !index) continue;
         ink(x,y,index,mode);
       }
     }
@@ -175,7 +211,7 @@ void software_renderer::line(vec2d const &a, vec2d const &b, uint8_t const colou
   }
 }
 
-void software_renderer::primitive(models::primitive const &source, std::span<models::model_vertex const> const camera_vertices, camera const &source_view, std::span<uint8_t const> const texture, colour_map const *const remap) {
+void software_renderer::primitive(models::primitive const &source, std::span<models::model_vertex const> const camera_vertices, camera const &source_view, std::span<uint8_t const> const texture, colour_map const *const remap, std::span<uint16_t const> const overlay) {
   auto view{source_view};
   if(output.size != vec2<int>{screen_width,screen_height} && view.projection == projection_mode::original_model) {
     double const scale{std::min(output.size.x / static_cast<double>(screen_width),output.size.y / static_cast<double>(screen_height))};
@@ -187,7 +223,7 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
   if(camera_vertices.empty()) return;
   uint8_t const source_index{static_cast<uint8_t>(source.colour)};
   uint8_t const ink_index{remap ? (*remap)[source_index] : source_index};
-  if(paint_model_primitive(output,source,camera_vertices,view,texture,remap,procedural_seed)) return;
+  if(overlay.empty() && paint_model_primitive(output,source,camera_vertices,view,texture,remap,procedural_seed)) return;
   if(source.kind == models::primitive_kind::point) {
     auto const &v{camera_vertices[0].position};
     if(v.z <= view.near_distance * camera_vertices.front().projection_scale || v.z > view.far_distance) return;
@@ -291,7 +327,7 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
       });
       polygon(curve,ink_index,source.mode);
     }
-  } else polygon(projected,ink_index,source.mode,texture,remap);
+  } else polygon(projected,ink_index,source.mode,texture,remap,overlay);
 }
 
 unsigned int software_renderer::text_width(std::string_view const message) const {

@@ -3,6 +3,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <string_view>
 #include "render/software_renderer.h"
 #include "render/model_queue.h"
 #include "render/model_jitter.h"
@@ -82,6 +83,7 @@ private:
   std::optional<player_rendering> player_model;
   std::optional<render::camera> installed_camera;
   double visual_lod_scale{1};
+  std::function<std::span<uint16_t const>(std::string_view,models::texture_binding const&)> texture_overlay;
 
 public:
   std::set<std::string> warnings;
@@ -90,6 +92,7 @@ public:
   scene(environment const &terrain, assets &resources, environment const *upper = nullptr, animation_clock *retained_clock = nullptr);
   scene(scene const&) = delete;
   scene &operator=(scene const&) = delete;
+  void set_texture_overlay(decltype(texture_overlay) provider) { texture_overlay=std::move(provider); }
   void set_visual_lod_scale(double scale) { visual_lod_scale = scale; }
   void set_render_paused(bool paused);
   void set_effect_sink(std::function<void(effect_record const&)> sink);
