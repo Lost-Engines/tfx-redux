@@ -20,7 +20,10 @@ bool mouse_orbit::select(view_mode const mode) {
   selected = mode;
   return supports(mode);
 }
-void mouse_orbit::reset() { heading = pitch = 0; }
+void mouse_orbit::reset() { heading = pitch = zoom = 0; }
+void mouse_orbit::scroll(double offset) {
+  if(supports(selected)) zoom = std::clamp(zoom + offset,-32.0,24.0);
+}
 void mouse_orbit::move(vec2d const &delta) {
   if(!supports(selected)) return;
   double constexpr sensitivity{.004}, limit{std::numbers::pi * 85 / 180};
@@ -29,7 +32,7 @@ void mouse_orbit::move(vec2d const &delta) {
 }
 render::camera mouse_orbit::apply(render::camera view, view_camera_context const &context,
                                  missile_camera_pose const &last_missile) const {
-  if(!supports(selected) || (heading == 0 && pitch == 0)) return view;
+  if(!supports(selected) || (heading == 0 && pitch == 0 && zoom == 0)) return view;
   vec3<int32_t> target_q8{context.position_q8};
   if(selected == view_mode::target) {
     if(!context.observed_target_q8) return view;
@@ -52,9 +55,13 @@ render::camera mouse_orbit::apply(render::camera view, view_camera_context const
     double const py{cp * y - sp * z}, pz{sp * y + cp * z};
     return right * (ch * x - sh * pz) + down * py + forward * (sh * x + ch * pz);
   }};
-  // Rotate the eye and its complete basis about the same pivot. The subject
-  // retains its screen position and distance, including during native smoothing.
-  view.position = target + rotate(view.position - target);
+  // Rotate the eye and its complete basis about the same pivot. Dolly along
+  // that ray to zoom without moving the subject on screen or changing the FOV.
+  // Eight wheel steps halve the distance; fractional trackpad steps work too.
+  double const distance_scale{std::exp2(-zoom / 8)};
+  view.position = target + rotate(view.position - target) * distance_scale;
+  // Keep the near plane clear of the subject as the camera moves closer.
+  view.near_distance *= std::min(1.0,distance_scale);
   view.right = rotate(view.right);
   view.down = rotate(view.down);
   view.forward = rotate(view.forward);

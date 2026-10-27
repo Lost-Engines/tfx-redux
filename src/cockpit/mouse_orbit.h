@@ -8,12 +8,13 @@ namespace tfx::cockpit {
 // separate preserves the authored tracking, fly-past and keyboard camera laws.
 class mouse_orbit {
   view_mode selected{view_mode::cockpit};
-  double heading{0}, pitch{0};
+  double heading{0}, pitch{0}, zoom{0};
 public:
   static bool supports(view_mode mode);
   bool select(view_mode mode);
   void reset();
   void move(vec2d const &delta);
+  void scroll(double offset);
   render::camera apply(render::camera view, view_camera_context const &context,
                        missile_camera_pose const &last_missile) const;
 };

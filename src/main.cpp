@@ -109,7 +109,7 @@ auto main(int const argc, char const *const argv[])->int try {
                    "4 saves a numbered GRAB_00.LBM screenshot in the game directory.\n"
                    "Alt+V starts/stops recording; choose its filename in configuration. WNN replay follows mission completion.\n"
                    "F1 cockpit; Shift+F1 full forward; F2/F3 look left/right; F4 rear; F5 chase.\n"
-                   "Mouse orbits external views; selecting a camera again resets its angle.\n"
+                   "Mouse orbits external views; wheel zooms; selecting a camera again resets angle and distance.\n"
                    "F6 fly-past; F7 tactical; F8 fired-store camera (twice: nose view).\n"
                    "F9 target observer; F10 virtual cockpit/target tracking.\n";
 #ifndef NDEBUG
