@@ -58,6 +58,7 @@
 #include "cockpit/initialisation.h"
 #include "cockpit/scene_display.h"
 #include "cockpit/designator.h"
+#include "cockpit/designator_mouse.h"
 #include "missions/initialisation.h"
 #include "missions/timeline.h"
 #include "missions/progress.h"
@@ -316,6 +317,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto &seeker{options.seeker};
   std::vector<tfx::sensors::air_contact> radar_actors;
   tfx::sensors::designator designator;
+  tfx::cockpit::designator_mouse designator_mouse;
   bool designator_view{false},designator_tracking_frame{false};
   uint32_t designator_frame_gap{0}; // Native 0x8844 counts input frames since the last designator draw.
   auto &cannon_navigation{options.cannon_navigation};
@@ -1001,21 +1003,24 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       if(weapon == &tables.weapons[std::to_underlying(tfx::weapons::weapon_id::harm)] || weapon == &tables.weapons[std::to_underlying(tfx::weapons::weapon_id::sidearm)]) cycle_target();
     }
   }};
-  auto const update_designator{[&] {
+  auto const update_designator{[&](bool frozen) {
     if(designator_view) {
       designator_tracking_frame = ground_designation.has_value();
-      if(ground_designation) tfx::sensors::follow_designation(designator,player.integer_position,ground_designation->actor ? actor_position(*ground_designation->actor) : designated_point);
-      else {
+      if(ground_designation) {
+        designator_mouse.apply(designator,true);
+        tfx::sensors::follow_designation(designator,player.integer_position,ground_designation->actor ? actor_position(*ground_designation->actor) : designated_point);
+      } else {
         // Native 0x92c40 recentres only after more than one absent input frame.
         // Re-entering an already active view preserves its gimbal.
-        if(std::bit_cast<int32_t>(designator_frame_gap) > 1) {
+        if(!frozen && std::bit_cast<int32_t>(designator_frame_gap) > 1) {
           designator.pitch = 0x500;
           designator.heading = player.angles.y;
         }
-        tfx::sensors::aim_designator(designator,player.integer_position,player.angles,player.aircraft,designator_input);
+        designator_mouse.apply(designator,false);
+        tfx::sensors::aim_designator(designator,player.integer_position,player.angles,player.aircraft,frozen ? tfx::sensors::designator_controls{} : designator_input);
       }
-      designator_frame_gap = 0;
-      if(designate_trigger) {
+      if(!frozen) designator_frame_gap = 0;
+      if(!frozen && designate_trigger) {
         designated_point = vec3<int32_t>{vec3<uint32_t>{designator.point} * static_cast<uint32_t>(tfx::actors::position_unit)};
         auto const *weapon{selected_weapon()};
         if(weapon == &tables.weapons[std::to_underlying(tfx::weapons::weapon_id::maverick)]) {
@@ -1142,6 +1147,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     radar.nearby_hostile_count = options.nearby_hostile_count;
     seeker.begin_mission(options.projection_origin);
     designator = {};
+    designator_mouse.reset();
     designator_view = designator_tracking_frame = false;
     designator_frame_gap = 0;
     views = tfx::cockpit::view_control{};
@@ -1295,7 +1301,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
           .source{simple_controls.source},
           .keys{simple_controls.keys},
           .joystick{vec2<int16_t>{simple_controls.joystick}},
-          .mouse{vec2<int16_t>{mouse_control.position}},
+          .mouse{designator_view ? vec2<int16_t>{0,0} : vec2<int16_t>{mouse_control.position}},
           .alt{simple_controls.alt},
           .accelerate{controls.accelerate},
           .decelerate{controls.decelerate},
@@ -2017,6 +2023,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     render::preview_state lighting_frame{palette_lighting,paused};
     render::preview_state rain_frame{options.rain,paused};
     render::preview_state radio_frame{radio,paused};
+    render::preview_state designator_frame{designator_display,paused};
     if(paused) recording_timestamp.reset();
     hud_vectors.begin(video.resolution);hud_underlay.clear();
     instrument_positions = {};
@@ -2154,7 +2161,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       paint_scene(primary,primary.world_anchor,true);
       paint_precipitation(primary);
     }
-    if(!inspect && !paused) update_designator();
+    if(!inspect) update_designator(paused);
     if(!inspect) options.ground_reference = vec3<int32_t>{view_motion.value().ground_reference};
     auto const projection_origin{cockpit_frame.projection_origin(view_index(),cockpit_position.value())};
     auto view{inspect ? tfx::render::inspection_camera(position,heading,pitch) : designator_view ? tfx::cockpit::designator_pose(designator).camera(projection_origin) : view_motion.last_pose().camera(projection_origin)};
@@ -2228,7 +2235,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         });
         if(radio_window) instruments.draw_radio(renderer,*radio_window);
       }
-      if(designator_view) designator_display.draw(renderer,impact_projection->integer(designator.point).value_or(vec2<int16_t>{-1,-1}),designator_tracking_frame);
+      if(designator_view) designator_frame->draw(renderer,impact_projection->integer(designator.point).value_or(vec2<int16_t>{-1,-1}),designator_tracking_frame);
       if(flight_recorder.active()) {
         auto const &marker{tables.configuration_widgets().recording_marker};
         tables.presentation_fonts().draw_driver(renderer.output,{311,1},marker,0);
@@ -2336,7 +2343,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
 
   double previous_time{glfwGetTime()}, title_time{previous_time}, last_mouse_x{0}, last_mouse_y{0}, timer_fraction{0};
   unsigned int frames{0}, interval_frames{0};
-  bool captured{false}, mouse_started{false}, store_trigger{false}, orbiting{false};
+  bool captured{false}, mouse_started{false}, store_trigger{false}, designator_mouse_active{false}, orbiting{false};
   std::array<bool,GLFW_KEY_LAST + 1> held{false};
   // A key that closed the launch screen is not a new in-flight press.
   for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = glfwGetKey(host,key) == GLFW_PRESS;
@@ -2363,6 +2370,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       mission_progress.ended = true;
     }
   }};
+  window.take_scroll();
   while(window.poll()) {
     if(video.automatic_resolution && video.resolution != window.resolution()) {
       video.resolution = vec2<int>{window.resolution()};
@@ -2371,6 +2379,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }
     double const now{glfwGetTime()}, real_elapsed{now - previous_time}, elapsed{std::clamp(real_elapsed,0.0,.1)};
     previous_time = now;
+    auto const wheel{window.take_scroll()};
     bool const focused{window.focused()};
     if(!focused) {
       captured = false;
@@ -2384,6 +2393,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       simple_controls.joystick = {0,0};
       stick_buttons = {};
       mouse_control = {};
+      designator_mouse.reset();
     }
     pause_input::snapshot keys{};
     if(focused) for(int key=GLFW_KEY_SPACE;key<=GLFW_KEY_LAST;++key) keys[static_cast<size_t>(key)]=glfwGetKey(host,key)==GLFW_PRESS;
@@ -2499,6 +2509,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       mouse_control = {};
       pitch_input = roll_input = 0;
       store_trigger = false;
+      designator_mouse.reset();
+      window.take_scroll();
       // The modal screen consumed its closing make-code. Do not turn a
       // still-held M/Escape into another map request or an ejection press.
       for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) {
@@ -2560,6 +2572,14 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }};
     if(!inspect && !result_evaluated) for(auto const &[key,action] : view_bindings) if(pressed(key)) select_view(action);
     uint8_t const stick_mask{focused && !inspect && !paused && !result_evaluated ? poll_stick() : uint8_t{0}};
+    bool const designator_mouse_mode{!inspect && !result_evaluated && designator_view};
+    if(designator_mouse_mode != designator_mouse_active) {
+      designator_mouse_active = designator_mouse_mode;
+      mouse_started = false;
+      pitch_input = roll_input = 0;
+      mouse_control = {};
+      designator_mouse.reset();
+    }
     bool const orbit_input{!inspect && !designator_view && external_orbit.select(views.value().current)};
     if(orbit_input != orbiting) {
       orbiting = orbit_input;
@@ -2567,17 +2587,22 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       pitch_input = roll_input = 0;
       mouse_control = {};
     }
-    bool const capture{focused && (inspect ? glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS : (orbiting || (!paused && (arcade_mode || simple_controls.source == tfx::flight::control_source::mouse))) && !result_evaluated)};
-    if(capture != captured) {
+    bool const capture{focused && (inspect ? glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS : (orbiting || designator_mouse_mode || (!paused && (arcade_mode || simple_controls.source == tfx::flight::control_source::mouse))) && !result_evaluated)};
+    if(focused && designator_mouse_mode) designator_mouse.scroll(wheel.y);
+    bool const capture_changed{capture != captured};
+    if(capture_changed) {
       captured = capture;
       mouse_started = false;
       glfwSetInputMode(host,GLFW_CURSOR,captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
     }
-    if(captured) {
+    // Capture can enqueue a cursor warp. Let the next poll consume it before
+    // taking a new baseline, otherwise that warp becomes a steering command.
+    if(captured && !capture_changed) {
       double mouse_x{0}, mouse_y{0};
       glfwGetCursorPos(host,&mouse_x,&mouse_y);
       if(mouse_started) {
         if(inspect) { heading += (mouse_x - last_mouse_x) * .004; pitch -= (mouse_y - last_mouse_y) * .004; }
+        else if(designator_mouse_mode) designator_mouse.move({mouse_x - last_mouse_x,mouse_y - last_mouse_y});
         else if(orbiting) external_orbit.move({mouse_x - last_mouse_x,mouse_y - last_mouse_y});
         else { pitch_input += mouse_y - last_mouse_y; roll_input += mouse_x - last_mouse_x; }
       }
@@ -2980,15 +3005,15 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         simple_controls.alt = down(GLFW_KEY_LEFT_ALT) || down(GLFW_KEY_RIGHT_ALT);
         auto const input_word{[](double const value){ return static_cast<int16_t>(std::clamp(value,-32768.0,32767.0)); }};
         tfx::flight::flight_controls const controls{
-          .pitch_delta{input_word(pitch_input)},
-          .roll_delta{input_word(roll_input)},
+          .pitch_delta{designator_view ? int16_t{0} : input_word(pitch_input)},
+          .roll_delta{designator_view ? int16_t{0} : input_word(roll_input)},
           .accelerate{keyboard.accelerate},
           .decelerate{keyboard.decelerate},
-          .mouse_buttons{static_cast<uint8_t>((focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0))},
+          .mouse_buttons{static_cast<uint8_t>((focused && !designator_view && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (focused && !designator_view && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0))},
         };
         pitch_input -= controls.pitch_delta;
         roll_input -= controls.roll_delta;
-        if(simple_controls.source == tfx::flight::control_source::mouse && !arcade_mode) mouse_control.advance({controls.roll_delta,controls.pitch_delta});
+        if(!designator_view && simple_controls.source == tfx::flight::control_source::mouse && !arcade_mode) mouse_control.advance({controls.roll_delta,controls.pitch_delta});
         advance_world(controls,step->world_ticks,step->physics_seconds,down(GLFW_KEY_SPACE),store_trigger);
         if(service_modal_closed) {
           service_modal_closed = false;

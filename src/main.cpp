@@ -95,7 +95,7 @@ auto main(int const argc, char const *const argv[])->int try {
                    "[ and ] toggle engines; G gear; H arrestor hook; W wheel brakes; B air brakes; Alt+B brake chute; Shift+B cut away.\n"
                    "E/S toggle ECM/stealth on Eurofighter/F-22; Insert releases chaff; Delete releases a flare.\n"
                    "Enter selects air-to-air weapons; Backspace/O air-to-ground; F/Ctrl selects cannon/navigation.\n"
-                   "C cycles radar/emitter targets; Z opens/locks laser designator; arrows aim; comma/period zoom.\n"
+                   "C cycles radar/emitter targets; Z opens/locks laser designator; mouse/arrows aim; wheel or comma/period zoom.\n"
                    "X clears targets; F1 returns to flight view; Space fires; Alt+J jettisons ground stores/tanks; T toggles accelerated time; P/Pause pauses; Escape/backtick opens menu; double Ctrl+Escape ejects; Shift+Q opens quit/enrol confirmation.\n"
                    "M opens the tactical map; any key returns. D toggles external flight information; Shift+D restores default stores and countermeasures.\n"
                    "1/2/3 cycle the MFDs; R changes radar range; N selects the ground-target preview.\n"
