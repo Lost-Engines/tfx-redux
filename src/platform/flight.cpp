@@ -2588,7 +2588,10 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       mouse_control = {};
     }
     bool const capture{focused && (inspect ? glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS : (orbiting || designator_mouse_mode || (!paused && (arcade_mode || simple_controls.source == tfx::flight::control_source::mouse))) && !result_evaluated)};
-    if(focused && designator_mouse_mode) designator_mouse.scroll(wheel.y);
+    if(focused && !result_evaluated) {
+      if(designator_mouse_mode) designator_mouse.scroll(wheel.y);
+      else if(orbiting) external_orbit.scroll(wheel.y);
+    }
     bool const capture_changed{capture != captured};
     if(capture_changed) {
       captured = capture;

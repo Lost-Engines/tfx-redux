@@ -61,6 +61,7 @@ run
 commands
 silent
 printf \"ORBIT %d %f %f\\n\", this->selected, this->heading, this->pitch
+printf "ZOOM %f\\n", this->zoom
 continue
 end
 break tfx::flight::advance_arcade
@@ -131,26 +132,38 @@ run
     tap('Escape');wait(lambda:'flight' in title(),'Escape did not resume flight')
    if a.mouse_orbit:
     def orbit_states():return [(int(m),float(h),float(p)) for m,h,p in re.findall(r'^ORBIT (\d+) ([-.0-9]+) ([-.0-9]+)$',log.read_text(),re.M)]
+    def zoom():return float(re.findall(r'^ZOOM ([-.0-9]+)$',log.read_text(),re.M)[-1])
     def mouse(dx,dy):run('xdotool','mousemove_relative','--',str(dx),str(dy));time.sleep(.3)
     tap('F7');wait(lambda:orbit_states()[-1][0]==11,'tactical view did not open')
     before=len(log.read_text());mouse(70,-40)
     wait(lambda:orbit_states()[-1][1]>0 and orbit_states()[-1][2]<0,'mouse did not orbit tactical view')
     assert all(x==('0','0') for x in re.findall(r'^STEER (-?\d+) (-?\d+)$',log.read_text()[before:],re.M)),'orbit also steered aircraft'
     screenshot('mouse-orbit-tactical')
+    run('xdotool','click','4');wait(lambda:zoom()==1,'wheel up did not zoom the running camera')
+    run('xdotool','click','5');wait(lambda:zoom()==0,'wheel down did not restore camera distance')
+    assert all(x==('0','0') for x in re.findall(r'^STEER (-?\d+) (-?\d+)$',log.read_text()[before:],re.M)),'wheel zoom also steered aircraft'
+    run('xdotool','click','4');wait(lambda:zoom()==1,'wheel zoom did not resume')
     tap('F7');wait(lambda:orbit_states()[-1]==(11,0.,0.),'reselecting camera did not reset orbit')
+    wait(lambda:zoom()==0,'reselecting camera did not reset wheel zoom')
     tap('F5');wait(lambda:orbit_states()[-1][0]==4,'chase view did not open')
     before=len(log.read_text());mouse(100,30)
     wait(lambda:orbit_states()[-1][1]>0 and orbit_states()[-1][2]>0,'mouse did not orbit chase view')
     assert all(x==('0','0') for x in re.findall(r'^STEER (-?\d+) (-?\d+)$',log.read_text()[before:],re.M)),'chase orbit also steered aircraft'
+    run('xdotool','click','4');wait(lambda:zoom()==1,'chase wheel zoom failed')
     screenshot('mouse-orbit-chase')
     state=orbit_states()[-1];run('xdotool','windowfocus','0');time.sleep(.3);mouse(100,-60)
+    run('xdotool','click','4');time.sleep(.3)
+    assert zoom()==1,'unfocused wheel changed zoom'
     assert orbit_states()[-1]==state,'unfocused mouse changed orbit'
     run('xdotool','windowfocus','--sync',window);time.sleep(.3)
     assert orbit_states()[-1]==state,'refocusing jumped the camera'
     tap('F1');wait(lambda:orbit_states()[-1][0]==0,'cockpit did not reopen')
+    assert zoom()==0,'external zoom leaked into cockpit'
+    run('xdotool','click','4');time.sleep(.3)
+    assert zoom()==0,'cockpit wheel changed external zoom'
     before=len(log.read_text());mouse(8,-6)
     wait(lambda:any(x!=('0','0') for x in re.findall(r'^STEER (-?\d+) (-?\d+)$',log.read_text()[before:],re.M)),'cockpit mouse steering did not resume')
-    print('Mouse orbit passed: tactical/chase, screen axes, reset, no flight steering, focus release, cockpit steering restored')
+    print('Mouse orbit/zoom passed: tactical/chase, screen axes, wheel directions, reset, no flight steering, ignored background/cockpit wheel, focus release, cockpit steering restored')
    key='ctrl+Escape' if a.redux else 'Escape'
    run('xdotool','keydown',key);time.sleep(1);run('xdotool','keyup',key);time.sleep(.3)
    assert states()[-1]==(1,0),('one held press ejected the pilot',states()[-8:])

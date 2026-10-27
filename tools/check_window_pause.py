@@ -82,6 +82,7 @@ run
 commands
 silent
 printf "ORBIT %d %f %f\n", this->selected, this->heading, this->pitch
+printf "ZOOM %f\n", this->zoom
 continue
 end
 run
@@ -172,7 +173,20 @@ run
                 frames(6)
                 states = [(int(m), float(h), float(p)) for m,h,p in re.findall(r'^ORBIT (\d+) ([-.0-9]+) ([-.0-9]+)$', log.read_text(), re.M)]
                 assert any(m == 4 and abs(h) > .05 and abs(p) > .05 for m,h,p in states), 'paused mouse did not orbit the aircraft'
-                assert chase != picture('paused-orbit'), 'mouse orbit did not change the paused image'
+                orbited = picture('paused-orbit')
+                assert chase != orbited, 'mouse orbit did not change the paused image'
+                run('xdotool', 'click', '4')
+                frames(5)
+                assert float(re.findall(r'^ZOOM ([-.0-9]+)$', log.read_text(), re.M)[-1]) == 1, 'paused wheel did not zoom'
+                assert picture('paused-zoom') != orbited, 'wheel zoom did not change the paused image'
+                run('xdotool', 'click', '5')
+                frames(5)
+                assert picture('paused-zoom-restored') == orbited, 'reverse scrolling did not restore the paused image'
+                run('xdotool', 'click', '4')
+                frames(5)
+                tap('F5')
+                frames(80)
+                assert float(re.findall(r'^ZOOM ([-.0-9]+)$', log.read_text(), re.M)[-1]) == 0, 'selecting the paused camera did not reset zoom'
             tap('4')
             wait(lambda: bool(list(install.glob('GRAB_*.LBM'))), 'screenshot key did not save while paused')
             assert count('TICK') == frozen_ticks and count('ANIMATION') == frozen_animation, 'mouse or screenshot input advanced the world'
@@ -200,7 +214,7 @@ run
             paused()
             tap('Pause')
             running()
-            print('Paused F-key cameras, frozen scene, mouse orbit where supported and screenshot save passed. Live pause: Pause/P stop simulation; modifiers leave it paused; Enter, Space and G resume; held Space cannot fire until released and pressed again.')
+            print('Paused F-key cameras, frozen scene, mouse orbit/zoom where supported and screenshot save passed. Live pause: Pause/P stop simulation; modifiers leave it paused; Enter, Space and G resume; held Space cannot fire until released and pressed again.')
     finally:
         if game and game.poll() is None:
             os.killpg(game.pid, signal.SIGTERM)

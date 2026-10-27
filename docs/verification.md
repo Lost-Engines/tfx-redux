@@ -120,9 +120,10 @@ entry/cancellation, and a 913×617 render target after resizing. Add
 `--menu-eject` to check confirmed menu ejection, or `--fixed-resolution` to check
 that an explicit target remains fixed when the window changes. Test installs
 and pilot/configuration files are disposable. `--mouse-orbit` additionally checks
-external camera mouse movement, reset, focus release and separation from flight
-steering. `mouse_orbit_tests` checks pivot/distance preservation and tracking for
-every supported external view, including missiles and the ejected pilot.
+external camera mouse movement, wheel zoom, reset, focus release and separation from flight
+steering. `mouse_orbit_tests` checks pivot preservation, zoom direction and bounds,
+fractional input, unchanged FOV and tracking for every supported external view,
+including missiles and the ejected pilot.
 
 ## Pause input
 
@@ -136,7 +137,7 @@ press after release can fire normally. Modifier keys alone leave flight paused.
 The same check switches F4/F5/F1 while paused, waits for camera transitions,
 compares a settled view across repeated frames, and saves an in-game screenshot.
 Simulation ticks and scenery animation calls must stay unchanged throughout.
-Redux additionally checks that paused mouse orbit changes the rendered view.
+Redux additionally checks that paused mouse orbit and wheel zoom change the rendered view, that reverse scrolling restores it, and that camera selection resets zoom.
 
 `tools/check_window_designator_mouse.py --redux` checks real mouse movement and both mouse buttons in Z view, confirms that flight receives no mouse input, and checks that F1 restores steering without carrying over camera input. Run it with both `--flight-model arcade` and `--flight-model military-spec` to cover relative steering and the retained mouse stick. It also checks paused designator images for unwanted animation. The test uses a private X11 display and temporary configuration; GDB only observes state.
 

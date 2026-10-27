@@ -40,11 +40,24 @@ int main() {
       close(changed.transform(target),original.transform(target),"orbit moved the subject on screen");
       require(std::abs((changed.position-target).dot(changed.position-target)-1600)<1e-8,"orbit changed viewing distance");
       close(changed.forward.cross(changed.right),changed.down,"camera basis lost orthogonality");
+      orbit.scroll(8);
+      auto const nearer{orbit.apply(original,context,missile)};
+      require(std::abs((nearer.position-target).dot(nearer.position-target)-400)<1e-8,"wheel up did not halve viewing distance");
+      close(nearer.forward,changed.forward,"zoom changed orbit orientation");
+      require(nearer.focal_distance==original.focal_distance,"zoom changed field of view");
+      require(nearer.transform(target).z>nearer.near_distance,"zoom clipped its subject at the near plane");
+      // A target off the optical axis must retain its screen position too.
+      auto off_centre{original};off_centre.position+=original.right*7;
+      auto const zoomed_off_centre{orbit.apply(off_centre,context,missile)};
+      auto const screen_delta{zoomed_off_centre.project(zoomed_off_centre.transform(target))-off_centre.project(off_centre.transform(target))};
+      require(screen_delta.dot(screen_delta)<1e-14,"zoom moved an off-centre subject on screen");
+      orbit.scroll(-8);
+      close(orbit.apply(original,context,missile).position,changed.position,"reverse wheel did not restore viewing distance");
       orbit.move({-80,45});
       close(orbit.apply(original,context,missile).position,original.position,"opposite motion did not restore view");
-      orbit.move({30,50});orbit.reset();
+      orbit.move({30,50});orbit.scroll(5);orbit.reset();
       close(orbit.apply(original,context,missile).position,original.position,"reset did not restore native view");
-      orbit.move({30,50});
+      orbit.move({30,50});orbit.scroll(-5);
       require(!orbit.select(view_mode::cockpit),"cockpit must retain flight steering");
       close(orbit.apply(original,context,missile).position,original.position,"orbit leaked into cockpit");
       orbit.select(mode);
@@ -55,7 +68,7 @@ int main() {
   for(auto mode : {view_mode::full_forward,view_mode::virtual_cockpit,view_mode::target_tracking,
                    view_mode::designator,view_mode::missile_infrared,view_mode::rear})
     require(!orbit.select(mode),"internal camera must not orbit");
-  orbit.select(view_mode::missile);orbit.move({100,20});
+  orbit.select(view_mode::missile);orbit.move({100,20});orbit.scroll(4);
   auto const original{tfx::render::inspection_camera(vec3d{missile.position_q8}/256.0-vec3d{0,0,40},0,0)};
   auto const active{orbit.apply(original,context,missile)};
   context.missile.reset();
@@ -65,5 +78,26 @@ int main() {
   context.missile->position_q8 += vec3<int32_t>{25600,0,-51200};
   auto translated{original};translated.position += vec3d{100,0,-200};
   close(orbit.apply(translated,context,missile).position,active.position+vec3d{100,0,-200},"orbit stopped following its subject");
-  std::cout << "External mouse orbit: screen axes, fixed pivot/distance, tracking, reset and internal-view exclusion passed\n";
+  mouse_orbit whole, fractional;
+  whole.select(view_mode::chase);fractional.select(view_mode::chase);
+  whole.scroll(1);
+  for(int i=0;i<4;++i) fractional.scroll(.25);
+  close(whole.apply(original,context,missile).position,fractional.apply(original,context,missile).position,"fractional wheel input changed zoom speed");
+  vec3d const target{vec3d{context.position_q8}/256.0};
+  auto const distance{[&](tfx::render::camera const &camera) { auto delta{camera.position-target};return std::sqrt(delta.dot(delta)); }};
+  whole.scroll(1e9);
+  auto const nearest{whole.apply(original,context,missile)};
+  require(std::isfinite(distance(nearest)) && distance(nearest)>0 && nearest.near_distance>0,"zoom limit crossed the subject or near plane");
+  whole.scroll(-1);
+  require(distance(whole.apply(original,context,missile))>distance(nearest),"zoom-in bound swallowed reverse scrolling");
+  whole.scroll(-1e9);
+  auto const farthest{whole.apply(original,context,missile)};
+  require(std::isfinite(distance(farthest)) && distance(farthest)>distance(original),"zoom-out bound overflowed or reversed direction");
+  whole.scroll(1);
+  require(distance(whole.apply(original,context,missile))<distance(farthest),"zoom-out bound swallowed reverse scrolling");
+  for(auto mode : {view_mode::cockpit,view_mode::designator,view_mode::missile_infrared}) {
+    whole.select(mode);whole.scroll(10);
+    close(whole.apply(original,context,missile).position,original.position,"external wheel zoom leaked into an internal camera");
+  }
+  std::cout << "External mouse orbit and zoom: screen axes, pivot, FOV, wheel directions/bounds/fractions, tracking, reset and internal-view exclusion passed\n";
 }
