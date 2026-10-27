@@ -27,39 +27,62 @@ args = parser.parse_args()
 width, height = map(int, args.resolution.lower().split('x'))
 resolution = (width, height)
 
+def unpack(data, length):
+    at = 0
+    pixels = bytearray()
+    while at < len(data):
+        control = data[at]
+        at += 1
+        assert control != 128
+        if control < 128:
+            size = control + 1
+            pixels.extend(data[at:at + size])
+            at += size
+        else:
+            pixels.extend(bytes([data[at]]) * (257 - control))
+            at += 1
+    assert at == len(data) and len(pixels) == length
+    return pixels
+
 def decode(path):
     data = path.read_bytes()
-    assert data[:8] == b'TFXRVID\0' and struct.unpack_from('<II', data, 8) == (1, 0)
+    version, reserved = struct.unpack_from('<II', data, 8)
+    assert data[:8] == b'TFXRVID\0' and version in (1, 2) and reserved == 0
     count, = struct.unpack_from('<Q', data, 16)
     at = 24
     previous = None
     result = []
     for _ in range(count):
-        width, height, duration, length, mode = struct.unpack_from('<IIQIB', data, at)
-        assert data[at + 21:at + 24] == bytes(3) and 0 < duration <= 600000000
+        width, height, duration, length, mode, optical = struct.unpack_from('<IIQIBB', data, at)
+        assert data[at + 22:at + 24] == bytes(2) and optical in (0, 1) and 0 < duration <= 600000000
+        assert version == 2 or optical == 0
         at += 24
         palette = data[at:at + 768]
         at += 768
-        end = at + length
-        pixels = bytearray()
-        while at < end:
-            control = data[at]
-            at += 1
-            assert control != 128
-            if control < 128:
-                size = control + 1
-                pixels.extend(data[at:at + size])
-                at += size
-            else:
-                pixels.extend(bytes([data[at]]) * (257 - control))
-                at += 1
-        assert at == end and len(pixels) == width * height
+        pixels = unpack(data[at:at + length], width * height)
+        at += length
         if mode:
             assert mode == 1 and previous is not None and len(previous) == len(pixels)
             pixels = bytearray(a ^ b for a, b in zip(pixels, previous))
         previous = pixels
-        result.append((width, height, palette, bytes(pixels)))
+        coverage = b''
+        if optical:
+            length, = struct.unpack_from('<I', data, at)
+            at += 4
+            coverage = bytes(unpack(data[at:at + length], width * height))
+            at += length
+        result.append((width, height, palette, bytes(pixels), coverage))
     assert at == len(data) and count >= 3
+    return result
+
+def colourise(palette, pixels, coverage):
+    colours = [bytes(((component & 63) * 255 + 31) // 63 for component in palette[at:at + 3]) + b'\xff' for at in range(0, 768, 3)]
+    result = bytearray(b''.join(colours[pixel] for pixel in pixels))
+    for i, alpha in enumerate(coverage):
+        if alpha:
+            for channel in range(3):
+                light = (colours[6][channel] * alpha * 9 + 1275) // 2550
+                result[i * 4 + channel] = min(255, result[i * 4 + channel] + light)
     return result
 
 with tempfile.TemporaryDirectory(prefix='tfx-redux-recording-') as temporary:
@@ -132,6 +155,9 @@ python
 start=int(gdb.parse_and_eval('image.pixels._M_impl._M_start'))
 end=int(gdb.parse_and_eval('image.pixels._M_impl._M_finish'))
 (root/f'live-{recorded}.pixels').write_bytes(gdb.selected_inferior().read_memory(start,end-start))
+start=int(gdb.parse_and_eval('image.hud_coverage._M_impl._M_start'))
+end=int(gdb.parse_and_eval('image.hud_coverage._M_impl._M_finish'))
+(root/f'live-{recorded}.hud').write_bytes(gdb.selected_inferior().read_memory(start,end-start) if end>start else b'')
 palette=int(gdb.parse_and_eval('&palette._M_elems[0]'))
 (root/f'live-{recorded}.palette').write_bytes(gdb.selected_inferior().read_memory(palette,768))
 print(f'REDUX_FRAME {recorded}')
@@ -178,16 +204,16 @@ run
         assert instruments and all(int(w) > 51 and int(h) > 35 and math.isclose(float(focal), 256 * min(width / 320, height / 200)) for _, w, h, _, focal, _ in instruments), 'MFD did not render at displayed resolution with its authored lens'
         frames = decode(install / 'video.rec')
         assert len(frames) == text.count('REDUX_FRAME ')
-        for index, (stored_width, stored_height, palette, pixels) in enumerate(frames):
+        for index, (stored_width, stored_height, palette, pixels, coverage) in enumerate(frames):
             assert (stored_width, stored_height) == resolution
+            assert coverage == (root / f'live-{index}.hud').read_bytes() and any(coverage), ('optical HUD differs or is missing', index)
             assert pixels == (root / f'live-{index}.pixels').read_bytes(), ('recorded pixels differ', index)
             assert palette == (root / f'live-{index}.palette').read_bytes(), ('recorded palette differs', index)
         if args.save_directory:
             from PIL import Image
             args.save_directory.mkdir(parents=True, exist_ok=True)
-            width, height, palette, pixels = frames[0]
-            image = Image.frombytes('P', (width, height), pixels)
-            image.putpalette(bytes(((component & 63) * 255 + 31) // 63 for component in palette))
+            width, height, palette, pixels, coverage = frames[0]
+            image = Image.frombytes('RGBA', (width, height), bytes(colourise(palette, pixels, coverage)))
             image.convert('RGB').save(args.save_directory / 'mfd-recording.png')
         assert (install / 'TFX.CFG').read_bytes() == config
         # Read back through the actual production playback window. Break at
@@ -229,11 +255,10 @@ run
             game.wait(timeout=60)
         text = log.read_text()
         assert game.returncode == 0 and 'exited normally' in text and text.count('REDUX_PLAY ') == len(frames), text[-6000:]
-        for index, (_, _, palette, pixels) in enumerate(frames):
-            colours = [bytes(((component & 63) * 255 + 31) // 63 for component in palette[at:at + 3]) + b'\xff' for at in range(0, 768, 3)]
-            rgba = b''.join(colours[pixel] for pixel in pixels)
+        for index, (_, _, palette, pixels, coverage) in enumerate(frames):
+            rgba = colourise(palette, pixels, coverage)
             assert rgba == (root / f'played-{index}.rgba').read_bytes(), ('playback changed displayed pixels', index)
-        print(f'Live Redux capture/replay: {len(frames)} full-resolution frames match every palette index, DAC value and displayed RGBA pixel; FOV/range unchanged, both MFD cameras rendered at displayed resolution')
+        print(f'Live Redux capture/replay: {len(frames)} full-resolution frames match every palette index, DAC value, optical HUD sample and displayed RGBA pixel; FOV/range unchanged, both MFD cameras rendered at displayed resolution')
     finally:
         for process in (game, display):
             if process is not None and process.poll() is None:

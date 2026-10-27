@@ -1,4 +1,5 @@
 #include "drawing.h"
+#include "cockpit/vector_hud.h"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -7,6 +8,7 @@ namespace tfx::presentation {
 
 // Native widgets use inclusive endpoints and the same Bresenham tie rule as VGA lines.
 void draw_line(render::framebuffer &image, vec2<int> from, vec2<int> const &to, uint8_t const colour) {
+  if(image.hud_capture) { image.hud_capture->line(vec2d{from},vec2d{to},{0,0},{319,199});return; }
   if(from.x > to.x) { draw_line(image,vec2<int>{to},from,colour);return; }
   int const dx{to.x - from.x}, dy{std::abs(to.y - from.y)}, direction{from.y <= to.y ? 1 : -1};
   auto const pixel{[&] {
@@ -48,10 +50,12 @@ bool clip_line(vec2<int> &from, vec2<int> &to,
 }
 void draw_clipped_line(render::framebuffer &image, vec2<int> from, vec2<int> to,
   vec2<int> const &minimum, vec2<int> const &maximum, uint8_t const colour) {
+  if(image.hud_capture) { image.hud_capture->line(vec2d{from},vec2d{to},minimum,maximum);return; }
   if(clip_line(from,to,minimum,maximum)) draw_line(image,vec2<int>{from},to,colour);
 }
 void draw_patterned_line(render::framebuffer &image, vec2<int> from, vec2<int> to,
   vec2<int> const &minimum, vec2<int> const &maximum, uint8_t const colour, uint8_t pattern) {
+  if(image.hud_capture) { image.hud_capture->line(vec2d{from},vec2d{to},minimum,maximum,pattern);return; }
   if(!clip_line(from,to,minimum,maximum)) return;
   // Native 0xdf790 starts from the lesser X (swapping equal X too). Its
   // pattern phase comes from the VGA plane mask, not the screen X directly.

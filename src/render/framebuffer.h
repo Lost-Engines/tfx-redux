@@ -8,6 +8,8 @@
 #include "vectorstorm/vector/vector4.h"
 #include "math/native.h"
 
+namespace tfx::cockpit { class vector_hud; }
+
 namespace tfx::render {
 
 int constexpr screen_width{320}, screen_height{200};
@@ -31,6 +33,8 @@ struct framebuffer {
   vec2<int> size{screen_width,screen_height};
   pixel_buffer pixels{static_cast<size_t>(size.x) * static_cast<size_t>(size.y)};
   std::vector<uint8_t> coverage{};
+  std::vector<uint8_t> hud_coverage{}; // Optional antialiased additive HUD light.
+  cockpit::vector_hud *hud_capture{nullptr}; // Scoped, non-owning drawing sink.
   static size_t pixel_count(vec2<int> const &dimensions);
   void resize(vec2<int> const &dimensions);
   void track_writes();

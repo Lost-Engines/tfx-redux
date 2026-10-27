@@ -1,4 +1,5 @@
 #include "software_renderer.h"
+#include "cockpit/vector_hud.h"
 #include "model_raster.h"
 #include "rounded_curve.h"
 #include "integer_polygon.h"
@@ -308,6 +309,7 @@ void software_renderer::text(int x, int const y, std::string_view const message,
     if(character == ' ') { x += 3; continue; }
     auto const *const glyph{tables.glyph(character)};
     if(!glyph) continue;
+    if(output.hud_capture) { output.hud_capture->glyph(glyph->rows,{static_cast<double>(x),static_cast<double>(y)},clipping);x+=static_cast<int>(glyph->advance);continue; }
     for(int row{0}; row != 6; ++row) {
       for(int column{0}; column != 8; ++column) {
         if((glyph->rows[static_cast<unsigned int>(row)] & (128 >> column)) && x + column >= clipping.glyph_minimum.x && x + column < clipping.glyph_limit.x && y + row >= clipping.glyph_minimum.y && y + row < clipping.glyph_limit.y) {

@@ -14,7 +14,7 @@ void framebuffer::resize(vec2<int> const &dimensions) {
   auto const count{pixel_count(dimensions)};
   size = vec2<int>{dimensions};
   pixels.assign(count,0);
-  coverage.clear();
+  coverage.clear();hud_coverage.clear();hud_capture=nullptr;
 }
 void framebuffer::track_writes() {
   coverage.assign(pixels.size(),0);
@@ -22,12 +22,21 @@ void framebuffer::track_writes() {
 
 
 std::vector<rgba_pixel> framebuffer::colourise(palette const &colours) const {
-  /// Keep palette indices through software drawing; RGB conversion happens only at presentation
+  // Keep scene palette indices until presentation; add optical HUD light afterwards.
   std::vector<rgba_pixel> result;
   result.reserve(pixels.size());
   for(auto const index : pixels) {
     auto const &colour{colours[index]};
     result.emplace_back(colour.r, colour.g, colour.b, 255);
+  }
+  if(!hud_coverage.empty()) {
+    if(hud_coverage.size()!=pixels.size()) throw std::logic_error{"HUD coverage dimensions do not match the framebuffer"};
+    auto const &emission{colours[6]};
+    for(size_t i=0;i<result.size();++i) if(hud_coverage[i]) for(unsigned channel=0;channel<3;++channel) {
+      // Add light without darkening or replacing the scenery behind it.
+      unsigned const light{(static_cast<unsigned>(emission[channel])*hud_coverage[i]*9+1275)/2550};
+      result[i][channel]=static_cast<uint8_t>(std::min(255u,static_cast<unsigned>(result[i][channel])+light));
+    }
   }
   return result;
 }
@@ -36,10 +45,7 @@ void framebuffer::screenshot(std::filesystem::path const &path, palette const &c
   std::ofstream stream{path, std::ios::binary};
   stream.exceptions(std::ios::failbit | std::ios::badbit);
   stream << "P6\n" << size.x << ' ' << size.y << "\n255\n";
-  for(auto const index : pixels) {
-    auto const &colour{colours[index]};
-    stream.write(reinterpret_cast<char const*>(colour.data()), 3);
-  }
+  for(auto const &colour : colourise(colours)) stream.write(reinterpret_cast<char const*>(colour.data()), 3);
 }
 
 palette decode_palette(std::span<uint8_t const> const source) {

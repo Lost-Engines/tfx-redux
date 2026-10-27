@@ -89,3 +89,22 @@ The same 1080p, 16-cell, full-detail benchmark above measured 0.47 ms horizon,
 14.05 ms scene and 2.29 ms UI (16.80 ms total), with 306 parts / 20,391
 primitives. The added visibility work costs about 1.8 ms in this scene. Timing
 still excludes simulation, audio, colour conversion and desktop upload.
+
+
+## Optical HUD
+
+The forward HUD is rasterised directly into a coverage layer at the framebuffer
+resolution. Lines use a distance-based edge filter, circles are tessellated at
+screen resolution, and the small original glyphs supply connected stroke shapes.
+The pitch ladder and heading strip retain fractional positions. Coverage takes
+the maximum at joins, so repeated endpoints do not become brighter.
+
+Only the HUD is blended after palette conversion: it adds 90% of palette colour 6,
+modulated by coverage and saturated per RGB channel. The terrain and cockpit keep
+their indexed colours. Later cockpit/menu writes occlude the layer, and the layer
+is preserved in screenshots and recordings. Optical screenshots are 24-plane
+true-colour ILBM files; ordinary indexed screenshots retain the original format.
+
+The isolated three-layout HUD probe measured about 0.26 ms at 320×200, 0.81 ms at
+1001×603 and 1.99 ms at 1920×1080, including coverage composition but excluding
+final colour conversion. These are local CPU measurements, not gameplay rates.

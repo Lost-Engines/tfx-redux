@@ -360,6 +360,8 @@ add_library(tfx_core
   src/simulation/acceleration.h
   src/resources/executable_tables.cpp
   src/resources/executable_tables.h
+  src/cockpit/vector_hud.cpp
+  src/cockpit/vector_hud.h
   src/render/framebuffer.cpp
   src/render/framebuffer.h
   src/render/display_pages.cpp src/render/display_pages.h
@@ -492,6 +494,9 @@ if(BUILD_TESTING)
   target_link_libraries(redux_video_tests PRIVATE tfx_core)
   configure_first_party(redux_video_tests)
   add_test(NAME recording.redux_lossless_video COMMAND redux_video_tests)
+  add_executable(redux_hud_probe tests/redux_hud_probe.cpp)
+  target_link_libraries(redux_hud_probe PRIVATE tfx_core)
+  configure_first_party(redux_hud_probe)
   add_executable(redux_effects_probe tests/redux_effects_probe.cpp)
   target_link_libraries(redux_effects_probe PRIVATE tfx_core)
   configure_first_party(redux_effects_probe)

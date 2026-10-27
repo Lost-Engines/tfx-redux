@@ -13,7 +13,8 @@ struct video_frame {
   std::chrono::microseconds duration;
 };
 
-// Redux captures palette indices, preserving the actual displayed view without
+// Redux captures palette indices and optional optical HUD coverage, preserving
+// the actual displayed view without
 // the DOS scene queue's coordinate, resource, model-count or frame-count limits.
 class video_recorder {
 private:
@@ -38,6 +39,7 @@ class video_playback {
 private:
   std::ifstream input;
   uint64_t frames{0}, remaining{0}, bytes_remaining{0};
+  uint32_t version{0};
   render::framebuffer previous;
 
 public:

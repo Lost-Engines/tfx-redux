@@ -1,9 +1,11 @@
 #include "sprites.h"
+#include "cockpit/vector_hud.h"
 #include <algorithm>
 
 namespace tfx::render {
 
 void draw_sprite(framebuffer &target, resources::indexed_image const &image, vec2<int> const &centre, framebuffer *const coverage, raster_clip const &clip) {
+  if(target.hud_capture) { target.hud_capture->sprite(image,vec2d{centre},clip);return; }
   // Native 0xc0ef8 supplies a sprite centre; palette index zero is transparent.
   int const left{centre.x - static_cast<int>(image.size.x / 2)};
   int const top{centre.y - static_cast<int>(image.size.y / 2)};
@@ -40,6 +42,7 @@ void draw_monochrome(framebuffer &target, resources::monochrome_image const &ima
   // Native 0xcda48 uses a top-left origin and MSB-first packed rows. A set bit may paint black.
   // Native arguments are sign-extended words, including callers that supplied MOVZX values.
   vec2<int> const origin{math::signed_word(static_cast<uint16_t>(position.x)),math::signed_word(static_cast<uint16_t>(position.y))};
+  if(target.hud_capture) { target.hud_capture->mask(image,origin,clip);return; }
   unsigned int const stride{(image.size.x + 7) / 8};
   for(int y{std::max({0,origin.y,clip.glyph_minimum.y})}; y < std::min({screen_height,origin.y + static_cast<int>(image.size.y),clip.glyph_limit.y}); ++y) {
     for(int x{std::max({0,origin.x,clip.glyph_minimum.x})}; x < std::min({screen_width,origin.x + static_cast<int>(image.size.x),clip.glyph_limit.x}); ++x) {
