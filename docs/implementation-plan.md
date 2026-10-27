@@ -42,7 +42,7 @@ only when a prepared question cannot be resolved analytically.
 
 ## Deliberately outside this pass
 
-- Optional QSound without its external Creative CSP firmware/driver.
+- Exact original-hardware QSound verification; the built-in analytical model is implemented.
 - Lower-RAM Gravis streaming and unlinked authoring/Inferno paths.
 - Windows/macOS verification and non-x86 numerical portability; Linux is the
   authentic reference target ahead of a separate eventual browser project.

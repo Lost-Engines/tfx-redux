@@ -5,11 +5,9 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 #include "qsound/spatial_model.h"
-#include "qsound/upgrade.h"
 #include "audio/qsound_effect.h"
 #include "audio/sample_voice.h"
 #include "simulation/timing.h"
@@ -24,81 +22,6 @@ void require(bool const condition, char const *message) {
 
 void integer(bytes &output, uint32_t const value, unsigned int const count = 2) {
   for(unsigned int byte{}; byte != count; ++byte) output.push_back(static_cast<uint8_t>(value >> (byte * 8)));
-}
-
-void tag(bytes &output, std::string_view const name) {
-  output.insert(output.end(), name.begin(), name.end());
-}
-
-void chunk(bytes &output, std::string_view const name, std::span<uint8_t const> const contents) {
-  tag(output, name);
-  integer(output, static_cast<uint32_t>(contents.size()), 4);
-  output.insert(output.end(), contents.begin(), contents.end());
-  if(contents.size() % 2) output.push_back(0);
-}
-
-bytes program(std::span<uint32_t const> const words) {
-  bytes result;
-  for(auto const word : words) {
-    for(unsigned int byte{}; byte != 4; ++byte) result.push_back(qsound::unscramble_byte(static_cast<uint8_t>(word >> (byte * 8))));
-  }
-  unsigned int checksum{};
-  for(auto const value : result) checksum += value;
-  integer(result, checksum);
-  integer(result, 1);
-  return result;
-}
-
-// Synthetic coefficient/table fixture, not original Creative firmware and not
-// an executable DSP replacement. It exercises the real parser and audio path.
-bytes fixture_firmware() {
-  std::vector<uint32_t> setup(8);
-  setup.push_back(0x04278000);
-  for(unsigned int filter{}; filter != 2; ++filter) {
-    setup.push_back(0xf8600019 + filter * 3);
-    std::array<int16_t, 3> constexpr taps{-10000, 4000, -5000};
-    for(auto const tap : taps) {
-      setup.push_back(0x742b0000 | static_cast<uint16_t>(tap));
-      setup.push_back(0x1400201c);
-    }
-  }
-  setup.push_back(0xfc600000);
-  setup.push_back(0xfd600083);
-  for(unsigned int position{}; position != 33; ++position) {
-    std::array<unsigned int, 4> const row{
-      2000 + position * 400,
-      30000 - position * 800,
-      3000 + position * 800,
-      15000 - position * 300,
-    };
-    for(auto const value : row) {
-      setup.push_back(0x742b0000 | value);
-      setup.push_back(0x04002108);
-    }
-  }
-  setup.push_back(0xfc600084);
-  std::vector<uint32_t> processing(351);
-  processing[0x72] = 0xfc600084;
-  processing[0x73] = 0xfd600087;
-  processing[0x82] = 0xf8600019;
-  processing[0x83] = 0xca602000;
-  processing[0x9c] = 0xf860001c;
-  bytes description;
-  for(auto const value : {1u, 1u, 2u, 1u, 1u, 1u}) integer(description, value);
-  bytes function;
-  tag(function, "func");
-  chunk(function, "desc", description);
-  bytes code;
-  tag(code, "code");
-  chunk(code, "init", program(setup));
-  chunk(code, "main", program(processing));
-  bytes payload;
-  tag(payload, "CSP ");
-  chunk(payload, "LIST", function);
-  chunk(payload, "LIST", code);
-  bytes result;
-  chunk(result, "RIFF", payload);
-  return result;
 }
 
 tfx::resources::archive fixture_samples() {
@@ -121,15 +44,14 @@ tfx::resources::archive fixture_samples() {
   return {std::move(data)};
 }
 
-void verify_timer(std::span<uint8_t const> const firmware) {
+void verify_timer() {
   unsigned int constexpr rate{48000};
-  auto const functions{qsound::decode_firmware_asset(firmware)};
-  auto const tables{qsound::recover_spatial_tables(qsound::select_qsound_function(functions, 8000))};
+  auto const tables{qsound::make_spatial_tables(8000)};
   qsound::spatial_model expected{tables, {
     .rounding{qsound::rounding_model::floor},
     .accumulation{qsound::accumulation_model::saturate_each_mac},
   }, qsound::position_policy::clamp_to_endpoints};
-  tfx::audio::qsound_effect actual{firmware, rate};
+  tfx::audio::qsound_effect actual{rate};
   tfx::audio::sample_pan parameters{
     .position{14 * 256},
     .increment{1024},
@@ -183,7 +105,7 @@ void verify_timer(std::span<uint8_t const> const firmware) {
   }
 }
 
-void verify_playback(std::span<uint8_t const> const firmware) {
+void verify_playback() {
   auto const archive{fixture_samples()};
   std::array<tfx::audio::sample_definition, 4> const definitions{{
     {
@@ -228,10 +150,9 @@ void verify_playback(std::span<uint8_t const> const firmware) {
     },
   }};
   tfx::audio::sample_bank const bank{definitions, archive};
-  auto const functions{qsound::decode_firmware_asset(firmware)};
-  auto const recovered{qsound::recover_spatial_tables(qsound::select_qsound_function(functions, 8000))};
+  auto const recovered{qsound::make_spatial_tables(8000)};
   for(unsigned int const rate : {8000u, 44100u, 48000u}) {
-    // Before the first PIT interrupt, gains remain at the firmware centre.
+    // Before the first PIT interrupt, gains remain at the default centre.
     // Independently resample native FIR outputs with the documented 119-us
     // DAC hold. This detects filtering repeated host frames or losing skipped
     // native samples at the 8-kHz host rate.
@@ -239,7 +160,7 @@ void verify_playback(std::span<uint8_t const> const firmware) {
       .rounding{qsound::rounding_model::floor},
       .accumulation{qsound::accumulation_model::saturate_each_mac},
     }};
-    tfx::audio::sample_voice held_voice{bank, rate, std::make_unique<tfx::audio::qsound_effect>(firmware, rate)};
+    tfx::audio::sample_voice held_voice{bank, rate, std::make_unique<tfx::audio::qsound_effect>(rate)};
     std::array<unsigned int, 1> constexpr first_sample{0};
     held_voice.submit(tfx::audio::sample_priority::normal, first_sample);
     unsigned int const frames{rate / 100};
@@ -259,8 +180,8 @@ void verify_playback(std::span<uint8_t const> const firmware) {
       require(held[frame * 2] == expected.left / 32768.0f && held[frame * 2 + 1] == expected.right / 32768.0f,
         "QSound filter clock or DAC sample holds changed");
     }
-    tfx::audio::sample_voice contiguous{bank, rate, std::make_unique<tfx::audio::qsound_effect>(firmware, rate)};
-    tfx::audio::sample_voice fragmented{bank, rate, std::make_unique<tfx::audio::qsound_effect>(firmware, rate)};
+    tfx::audio::sample_voice contiguous{bank, rate, std::make_unique<tfx::audio::qsound_effect>(rate)};
+    tfx::audio::sample_voice fragmented{bank, rate, std::make_unique<tfx::audio::qsound_effect>(rate)};
     std::array<unsigned int, 4> constexpr sequence{0, 1, 2, 3};
     contiguous.submit(tfx::audio::sample_priority::normal, sequence);
     fragmented.submit(tfx::audio::sample_priority::normal, sequence);
@@ -278,8 +199,8 @@ void verify_playback(std::span<uint8_t const> const firmware) {
     for(auto const value : whole) require(std::isfinite(value), "QSound produced a non-finite sample");
   }
   unsigned int constexpr rate{48000};
-  tfx::audio::sample_voice first{bank, rate, std::make_unique<tfx::audio::qsound_effect>(firmware, rate)};
-  tfx::audio::sample_voice second{bank, rate, std::make_unique<tfx::audio::qsound_effect>(firmware, rate)};
+  tfx::audio::sample_voice first{bank, rate, std::make_unique<tfx::audio::qsound_effect>(rate)};
+  tfx::audio::sample_voice second{bank, rate, std::make_unique<tfx::audio::qsound_effect>(rate)};
   std::array<unsigned int, 1> constexpr start{0}, interrupt{2}, rejected{1};
   first.submit(tfx::audio::sample_priority::normal, start);
   second.submit(tfx::audio::sample_priority::normal, start);
@@ -300,10 +221,9 @@ void verify_playback(std::span<uint8_t const> const firmware) {
 
 } // anonymous namespace
 
-auto main(int const argc, char const *const argv[])->int try {
-  auto const firmware{argc == 2 ? tfx::resources::read_file(argv[1]) : fixture_firmware()};
-  verify_timer(firmware);
-  verify_playback(firmware);
+auto main()->int try {
+  verify_timer();
+  verify_playback();
   std::cout << "QSound: original timer cadence, endpoint clamping, DAC-rate filtering, callback boundaries, rate changes, preemption, additive mixing and tail drainage passed\n";
   return 0;
 } catch(std::exception const &error) {

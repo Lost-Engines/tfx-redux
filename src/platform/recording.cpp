@@ -45,23 +45,16 @@ void replay_recording(window &window, resources::archive const &game,
     presentation::scene_input input;
     presentation::sequence_controls sequence;
     double const started{glfwGetTime()};
-    double next{started}, paused{0};
+    double next{started};
     presentation::scene_player sequence_player{presentation::node_kind::animation,clip,
       game.read("anim/" + clip.resource + ".256"),tables.presentation_fonts(),{},
       {},palette,tables.text_palette,counters(0),input};
     window.title("TFX Redux — WNN — " + clip.resource);
     while(window.poll()) {
       double const now{glfwGetTime()};
-      if(!window.focused()) {
-        double const before{now};
-        glfwWaitEventsTimeout(.05);
-        paused += glfwGetTime() - before;
-        next = glfwGetTime();
-        continue;
-      }
       if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
       next = now + 1.0 / 70;
-      bool const complete{sequence_player.advance(counters(now - started - paused),input,sequence)};
+      bool const complete{sequence_player.advance(counters(now - started),input,sequence)};
       window.present(sequence_player.image().colourise(sequence_player.colours()));
       if(complete) break;
     }
@@ -87,13 +80,7 @@ void replay_recording(window &window, resources::archive const &game,
   double constexpr frame_seconds{4 / simulation::timer_hz};
   while(window.poll()) {
     double const now{glfwGetTime()};
-    if(!window.focused()) {
-      sample_keys();
-      next = now;
-      glfwWaitEventsTimeout(.05);
-      continue;
-    }
-    if(sample_keys()) break;
+    if(sample_keys() && window.focused()) break;
     if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
     if(video) {
       auto const frame{video->next()};

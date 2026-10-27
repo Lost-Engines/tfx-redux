@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-audio-') as temporary:
   def run(*args):return subprocess.run(args,env=env,check=True,capture_output=True,text=True,timeout=5)
   with pcm.open('wb') as recording, log.open('w') as output:
    capture=subprocess.Popen(['parec','--device='+sink+'.monitor','--format=float32le','--rate=48000','--channels=2'],stdout=recording,stderr=subprocess.DEVNULL,env=env)
-   game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501'if a.cannon else '513','--music','none','--scale','2'],stdout=output,stderr=subprocess.STDOUT,env=env)
+   game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501'if a.cannon else '513','--music','none','--qsound','off','--scale','2'],stdout=output,stderr=subprocess.STDOUT,env=env)
    deadline=time.monotonic()+30;window=None
    while time.monotonic()<deadline and game.poll() is None:
     windows=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True).stdout.splitlines()

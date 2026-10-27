@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fetch the reference CD images and external audio firmware; verify every asset on each run.
 set -u
-usage() { echo "Usage: $0 [destination]"; echo 'Fetch the TFX 2.05 CD, QSound firmware and CM-32L, SC-55 and SCC-1A ROMs (default: $XDG_DATA_HOME/tfx or ~/.local/share/tfx).'; }
+usage() { echo "Usage: $0 [destination]"; echo 'Fetch the TFX 2.05 CD and CM-32L, SC-55 and SCC-1A ROMs (default: $XDG_DATA_HOME/tfx or ~/.local/share/tfx).'; }
 if [[ "${1:-}" == --help ]]; then usage; exit 0; fi
 if (( $# > 1 )); then usage >&2; exit 2; fi
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd) || exit 1

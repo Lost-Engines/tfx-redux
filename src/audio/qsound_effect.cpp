@@ -1,21 +1,16 @@
 #include "qsound_effect.h"
 
 #include <algorithm>
-#include <exception>
 #include <utility>
 #include "qsound/position_sweep.h"
 #include "qsound/spatial_model.h"
-#include "qsound/upgrade.h"
 #include "audio/music_clock.h"
 
 namespace tfx::audio {
+
 namespace {
 
-auto tables(std::span<uint8_t const> const firmware)->qsound::spatial_tables {
-  auto const functions{qsound::decode_firmware_asset(firmware)};
-  unsigned int constexpr original_firmware_rate{8000};
-  return qsound::recover_spatial_tables(qsound::select_qsound_function(functions, original_firmware_rate));
-}
+unsigned int constexpr original_coefficient_bank_rate{8000};
 
 } // anonymous namespace
 
@@ -37,8 +32,8 @@ struct qsound_effect::implementation {
   }
 };
 
-qsound_effect::qsound_effect(std::span<uint8_t const> const firmware, unsigned int const output_rate) :
-  state{std::make_unique<implementation>(tables(firmware), output_rate)} {
+qsound_effect::qsound_effect(unsigned int const output_rate) :
+  state{std::make_unique<implementation>(qsound::make_spatial_tables(original_coefficient_bank_rate), output_rate)} {
 }
 
 qsound_effect::~qsound_effect() = default;
@@ -84,26 +79,6 @@ stereo_frame qsound_effect::process(uint8_t const sample) noexcept {
 
 unsigned int qsound_effect::tail_samples() const noexcept {
   return state->tail;
-}
-
-std::unique_ptr<qsound_effect> load_qsound_effect(std::span<std::filesystem::path const> const directories,
-    unsigned int const output_rate) {
-  std::exception_ptr invalid_firmware;
-  for(auto const &directory : directories) {
-    for(auto const *name : {"WFM0001A.CSP", "wfm0001a.csp", "CSP/WFM0001A.CSP", "csp/wfm0001a.csp", "qsound/MAIN.PVL"}) {
-      auto const path{directory / name};
-      if(std::filesystem::is_regular_file(path)) {
-        try {
-          return std::make_unique<qsound_effect>(resources::read_file(path), output_rate);
-        } catch(std::exception const &) {
-          // A stale local copy must not hide a valid fetched firmware asset.
-          if(!invalid_firmware) invalid_firmware = std::current_exception();
-        }
-      }
-    }
-  }
-  if(invalid_firmware) std::rethrow_exception(invalid_firmware);
-  return {};
 }
 
 } // namespace tfx::audio
