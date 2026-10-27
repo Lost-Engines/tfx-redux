@@ -71,7 +71,8 @@ The following departures from the original are intentional:
 - Arming picks the aircraft's pylon volumes along the cursor ray, including after rotating the aircraft. The held weapon follows that cursor ray instead of mapping mouse movement to fixed aircraft axes. Buttons use the actual cursor position, without the original miniature-aircraft hotspot offset.
 - Escape cancels an active arming operation first. At the idle preflight arming screen, it returns to the preceding choice screen (or pilot enrolment when none exists). During an in-flight rearm, it asks before returning to the mission. Cancelling restores the loadout held before opening the arming screen.
 - Distant point models use the same missile-view projection as polygons. Two-pixel models are clipped at the screen edge instead of wrapping a pixel onto the next row.
-- Small lights and pixel-sized model details scale relative to the original 320×200 image. Missile smoke keeps its visible density when mesh LOD is disabled.
+- At higher resolutions, point lights use smaller circles sized for the camera’s field of view. Distant aircraft dots stay small, and lights are hidden by nearer scenery rather than the drawing order of whole terrain tiles.
+- Missile smoke uses consistent spacing between puffs even when the frame rate changes. Its visibility follows the selected field of view, and its animation and particle sizes are independent of mesh LOD.
 - Moving the mouse in external views orbits the aircraft, missile or target being viewed, with mouse capture and no simultaneous mouse steering. Selecting a camera again restores its normal angle.
 - Escape opens the flight menu; ejection has a separate confirmation or a two-press Ctrl+Escape shortcut. Focus loss releases controls without pausing flight or playback.
 - Looking steeply down no longer paints a blue circular patch beneath the camera. The software horizon uses faster span drawing while retaining its palette bands.

@@ -74,3 +74,18 @@ At 3840×2160 the same scene takes about 32.6 ms (2.5 horizon, 20.9 geometry,
 they are not promised gameplay frame rates. Full-map visibility still incurs
 much more geometry work. The benchmark explicitly holds LOD scale at 0, while
 the game's new default of 0.1 can reduce that work further.
+
+
+## Point visibility
+
+Small point sprites now use a separate visibility pass against the projected
+surfaces. Screen bins restrict each query to nearby polygons; polygon colours
+still use the original painter order. This prevents a terrain tile's sorting
+bias from erasing lights in front of it, without adding a depth operation to
+every framebuffer pixel. Transparent texture texels and regular stipple gaps
+remain transparent; procedural cloud/smoke stipple is not a solid occluder.
+
+The same 1080p, 16-cell, full-detail benchmark above measured 0.47 ms horizon,
+14.05 ms scene and 2.29 ms UI (16.80 ms total), with 306 parts / 20,391
+primitives. The added visibility work costs about 1.8 ms in this scene. Timing
+still excludes simulation, audio, colour conversion and desktop upload.

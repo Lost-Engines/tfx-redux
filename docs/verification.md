@@ -96,9 +96,12 @@ The live check creates a private display, audio sink and installation. It observ
 
 `redux_view_test` checks horizon spans against per-pixel rays, including wide,
 banked and near-vertical views. `redux_effects_probe DATA_DIR` checks the actual
-missile smoke model at five distances and three resolutions: LOD scales 0, 0.1
-and 1 must retain the same particle representation, and one/two-pixel details
-must scale with the target. `redux_arming_probe` also checks target resizing.
+missile smoke model at five distances and three resolutions, plus its complete
+SSD animation: LOD scales 0, 0.1 and 1 must retain the same particle representation
+and lifetime. It also checks identical smoke sample positions across different
+update divisions, wider-FOV visibility, circular light sizes, single-pixel object
+proxies, and occlusion independent of polygon drawing order. `redux_arming_probe`
+also checks target resizing.
 
 `python3 tools/check_window_playtest.py --redux` uses a private X11 display and
 GDB as an observer. It checks continued flight without focus, ignored background

@@ -313,13 +313,14 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
   render::model_queue native_queue;
   auto const projection{view.projector()};
   bool const native{view.projection == render::projection_mode::original_model};
+  if(!native) renderer.begin_points();
   auto const fixed_position{[](vec3d const &position) { return vec3<int32_t>{vec3<uint32_t>{vec3<int64_t>{position * 65536}}}; }};
   auto const paint_part{[&](queued_part &item, render::model_render_path const path, part_delivery const delivery = part_delivery::queued) {
     try {
       if(native && delivery == part_delivery::queued) model_parameters = item.parameters;
       if(native) item.camera_origin = render::scale_model_cache(item.camera_origin,item.rotation_scale);
       item.metrics.distance = render::measure_model(item.camera_origin,item.shape->sort_depth_bias).distance;
-      // Missile smoke changes from a tiny dithered sphere to several pixel
+      // Missile smoke changes from a small sphere to several pixel
       // blocks with distance. These compensate for shrinking particles; the
       // nearest representation is not a higher-detail mesh to hold forever.
       double const detail_scale{item.name == "smokecld" ? 1 : visual_lod_scale};
@@ -342,6 +343,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
             .colour{colour},
             .pixel_size{size},
             .attachment_slot{},
+            .model_proxy{item.shape->has_surfaces},
           };
           std::array<models::model_vertex,1> const point{{{
             .position{native ? vec3d{item.camera_origin} / 65536.0 : view.transform(item.origin)},
@@ -370,7 +372,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       context.jitter = &jitter.state();
       context.distance = visual_distance;
       if(detail) context.entry_address = detail->offset + 2;
-      context.camera_depth = [&](vec3d const &point) { return camera_point(point,1).z * visual_lod_scale; };
+      context.camera_depth = [&](vec3d const &point) { return camera_point(point,1).z * detail_scale; };
       context.project = [&view, &camera_point, native](vec3d const &v, double const scale){
         auto point{native ? vec3d{v} : camera_point(v,scale)};
         if(std::abs(point.z) < view.near_distance * scale) point.z = std::copysign(view.near_distance * scale,point.z);
@@ -410,7 +412,11 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         uint8_t colour_row{distance_row};
         if(primitive.palette == models::palette_source::fixed) colour_row = 0;
         else if(native && primitive.palette == models::palette_source::face_depth) colour_row = render::distance_colour_row(static_cast<int32_t>(primitive.palette_depth) * 65536);
-        renderer.primitive(primitive,vertices,view,texture,primitive.palette != models::palette_source::direct ? &resources.model_colours(colour_row) : nullptr);
+        auto const *remap{primitive.palette != models::palette_source::direct ? &resources.model_colours(colour_row) : nullptr};
+        if(item.shape->has_surfaces && geometry.primitives.size()==1 && primitive.pixel_size) {
+          auto proxy{primitive};proxy.model_proxy=true;
+          renderer.primitive(proxy,vertices,view,texture,remap);
+        } else renderer.primitive(primitive,vertices,view,texture,remap);
         ++primitives_drawn;
       }
     } catch(std::exception const &error) {
@@ -670,6 +676,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
     }
   }
   flush_queue();
+  if(!native) renderer.finish_points();
   return events;
 }
 

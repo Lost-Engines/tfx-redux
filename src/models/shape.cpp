@@ -88,6 +88,7 @@ shape::shape(std::span<uint8_t const> const source) {
           .operands{},
         };
         for(unsigned int i{0}; i != count; ++i) instruction.operands.push_back(view.be16(at + 2 + i * 2));
+        if(opcode == 2 || opcode == 3 || opcode == 4 || opcode == 26 || opcode == 27 || opcode == 56 || opcode == 62 || opcode == 77 || opcode == 79 || opcode == 50 || opcode == 90 || opcode == 91 || opcode == 113 || opcode == 114 || opcode == 115 || opcode == 47) has_surfaces = true;
         instructions.insert_or_assign(at, std::move(instruction));
         at += 2 + count * 2;
         if(opcode == 65535) break;

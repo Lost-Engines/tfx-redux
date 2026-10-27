@@ -1,5 +1,6 @@
 #include "trails.h"
 #include <stdexcept>
+#include <cmath>
 #include "world/effects.h"
 
 namespace tfx::world {
@@ -34,6 +35,20 @@ void emit_trail(trail_segment const &segment, std::function_ref<void(vec3<int32_
     point += step;
     remaining = math::signed_word(static_cast<uint16_t>(remaining - trail_spacing));
   } while(remaining >= trail_spacing);
+}
+
+void trail_sampler::advance(vec3<int32_t> const &previous_q8, vec3<int32_t> const &current_q8,
+                            std::function_ref<void(vec3<int32_t> const&)> output) {
+  auto const start{vec3d{previous_q8}}, delta{vec3d{current_q8} - start};
+  double const length{std::sqrt(delta.dot(delta))};
+  if(length == 0) return;
+  double const spacing{trail_spacing * actors::position_unit};
+  // Exclude the endpoint so splitting a segment cannot duplicate a sample.
+  for(; until_next < length; until_next += spacing) {
+    auto const point{start + delta * (until_next / length)};
+    output({static_cast<int32_t>(std::lround(point.x)),static_cast<int32_t>(std::lround(point.y)),static_cast<int32_t>(std::lround(point.z))});
+  }
+  until_next -= length;
 }
 
 void trail_pool::reset() { first = 0;next = 0;count = 0; }
