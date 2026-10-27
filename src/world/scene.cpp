@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "render/point_size.h"
 #include "terrain_cells.h"
 #include "world/sky.h"
 #include "world/model_placement.h"
@@ -20,13 +21,14 @@ namespace tfx::world {
 scene::scene(environment const &environment, assets &bank, world::environment const *const upper, animation_clock *const retained_clock) : terrain{environment}, upper_terrain{upper}, resources{bank}, clock{retained_clock ? *retained_clock : local_clock} {
 }
 
-scene_handle scene::create_actor(std::string const &name, vec3d const &position, vec3<math::angle> const &angles) {
+scene_handle scene::create_actor(std::string const &name, vec3d const &position, vec3<math::angle> const &angles, bool const aircraft) {
   auto const &source{resources.object(name)};
   unsigned int const id{next_actor++};
   actors.emplace(id,moving_instance{
     .state{source},
     .position{vec3d{position}},
     .angles{vec3<math::angle>{angles}},
+    .aircraft{aircraft},
   });
   actor_order.push_back({
     .value{id},
@@ -308,6 +310,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
     render::model_metrics metrics;
     render::model_render_path path;
     uint8_t rotation_scale;
+    bool minimum_size{false};
   };
   std::vector<queued_part> queue;
   render::model_queue native_queue;
@@ -343,7 +346,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
             .colour{colour},
             .pixel_size{size},
             .attachment_slot{},
-            .model_proxy{item.shape->has_surfaces},
+            .point_role{item.shape->has_surfaces ? models::point_role::object : item.name=="smokecld" ? models::point_role::particle : models::point_role::light},
           };
           std::array<models::model_vertex,1> const point{{{
             .position{native ? vec3d{item.camera_origin} / 65536.0 : view.transform(item.origin)},
@@ -391,8 +394,38 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       auto const geometry{models::interpret(*item.shape,context)};
       warnings.insert(geometry.warnings.begin(),geometry.warnings.end());
       ++parts_drawn;
+      // Keep a distant aircraft visible even when LOD 0 retains its mesh.
+      // Include thin silhouettes; stop measuring once the mesh is large enough.
+      bool minimum_proxy{false};
+      if(!native && item.minimum_size && item.shape->has_surfaces && !shadow) {
+        double const minimum{render::object_point_diameter(renderer.output.size)};
+        vec2d low{1e30,1e30}, high{-1e30,-1e30};
+        models::primitive const *body{nullptr};bool small{true};
+        for(auto const &primitive : geometry.primitives) {
+          if(primitive.kind==models::primitive_kind::point) continue;
+          if(!body) body=&primitive;
+          for(auto const &vertex : primitive.vertices) {
+            auto const camera{camera_point(vertex.position,vertex.projection_scale)};
+            if(camera.z<=view.near_distance*vertex.projection_scale) { small=false;break; }
+            auto const screen{view.project(camera,vertex.projection_scale)};
+            low.x=std::min(low.x,screen.x);low.y=std::min(low.y,screen.y);
+            high.x=std::max(high.x,screen.x);high.y=std::max(high.y,screen.y);
+            double const width{high.x-low.x}, height{high.y-low.y};
+            if(std::max(width,height)>=2*minimum || (std::max(width,height)>=minimum && width*height>=minimum*minimum)) { small=false;break; }
+          }
+          if(!small) break;
+        }
+        if(body && small) {
+          models::primitive dot{.kind{models::primitive_kind::point},.vertices{},.colour{body->colour},.pixel_size{1},.attachment_slot{},.point_role{models::point_role::object}};
+          std::array<models::model_vertex,1> const centre{{{.position{view.transform(item.origin)},.uv{0,0}}}};
+          auto const *colours{body->palette==models::palette_source::direct ? nullptr : &resources.model_colours(body->palette==models::palette_source::fixed ? 0 : distance_row)};
+          renderer.primitive(dot,centre,view,{},colours);++primitives_drawn;minimum_proxy=true;
+        }
+      }
       std::vector<models::model_vertex> vertices;
       for(auto const &primitive : geometry.primitives) {
+        // The visibility floor replaces the body, preserving attached lights/effects.
+        if(minimum_proxy && primitive.kind!=models::primitive_kind::point) continue;
         vertices.clear();vertices.reserve(primitive.vertices.size());
         for(auto const &vertex : primitive.vertices) vertices.push_back({
           .position{native ? vec3d{vertex.position} : camera_point(vertex.position,vertex.projection_scale)},
@@ -413,9 +446,9 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         if(primitive.palette == models::palette_source::fixed) colour_row = 0;
         else if(native && primitive.palette == models::palette_source::face_depth) colour_row = render::distance_colour_row(static_cast<int32_t>(primitive.palette_depth) * 65536);
         auto const *remap{primitive.palette != models::palette_source::direct ? &resources.model_colours(colour_row) : nullptr};
-        if(item.shape->has_surfaces && geometry.primitives.size()==1 && primitive.pixel_size) {
-          auto proxy{primitive};proxy.model_proxy=true;
-          renderer.primitive(proxy,vertices,view,texture,remap);
+        if(primitive.pixel_size && (item.name=="smokecld" || (item.shape->has_surfaces && geometry.primitives.size()==1))) {
+          auto point{primitive};point.point_role=item.name=="smokecld" ? models::point_role::particle : models::point_role::object;
+          renderer.primitive(point,vertices,view,texture,remap);
         } else renderer.primitive(primitive,vertices,view,texture,remap);
         ++primitives_drawn;
       }
@@ -423,7 +456,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       warnings.insert(item.name + ": " + error.what());
     }
   }};
-  auto const queue_part{[&](models::shape const &shape, model_part const &part, vec3d const &origin, mat3d const &rotation, math::angle const heading, vec3<math::angle> const &angles, vec3<int32_t> const &camera_origin, render::model_render_path const path = render::model_render_path::scaled, part_delivery const delivery = part_delivery::queued) {
+  auto const queue_part{[&](models::shape const &shape, model_part const &part, vec3d const &origin, mat3d const &rotation, math::angle const heading, vec3<math::angle> const &angles, vec3<int32_t> const &camera_origin, render::model_render_path const path = render::model_render_path::scaled, part_delivery const delivery = part_delivery::queued, bool const minimum_size = false) {
     auto const metrics{render::measure_model(camera_origin,shape.sort_depth_bias)};
     double const depth{view.transform(origin).z};
     queued_part item{
@@ -441,6 +474,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       .metrics{metrics},
       .path{path},
       .rotation_scale{part.rotation_mode ? part.rotation_mode : uint8_t{1}},
+      .minimum_size{minimum_size},
     };
     if(native && delivery == part_delivery::immediate) {
       auto const slot{native_queue.scratch_slot()};
@@ -555,7 +589,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         auto const origin{(shadow || (native && draw.placement != part_position::assembly_origin)) ? vec3d{effect_position(placement.position,vec3<int32_t>{position})} : position + rotation * draw.anchor};
         double const depth{view.transform(origin).z};
         if(!native && (depth < -cell_units || depth > view.far_distance + cell_units)) continue;
-        queue_part(shape,part,origin,rotation * math::rotation(part.rotation),0,model_orientation(angles,part),placement.camera_origin,shadow ? render::model_render_path::ground_shadow : render::model_render_path::scaled,draw.delivery);
+        queue_part(shape,part,origin,rotation * math::rotation(part.rotation),0,model_orientation(angles,part),placement.camera_origin,shadow ? render::model_render_path::ground_shadow : render::model_render_path::scaled,draw.delivery,actor.aircraft && !shadow);
       } catch(std::exception const &error) {
         warnings.insert(part.name + ": " + error.what());
       }

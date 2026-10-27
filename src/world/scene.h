@@ -38,6 +38,7 @@ private:
     vec3d position;
     vec3<math::angle> angles;
     bool visible{true};
+    bool aircraft{false};
   };
   std::map<unsigned int,moving_instance> actors;
   std::vector<scene_handle> actor_order;
@@ -91,7 +92,7 @@ public:
   void set_effect_sink(std::function<void(effect_record const&)> sink);
   void set_query_reference(vec3<int32_t> const *position);
   void set_carried_models(std::span<models::shape const *const> models);
-  scene_handle create_actor(std::string const &definition, vec3d const &position, vec3<math::angle> const &angles);
+  scene_handle create_actor(std::string const &definition, vec3d const &position, vec3<math::angle> const &angles, bool aircraft = false);
   // Submit these actors first; other actors retain their existing order.
   // Allocation/animation/collision identities are independent of drawing.
   void set_actor_draw_order(std::span<scene_handle const> order);

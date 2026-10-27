@@ -39,6 +39,8 @@ struct shape {
   shape_detail const *detail_for_distance(int16_t distance) const;
 };
 
+enum class point_role { light, object, particle };
+
 enum class primitive_kind : uint32_t { polygon, line, point };
 enum class texture_source { global, model };
 enum class palette_source { distance, fixed, face_depth, direct };
@@ -68,7 +70,7 @@ struct primitive {
   bool rounded{false};
   unsigned int source_address{0};
   std::optional<unsigned int> attachment_slot;
-  bool model_proxy{false}; // A whole distant object, rather than an authored light.
+  models::point_role point_role{models::point_role::light};
 };
 enum class facing_test { branch, polygon };
 

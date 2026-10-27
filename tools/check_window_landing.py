@@ -74,7 +74,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-x11-landing-') as temporary:
                 assert any(all(frame.getpixel((x,y+offset))==ink for x,y in pattern) for pattern in landing_patterns),'ILS beacon heading legend is absent'
             check('NAV');tap('Return');check('AA')
             tap('i');check_landing()
-            tap('p');tap('backslash');tap('p');check_landing()
+            tap('p');tap('backslash');check_landing()  # Resume press is consumed; ILS remains engaged.
             tap('F5',2);tap('F1',3);check_landing()
             tap('backslash');check('NAV')
             tap('i');check_landing()

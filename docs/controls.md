@@ -31,6 +31,8 @@ The 3D render size follows the window by default; `--resolution=WIDTHxHEIGHT` fi
 Alt+V starts or stops a lossless video recording of the displayed view, without changing those rendering settings. `--replay FILE` opens a saved recording directly; add `--skip-intro` to omit its WNN prelude. See [recording details](recording.md).
 
 
+While paused, Enter, Space, letters, arrows and function keys resume flight. The resume key is consumed until release, so Space does not also fire. Modifier keys, Escape, backtick, M (map), the screenshot key and Shift+Q retain their existing behaviour.
+
 ## Sound
 
 Sound Blaster FM music follows the original `MUSIC` setting, and `--music=soundblaster-fm` selects it explicitly. For Roland LAPC-I music, use `--music=roland-lapc` with compatible CM-32L/MT-32 control and PCM ROMs. `--music=none` disables music. The original Sound Canvas setting uses SCC-1A emulation; `--music=roland-scc1a` or `--music=roland-sc55` selects the available hardware model, with its matching ROMs found automatically beside the game files or in the default installation directory. `--rom-dir` overrides that lookup for custom locations. These are compatible alternatives to the original SCC-1, whose exact ROM set is unavailable. Flight music now uses the original theme selection, temporary cues and engine sounds, including engine playback with music switched off. The original SB/CD mode uses synthesised presentation music and CD flight music; the explicit FM option selects synthesised flight music.

@@ -96,11 +96,14 @@ The live check creates a private display, audio sink and installation. It observ
 
 `redux_view_test` checks horizon spans against per-pixel rays, including wide,
 banked and near-vertical views. `redux_effects_probe DATA_DIR` checks the actual
-missile smoke model at five distances and three resolutions, plus its complete
+missile smoke model at five distances and four resolutions, plus its complete
 SSD animation: LOD scales 0, 0.1 and 1 must retain the same particle representation
 and lifetime. It also checks identical smoke sample positions across different
-update divisions, wider-FOV visibility, circular light sizes, single-pixel object
-proxies, and occlusion independent of polygon drawing order. `redux_arming_probe`
+update divisions, wider-FOV visibility, circular lights shrinking with distance,
+resolution-dependent object minima, and occlusion independent of polygon drawing
+order. Actual Eurofighter, F-117 and F-22 assemblies retain their 4K visibility
+floor at three distances, four orientations and all three LOD scales, even with
+full meshes enabled. `redux_arming_probe`
 also checks target resizing.
 
 `redux_hud_probe DATA_DIR [CAPTURE_DIR]` checks the vector HUD at native,
@@ -120,3 +123,12 @@ and pilot/configuration files are disposable. `--mouse-orbit` additionally check
 external camera mouse movement, reset, focus release and separation from flight
 steering. `mouse_orbit_tests` checks pivot/distance preservation and tracking for
 every supported external view, including missiles and the ejected pilot.
+
+## Pause input
+
+`pause_input_tests` checks resume keys, held-key suppression, release/repress,
+focus changes and modal shortcuts. `python3 tools/check_window_pause.py --redux`
+checks the actual window on a private X11 display with a disposable install.
+GDB observes simulation ticks and projectile launches: P/Pause stop simulation;
+Enter, Space and G resume; holding the Space resume press cannot fire; a fresh
+press after release can fire normally. Modifier keys alone leave flight paused.

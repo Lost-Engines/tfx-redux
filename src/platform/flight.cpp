@@ -34,6 +34,7 @@
 #include "flight/player_flight.h"
 #include "flight/joystick.h"
 #include "flight/mouse_input.h"
+#include "pause_input.h"
 #include "flight/keyboard.h"
 #include "flight/damage.h"
 #include "flight/defence.h"
@@ -246,7 +247,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   tfx::cockpit::radio_ticker radio{tables.instruments().radio_padding};
   for(auto const &actor : initial_actors) {
     auto const profile{std::ranges::find(profiles,actor.profile_id,&tfx::actors::profile::id)};
-    auto const visual{scene.create_actor(profile->definition,vec3d{actor.position} / tfx::actors::position_unit,actor.angles)};
+    auto const visual{scene.create_actor(profile->definition,vec3d{actor.position} / tfx::actors::position_unit,actor.angles,actor.kind==tfx::actors::record_kind::aircraft)};
     if(actor.kind == tfx::actors::record_kind::aircraft) air_visuals[tfx::actors::air_registry_index(actor)] = visual;
     else if(actor.kind == tfx::actors::record_kind::surface) surface_actors.push_back({
       .state{tfx::actors::create_surface(actor,actor_program)},
@@ -418,7 +419,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }
   }
   std::array<char const*,3> constexpr player_definitions{"efa","f_117a","f_22"};
-  auto const aircraft_visual{scene.create_actor(player_definitions.at(std::to_underlying(player.aircraft) - 1),{0,0,0},{0,0,0})};
+  auto const aircraft_visual{scene.create_actor(player_definitions.at(std::to_underlying(player.aircraft) - 1),{0,0,0},{0,0,0},true)};
   auto const pilot_visual{scene.create_actor("man",{0,0,0},{0,0,0})};
   struct crash_models {
     tfx::world::scene_handle land;
@@ -2323,6 +2324,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   std::array<bool,GLFW_KEY_LAST + 1> held{false};
   // A key that closed the launch screen is not a new in-flight press.
   for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = glfwGetKey(host,key) == GLFW_PRESS;
+  pause_input pause_keys;pause_keys.synchronise(held,window.focused());
   tfx::simulation::timer_counter counter{0};
   tfx::simulation::flight_clock flight_clock{counter};
   flight_clock.begin({
@@ -2367,7 +2369,10 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       stick_buttons = {};
       mouse_control = {};
     }
-    auto const down{[host,focused](int const key){ return focused && glfwGetKey(host,key) == GLFW_PRESS; }};
+    pause_input::snapshot keys{};
+    if(focused) for(int key=GLFW_KEY_SPACE;key<=GLFW_KEY_LAST;++key) keys[static_cast<size_t>(key)]=glfwGetKey(host,key)==GLFW_PRESS;
+    if(pause_keys.update(keys,paused && !inspect && !result_evaluated,focused)) paused=false;
+    auto const down{[&](int const key){ return keys[static_cast<size_t>(key)] && !pause_keys.consumed(key); }};
     auto const pressed{[&](int const key){
       bool const active{down(key)}, edge{active && !held[static_cast<unsigned int>(key)]};
       held[static_cast<unsigned int>(key)] = active;
@@ -2480,7 +2485,11 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       store_trigger = false;
       // The modal screen consumed its closing make-code. Do not turn a
       // still-held M/Escape into another map request or an ejection press.
-      for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = down(key);
+      for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) {
+        keys[static_cast<size_t>(key)]=window.focused() && glfwGetKey(host,key)==GLFW_PRESS;
+        held[static_cast<size_t>(key)]=keys[static_cast<size_t>(key)];
+      }
+      pause_keys.synchronise(keys,window.focused());
       flight_clock.resume(counter,{
         .model{preferences.model},
       });

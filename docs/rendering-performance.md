@@ -91,6 +91,24 @@ primitives. The added visibility work costs about 1.8 ms in this scene. Timing
 still excludes simulation, audio, colour conversion and desktop upload.
 
 
+## Point sizes
+
+Whole-object dots have a minimum diameter of the shorter framebuffer dimension
+divided by 720, clamped to at least one pixel and rounded by the disc rasteriser.
+That gives two pixels across at 1080p and three at 4K, independent of FOV.
+Aircraft whose full-detail meshes become very small or thin use the same floor,
+so disabling LOD cannot make a distant aircraft harder to spot than its dot.
+This substitutes only for tiny geometry; ordinary aircraft silhouettes stay intact.
+
+Lights retain the authored one/two-pixel distinction nearby. Their diameter is
+scaled by the camera lens and by `800 / hypot(800, distance)` in world units
+(800 is roughly two kilometres), approaching inverse-distance scaling without
+an unbounded glow near the camera. The distant minimum is half the aircraft
+minimum, clamped to one pixel. Thus remote city lights do not remain large discs
+beside smaller geometry. Native 320×200 lights keep their original pixel shapes;
+smoke retains its existing particle sizing and LOD-independent animation.
+
+
 ## Optical HUD
 
 The forward HUD is rasterised directly into a coverage layer at the framebuffer
