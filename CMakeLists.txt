@@ -403,6 +403,7 @@ add_library(tfx_core
   src/render/integer_polygon.cpp src/render/integer_polygon.h
   src/render/pattern_raster.cpp src/render/pattern_raster.h
   src/render/point_visibility.cpp
+  src/render/point_size.h
   src/render/point_visibility.h
   src/render/software_renderer.cpp
   src/render/software_renderer.h
@@ -532,6 +533,10 @@ if(BUILD_TESTING)
   target_link_libraries(gf1_reference PRIVATE gf1_backend)
   configure_first_party(gf1_reference)
   set_target_properties(gf1_reference PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  add_executable(pause_input_tests tests/pause_input_test.cpp)
+  target_link_libraries(pause_input_tests PRIVATE tfx_core glfw)
+  configure_first_party(pause_input_tests)
+  add_test(NAME platform.pause_resume_input COMMAND pause_input_tests)
   add_executable(recording_tests tests/recording_test.cpp)
   target_link_libraries(recording_tests PRIVATE tfx_core)
   configure_first_party(recording_tests)

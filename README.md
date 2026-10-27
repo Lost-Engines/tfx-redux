@@ -43,7 +43,7 @@ Arcade uses mouse steering. The other flight models support keyboard and joystic
 
 **Alt+V** starts or stops a flight recording. Its default filename is `video.rec`, editable in the configuration menu. A new recording replaces that file. After a campaign flight, the original WNN sequence and recorded flight play automatically.
 
-The floating window fits the desktop automatically, with square pixels and nearest-neighbour presentation. `--scale=2` starts a 640×400 window, or doubles an explicitly selected render size. Losing focus releases all flight input; flight, presentations and replay keep running. Use **P**, **Pause** or the menu when you want to pause.
+The floating window fits the desktop automatically, with square pixels and nearest-neighbour presentation. `--scale=2` starts a 640×400 window, or doubles an explicitly selected render size. Losing focus releases all flight input; flight, presentations and replay keep running. Use **P**, **Pause** or the menu when you want to pause. Most ordinary keys, including Enter and Space, resume; the resume press is consumed until release.
 
 See [controls and configuration](docs/controls.md) for weapons, autopilot, cameras, MFDs, joystick bindings, recordings and developer commands. The original manual remains the best guide to flying the missions.
 
@@ -72,7 +72,7 @@ The following departures from the original are intentional:
 - Arming picks the aircraft's pylon volumes along the cursor ray, including after rotating the aircraft. The held weapon follows that cursor ray instead of mapping mouse movement to fixed aircraft axes. Buttons use the actual cursor position, without the original miniature-aircraft hotspot offset.
 - Escape cancels an active arming operation first. At the idle preflight arming screen, it returns to the preceding choice screen (or pilot enrolment when none exists). During an in-flight rearm, it asks before returning to the mission. Cancelling restores the loadout held before opening the arming screen.
 - Distant point models use the same missile-view projection as polygons. Two-pixel models are clipped at the screen edge instead of wrapping a pixel onto the next row.
-- At higher resolutions, point lights use smaller circles sized for the camera’s field of view. Distant aircraft dots stay small, and lights are hidden by nearer scenery rather than the drawing order of whole terrain tiles.
+- At higher resolutions, point lights use smaller circles that shrink with distance and account for the camera’s field of view. Distant aircraft keep a visible minimum size (about two pixels across at 1080p, three at 4K), including when LOD is disabled. Lights are hidden by nearer scenery rather than the drawing order of whole terrain tiles.
 - Missile smoke uses consistent spacing between puffs even when the frame rate changes. Its visibility follows the selected field of view, and its animation and particle sizes are independent of mesh LOD.
 - Moving the mouse in external views orbits the aircraft, missile or target being viewed, with mouse capture and no simultaneous mouse steering. Selecting a camera again restores its normal angle.
 - Escape opens the flight menu; ejection has a separate confirmation or a two-press Ctrl+Escape shortcut. Focus loss releases controls without pausing flight or playback.

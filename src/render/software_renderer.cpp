@@ -1,4 +1,5 @@
 #include "software_renderer.h"
+#include "point_size.h"
 #include "cockpit/vector_hud.h"
 #include "model_raster.h"
 #include "rounded_curve.h"
@@ -193,14 +194,14 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
     auto const point{view.project(v,camera_vertices.front().projection_scale)};
     if(point.x < -100 || point.x > output.size.x + 100 || point.y < -100 || point.y > output.size.y + 100) return;
     int const x{static_cast<int>(std::lround(point.x))}, y{static_cast<int>(std::lround(point.y))};
-    // Half an original pixel's angular size, using this camera's lens rather
-    // than the UI scale. Whole-model point LOD never grows a distant aircraft.
+    // Physical spheres retain their authored size; pixel primitives have
+    // separate light, particle and whole-object sizing rules.
     double const pixel_scale{std::max(1.0,view.focal_distance / 512.0)};
     if(source.pixel_size) {
-      if(output.size == vec2<int>{screen_width,screen_height} && !source.model_proxy) {
+      if(output.size == vec2<int>{screen_width,screen_height} && source.point_role!=models::point_role::object) {
         for(unsigned int row{0}; row<source.pixel_size; ++row) for(unsigned int col{0}; col<source.pixel_size; ++col) ink(x+static_cast<int>(col),y+static_cast<int>(row),ink_index,source.mode);
       } else {
-        point_sprite const sprite{{x,y},vec2d{point},v.z,source.model_proxy ? 1.0 : source.pixel_size*pixel_scale,ink_index,source.mode};
+        point_sprite const sprite{{x,y},vec2d{point},v.z,point_diameter(source,output.size,view.focal_distance,v.length()),ink_index,source.mode};
         if(collect_points) points.push_back(sprite);else point_disc(sprite);
       }
     } else circle(x,y,static_cast<unsigned int>(std::max(source.radius * view.focal_distance / v.z,std::floor(pixel_scale / 2))),ink_index,source.mode);
