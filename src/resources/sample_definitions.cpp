@@ -6,6 +6,7 @@ namespace tfx::audio {
 std::vector<sample_definition> load_sample_definitions(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
   unsigned int constexpr data_file{0xedaa4}, table{0x9860}, record_bytes{26}, maximum_slots{256};
+  uint16_t constexpr centred_qsound_phase{16u << 8};
   std::vector<sample_definition> result;
   for(unsigned int index{0}; index != maximum_slots; ++index) {
     auto const at{data_file + table + index * record_bytes};
@@ -21,7 +22,15 @@ std::vector<sample_definition> load_sample_definitions(std::span<uint8_t const> 
       .name{std::move(name)},
       .rate{source.le16(at + 4)},
       .retrigger_delay{source.signed_le16(at + 6)},
-      .qsound_parameters{effect ? std::array<int16_t,3>{source.signed_le16(data_file + effect),source.signed_le16(data_file + effect + 2),source.signed_le16(data_file + effect + 4)} : std::array<int16_t,3>{}},
+      .qsound_parameters{effect ? sample_pan{
+        .position{source.le16(data_file + effect)},
+        .increment{source.signed_le16(data_file + effect + 2)},
+        .movement_enable{source.le16(data_file + effect + 4)},
+      } : sample_pan{
+        .position{centred_qsound_phase}, // Native null-definition fallback is the centre position.
+        .increment{},
+        .movement_enable{},
+      }},
     });
   }
   throw std::runtime_error{"unterminated native sample definitions"};

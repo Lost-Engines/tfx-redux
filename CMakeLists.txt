@@ -31,6 +31,8 @@ add_library(tfx_audio
   src/audio/gus_samples.cpp src/audio/gus_samples.h
   src/audio/sample_bank.cpp src/audio/sample_bank.h
   src/audio/sample_voice.cpp src/audio/sample_voice.h
+  src/audio/qsound_effect.cpp src/audio/qsound_effect.h
+  ${QSOUND_SOURCES}
   src/audio/runtime.cpp src/audio/runtime.h src/audio/requests.h
   src/audio/osl_resource.cpp src/audio/osl_resource.h
   src/audio/osl_channel.h src/audio/osl_device.h
@@ -48,6 +50,7 @@ add_library(tfx_audio
   src/audio/music_clock.h src/audio/music_player.cpp src/audio/music_player.h
 )
 configure_first_party(tfx_audio)
+target_include_directories(tfx_audio PRIVATE "${QSOUND_INCLUDE_DIR}")
 
 add_library(tfx_core
   src/recording/video.cpp
@@ -1051,6 +1054,12 @@ if(BUILD_TESTING)
   target_link_libraries(osl_pattern_test PRIVATE tfx_audio)
   configure_first_party(osl_pattern_test)
   add_test(NAME audio.native_osl_patterns COMMAND osl_pattern_test "${PROJECT_SOURCE_DIR}/tests/fixtures/osl_patterns.txt")
+  add_executable(qsound_playback_test tests/qsound_playback_test.cpp)
+  target_link_libraries(qsound_playback_test PRIVATE tfx_audio)
+  target_include_directories(qsound_playback_test PRIVATE "${QSOUND_INCLUDE_DIR}")
+  configure_first_party(qsound_playback_test)
+  add_test(NAME audio.qsound_dac_and_sweeps COMMAND qsound_playback_test)
+
   add_executable(sample_bank_probe tests/sample_bank_probe.cpp)
   target_link_libraries(sample_bank_probe PRIVATE tfx_audio)
   configure_first_party(sample_bank_probe)

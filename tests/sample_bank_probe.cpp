@@ -69,7 +69,8 @@ int main(int const argc, char const *const argv[]) try {
     uint64_t hash{14695981039346656037ull};
     for(auto const byte : bank.pcm(i)) hash = (hash ^ byte) * 1099511628211ull;
     std::cout << i << ' ' << std::quoted(d.name) << ' ' << d.rate << ' ' << d.retrigger_delay;
-    for(auto const value : d.qsound_parameters) std::cout << ' ' << value;
+    std::cout << ' ' << std::bit_cast<int16_t>(d.qsound_parameters.position)
+      << ' ' << d.qsound_parameters.increment << ' ' << std::bit_cast<int16_t>(d.qsound_parameters.movement_enable);
     std::cout << ' ' << s.available << ' ' << s.samples << ' ' << hash << '\n';
   }
   return 0;

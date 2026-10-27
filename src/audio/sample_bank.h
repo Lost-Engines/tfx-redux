@@ -7,11 +7,17 @@
 
 namespace tfx::audio {
 
+struct sample_pan {
+  uint16_t position{};
+  int16_t increment{};
+  uint16_t movement_enable{}; // Preserve the original word; any nonzero value enables movement.
+};
+
 struct sample_definition {
   std::string name;
   uint16_t rate;
   int16_t retrigger_delay;
-  std::array<int16_t,3> qsound_parameters;
+  sample_pan qsound_parameters;
 };
 std::vector<sample_definition> load_sample_definitions(std::span<uint8_t const> executable);
 

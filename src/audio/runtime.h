@@ -30,7 +30,7 @@ private:
 public:
   runtime(std::span<sample_definition const> definitions, resources::archive const &game, unsigned int output_rate,
     sound_device device, std::unique_ptr<music_player> music = {}, std::optional<gus_parameters> const &gravis = {},
-    std::unique_ptr<cd_player> cd = {}, music_mode mode = music_mode::none, bool music_enabled = true);
+    std::unique_ptr<cd_player> cd = {}, music_mode mode = music_mode::none, bool music_enabled = true, std::unique_ptr<qsound_effect> spatial = {});
   bool sound_available() const;
   bool sound_enabled() const;
   bool music_available() const;

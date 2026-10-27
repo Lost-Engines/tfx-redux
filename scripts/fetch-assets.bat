@@ -1,6 +1,6 @@
 @echo off
 setlocal DisableDelayedExpansion
-rem Fetch reference CD images and ROMs; verify every asset on each run.
+rem Fetch reference CD images and audio firmware; verify every asset on each run.
 if "%~1"=="--help" goto help
 if not "%~2"=="" goto usage_error
 set "script_dir=%~dp0"
@@ -42,7 +42,7 @@ if "%failed%"=="1" (
   popd
   exit /b 1
 )
-echo Game images and ROMs ready in %CD%
+echo Game images and audio firmware ready in %CD%
 echo Launch TFX normally; it will prepare the game files from cd\tfx.cue on first use.
 popd
 exit /b 0
@@ -60,7 +60,7 @@ echo Fetching %file%
 for %%P in ("%file%") do if not exist "%%~dpP" mkdir "%%~dpP"
 if "%url%"=="-" goto bundled
 if "%member%"=="-" goto direct
-rem Download an archive only once for all of its ROMs, even if it fails.
+rem Download an archive only once for all of its selected members, even if it fails.
 if not "%url%"=="%archive_url%" call :archive
 if not defined archive_ready goto fetch_failed
 tar.exe -xOf "%temporary%\archive.zip" "%member%" > "%temporary%\rom.tmp"
@@ -110,7 +110,7 @@ exit /b 0
 
 :help
 echo Usage: %~nx0 [destination]
-echo Fetch the TFX 2.05 CD and CM-32L, SC-55 and SCC-1A ROMs (default: package directory, beside tfx.exe).
+echo Fetch the TFX 2.05 CD, QSound firmware and CM-32L, SC-55 and SCC-1A ROMs (default: package directory, beside tfx.exe).
 exit /b 0
 :usage_error
 echo Usage: %~nx0 [destination] 1>&2

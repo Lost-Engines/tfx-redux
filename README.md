@@ -2,7 +2,7 @@
 
 An enhanced native C++26 version of Digital Image Design’s **TFX: Tactical Fighter Experiment**, based on the [TFX C++ reconstruction](https://github.com/Lost-Engines/tfx-cpp) of the September 1994 CD release, **version 2.05**. Redux adds higher-resolution rendering, configurable views and arming-screen improvements while retaining the original game data, flight models and mission logic.
 
-The supplied fetch script downloads the reference game CD and synthesiser ROMs. You can also use your own TFX 2.05 installation. Research exports are neither required nor bundled.
+The supplied fetch script downloads the reference game CD and audio firmware. You can also use your own TFX 2.05 installation. Research exports are neither required nor bundled.
 
 ## Getting started
 
@@ -88,7 +88,9 @@ Omit `--skip-intro` to include the original WNN prelude. [Recording details](doc
 
 Sampled Sound Blaster and Gravis effects and speech, FM music, Roland LAPC-I and Sound Canvas emulation are connected. The saved `SOUNDFX=4` setting selects Gravis; `SOUNDFX=2` with `MUSIC=2` selects the original LAPC-I synthesised flight effects. `--music=soundblaster-fm` selects synthesised FM music explicitly; `--music=none` disables music. Roland modes find matching ROMs automatically beside the game files or in the default installation directory. Details are in [controls and configuration](docs/controls.md).
 
-To fetch or repair the game disc and Roland ROMs on Linux or macOS:
+QSound spatial processing is enabled automatically for Sound Blaster effects when its firmware is available. `--qsound=off` selects ordinary mono output; `--qsound=on` requires the firmware. This uses the recovered original filters with endpoint-clamped positioning; exact sound-card arithmetic remains unverified. Music and CD playback are unaffected.
+
+To fetch or repair the game disc and audio firmware on Linux or macOS:
 
 ```sh
 ./scripts/fetch-assets.sh
@@ -98,7 +100,7 @@ To fetch or repair the game disc and Roland ROMs on Linux or macOS:
 On Windows, run `scripts\fetch-assets.bat`. The scripts use the default
 installation directory described above, so no `--rom-dir` option is needed.
 They fetch the reference CD as individual BIN files (roughly 576 MiB), plus
-CM-32L/LAPC-I, SC-55 v1.21 and SCC-1A v1.30 ROMs. Every file is checked on each
+CM-32L/LAPC-I, SC-55 v1.21 and SCC-1A v1.30 ROMs and the Creative QSound firmware. Every file is checked on each
 run; missing or damaged files are downloaded again, with retries. An optional destination argument and
 `--rom-dir` are available for custom locations. Linux/macOS
 needs `curl`, `unzip` and `sha256sum` or `shasum`; Windows uses its built-in
