@@ -219,6 +219,7 @@ add_library(tfx_core
   src/cockpit/designator_mouse.cpp src/cockpit/designator_mouse.h
   src/cockpit/scene_display.cpp
   src/cockpit/scene_display.h
+  src/cockpit/virtual_displays.cpp src/cockpit/virtual_displays.h
   src/cockpit/hud.cpp
   src/cockpit/hud.h
   src/cockpit/control_state.h
@@ -505,6 +506,9 @@ if(BUILD_TESTING)
   target_link_libraries(redux_video_tests PRIVATE tfx_core)
   configure_first_party(redux_video_tests)
   add_test(NAME recording.redux_lossless_video COMMAND redux_video_tests)
+  add_executable(virtual_cockpit_probe tests/virtual_cockpit_probe.cpp)
+  target_link_libraries(virtual_cockpit_probe PRIVATE tfx_core)
+  configure_first_party(virtual_cockpit_probe)
   add_executable(redux_hud_probe tests/redux_hud_probe.cpp)
   target_link_libraries(redux_hud_probe PRIVATE tfx_core)
   configure_first_party(redux_hud_probe)

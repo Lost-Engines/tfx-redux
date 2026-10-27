@@ -148,3 +148,19 @@ The Redux check additionally verifies aiming direction, wheel zoom, paused aimin
 The original `0x7459c`/`0x74508` mouse update clamps the previous position before adding the current motion, checks at most one axis per lower/upper pass, and uses signed-word wrapping. A long frame can therefore supply a stick position beyond its nominal −512…511 range. `0x9a104` cubes the resulting mouse demand: a 4,000-pixel/second sweep gives about 4.6 times full aileron demand at 15 updates/second and 8 times at 10. Redux saturates both axes after accumulation, without wrapping; the native numerical controls and their comparison fixtures remain unchanged.
 
 `flight.redux_mouse_bounds` exercises the actual aerodynamic control law with positive and negative sweeps at 10, 15, 30 and 60 input updates/second, diagonal limits, extreme deltas, immediate reversal and unchanged in-range sensitivity. `tools/check_window_mouse_rate.py --flight-model military-spec --fps 10` adds real X11 pointer events on a private display, delaying presentation without changing simulation state. Use `--flight-model realistic` or `arcade`, and `--fps 15` or `60`, for the other checks. The nominal FPS is a presentation cap; the native flight clock can impose a lower update rate. Every injected relative sample must be consumed once, and Military-spec/Realistic must receive bounded stick positions. Arcade's relative-motion path is unchanged.
+
+### Live virtual-cockpit displays
+
+`virtual_cockpit_probe DATA_DIR [CAPTURE_DIR]` compares the continuous fast and
+general texture painters, including clipped/out-of-bounds spans, lighting remaps,
+transparency and write coverage. It checks unlit opaque-black display texels,
+port/starboard mapping, the continuous centre-display seam and all six ordinary
+and refuelling canopy models at 960×600, 1080p and 4K. Optional captures use the
+real instrument artwork; the benchmark prints isolated canopy costs.
+
+`python3 tools/check_window_virtual_cockpit.py --data-dir DATA_DIR` launches
+mission 703 on a private X11 display with temporary configuration and no audio.
+It cycles the MFDs in F10, exercises scene-camera pages, checks that paused images
+and flight inputs stop changing, and switches between paused F5, F1 and F10.
+GDB observes execution without changing simulation state. Screenshots go to
+`/tmp/tfx-virtual-live` by default (`--captures` selects another directory).

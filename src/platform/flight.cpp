@@ -48,6 +48,7 @@
 #include "flight/fuel_gauge.h"
 #include "cockpit/hud.h"
 #include "cockpit/vector_hud.h"
+#include "cockpit/virtual_displays.h"
 #include "cockpit/radio_ticker.h"
 #include "simulation/acceleration.h"
 #include "cockpit/weapon_display.h"
@@ -194,7 +195,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto &sky_state{options.sky};
   auto &ground_phase{options.ground_phase};
   bool sky_animation{false};
-  tfx::render::software_renderer renderer{tables}, world_renderer{tables};
+  tfx::render::software_renderer renderer{tables}, world_renderer{tables}, virtual_renderer{tables};
+  tfx::cockpit::virtual_displays virtual_displays{tables.instruments()};
   std::array<tfx::render::software_renderer,2> instrument_renderers{tfx::render::software_renderer{tables},tfx::render::software_renderer{tables}};
   std::array<std::optional<vec2<int>>,2> instrument_positions{};
   world_renderer.output.resize(video.resolution);
@@ -1689,11 +1691,12 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       scene.queue_actor(weapon_visuals[shot->state.weapon][shot->state.secondary],vec3d{shot->state.position} / tfx::actors::position_unit,shot->state.angles,&camera_anchor,tfx::world::submission_phase::before_actors);
     }
   }};
-  auto const draw_instruments{[&](std::optional<std::string> const &radio_window) {
+  auto const draw_instruments{[&](tfx::render::software_renderer &target_renderer, std::optional<std::string> const &radio_window, bool const virtual_panel = false) {
     render::preview_state instrument_frame{instruments,paused};
     render::preview_state scenes_frame{scene_displays,paused};
     render::preview_state selection_frame{display_selection,paused};
-    render::preview_state random_frame{air_simulation.random_stream(),paused};
+    // Extra virtual-cockpit radar jitter must not consume the simulation RNG.
+    render::preview_state random_frame{air_simulation.random_stream(),paused || virtual_panel};
     std::array<std::vector<tfx::cockpit::radar_aircraft>,2> air_contacts;
     std::array<std::vector<tfx::cockpit::radar_surface>,2> surface_contacts;
     for(unsigned int pool{0}; pool != air_contacts.size(); ++pool) for(unsigned int reverse{tfx::actors::aircraft_per_side}; reverse; --reverse) {
@@ -1729,7 +1732,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(launch_warning) state.tracked_weapon_category = tables.weapons[launch_warning->state.weapon].category;
     auto &readings{state.instruments};
     readings.aircraft = player.aircraft;
-    readings.offset = cockpit_frame.clamp(tfx::cockpit::forward_cockpit,cockpit_position.value());
+    readings.offset = virtual_panel ? vec2<int16_t>{0,0} : cockpit_frame.clamp(tfx::cockpit::forward_cockpit,cockpit_position.value());
     readings.systems = player_damage.systems;
     auto const switched_system{[&](tfx::flight::aircraft_system const system, bool const active) {
       auto &condition{readings.systems[std::to_underlying(system)]};
@@ -1800,7 +1803,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       state.in_range = distance != 0 && distance < range_weapon.range;
     }
     if(radio_window) state.radio_message = *radio_window;
-    auto const result{instrument_frame->draw(renderer,selection_frame.value(),state,random_frame.value(),nullptr,[&](tfx::cockpit::display_side const side, tfx::cockpit::display_page const page, tfx::cockpit::mfd_state const &display) {
+    auto const result{instrument_frame->draw(target_renderer,selection_frame.value(),state,random_frame.value(),nullptr,[&](tfx::cockpit::display_side const side, tfx::cockpit::display_page const page, tfx::cockpit::mfd_state const &display) {
       tfx::cockpit::scene_camera_state camera_state{
         .aircraft{player.aircraft},
         .position{vec3<int32_t>{player.integer_position}},
@@ -1813,12 +1816,14 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       };
       if(ground_designation) camera_state.tracked_position_q8.emplace(vec3<int32_t>{designated_point});
       if(!mission_setup.targets.empty()) camera_state.ground_target = vec3<int32_t>{mission_setup.targets[ground_target_page].position};
-      auto const previous_clipping{renderer.clipping};
-      scenes_frame->draw(renderer,side,page,display.offset,camera_state,[&](tfx::cockpit::scene_camera_request const &request) {
+      auto const previous_clipping{target_renderer.clipping};
+      scenes_frame->draw(target_renderer,side,page,display.offset,camera_state,[&](tfx::cockpit::scene_camera_request const &request) {
         vec2<int> const minimum{std::max(0,request.minimum.x),std::max(0,request.minimum.y + (request.maximum.y < tfx::render::screen_height ? 1 : 0))};
         vec2<int> const maximum{std::min(tfx::render::screen_width - 1,request.maximum.x),std::min(tfx::render::screen_height - 1,request.maximum.y - 1)};
-        renderer.clipping = tfx::render::raster_clip::pixels(minimum,maximum);
-        auto const region{tfx::render::instrument_camera(request.view(),video,minimum,maximum)};
+        target_renderer.clipping = tfx::render::raster_clip::pixels(minimum,maximum);
+        auto display_video{video};
+        if(virtual_panel) display_video.resolution={320,200};
+        auto const region{tfx::render::instrument_camera(request.view(),display_video,minimum,maximum)};
         if(!region) return vec2<int16_t>{0,0};
         unsigned int const slot{side == tfx::cockpit::display_side::left ? 0u : 1u};
         auto &camera_renderer{instrument_renderers[slot]};
@@ -1830,22 +1835,28 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         select_actor_draw_region(request.position);
         options.projection_origin = vec2<int16_t>{request.view().projection_origin};
         scene.set_visual_lod_scale(video.lod_scale);
+        if(virtual_panel) scene.set_render_paused(true); // The primary view owns scene animation.
         auto const rendered{scene.draw(camera_renderer,camera,scene_radius,[&] { queue_effects(camera); },request.position.y,ground.height,tfx::world::scene_pass::instrument)};
-        if(!paused) clean_trails();
+        if(virtual_panel) scene.set_render_paused(paused);
+        if(!paused && !virtual_panel) clean_trails();
         if(!paused && rendered.eject_player) ejection.request();
-        instrument_positions[slot].emplace(vec2<int>{region->position});
+        if(virtual_panel) {
+          auto const &image{camera_renderer.output};
+          for(int y=0; y<image.size.y; ++y) for(int x=0; x<image.size.x; ++x)
+            target_renderer.output.write(static_cast<size_t>((region->position.y+y)*320+region->position.x+x),image.pixels[static_cast<size_t>(y*image.size.x+x)]);
+        } else instrument_positions[slot].emplace(vec2<int>{region->position});
         // Punch out the old UI background here. Reticles and range text drawn
         // after this callback acquire coverage normally, above the 3D image.
-        for(int y{minimum.y}; y <= maximum.y; ++y) for(int x{minimum.x}; x <= maximum.x; ++x) renderer.output.coverage[static_cast<size_t>(y * tfx::render::screen_width + x)] = 0;
+        if(!virtual_panel) for(int y{minimum.y}; y <= maximum.y; ++y) for(int x{minimum.x}; x <= maximum.x; ++x) target_renderer.output.coverage[static_cast<size_t>(y * tfx::render::screen_width + x)] = 0;
         if(!request.tracked_position) return vec2<int16_t>{0,0};
         auto const point{camera.transform(vec3d{*request.tracked_position})};
         if(point.z <= 0) return vec2<int16_t>{-32000,-32000};
-        tfx::render::interface_layout const layout{video.resolution};
+        tfx::render::interface_layout const layout{display_video.resolution};
         auto const screen{(camera.project(point) + vec2d{region->position} - layout.offset) / layout.scale};
         return vec2<int16_t>{static_cast<int16_t>(std::clamp(screen.x,-32768.0,32767.0)),static_cast<int16_t>(std::clamp(screen.y,-32768.0,32767.0))};
       });
-      renderer.clipping = previous_clipping;
-    },&hud_vectors)};
+      target_renderer.clipping = previous_clipping;
+    },virtual_panel ? nullptr : &hud_vectors)};
     physical_player.powerplant.afterburner_control = instruments.animation().redraw_phase;
     if(!paused) player_damage.systems[std::to_underlying(tfx::flight::aircraft_system::fuel)] = result.fuel_condition;
     if(!paused && result.threat_sound) sample(audio::sample_priority::urgent,audio::sample_id::threat);
@@ -2199,6 +2210,18 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     // camera. External and target views must not use a forward-only matrix.
     if(!inspect && !paused && !designator_view) advance_air_tracking(*impact_projection);
     vec3<int32_t> const draw_reference{inspect ? vec3<int32_t>{view.position} : designator_view ? vec3<int32_t>{designator.camera} : vec3<int32_t>{view.world_anchor}};
+    // Render instruments once before the canopy consumes their texture pages.
+    // Scene cameras use only their small native display size here; enlarging
+    // them to the window would cost a second full-resolution world render.
+    bool const virtual_panel{!inspect && !result_evaluated && !designator_view
+      && view_index()!=tfx::cockpit::forward_cockpit
+      && view_motion.last_pose().player_model_entry==19u+camera_context().refuel_phase};
+    if(virtual_panel) {
+      virtual_renderer.output.pixels.fill(0);
+      draw_instruments(virtual_renderer,std::nullopt,true);
+      virtual_displays.update(virtual_renderer.output);
+      scene.set_texture_overlay([&](std::string_view model, models::texture_binding const &binding) { return virtual_displays.texture(model,binding); });
+    } else scene.set_texture_overlay({});
     paint_scene(view,draw_reference,!designator_view);
     renderer.output.pixels.fill(0);
     renderer.output.track_writes();
@@ -2225,7 +2248,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       }};
       if(!designator_view && view_index() == tfx::cockpit::forward_cockpit) {
         paint_cockpit();
-        draw_instruments(radio_window);
+        draw_instruments(renderer,radio_window);
       } else if(!designator_view && callback == 0x80704) paint_cockpit();
       else {
         if(!designator_view && callback == 0x80794 && options.flight_information) external_instruments.draw(renderer,{
