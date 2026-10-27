@@ -72,6 +72,7 @@ The following departures from the original are intentional:
 - Escape cancels an active arming operation first. At the idle preflight arming screen, it returns to the preceding choice screen (or pilot enrolment when none exists). During an in-flight rearm, it asks before returning to the mission. Cancelling restores the loadout held before opening the arming screen.
 - Distant point models use the same missile-view projection as polygons. Two-pixel models are clipped at the screen edge instead of wrapping a pixel onto the next row.
 - Small lights and pixel-sized model details scale relative to the original 320×200 image. Missile smoke keeps its visible density when mesh LOD is disabled.
+- Moving the mouse in external views orbits the aircraft, missile or target being viewed, with mouse capture and no simultaneous mouse steering. Selecting a camera again restores its normal angle.
 - Escape opens the flight menu; ejection has a separate confirmation or a two-press Ctrl+Escape shortcut. Focus loss releases controls without pausing flight or playback.
 - Looking steeply down no longer paints a blue circular patch beneath the camera. The software horizon uses faster span drawing while retaining its palette bands.
 - In-flight screenshots capture the full render resolution and declare square pixels in their ILBM metadata.

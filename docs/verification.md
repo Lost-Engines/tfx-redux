@@ -106,4 +106,7 @@ input, holding the first Ctrl+Escape safely, a second press ejecting, Escape men
 entry/cancellation, and a 913×617 render target after resizing. Add
 `--menu-eject` to check confirmed menu ejection, or `--fixed-resolution` to check
 that an explicit target remains fixed when the window changes. Test installs
-and pilot/configuration files are disposable.
+and pilot/configuration files are disposable. `--mouse-orbit` additionally checks
+external camera mouse movement, reset, focus release and separation from flight
+steering. `mouse_orbit_tests` checks pivot/distance preservation and tracking for
+every supported external view, including missiles and the ejected pilot.

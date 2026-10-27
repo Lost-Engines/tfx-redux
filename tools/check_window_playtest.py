@@ -17,10 +17,12 @@ p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--build',type=Path,default=Path('build'))
 p.add_argument('--data-dir',type=Path,default=Path('../tfx-reverse/installs/cd_1994_09/TFX'))
 p.add_argument('--redux',action='store_true')
+p.add_argument('--mouse-orbit',action='store_true',help='also check Redux camera mouse routing')
 p.add_argument('--fixed-resolution',action='store_true',help='verify --resolution overrides automatic sizing')
 p.add_argument('--menu-eject',action='store_true',help='confirm Redux menu ejection instead of testing its shortcut')
 p.add_argument('--screenshots',type=Path)
 a=p.parse_args()
+if a.mouse_orbit:a.redux=True
 with tempfile.TemporaryDirectory(prefix='tfx-window-playtest-') as temp:
  root=Path(temp);install=root/'TFX';install.mkdir()
  for name in ('DID.DAT','TFX.DAT'):(install/name).symlink_to((a.data_dir/name).resolve())
@@ -54,6 +56,21 @@ run
 ''')
   if not a.redux:
    script.write_text(script.read_text().replace('break tfx::platform::window::present\ncommands\nsilent\nprintf "SIZE %d %d\\n", size.x, size.y\ncontinue\nend\n',''))
+  if a.mouse_orbit:
+   script.write_text(script.read_text().replace('run\n',"""break tfx::cockpit::mouse_orbit::apply
+commands
+silent
+printf \"ORBIT %d %f %f\\n\", this->selected, this->heading, this->pitch
+continue
+end
+break tfx::flight::advance_arcade
+commands
+silent
+printf \"STEER %d %d\\n\", controls.pitch_delta, controls.roll_delta
+continue
+end
+run
+"""))
   args=[str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501','--music','none','--scale','2']
   if a.fixed_resolution:args.append('--resolution=800x500')
   with log.open('w') as out:
@@ -112,6 +129,28 @@ run
      wait(lambda:any(stage!=0 for presses,stage in states()),'confirmed menu ejection did not eject')
      print('Confirmed menu ejection passed');raise SystemExit(0)
     tap('Escape');wait(lambda:'flight' in title(),'Escape did not resume flight')
+   if a.mouse_orbit:
+    def orbit_states():return [(int(m),float(h),float(p)) for m,h,p in re.findall(r'^ORBIT (\d+) ([-.0-9]+) ([-.0-9]+)$',log.read_text(),re.M)]
+    def mouse(dx,dy):run('xdotool','mousemove_relative','--',str(dx),str(dy));time.sleep(.3)
+    tap('F7');wait(lambda:orbit_states()[-1][0]==11,'tactical view did not open')
+    before=len(log.read_text());mouse(70,-40)
+    wait(lambda:orbit_states()[-1][1]>0 and orbit_states()[-1][2]<0,'mouse did not orbit tactical view')
+    assert all(x==('0','0') for x in re.findall(r'^STEER (-?\d+) (-?\d+)$',log.read_text()[before:],re.M)),'orbit also steered aircraft'
+    screenshot('mouse-orbit-tactical')
+    tap('F7');wait(lambda:orbit_states()[-1]==(11,0.,0.),'reselecting camera did not reset orbit')
+    tap('F5');wait(lambda:orbit_states()[-1][0]==4,'chase view did not open')
+    before=len(log.read_text());mouse(100,30)
+    wait(lambda:orbit_states()[-1][1]>0 and orbit_states()[-1][2]>0,'mouse did not orbit chase view')
+    assert all(x==('0','0') for x in re.findall(r'^STEER (-?\d+) (-?\d+)$',log.read_text()[before:],re.M)),'chase orbit also steered aircraft'
+    screenshot('mouse-orbit-chase')
+    state=orbit_states()[-1];run('xdotool','windowfocus','0');time.sleep(.3);mouse(100,-60)
+    assert orbit_states()[-1]==state,'unfocused mouse changed orbit'
+    run('xdotool','windowfocus','--sync',window);time.sleep(.3)
+    assert orbit_states()[-1]==state,'refocusing jumped the camera'
+    tap('F1');wait(lambda:orbit_states()[-1][0]==0,'cockpit did not reopen')
+    before=len(log.read_text());mouse(8,-6)
+    wait(lambda:any(x!=('0','0') for x in re.findall(r'^STEER (-?\d+) (-?\d+)$',log.read_text()[before:],re.M)),'cockpit mouse steering did not resume')
+    print('Mouse orbit passed: tactical/chase, screen axes, reset, no flight steering, focus release, cockpit steering restored')
    key='ctrl+Escape' if a.redux else 'Escape'
    run('xdotool','keydown',key);time.sleep(1);run('xdotool','keyup',key);time.sleep(.3)
    assert states()[-1]==(1,0),('one held press ejected the pilot',states()[-8:])
