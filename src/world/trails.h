@@ -22,6 +22,15 @@ struct trail_segment {
 std::optional<trail_segment> prepare_trail(vec3<int32_t> const &previous, vec3<int32_t> const &current, bool enabled);
 void emit_trail(trail_segment const &segment, std::function_ref<void(vec3<int32_t> const&)> output);
 
+// Redux: retain fractional spacing across projectile updates, independent of
+// how many simulation ticks a rendered frame took.
+class trail_sampler {
+  double until_next{0};
+public:
+  void advance(vec3<int32_t> const &previous_q8, vec3<int32_t> const &current_q8,
+               std::function_ref<void(vec3<int32_t> const&)> output);
+};
+
 using trail_slot = unsigned int;
 struct trail_record {
   vec3<int32_t> position_q8{0,0,0};

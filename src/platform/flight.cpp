@@ -451,6 +451,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }
   }
   tfx::world::trail_pool trails;
+  std::map<tfx::weapons::projectile_id,tfx::world::trail_sampler> trail_samplers;
   std::array<tfx::world::scene_handle,tfx::world::trail_capacity> trail_visuals;
   for(auto &visual : trail_visuals) {
     visual = scene.create_actor(std::string{tfx::world::trail_definition},{0,0,0},{0,0,0});
@@ -485,6 +486,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     trails.clean(player.integer_position,destroyed);
   }};
   std::optional<tfx::render::point_projection> impact_projection;
+  std::optional<tfx::render::camera> trail_camera;
   auto const impact_surface{[&](vec3<int32_t> const &position) {
     auto const point{impact_projection ? impact_projection->integer(position) : std::nullopt};
     return tfx::world::classify_impact(renderer.output,point,environment.lighting.water_world);
@@ -635,13 +637,18 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       }
     }},
     .trail{[&](tfx::weapons::active_projectile const &shot) {
-      auto const segment{tfx::world::prepare_trail(projectile_world_position(shot.state.previous),projectile_world_position(shot.state.position),preferences.detail != 0)};
-      if(!segment || !impact_projection || !impact_projection->sphere_visible(segment->midpoint(),segment->length)) return;
-      auto const sample{[&](vec3<int32_t> const &position_q8) {
+      if(!preferences.detail) return;
+      // Keep spacing even when this segment is off screen. Visibility uses
+      // the actual Redux lens rather than the original fixed 320x200 frustum.
+      auto const &camera{trail_camera};
+      bool const visible{camera && camera->sphere_visible(
+        (vec3d{shot.state.previous} + vec3d{shot.state.position}) / (2 * tfx::actors::position_unit),
+        (vec3d{shot.state.position} - vec3d{shot.state.previous}).length() / (2 * tfx::actors::position_unit))};
+      trail_samplers[shot.id].advance(shot.state.previous,shot.state.position,[&](vec3<int32_t> const &position_q8) {
+        if(!visible) return;
         auto const slot{trails.spawn(position_q8)};
         scene.actor_event(trail_visuals[slot],0);
-      }};
-      tfx::world::emit_trail(*segment,sample);
+      });
     }},
     .ground_impact{[&](tfx::weapons::active_projectile const &shot, int16_t &appearance) {
       auto const position{projectile_world_position(shot.state.position)};
@@ -1078,6 +1085,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     effects.reset();
     flak.reset();
     trails.reset();
+    trail_samplers.clear();
+    trail_camera.reset();
     flak_state.centre = {0,0};
     flak_flash = false;
     engagement = {};
@@ -1644,6 +1653,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     advance_world({},4,static_cast<double>(4 * .02f));
     finish_world(4);
     projectiles.finish_frame();
+    std::erase_if(trail_samplers,[&](auto const &entry) { return !projectiles.projectiles().contains(entry.first); });
   }
   // Native 0x72588 resumes the parser directly after FINISH and teardown.
   // A direct --mission launch keeps its standalone diagnostic result display.
@@ -2132,6 +2142,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       tfx::render::interface_layout const interface{video.resolution};
       auto const actual_view{tfx::render::scene_camera(view,video)};
       view.point_focal_distance = actual_view.focal_distance / interface.scale;
+      trail_camera = actual_view; // MFD passes replace scene.last_camera() later.
       impact_projection.emplace(view.projector());
       if(!designator_view) prepare_lighting(view);
     }
@@ -2241,6 +2252,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     draw();
     finish_world(4);
     projectiles.finish_frame();
+    std::erase_if(trail_samplers,[&](auto const &entry) { return !projectiles.projectiles().contains(entry.first); });
   }
   if(flight_frames) std::cout << "Complete flight frames: " << complete_frames << std::endl;
   if(frontend_flight && result_evaluated) return flight_result::finished;
@@ -2958,6 +2970,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(frame_ticks) {
       finish_world(*frame_ticks);
       projectiles.finish_frame();
+      std::erase_if(trail_samplers,[&](auto const &entry) { return !projectiles.projectiles().contains(entry.first); });
     }
     if(frontend_flight && result_evaluated) break;
     ++frames;

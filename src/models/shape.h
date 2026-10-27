@@ -34,6 +34,7 @@ struct shape {
   std::string texture_name;
   int16_t sort_depth_bias;
   int16_t minimum_draw_distance;
+  bool has_surfaces{false};
   shape(std::span<uint8_t const> source);
   shape_detail const *detail_for_distance(int16_t distance) const;
 };
@@ -67,6 +68,7 @@ struct primitive {
   bool rounded{false};
   unsigned int source_address{0};
   std::optional<unsigned int> attachment_slot;
+  bool model_proxy{false}; // A whole distant object, rather than an authored light.
 };
 enum class facing_test { branch, polygon };
 

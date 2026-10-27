@@ -140,6 +140,24 @@ void software_renderer::circle(int const x, int const y, unsigned int const radi
   }
 }
 
+void software_renderer::begin_points() {
+  collect_points = true;points.clear();point_depth.begin(output.size);
+}
+void software_renderer::finish_points() {
+  collect_points = false;
+  std::stable_sort(points.begin(),points.end(),[](auto const &a, auto const &b) { return a.depth>b.depth; });
+  for(auto const &point : points) if(point_depth.visible(point.ray,point.depth)) point_disc(point);
+  points.clear();
+}
+void software_renderer::point_disc(point_sprite const &point) {
+  int const extent{std::max(1,static_cast<int>(std::lround(point.diameter)))};
+  if(extent==1) { ink(point.position.x,point.position.y,point.colour,point.mode);return; }
+  double const offset{extent%2 ? 0 : .5}, radius{(extent-.5)/2};
+  for(int y{-extent/2}; y<=extent/2; ++y) for(int x{-extent/2}; x<=extent/2; ++x)
+    if((x-offset)*(x-offset)+(y-offset)*(y-offset)<=radius*radius)
+      ink(point.position.x+x,point.position.y+y,point.colour,point.mode);
+}
+
 void software_renderer::line(vec2d const &a, vec2d const &b, uint8_t const colour) {
   /// Integer Bresenham segments after camera clipping
   int x{static_cast<int>(std::lround(a.x))}, y{static_cast<int>(std::lround(a.y))};
@@ -174,11 +192,16 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
     auto const point{view.project(v,camera_vertices.front().projection_scale)};
     if(point.x < -100 || point.x > output.size.x + 100 || point.y < -100 || point.y > output.size.y + 100) return;
     int const x{static_cast<int>(std::lround(point.x))}, y{static_cast<int>(std::lround(point.y))};
-    double const pixel_scale{std::max(1.0,std::min(output.size.x / static_cast<double>(screen_width),output.size.y / static_cast<double>(screen_height)))};
+    // Half an original pixel's angular size, using this camera's lens rather
+    // than the UI scale. Whole-model point LOD never grows a distant aircraft.
+    double const pixel_scale{std::max(1.0,view.focal_distance / 512.0)};
     if(source.pixel_size) {
-      int const extent{static_cast<int>(std::lround(source.pixel_size * pixel_scale))};
-      int const offset{(extent - static_cast<int>(source.pixel_size)) / 2};
-      for(int row{0}; row != extent; ++row) for(int col{0}; col != extent; ++col) ink(x + col - offset,y + row - offset,ink_index,source.mode);
+      if(output.size == vec2<int>{screen_width,screen_height} && !source.model_proxy) {
+        for(unsigned int row{0}; row<source.pixel_size; ++row) for(unsigned int col{0}; col<source.pixel_size; ++col) ink(x+static_cast<int>(col),y+static_cast<int>(row),ink_index,source.mode);
+      } else {
+        point_sprite const sprite{{x,y},vec2d{point},v.z,source.model_proxy ? 1.0 : source.pixel_size*pixel_scale,ink_index,source.mode};
+        if(collect_points) points.push_back(sprite);else point_disc(sprite);
+      }
     } else circle(x,y,static_cast<unsigned int>(std::max(source.radius * view.focal_distance / v.z,std::floor(pixel_scale / 2))),ink_index,source.mode);
     return;
   }
@@ -237,6 +260,7 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
     }
     clipped = next;buffer ^= 1;
   }
+  if(collect_points && source.kind == models::primitive_kind::polygon && !source.rounded) point_depth.add(clipped,view,source.mode,texture,remap);
   auto &projected{projected_vertices};projected.clear();projected.reserve(clipped.size());
   for(auto const &v : clipped) projected.push_back({
     .position{view.project(v.position,v.projection_scale)},

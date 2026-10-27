@@ -8,6 +8,7 @@
 #include "render/clipping.h"
 #include "render/colour_remap.h"
 #include "render/framebuffer.h"
+#include "render/point_visibility.h"
 #include "resources/executable_tables.h"
 
 namespace tfx::render {
@@ -27,6 +28,11 @@ private:
   // Reused within each synchronous draw; no allocation per polygon/scanline.
   std::array<std::vector<models::model_vertex>,2> clip_vertices;
   std::vector<screen_vertex> projected_vertices, scanline_hits;
+  struct point_sprite { vec2<int> position; vec2d ray; double depth, diameter; uint8_t colour; int mode; };
+  point_visibility point_depth;
+  std::vector<point_sprite> points;
+  bool collect_points{false};
+  void point_disc(point_sprite const &point);
   void ink(int x, int y, uint8_t colour, int mode);
   void patterned_span(int y, double left, double right, uint8_t colour, int mode, int bottom, bool inclusive, bool paint = true);
 
@@ -35,6 +41,8 @@ public:
   raster_clip clipping;
   software_renderer(resources::executable_tables const &tables, uint16_t procedural_seed = 0x4321);
   uint16_t procedural_state() const;
+  void begin_points();
+  void finish_points();
   void background(camera const &view, uint8_t sky, uint8_t ground);
   unsigned int text_width(std::string_view message) const;
   void text(int x, int y, std::string_view message, uint8_t colour, framebuffer *coverage = nullptr);

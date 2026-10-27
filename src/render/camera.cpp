@@ -19,6 +19,16 @@ point_projection camera::projector() const {
   return result;
 }
 
+bool camera::sphere_visible(vec3d const &world, double const radius) const {
+  auto const point{transform(world)};
+  if(point.z + radius <= 0 || point.z - radius > far_distance) return false;
+  double const depth{std::max(0.0,point.z)};
+  double const horizontal{std::max(projection_origin.x - viewport_minimum.x,viewport_maximum.x + 1 - projection_origin.x) / focal_distance};
+  double const vertical{std::max(projection_origin.y - viewport_minimum.y,viewport_maximum.y + 1 - projection_origin.y) / focal_distance};
+  return std::abs(point.x) <= depth * horizontal + radius * (1 + horizontal)
+      && std::abs(point.y) <= depth * vertical + radius * (1 + vertical);
+}
+
 vec3d camera::transform(vec3d const &world) const {
   auto const relative{world - position};
   return {relative.dot(right), relative.dot(down), relative.dot(forward)};

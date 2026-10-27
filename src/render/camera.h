@@ -30,6 +30,7 @@ struct camera {
   // Integer world/terrain anchor; chase smoothing can offset position from it.
   vec3<int32_t> world_anchor{0,0,0};
   point_projection projector() const;
+  bool sphere_visible(vec3d const &world, double radius) const;
   vec3d transform(vec3d const &world) const;
   vec2d project(vec3d const &camera_position, double projection_scale = 1) const;
 };
