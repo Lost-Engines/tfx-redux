@@ -7,7 +7,7 @@
 namespace tfx::platform {
 
 // Resume presses are swallowed until release, including level-triggered fire
-// and steering keys. Modifiers and modal/screenshot shortcuts do not resume.
+// and steering keys. Camera keys, modifiers and modal/screenshot shortcuts do not resume.
 class pause_input {
 public:
   using snapshot = std::array<bool,GLFW_KEY_LAST+1>;
@@ -15,7 +15,7 @@ private:
   snapshot previous{}, blocked{};
   bool had_focus{false};
   static bool resumes(int key, snapshot const &keys) {
-    if(key>=GLFW_KEY_LEFT_SHIFT || key==GLFW_KEY_ESCAPE || key==GLFW_KEY_GRAVE_ACCENT || key==GLFW_KEY_M || key==GLFW_KEY_4
+    if((key>=GLFW_KEY_F1 && key<=GLFW_KEY_F25) || key>=GLFW_KEY_LEFT_SHIFT || key==GLFW_KEY_ESCAPE || key==GLFW_KEY_GRAVE_ACCENT || key==GLFW_KEY_M || key==GLFW_KEY_4
        || key==GLFW_KEY_CAPS_LOCK || key==GLFW_KEY_NUM_LOCK || key==GLFW_KEY_SCROLL_LOCK || key==GLFW_KEY_PRINT_SCREEN) return false;
     if(key==GLFW_KEY_Q && (keys[GLFW_KEY_LEFT_SHIFT] || keys[GLFW_KEY_RIGHT_SHIFT])) return false;
     return true;

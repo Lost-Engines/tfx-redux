@@ -43,7 +43,7 @@ Arcade uses mouse steering. The other flight models support keyboard and joystic
 
 **Alt+V** starts or stops a flight recording. Its default filename is `video.rec`, editable in the configuration menu. A new recording replaces that file. After a campaign flight, the original WNN sequence and recorded flight play automatically.
 
-The floating window fits the desktop automatically, with square pixels and nearest-neighbour presentation. `--scale=2` starts a 640×400 window, or doubles an explicitly selected render size. Losing focus releases all flight input; flight, presentations and replay keep running. Use **P**, **Pause** or the menu when you want to pause. Most ordinary keys, including Enter and Space, resume; the resume press is consumed until release.
+The floating window fits the desktop automatically, with square pixels and nearest-neighbour presentation. `--scale=2` starts a 640×400 window, or doubles an explicitly selected render size. Losing focus releases all flight input; flight, presentations and replay keep running. Use **P**, **Pause** or the menu when you want to pause. Most ordinary keys, including Enter and Space, resume; the resume press is consumed until release. F-key camera changes and screenshots remain available while paused, with no pause label over the image. External views also retain mouse orbit while paused.
 
 See [controls and configuration](docs/controls.md) for weapons, autopilot, cameras, MFDs, joystick bindings, recordings and developer commands. The original manual remains the best guide to flying the missions.
 
