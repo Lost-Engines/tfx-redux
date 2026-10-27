@@ -51,6 +51,7 @@ arming_result arm_mission(window &window, resources::archive const &game, resour
   std::optional<vec2<int16_t>> previous_pointer;
   std::optional<vec2<int32_t>> previous_coordinates;
   while(window.poll()) {
+    screen.resize(window.resolution());
     double const now{glfwGetTime()};
     if(!window.focused()) {
       next_frame = now;

@@ -39,27 +39,27 @@ Mission 501 is the first Fighter Weapons School engagement. Direct launches use 
 
 The original menus, briefings, mission planning, arming, flight, combat and results are connected. All four flight models are available, along with the original cockpit/MFDs, cameras, weather, damage, refuelling and automatic landing. Landing and stopping can refuel, repair and rearm your aircraft through the original arming screen. Campaign flights return to the authored presentations and retain DOS-compatible `TFXSAV.0`–`TFXSAV.9` pilot files.
 
-Arcade uses mouse steering. The other flight models support keyboard and joystick controls; `--flight-model` and `--control` override the saved choices. Press **backtick** in flight for configuration and realism settings, and **P** to pause. Press Escape twice to eject; **Shift+Q** opens the quit/enrol confirmation.
+Arcade uses mouse steering. The other flight models support keyboard and joystick controls; `--flight-model` and `--control` override the saved choices. Press **Escape** (or **backtick**) in flight for the menu and realism settings, and **P** to pause. Choose **EJECT** and confirm, or press **Ctrl+Escape twice** to eject; **Shift+Q** opens the quit/enrol confirmation.
 
 **Alt+V** starts or stops a flight recording. Its default filename is `video.rec`, editable in the configuration menu. A new recording replaces that file. After a campaign flight, the original WNN sequence and recorded flight play automatically.
 
-The floating window fits the desktop automatically, with square pixels and nearest-neighbour presentation. `--scale=2` requests a window twice the render size. Focus loss releases mouse capture.
+The floating window fits the desktop automatically, with square pixels and nearest-neighbour presentation. `--scale=2` starts a 640×400 window, or doubles an explicitly selected render size. Losing focus releases all flight input; flight, presentations and replay keep running. Use **P** or the menu when you want to pause.
 
 See [controls and configuration](docs/controls.md) for weapons, autopilot, cameras, MFDs, joystick bindings, recordings and developer commands. The original manual remains the best guide to flying the missions.
 
 ## Redux improvements
 
-The defaults are **1280×800**, the original **64.01° horizontal FOV**, a **16-cell draw radius** and **highest-detail models**. For example:
+By default, 3D rendering uses the **window’s actual pixel dimensions**, including after resizing. The other defaults are the original **64.01° horizontal FOV**, a **16-cell draw radius** and **LOD scale 0.1**. For example:
 
 ```sh
 ./build/tfx --resolution=1920x1080 --fov=90 --draw-distance=64
 ./build/tfx --resolution=1280x800 --draw-distance=infinite
 ```
 
-- `--resolution WIDTHxHEIGHT` sets the actual 3D render resolution, including aircraft and weapons in the arming screen. Widescreen and other aspect ratios use square pixels.
+- `--resolution WIDTHxHEIGHT` fixes the 3D render resolution, including aircraft and weapons in the arming screen. Without it, both follow the window’s framebuffer size. Widescreen and other aspect ratios use square pixels.
 - `--fov DEGREES` sets the horizontal field of view, from 10° to 170°. The main camera uses this angle. The missile-nose camera retains its wider view; the HUD pitch ladder and target markers follow the selected projection.
 - `--draw-distance CELLS` controls the terrain radius; `0` or `infinite` removes the far plane and includes the whole finite map. The original radius is 8 cells. Whole-map rendering can be expensive in the software renderer.
-- `--lod-scale FACTOR` controls visual detail cutoffs. The default, `0`, keeps the most detailed models and disables drawing-distance tests in scenery scripts. `1` restores the original LOD thresholds; values between 0 and 1 postpone detail reductions. Gameplay and collision ranges are unaffected.
+- `--lod-scale FACTOR` controls visual detail cutoffs. The default, `0.1`, postpones detail reductions to ten times their original distance. `0` keeps the most detailed models and disables drawing-distance tests in scenery scripts; `1` restores the original thresholds. Missile smoke retains its authored distance-dependent particle sizes at every setting. Gameplay and collision ranges are unaffected.
 
 These display settings are command-line options for now.
 
@@ -71,10 +71,13 @@ The following departures from the original are intentional:
 - Arming picks the aircraft's pylon volumes along the cursor ray, including after rotating the aircraft. The held weapon follows that cursor ray instead of mapping mouse movement to fixed aircraft axes. Buttons use the actual cursor position, without the original miniature-aircraft hotspot offset.
 - Escape cancels an active arming operation first. At the idle preflight arming screen, it returns to the preceding choice screen (or pilot enrolment when none exists). During an in-flight rearm, it asks before returning to the mission. Cancelling restores the loadout held before opening the arming screen.
 - Distant point models use the same missile-view projection as polygons. Two-pixel models are clipped at the screen edge instead of wrapping a pixel onto the next row.
+- Small lights and pixel-sized model details scale relative to the original 320×200 image. Missile smoke keeps its visible density when mesh LOD is disabled.
+- Escape opens the flight menu; ejection has a separate confirmation or a two-press Ctrl+Escape shortcut. Focus loss releases controls without pausing flight or playback.
+- Looking steeply down no longer paints a blue circular patch beneath the camera. The software horizon uses faster span drawing while retaining its palette bands.
 - In-flight screenshots capture the full render resolution and declare square pixels in their ILBM metadata.
 - Pixel clipping includes the complete render target; MFD target reticles stay within their display. Rendering also avoids unnecessary polygon allocation and clipping work without changing the palette or drawing style.
 
-**Flight recordings:** Alt+V records the view as displayed, including its resolution, FOV, distance shading, cockpit and MFDs. Recording preserves your rendering settings. Replay uses the recorded colours and viewpoint instead of the original infrared model-queue replay. New files use a compressed, lossless Redux format; existing DOS recordings remain playable. Recordings contain video only and omit pauses, focus loss and menus.
+**Flight recordings:** Alt+V records the view as displayed, including its resolution, FOV, distance shading, cockpit and MFDs. Recording preserves your rendering settings. Replay uses the recorded colours and viewpoint instead of the original infrared model-queue replay. New files use a compressed, lossless Redux format; existing DOS recordings remain playable. Recordings contain video only and omit pauses and menus. They continue while the window is unfocused.
 
 To replay a saved flight directly:
 

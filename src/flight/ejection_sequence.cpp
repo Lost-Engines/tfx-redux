@@ -15,9 +15,10 @@ ejection_sequence::ejection_sequence(ejection_state initial) : state{std::move(i
 ejection_state const &ejection_sequence::value() const { return state; }
 void ejection_sequence::reset() { state = {}; }
 void ejection_sequence::request() { state.stage = ejection_stage::requested; }
-escape_result ejection_sequence::escape(vec3<int32_t> const &position, vec3<math::angle> const &angles, int32_t const speed) {
+escape_result ejection_sequence::escape(vec3<int32_t> const &position, vec3<math::angle> const &angles, int32_t const speed, bool const confirmed) {
   escape_result result;
   if(state.stage != ejection_stage::cockpit) { result.end_flight = true;return result; }
+  if(confirmed) state.escape_presses = 1;
   ++state.escape_presses;
   if(state.escape_presses != 2) return result;
   state.escape_presses = 0;

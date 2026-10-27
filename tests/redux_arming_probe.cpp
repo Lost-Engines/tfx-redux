@@ -63,6 +63,9 @@ int main(int const argc, char const *const argv[]) try {
     tfx::presentation::arming_screen screen{game,tables,inventory,type,0,tfx::presentation::arming_entry::preflight,{1200,750}};
     for(unsigned int frame{0}; frame != 45; ++frame) screen.advance({100,75},{0,0},0);
     screen.image().screenshot(output / ("arming-" + std::to_string(craft) + ".ppm"),screen.colours());
+    screen.resize({913,617});
+    screen.advance({100,75},{0,0},0);
+    require(screen.image().size == vec2<int>{913,617},"arming view did not follow a resized window");
     screen.press(1);
     for(unsigned int frame{0}; frame != 45; ++frame) screen.advance({100,75},{0,0},0);
     require(screen.cancelled(),"preflight Escape entered the mission");

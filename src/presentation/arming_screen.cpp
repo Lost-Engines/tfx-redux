@@ -81,6 +81,12 @@ bool arming_screen::advance(vec2<int16_t> const &position, vec2<int16_t> const &
   return false;
 }
 bool arming_screen::cancelled() const { return controls.state().mode == arming_mode::cancelled; }
+void arming_screen::resize(vec2<int> const &size) {
+  if(resolution == size) return;
+  resolution = vec2<int>{size};
+  detail_renderer.output.resize(size);
+  detail_renderer.clipping = render::raster_clip::viewport({0,0},{size.x - 1,size.y - 1});
+}
 render::framebuffer const &arming_screen::image() const { return resolution == vec2<int>{render::screen_width,render::screen_height} ? renderer.output : composed; }
 render::palette arming_screen::colours() const { return render::decode_palette(fade_palette(palette,fade_level,40)); }
 

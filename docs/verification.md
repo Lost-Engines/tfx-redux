@@ -91,3 +91,19 @@ python3 tools/check_audio_menu.py --build build-rel --qsound auto
 ```
 
 The live check creates a private display, audio sink and installation. It observes CD progress, mute/restart, effects alongside music, a single output device and clean shutdown. The default built-in QSound path is exercised with no CSP/PVL in the private installation. `--qsound off` checks ordinary mono effects separately. Original firmware extraction remains an optional research workflow in the QSound component repository.
+
+## Redux playtesting regressions
+
+`redux_view_test` checks horizon spans against per-pixel rays, including wide,
+banked and near-vertical views. `redux_effects_probe DATA_DIR` checks the actual
+missile smoke model at five distances and three resolutions: LOD scales 0, 0.1
+and 1 must retain the same particle representation, and one/two-pixel details
+must scale with the target. `redux_arming_probe` also checks target resizing.
+
+`python3 tools/check_window_playtest.py --redux` uses a private X11 display and
+GDB as an observer. It checks continued flight without focus, ignored background
+input, holding the first Ctrl+Escape safely, a second press ejecting, Escape menu
+entry/cancellation, and a 913×617 render target after resizing. Add
+`--menu-eject` to check confirmed menu ejection, or `--fixed-resolution` to check
+that an explicit target remains fixed when the window changes. Test installs
+and pilot/configuration files are disposable.

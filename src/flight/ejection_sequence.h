@@ -32,7 +32,7 @@ public:
   explicit ejection_sequence(ejection_state initial = {});
   ejection_state const &value() const;
   void reset();
-  escape_result escape(vec3<int32_t> const &position, vec3<math::angle> const &angles, int32_t speed);
+  escape_result escape(vec3<int32_t> const &position, vec3<math::angle> const &angles, int32_t speed, bool confirmed = false);
   void request(); // SSD opcode 33, emitted at the authored seat-release frame.
   void collision(int16_t collision);
   pilot_update advance_pilot(pilot_context const &context);

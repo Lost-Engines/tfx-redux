@@ -73,6 +73,14 @@ void configuration_menu::rebuild() {
       .enabled{enabled},
     });
   }};
+  if(current == configuration_page::confirm_eject) {
+    form = {.position{11,9},.size{17,6},.border{dialogue_border::raised}};
+    add(assets.yes,2,3,configuration_item::confirm_eject);
+    buttons.back().drawing.size.x = 3;
+    add(assets.no,9,3,configuration_item::cancel_eject);
+    buttons.back().drawing.size.x = 3;
+    return;
+  }
   if(current == configuration_page::confirm_quit) {
     form = {
       .position{11,9},
@@ -120,6 +128,7 @@ void configuration_menu::rebuild() {
     std::array<configuration_item,5> constexpr items{configuration_item::precipitation,configuration_item::crashing,configuration_item::gear_damage,configuration_item::wind,configuration_item::temperature};
     for(unsigned int row{0}; row != items.size(); ++row) for(unsigned int index{0}; index != 2; ++index) add(assets.switches[index],static_cast<uint8_t>(10 + index * 3),static_cast<uint8_t>(5 + row * 2),items[row],static_cast<uint8_t>(index),values[row] == index);
   }
+  add("EJECT",32,17,configuration_item::eject);
   add(assets.quit,5,17,configuration_item::quit);
   add(assets.resume,13,17,configuration_item::resume);
   add(current == configuration_page::main ? assets.realism_title : assets.main_title,23,17,configuration_item::change_page);
@@ -165,6 +174,9 @@ configuration_action configuration_menu::select(unsigned int const index) {
     case configuration_item::confirm_quit: return configuration_action::quit;
     case configuration_item::enrol: return configuration_action::enrol;
     case configuration_item::resume: return configuration_action::resume;
+    case configuration_item::eject: current = configuration_page::confirm_eject;break;
+    case configuration_item::cancel_eject: current = configuration_page::main;break;
+    case configuration_item::confirm_eject: return configuration_action::eject;
     default: break;
   }
   rebuild();
@@ -196,6 +208,12 @@ void configuration_menu::press(uint8_t const scan, bool const shift) {
 void configuration_menu::draw(render::framebuffer &target) const {
   draw_dialogue_form(target,form);
   for(auto const &button : buttons) draw_dialogue_widget(target,font,form,button.drawing);
+  if(current == configuration_page::confirm_eject) {
+    int const centre{(form.position.x + 1) * dialogue_cell_pixels + form.size.x * 4};
+    font.draw(target,{centre - font.measure("EJECT?") / 2,82},"EJECT?",dialogue_palette_base + 15);
+    font.draw(target,{centre - font.measure("LEAVE AIRCRAFT") / 2,94},"LEAVE AIRCRAFT",dialogue_palette_base + 15);
+    return;
+  }
   if(current == configuration_page::confirm_quit) {
     auto const centre{(form.position.x + 1) * dialogue_cell_pixels + form.size.x * 4};
     for(unsigned int row{0}; row != assets.quit_lines.size(); ++row) font.draw(target,{centre - font.measure(assets.quit_lines[row]) / 2,(form.position.y + 1) * dialogue_cell_pixels + (row ? 9 : 2)},assets.quit_lines[row],dialogue_palette_base + 15);

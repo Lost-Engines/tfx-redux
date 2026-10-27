@@ -25,9 +25,9 @@ struct configuration_audio {
   bool sound_enabled{false};
   bool music_enabled{false};
 };
-enum class configuration_page { main, realism, confirm_quit };
-enum class configuration_action { none, resume, quit, enrol };
-enum class configuration_item { source, sensitivity, detail, model, sound, music, recovery, g_force, precipitation, crashing, gear_damage, wind, temperature, recording, quit, resume, change_page, cancel_quit, confirm_quit, enrol };
+enum class configuration_page { main, realism, confirm_quit, confirm_eject };
+enum class configuration_action { none, resume, quit, enrol, eject };
+enum class configuration_item { source, sensitivity, detail, model, sound, music, recovery, g_force, precipitation, crashing, gear_damage, wind, temperature, recording, quit, resume, change_page, cancel_quit, confirm_quit, enrol, eject, cancel_eject, confirm_eject };
 struct configuration_button {
   dialogue_widget drawing;
   configuration_item item;

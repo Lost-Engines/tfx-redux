@@ -11,9 +11,9 @@
 namespace tfx::platform {
 namespace {
 struct display_area { vec2<int> position; vec2<int> size; };
-display_area viewport(int const width, int const height, vec2<int> const &size) {
+display_area viewport(int const width, int const height, vec2<int> const &size, bool const integer_scale = true) {
   double const available{std::min(width / static_cast<double>(size.x),height / static_cast<double>(size.y))};
-  double const fit{available >= 1 ? std::floor(available) : available};
+  double const fit{integer_scale && available >= 1 ? std::floor(available) : available};
   vec2<int> const fitted{std::max(1,static_cast<int>(size.x * fit)),std::max(1,static_cast<int>(size.y * fit))};
   return {
     .position{(width - fitted.x) / 2,(height - fitted.y) / 2},
@@ -31,7 +31,7 @@ glfw_runtime::~glfw_runtime() {
   glfwTerminate();
 }
 
-window::window(unsigned int const scale, vec2<int> const &size) : handle{nullptr, glfwDestroyWindow}, render_size{size} {
+window::window(unsigned int const scale, vec2<int> const &size, bool const follow) : handle{nullptr, glfwDestroyWindow}, render_size{size}, follow_window{follow} {
   /// Match Darker's floating-window sizing and nearest-neighbour presentation; only the final CPU image uses OpenGL
   bool const automatic{scale == 0}, compositor_sizing{automatic && glfwGetPlatform() == GLFW_PLATFORM_WAYLAND};
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,2);
@@ -41,14 +41,14 @@ window::window(unsigned int const scale, vec2<int> const &size) : handle{nullptr
   auto const initial_scale{static_cast<int>(scale ? scale : 2)};
   // Query the work area using a small hidden window before requesting a
   // potentially much larger render size; the texture is independent of it.
-  handle.reset(glfwCreateWindow((automatic ? render::screen_width : size.x) * initial_scale,(automatic ? render::screen_height : size.y) * initial_scale,"TFX Redux — scene inspection",nullptr,nullptr));
+  handle.reset(glfwCreateWindow((automatic || follow_window ? render::screen_width : size.x) * initial_scale,(automatic || follow_window ? render::screen_height : size.y) * initial_scale,"TFX Redux — scene inspection",nullptr,nullptr));
   if(!handle) throw std::runtime_error{"cannot create the TFX window"};
   if(automatic && !compositor_sizing) {
     if(auto *monitor{glfwGetPrimaryMonitor()}) {
       int x{0}, y{0}, width{0}, height{0}, left{0}, top{0}, right{0}, bottom{0};
       glfwGetMonitorWorkarea(monitor,&x,&y,&width,&height);
       glfwGetWindowFrameSize(handle.get(),&left,&top,&right,&bottom);
-      auto const fitted{viewport(std::max(1,width - left - right),std::max(1,height - top - bottom),size)};
+      auto const fitted{follow_window ? display_area{{0,0},{std::max(1,width - left - right),std::max(1,height - top - bottom)}} : viewport(std::max(1,width - left - right),std::max(1,height - top - bottom),size)};
       glfwSetWindowSize(handle.get(),fitted.size.x,fitted.size.y);
       glfwSetWindowPos(handle.get(),x + left + fitted.position.x,y + top + fitted.position.y);
     }
@@ -60,7 +60,7 @@ window::window(unsigned int const scale, vec2<int> const &size) : handle{nullptr
     glfwRestoreWindow(handle.get());
     auto const deadline{glfwGetTime() + 1};
     while(glfwGetWindowAttrib(handle.get(),GLFW_MAXIMIZED) && glfwGetTime() < deadline) glfwWaitEventsTimeout(.01);
-    auto const fitted{viewport(width,height,size)};
+    auto const fitted{follow_window ? display_area{{0,0},{width,height}} : viewport(width,height,size)};
     glfwSetWindowSize(handle.get(),fitted.size.x,fitted.size.y);
   }
   glfwMakeContextCurrent(handle.get());
@@ -101,7 +101,7 @@ std::optional<vec2d> window::cursor_coordinates() const {
   if(width <= 0 || height <= 0 || framebuffer_width <= 0 || framebuffer_height <= 0) return {};
   double x{0}, y{0};
   glfwGetCursorPos(handle.get(),&x,&y);
-  auto const area{viewport(framebuffer_width,framebuffer_height,source_size)};
+  auto const area{viewport(framebuffer_width,framebuffer_height,source_size,!follow_window)};
   x = x * framebuffer_width / width - area.position.x;
   y = y * framebuffer_height / height - (framebuffer_height - area.position.y - area.size.y);
   render::interface_layout const layout{source_size};
@@ -115,7 +115,16 @@ std::optional<vec2<int16_t>> window::cursor_position() const {
 void window::title(std::string const &text) {
   glfwSetWindowTitle(handle.get(),text.c_str());
 }
-vec2<int> const &window::resolution() const { return render_size; }
+vec2<int> const &window::resolution() const {
+  if(follow_window) {
+    int width{0}, height{0};glfwGetFramebufferSize(handle.get(),&width,&height);
+    if(width > 0 && height > 0) {
+      render::framebuffer::pixel_count({width,height});
+      render_size = {width,height};
+    }
+  }
+  return render_size;
+}
 void window::present(std::span<render::rgba_pixel const> const pixels, vec2<int> const &size) {
   if(pixels.size() != static_cast<size_t>(size.x) * static_cast<size_t>(size.y)) throw std::invalid_argument{"display pixels do not match their resolution"};
   glBindTexture(GL_TEXTURE_2D,texture);
@@ -127,7 +136,7 @@ void window::present(std::span<render::rgba_pixel const> const pixels, vec2<int>
   int width{0}, height{0};
   glfwGetFramebufferSize(handle.get(),&width,&height);
   if(width <= 0 || height <= 0) return;
-  auto const area{viewport(width,height,source_size)};
+  auto const area{viewport(width,height,source_size,!follow_window)};
   glViewport(0,0,width,height);
   glClearColor(0,0,0,1);
   glClear(GL_COLOR_BUFFER_BIT);
