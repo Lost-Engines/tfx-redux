@@ -188,6 +188,8 @@ add_library(tfx_core
   src/render/point_projection.h
   src/cockpit/view_camera.cpp
   src/cockpit/view_camera.h
+  src/cockpit/mouse_orbit.cpp
+  src/cockpit/mouse_orbit.h
   src/cockpit/view_control.cpp
   src/cockpit/view_control.h
   src/cockpit/tactical_map.cpp
@@ -480,6 +482,10 @@ configure_first_party(tfx)
 include(cmake/install.cmake)
 
 if(BUILD_TESTING)
+  add_executable(mouse_orbit_tests tests/mouse_orbit_test.cpp)
+  target_link_libraries(mouse_orbit_tests PRIVATE tfx_core)
+  configure_first_party(mouse_orbit_tests)
+  add_test(NAME render.redux_mouse_orbit COMMAND mouse_orbit_tests)
   add_executable(redux_video_tests tests/redux_video_test.cpp)
   target_link_libraries(redux_video_tests PRIVATE tfx_core)
   configure_first_party(redux_video_tests)

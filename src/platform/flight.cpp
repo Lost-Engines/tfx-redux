@@ -51,6 +51,7 @@
 #include "cockpit/external_display.h"
 #include "cockpit/frame.h"
 #include "cockpit/view_camera.h"
+#include "cockpit/mouse_orbit.h"
 #include "cockpit/initialisation.h"
 #include "cockpit/scene_display.h"
 #include "cockpit/designator.h"
@@ -343,6 +344,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   tfx::cockpit::cockpit_position cockpit_position{tables.instruments(),initial_cockpit_offset};
   tfx::cockpit::view_control views;
   tfx::cockpit::view_camera view_motion;
+  tfx::cockpit::mouse_orbit external_orbit;
   uint16_t view_pan{0};
   tfx::flight::keyboard_state keyboard;
   unsigned int ground_target_page{0};
@@ -1129,6 +1131,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     designator_frame_gap = 0;
     views = tfx::cockpit::view_control{};
     view_motion = tfx::cockpit::view_camera{};
+    external_orbit = tfx::cockpit::mouse_orbit{};
     view_pan = 0;
     cockpit_position.move_to(initial_cockpit_offset);
     ground_designation.reset();
@@ -2119,6 +2122,10 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(!inspect) options.ground_reference = vec3<int32_t>{view_motion.value().ground_reference};
     auto const projection_origin{cockpit_frame.projection_origin(view_index(),cockpit_position.value())};
     auto view{inspect ? tfx::render::inspection_camera(position,heading,pitch) : designator_view ? tfx::cockpit::designator_pose(designator).camera(projection_origin) : view_motion.last_pose().camera(projection_origin)};
+    if(!inspect && !designator_view) {
+      external_orbit.select(views.value().current);
+      view = external_orbit.apply(view,camera_context(),view_motion.value().last_missile);
+    }
     if(!inspect) {
       auto const &layout{tables.instruments().viewports[view_index()]};
       view.viewport_maximum = {tfx::render::screen_width - 1,static_cast<int16_t>(layout.bottom + (layout.panel.empty() ? 0 : cockpit_position.value().y))};
@@ -2147,7 +2154,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     // Native 0x93328 projects after 0x92144 installs this frame's actual
     // camera. External and target views must not use a forward-only matrix.
     if(!inspect && !designator_view) advance_air_tracking(*impact_projection);
-    vec3<int32_t> const draw_reference{inspect ? vec3<int32_t>{view.position} : designator_view ? vec3<int32_t>{designator.camera} : vec3<int32_t>{view_motion.last_pose().anchor}};
+    vec3<int32_t> const draw_reference{inspect ? vec3<int32_t>{view.position} : designator_view ? vec3<int32_t>{designator.camera} : vec3<int32_t>{view.world_anchor}};
     paint_scene(view,draw_reference,!designator_view);
     renderer.output.pixels.fill(0);
     renderer.output.track_writes();
@@ -2282,7 +2289,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
 
   double previous_time{glfwGetTime()}, title_time{previous_time}, last_mouse_x{0}, last_mouse_y{0}, timer_fraction{0};
   unsigned int frames{0}, interval_frames{0};
-  bool captured{false}, mouse_started{false}, store_trigger{false};
+  bool captured{false}, mouse_started{false}, store_trigger{false}, orbiting{false};
   std::array<bool,GLFW_KEY_LAST + 1> held{false};
   // A key that closed the launch screen is not a new in-flight press.
   for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = glfwGetKey(host,key) == GLFW_PRESS;
@@ -2453,7 +2460,14 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }
     if(!inspect && !result_evaluated && pressed(GLFW_KEY_P)) paused = !paused;
     uint8_t const stick_mask{focused && !inspect && !paused && !result_evaluated ? poll_stick() : uint8_t{0}};
-    bool const capture{focused && (inspect ? glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS : (arcade_mode || simple_controls.source == tfx::flight::control_source::mouse) && !paused && !result_evaluated)};
+    bool const orbit_input{!inspect && !designator_view && external_orbit.select(views.value().current)};
+    if(orbit_input != orbiting) {
+      orbiting = orbit_input;
+      mouse_started = false;
+      pitch_input = roll_input = 0;
+      mouse_control = {};
+    }
+    bool const capture{focused && (inspect ? glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS : (orbiting || arcade_mode || simple_controls.source == tfx::flight::control_source::mouse) && !paused && !result_evaluated)};
     if(capture != captured) {
       captured = capture;
       mouse_started = false;
@@ -2464,6 +2478,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       glfwGetCursorPos(host,&mouse_x,&mouse_y);
       if(mouse_started) {
         if(inspect) { heading += (mouse_x - last_mouse_x) * .004; pitch -= (mouse_y - last_mouse_y) * .004; }
+        else if(orbiting) external_orbit.move({mouse_x - last_mouse_x,mouse_y - last_mouse_y});
         else { pitch_input += mouse_y - last_mouse_y; roll_input += mouse_x - last_mouse_x; }
       }
       last_mouse_x = mouse_x;
@@ -2725,6 +2740,10 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       }};
       views.offset(cockpit_position.value());
       auto const select_view{[&](tfx::cockpit::view_key const action) {
+        external_orbit.reset();
+        mouse_started = false;
+        pitch_input = roll_input = 0;
+        mouse_control = {};
         auto const events{views.press(action,view_keys)};
         if(events.fly_past_sound && (player.left_engine || player.right_engine)) {
           sample(audio::sample_priority::normal,audio::sample_id::fly_past);
