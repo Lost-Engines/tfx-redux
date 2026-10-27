@@ -1,7 +1,7 @@
 #!/bin/bash
-# Fetch the reference CD images and external synthesiser ROMs; verify every asset on each run.
+# Fetch the reference CD images and external audio firmware; verify every asset on each run.
 set -u
-usage() { echo "Usage: $0 [destination]"; echo 'Fetch the TFX 2.05 CD and CM-32L, SC-55 and SCC-1A ROMs (default: $XDG_DATA_HOME/tfx or ~/.local/share/tfx).'; }
+usage() { echo "Usage: $0 [destination]"; echo 'Fetch the TFX 2.05 CD, QSound firmware and CM-32L, SC-55 and SCC-1A ROMs (default: $XDG_DATA_HOME/tfx or ~/.local/share/tfx).'; }
 if [[ "${1:-}" == --help ]]; then usage; exit 0; fi
 if (( $# > 1 )); then usage >&2; exit 2; fi
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd) || exit 1
@@ -48,7 +48,7 @@ fetch() {
   elif [[ "$member" == - ]]; then
     download "$url" "$temporary/rom.tmp" || return 1
   else
-    # Cache this archive once for its five SCC-1A members, including a failed
+    # Cache this archive once for its selected members, including a failed
     # attempt. Extract just the named ROM, never the unrelated archive contents.
     if [[ "$archive_url" != "$url" ]]; then
       archive_url=$url
@@ -70,5 +70,5 @@ while read -r expected file url member; do
 done < "$script_dir/$manifest"
 done
 if (( failed )); then exit 1; fi
-echo "Game images and ROMs ready in $PWD"
+echo "Game images and audio firmware ready in $PWD"
 echo "Launch TFX normally; it will prepare the game files from cd/tfx.cue on first use."

@@ -12,3 +12,6 @@ f89442734fdebacae87c7707c01b2d7fdbf5940abae738987aee912d34b5882e cm300_rom2.bin 
 40c093cbfb4441a5c884e623f882a80b96b2527f9fd431e074398d206c0f073d cm300_waverom1.bin https://files.catbox.moe/8vvq0a.zip roms/scc1a/cm300_waverom1.bin
 9bbbcac747bd6f7a2693f4ef10633db8ab626f17d3d9c47c83c3839d4dd2f613 cm300_waverom2.bin https://files.catbox.moe/8vvq0a.zip roms/scc1a/cm300_waverom2.bin
 5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491 cm300_waverom3.bin https://files.catbox.moe/8vvq0a.zip roms/scc1a/cm300_waverom3.bin
+
+# Creative QSound firmware; the runtime unpacks the first bounded DCL member.
+748b8e44c9971e8faeb835dca6141465e0f30d035690e6677e9f53d5da67f544 qsound/MAIN.PVL https://files.mpoli.fi/hardware/SOUND/CLABS/CSPU.ZIP MAIN.PVL

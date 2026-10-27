@@ -2,8 +2,9 @@
 """Check CD progression and real effects through live configuration switches.
 
 A test-authored anti-phase stereo ramp makes CD position measurable while
-ordinary mono Sound Blaster effects cancel in the difference channel. All
-input, assets written, display and audio output belong to private test state.
+ordinary mono Sound Blaster effects cancel in the difference channel. Optional
+QSound is measured after transient tails settle; effect energy is checked
+separately. All inputs, assets, display and output belong to private test state.
 """
 import argparse
 import array
@@ -21,10 +22,16 @@ from window_input import move_game_pointer,confirm_flight_quit
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--build',type=Path,default=Path('build'))
 p.add_argument('--data-dir',type=Path,default=Path('../tfx-reverse/installs/cd_1994_09/TFX'))
+p.add_argument('--qsound-firmware',type=Path,help='also exercise automatic QSound loading, using an original CSP or MAIN.PVL in the private fixture')
 a=p.parse_args()
 with tempfile.TemporaryDirectory(prefix='tfx-audio-menu-') as temporary:
  root=Path(temporary);install=root/'TFX';install.mkdir();tracks=root/'tracks';tracks.mkdir()
  for name in ('DID.DAT','TFX.DAT','START.EXE'):(install/name).symlink_to((a.data_dir/name).resolve())
+ if a.qsound_firmware:
+  firmware=a.qsound_firmware.read_bytes()
+  path=install/'WFM0001A.CSP' if firmware.startswith(b'RIFF') else install/'qsound/MAIN.PVL'
+  path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(firmware)
+  if not firmware.startswith(b'RIFF'):(install/'WFM0001A.CSP').write_bytes(b'damaged local firmware')
  (install/'TFX.CFG').write_bytes(b'CONTROL=0\r\nMODEL=0\r\nSOUNDFX=1\r\nMUSIC=1\r\nREALISM=0,0,1,1,0,0,0\r\nDETAIL=2\r\n')
  rate=48000
  with wave.open(str(tracks/'track09.wav'),'wb') as file:
@@ -53,13 +60,14 @@ with tempfile.TemporaryDirectory(prefix='tfx-audio-menu-') as temporary:
    data=values();return statistics.median((data[i]-data[i+1])/2 for i in range(0,len(data),2))
   with pcm.open('wb') as output,log.open('w') as logging:
    capture=subprocess.Popen(['parec','--device='+sink+'.monitor','--format=float32le','--rate=48000','--channels=2','--latency-msec=20'],env=env,stdout=output,stderr=subprocess.DEVNULL)
-   game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501','--music','cd','--cd-audio-dir',str(tracks),'--scale','2'],env=env,cwd=root,stdout=logging,stderr=subprocess.STDOUT)
+   game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501','--music','cd','--cd-audio-dir',str(tracks),'--scale','2','--qsound','auto' if a.qsound_firmware else 'off'],env=env,cwd=root,stdout=logging,stderr=subprocess.STDOUT)
    deadline=time.monotonic()+30;window=None
    while time.monotonic()<deadline and game.poll() is None:
     found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True).stdout.splitlines()
     if found and 'PCM output:' in log.read_text():window=found[0];break
     time.sleep(.05)
    assert window,log.read_text()
+   if a.qsound_firmware:assert 'QSound: recovered 8 kHz model' in log.read_text(),log.read_text()
    run('xdotool','windowfocus','--sync',window)
    def tap(key):
     run('xdotool','keydown',key);time.sleep(.12);run('xdotool','keyup',key);time.sleep(.2)
@@ -85,7 +93,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-audio-menu-') as temporary:
    assert len([s for s in streams if s.get('properties',{}).get('application.process.id')==str(game.pid)])==1,'game opened competing audio outputs'
    tap('Shift_L+q');confirm_flight_quit(env,window);game.wait(timeout=10)
    assert game.returncode==0 and 'ERROR:' not in log.read_text() and 'unavailable' not in log.read_text(),log.read_text()
-   print('Private live mixed audio passed: CD advances through configuration, mute/restart continues, effects mix and disable independently, one PCM device and clean shutdown')
+   print('Private live mixed audio passed: CD advances through configuration, mute/restart continues, effects mix and disable independently, one PCM device and clean shutdown'+(' (QSound enabled)' if a.qsound_firmware else ''))
  finally:
   for process in (game,capture,display):
    if process is not None and process.poll() is None:

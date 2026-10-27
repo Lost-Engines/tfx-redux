@@ -23,7 +23,8 @@ older open-work statements describe earlier builds.
 | Sustained synth music | FM, LAPC-I and Sound Canvas each match 128 persistent flight/menu lifecycles: 21 min 20 s, 69,914 shared IRQ ticks per mode, retaining phase across all resource changes | Original controller, resource replacement, sequencer and driver execute; physical transport/settling declared |
 | LAPC effects | 128 lifecycles, 48,895 exact MIDI events/timestamps, repeated bank loading, overlap, channel exhaustion and mute/resume, with original wrappers and OSL/LA playback | MIDI and exact sample timestamps; firmware audio has separate checks |
 | CD transport | Shared/split CUE/BIN, pregaps, physical numbering and EOF; WAV/FLAC exact PCM, Ogg/MP3 independent decoder agreement; 274 native controller steps | MSCDEX transport replaced by the host stream |
-| Live mixed audio | CD continues through configuration; music mute/restart advances; SB effects mix and mute independently; one PCM output and clean shutdown | Measurable test-authored stereo track, private silent sink; not an analogue sound-card recording |
+| QSound playback | Recovered 8 kHz bank, timer-driven wrapping pan, explicit endpoint clamping, native-rate filtering, rate changes, preemption, additive mixing and finite tails; Debug/Release/ASan/UBSan checks | Analytical fixed-point model with stated policies, not independently verified ST18932 audio |
+| Live mixed audio | CD continues through configuration; music mute/restart advances; SB effects, including QSound with standalone CSP and fetched MAIN.PVL loading, mix and mute independently; one PCM output and clean shutdown | Measurable test-authored stereo track, private silent sink; not an analogue sound-card recording |
 | Projectile lifetime | 32,768 original/C++ frames with a 17-slot pool, repeated exhaustion/reuse, dispensers and jettison; exact state/event/RNG hashes | Transformed anchors and deterministic contact losses supplied; allocation, motion and retirement execute |
 | FM hardware cleanup | Real initialization and callback partition tests; all 27 reference FM resources retain exact pre-fix PCM/state hashes | Bounded preservation evidence, not proof of every hardware path |
 
@@ -77,9 +78,16 @@ weather, realism, loadout and AI encounter has been exhausted. Broader controlle
 coverage and complete natural sorties are deliberately reported separately.
 Future specific failures should become reproducible original/C++ comparisons.
 
-Optional QSound requires Creative CSP firmware and its resident DOS driver,
-neither present in the retained installation. Standard SB and Gravis samples,
-LAPC effects and all selected music modes work without that processor. Lower-RAM
+QSound now uses the reusable source-included QSound C++ model with external Creative firmware. No resident DOS driver or physical card is required. The model uses recovered coefficients, default 8 kHz bank selection and the original wrapping pan controller, with explicit endpoint clamping and floor/per-MAC saturation assumptions. Out-of-table DSP addressing, exact rounding/saturation and the hardware sample interface remain unverified against a physical card. Four-input processing, the complete DSP instruction set and VU/control-register emulation are outside this two-input playback implementation. Ordinary SB, Gravis, LAPC effects and music also remain available independently. Lower-RAM
 Gravis streaming, unlinked authoring/Inferno material and non-x86 numerical
 portability are outside this reference configuration. Windows/macOS builds
 remain conveniences; Linux is the verification target. CI remains unconfigured.
+
+QSound's reusable source is pinned and compiled directly into `tfx_audio`; it has no separately installed library or runtime driver. The offline integration test independently derives the PIT/BIOS callback count and DAC sample-hold indices, checks all three host rates 8/44.1/48 kHz, and compares contiguous and fragmented callbacks. It also checks rejected requests, preemption, history persistence and that pre-existing stereo audio is added without being processed by QSound. Synthetic table fixtures keep the standard CTests asset-free; the same test also passes with the external original CSP and MAIN.PVL.
+
+```sh
+./build/qsound_playback_test /path/to/WFM0001A.CSP
+python3 tools/check_audio_menu.py --build build-rel --qsound-firmware /path/to/MAIN.PVL
+```
+
+The live check creates a private display, audio sink and installation. It observes CD progress, mute/restart, effects alongside music, a single output device and clean shutdown. Default automatic lookup of `qsound/MAIN.PVL` is exercised, including fallback past an intentionally damaged standalone CSP. The firmware is external input and is not recorded into the repository.

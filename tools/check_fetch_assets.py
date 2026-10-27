@@ -18,10 +18,11 @@ args=parser.parse_args()
 with tempfile.TemporaryDirectory(prefix='tfx-fetch-test-') as temporary:
     root=Path(temporary);scripts=root/'scripts';scripts.mkdir()
     script=scripts/args.script.name;shutil.copy2(args.script,script)
-    payloads={'cd/track01.bin':b'reference data track','cd/track02.bin':b'reference audio track','cd/tfx.cue':b'FILE \"track01.bin\" BINARY\r\n','keep.rom':b'valid existing ROM','repair.rom':b'replacement bytes','new.rom':b'new ROM','first.bin':b'first ZIP ROM','second.bin':b'second ZIP ROM'}
+    payloads={'cd/track01.bin':b'reference data track','cd/track02.bin':b'reference audio track','cd/tfx.cue':b'FILE \"track01.bin\" BINARY\r\n','keep.rom':b'valid existing ROM','repair.rom':b'replacement bytes','new.rom':b'new ROM','first.bin':b'first ZIP ROM','second.bin':b'second ZIP ROM','qsound/MAIN.PVL':b'bounded Creative firmware archive'}
     bundle=root/'bundle.zip'
     with zipfile.ZipFile(bundle,'w',compression=zipfile.ZIP_DEFLATED) as archive:
         for name in ('first.bin','second.bin'):archive.writestr('roms/'+name,payloads[name])
+        archive.writestr('MAIN.PVL',payloads['qsound/MAIN.PVL'])
         archive.writestr('unrelated/leave-me-out.bin',b'not needed')
     requests=collections.Counter();agents=[];fail_archive=False;corrupt=False
     class Handler(http.server.BaseHTTPRequestHandler):
@@ -43,8 +44,9 @@ with tempfile.TemporaryDirectory(prefix='tfx-fetch-test-') as temporary:
                 location='-' if name.endswith('.cue') else url+'/'+name
                 game_manifest.append(f'{hashlib.sha256(data).hexdigest()} {name} {location} {member}')
                 continue
-            archive=name.endswith('.bin')
-            manifest.append(f'{hashlib.sha256(data).hexdigest()} {name} {url}/'+('bundle.zip roms/'+name if archive else name+' -'))
+            archive=name.endswith('.bin') or name=='qsound/MAIN.PVL'
+            member='MAIN.PVL' if name=='qsound/MAIN.PVL' else 'roms/'+name
+            manifest.append(f'{hashlib.sha256(data).hexdigest()} {name} {url}/'+('bundle.zip '+member if archive else name+' -'))
         # Windows packages have CRLF manifests; Bash must also accept those.
         (scripts/'game-files.txt').write_bytes(('\r\n'.join(game_manifest)+'\r\n').encode())
         (scripts/'cd-cue.txt').write_bytes(payloads['cd/tfx.cue'])

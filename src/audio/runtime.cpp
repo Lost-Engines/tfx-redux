@@ -8,8 +8,9 @@ namespace tfx::audio {
 
 namespace {
 std::variant<sample_voice,gus_samples> make_effects(sample_bank const &bank, unsigned int const rate,
-    std::optional<gus_parameters> const &gravis) {
-  if(!gravis) return std::variant<sample_voice,gus_samples>{std::in_place_type<sample_voice>,bank,rate};
+    std::optional<gus_parameters> const &gravis, std::unique_ptr<qsound_effect> spatial) {
+  if(!gravis) return std::variant<sample_voice,gus_samples>{std::in_place_type<sample_voice>,bank,rate,std::move(spatial)};
+  if(spatial) throw std::invalid_argument{"QSound applies only to Sound Blaster samples"};
   std::vector<gus_sample_data> samples;
   for(unsigned int index{0}; index != bank.entries().size(); ++index) samples.push_back({
     .pcm{bank.pcm(index)},
@@ -21,8 +22,8 @@ std::variant<sample_voice,gus_samples> make_effects(sample_bank const &bank, uns
 }
 runtime::runtime(std::span<sample_definition const> const definitions, resources::archive const &game,
     unsigned int const output_rate, sound_device const device, std::unique_ptr<music_player> music, std::optional<gus_parameters> const &gravis,
-    std::unique_ptr<cd_player> cd, music_mode mode, bool music_enabled) :
-    bank{definitions,game}, effects{make_effects(bank,output_rate,gravis)}, available{device != sound_device::none},
+    std::unique_ptr<cd_player> cd, music_mode mode, bool music_enabled, std::unique_ptr<qsound_effect> spatial) :
+    bank{definitions,game}, effects{make_effects(bank,output_rate,gravis,std::move(spatial))}, available{device != sound_device::none},
     sampled{device == sound_device::sound_blaster || device == sound_device::sound_blaster16 || device == sound_device::gravis},
     enabled{available}, music{std::move(music)}, cd{std::move(cd)}, mode{mode},
     music_on{this->music ? this->music->is_enabled() : music_enabled} {
