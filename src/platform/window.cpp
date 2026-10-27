@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include <unordered_map>
+#include <utility>
 #include "render/view_settings.h"
 #ifdef _WIN32
 #include <GL/glext.h>
@@ -10,6 +12,8 @@
 
 namespace tfx::platform {
 namespace {
+// Modal menus borrow GLFW's user pointer, independently of wheel delivery.
+std::unordered_map<GLFWwindow*,vec2d> wheel_offsets;
 struct display_area { vec2<int> position; vec2<int> size; };
 display_area viewport(int const width, int const height, vec2<int> const &size, bool const integer_scale = true) {
   double const available{std::min(width / static_cast<double>(size.x),height / static_cast<double>(size.y))};
@@ -76,12 +80,17 @@ window::window(unsigned int const scale, vec2<int> const &size, bool const follo
   glDisable(GL_DITHER);
   glEnable(GL_TEXTURE_2D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
+  wheel_offsets.emplace(handle.get(),vec2d{0,0});
+  glfwSetScrollCallback(handle.get(),[](GLFWwindow *target, double x, double y) {
+    if(auto entry{wheel_offsets.find(target)}; entry!=wheel_offsets.end()) entry->second += vec2d{x,y};
+  });
   glfwSetWindowFocusCallback(handle.get(),[](GLFWwindow *const target, int const focused){
     if(!focused) glfwSetInputMode(target,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
   });
 }
 
 window::~window() {
+  wheel_offsets.erase(handle.get());
   glDeleteTextures(1,&texture);
 }
 GLFWwindow *window::get() const {
@@ -90,6 +99,7 @@ GLFWwindow *window::get() const {
 bool window::focused() const {
   return glfwGetWindowAttrib(handle.get(),GLFW_FOCUSED) == GLFW_TRUE;
 }
+vec2d window::take_scroll() { return std::exchange(wheel_offsets.at(handle.get()),vec2d{0,0}); }
 bool window::poll() {
   glfwPollEvents();
   return !glfwWindowShouldClose(handle.get());

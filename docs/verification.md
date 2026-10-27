@@ -137,3 +137,7 @@ The same check switches F4/F5/F1 while paused, waits for camera transitions,
 compares a settled view across repeated frames, and saves an in-game screenshot.
 Simulation ticks and scenery animation calls must stay unchanged throughout.
 Redux additionally checks that paused mouse orbit changes the rendered view.
+
+`tools/check_window_designator_mouse.py --redux` checks real mouse movement and both mouse buttons in Z view, confirms that flight receives no mouse input, and checks that F1 restores steering without carrying over camera input. Run it with both `--flight-model arcade` and `--flight-model military-spec` to cover relative steering and the retained mouse stick. It also checks paused designator images for unwanted animation. The test uses a private X11 display and temporary configuration; GDB only observes state.
+
+The Redux check additionally verifies aiming direction, wheel zoom, paused aiming and zoom, and preservation of a locked designation. `render.redux_designator_mouse` covers fractional input, sensitivity at different zoom levels, bounds, lock/release input and view/focus reset. Physical joystick hardware is not exercised by these checks; the existing joystick input route remains independent.

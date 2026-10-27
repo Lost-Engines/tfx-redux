@@ -216,6 +216,7 @@ add_library(tfx_core
   src/cockpit/initialisation.h
   src/flight/fuel_gauge.h
   src/cockpit/designator.cpp src/cockpit/designator.h
+  src/cockpit/designator_mouse.cpp src/cockpit/designator_mouse.h
   src/cockpit/scene_display.cpp
   src/cockpit/scene_display.h
   src/cockpit/hud.cpp
@@ -488,6 +489,10 @@ configure_first_party(tfx)
 include(cmake/install.cmake)
 
 if(BUILD_TESTING)
+  add_executable(designator_mouse_tests tests/designator_mouse_test.cpp)
+  target_link_libraries(designator_mouse_tests PRIVATE tfx_core)
+  configure_first_party(designator_mouse_tests)
+  add_test(NAME render.redux_designator_mouse COMMAND designator_mouse_tests)
   add_executable(mouse_orbit_tests tests/mouse_orbit_test.cpp)
   target_link_libraries(mouse_orbit_tests PRIVATE tfx_core)
   configure_first_party(mouse_orbit_tests)

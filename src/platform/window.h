@@ -34,6 +34,7 @@ public:
   bool focused() const;
   vec2<int> const &resolution() const;
   bool poll();
+  vec2d take_scroll();
   std::optional<vec2d> cursor_coordinates() const;
   std::optional<vec2<int16_t>> cursor_position() const;
   void title(std::string const &text);
