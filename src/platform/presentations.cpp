@@ -118,7 +118,7 @@ void play_game(resources::archive const &game, resources::executable_tables cons
     frontend.image().screenshot(*options.screenshot,frontend.colours());
     return;
   }
-  window window{options.scale,options.video.resolution};
+  window window{options.scale,options.video.resolution,options.video.automatic_resolution};
   auto *const host{window.get()};
   glfwSetWindowUserPointer(host,&controls);
   glfwSetKeyCallback(host,frontend_keys::key);

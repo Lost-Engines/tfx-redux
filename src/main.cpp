@@ -82,11 +82,11 @@ auto main(int const argc, char const *const argv[])->int try {
                    "  --cd-audio-dir DIR    Play numbered local FLAC, Ogg, MP3 or WAV CD tracks\n"
                    "  --qsound MODE         auto, on or off; reconstructed Sound Blaster spatial effects (default: auto)\n"
                    "  --rom-dir DIRECTORY   Override automatic audio-firmware lookup\n"
-                   "  --resolution WxH      Render size in square pixels (default: 1280x800)\n"
+                   "  --resolution WxH      Fixed render size (default: actual window pixels)\n"
                    "  --fov DEGREES         Horizontal field of view, 10..170 (original/default: 64.01)\n"
                    "  --draw-distance N     Terrain radius in cells (default: 16; original: 8); 0/infinite draws the whole map\n"
-                   "  --lod-scale N         Visual LOD distance multiplier; 0 disables cutoffs (default), 1 uses original thresholds\n"
-                   "  --scale N             Final image pixel scale; 0 fits a floating window to the desktop (default)\n"
+                   "  --lod-scale N         Visual LOD distance multiplier; default 0.1; 0 disables mesh cutoffs, 1 is original\n"
+                   "  --scale N             Initial window scale (320x200 or --resolution); 0 fits desktop\n"
                    "\nGame files: current directory, then " << tfx::resources::default_game_directory().string() << "\n"
                    "ROMs: selected game directory, then the same default asset directory.\n"
                    "\nFlight: hold left/right mouse or =/- for thrust.\n"
@@ -96,7 +96,7 @@ auto main(int const argc, char const *const argv[])->int try {
                    "E/S toggle ECM/stealth on Eurofighter/F-22; Insert releases chaff; Delete releases a flare.\n"
                    "Enter selects air-to-air weapons; Backspace/O air-to-ground; F/Ctrl selects cannon/navigation.\n"
                    "C cycles radar/emitter targets; Z opens/locks laser designator; arrows aim; comma/period zoom.\n"
-                   "X clears targets; F1 returns to flight view; Space fires; Alt+J jettisons ground stores/tanks; T toggles accelerated time; P pauses; backtick opens configuration; double Escape ejects; Shift+Q opens quit/enrol confirmation.\n"
+                   "X clears targets; F1 returns to flight view; Space fires; Alt+J jettisons ground stores/tanks; T toggles accelerated time; P pauses; Escape/backtick opens menu; double Ctrl+Escape ejects; Shift+Q opens quit/enrol confirmation.\n"
                    "M opens the tactical map; any key returns. D toggles external flight information; Shift+D restores default stores and countermeasures.\n"
                    "1/2/3 cycle the MFDs; R changes radar range; N selects the ground-target preview.\n"
                    "Shift+N toggles infrared night vision; Y/U adjust HUD brightness; apostrophe opens/closes the refuelling hookup.\n"
@@ -184,6 +184,7 @@ auto main(int const argc, char const *const argv[])->int try {
       auto const width{number(text.substr(0,separator))}, height{number(text.substr(separator + 1))};
       if(width > 16384 || height > 16384) throw std::invalid_argument{"resolution dimensions must be at most 16384"};
       video.resolution = {static_cast<int>(width),static_cast<int>(height)};
+      video.automatic_resolution = false;
       tfx::render::framebuffer checked;checked.resize(video.resolution);
     } else if(key == "--fov" || key == "--lod-scale") {
       auto const text{value()};double parsed{0};
@@ -388,7 +389,7 @@ auto main(int const argc, char const *const argv[])->int try {
     tfx::world::mission const selected{game,mission_name};
     tfx::world::environment const environment{game,selected.grid_name(),selected.environment};
     tfx::world::assets assets{game};tfx::world::scene scene{environment,assets};
-    tfx::render::software_renderer renderer{tables};tfx::platform::window window{scale,video.resolution};
+    tfx::render::software_renderer renderer{tables};tfx::platform::window window{scale,video.resolution,video.automatic_resolution};
     tfx::render::dac_palette infrared{};
     auto const colours{game.read("colours/" + environment.lighting.infrared_palette_name + ".col")};
     std::ranges::copy(colours,infrared.begin());

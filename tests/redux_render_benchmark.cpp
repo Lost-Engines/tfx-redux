@@ -22,6 +22,7 @@ int main(int const argc, char const *const argv[]) try {
   tfx::world::environment const environment{game,mission.grid_name(),setup.environment};
   tfx::world::assets assets{game};tfx::world::scene scene{environment,assets};
   tfx::render::view_settings settings;
+  settings.lod_scale = 0; // Keep benchmark geometry comparable when game defaults change.
   settings.draw_distance = argc > 2 ? static_cast<unsigned int>(std::stoul(argv[2])) : 0;
   unsigned int const frames{argc > 3 ? static_cast<unsigned int>(std::stoul(argv[3])) : 8};
   if(!frames) throw std::runtime_error{"benchmark needs at least one frame"};

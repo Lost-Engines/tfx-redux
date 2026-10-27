@@ -262,24 +262,58 @@ void paint_horizon(framebuffer &output, camera const &view, int16_t const ground
     {698,21998},{940,21979},{1270,21963},{1714,21933},{2315,21878},
     {3119,21778},{4198,21595},{5638,21265},{7542,20666},{10013,19509},
   }};
+  // Each colour boundary intersects a scanline at at most two points. Solve
+  // those intersections once, then fill constant-colour spans instead of
+  // normalising a world-space ray for every pixel.
   output.pixels.fill(0);
+  auto const dx{view.right / view.focal_distance};
+  int const left{std::max(0,static_cast<int>(view.viewport_minimum.x))};
+  int const right{std::min(output.size.x,static_cast<int>(view.viewport_maximum.x) + 1)};
   int const bottom{std::min(output.size.y - 1,static_cast<int>(view.viewport_maximum.y))};
   for(int y{std::max(0,static_cast<int>(view.viewport_minimum.y))}; y <= bottom; ++y) {
-    auto const row{view.forward + view.down * ((y + .5 - view.projection_origin.y) / view.focal_distance)};
-    for(int x{0}; x != output.size.x; ++x) {
-      auto const ray{row + view.right * ((x + .5 - view.projection_origin.x) / view.focal_distance)};
+    auto const row{view.forward + view.down * ((y + .5 - view.projection_origin.y) / view.focal_distance) - dx * view.projection_origin.x};
+    std::array<int,64> edges{};
+    unsigned int count{0};
+    edges[count++] = left;edges[count++] = right;
+    auto const boundary{[&](double const x) {
+      if(std::isfinite(x) && x > left && x < right) edges[count++] = std::clamp(static_cast<int>(std::ceil(x - .5)),left,right);
+    }};
+    if(dx.y != 0) boundary(-row.y / dx.y);
+    auto const cone{[&](double const horizontal_weight, double const vertical_weight) {
+      double const a{horizontal_weight * (dx.x * dx.x + dx.z * dx.z) - vertical_weight * dx.y * dx.y};
+      double const b{2 * (horizontal_weight * (row.x * dx.x + row.z * dx.z) - vertical_weight * row.y * dx.y)};
+      double const c{horizontal_weight * (row.x * row.x + row.z * row.z) - vertical_weight * row.y * row.y};
+      if(a == 0) { if(b != 0) boundary(-c / b);return; }
+      double const discriminant{b * b - 4 * a * c};
+      if(discriminant < 0) return;
+      double const q{-.5 * (b + std::copysign(std::sqrt(discriminant),b))};
+      boundary(q / a);
+      if(q != 0) boundary(c / q);
+    }};
+    for(int band{1}; band < 16; ++band) {
+      double const distance{band * 1375.0 - ground_phase};
+      if(distance > 0) cone(height * height,distance * distance);
+    }
+    for(auto const &band : sky_bands) {
+      double const slope{(band.x - height - 350) / band.y};
+      if(slope > 0) cone(slope * slope,1);
+    }
+    std::sort(edges.begin(),edges.begin() + count);
+    for(unsigned int segment{1}; segment < count; ++segment) {
+      int const begin{edges[segment - 1]}, end{edges[segment]};
+      if(begin == end) continue;
+      auto const ray{row + dx * ((begin + end) * .5)};
       double const horizontal{std::hypot(ray.x,ray.z)};
       uint8_t colour{240};
       if(ray.y > 0) {
         double const distance{height * horizontal / ray.y};
         int const band{static_cast<int>(std::min(16.0,(distance + ground_phase) / 1375))};
         colour = static_cast<uint8_t>(224 + std::clamp(band,0,15));
-        if(distance < 300) colour = 253;
       } else {
         double const slope{-ray.y / std::max(1e-9,horizontal)};
         for(auto const &band : sky_bands) if(slope >= (band.x - height - 350) / band.y) ++colour;
       }
-      output.pixels[static_cast<size_t>(y * output.size.x + x)] = colour;
+      std::fill(output.pixels.begin() + y * output.size.x + begin,output.pixels.begin() + y * output.size.x + end,colour);
     }
   }
 }

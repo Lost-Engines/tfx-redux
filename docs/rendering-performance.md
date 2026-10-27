@@ -5,7 +5,7 @@ audio and desktop presentation. It uses mission 501 terrain with a fixed elevate
 camera, the highest-detail models and a representative opaque UI region. It is
 not a complete-game FPS measurement.
 
-Measurements on GCC 16.2, RelWithDebInfo (`-O2`), 1280×800:
+Earlier allocation/clipping measurements on GCC 16.2, RelWithDebInfo (`-O2`), 1280×800 (before the horizon and point-size changes below):
 
 | Whole-map frame stage | Before | After |
 | --- | ---: | ---: |
@@ -14,8 +14,8 @@ Measurements on GCC 16.2, RelWithDebInfo (`-O2`), 1280×800:
 | UI compositing | 4.3 ms | 1.2 ms |
 | Total | 214.6 ms | 142.1 ms |
 
-The benchmark draws 4,385 model parts / 278,966 primitives. Its indexed-image
-FNV-1a hash remains `17725320125237863711`; the before/after PPM exports also
+The benchmark draws 4,385 model parts / 278,966 primitives. At that revision, its indexed-image
+FNV-1a hash remained `17725320125237863711`; the before/after PPM exports also
 compare byte for byte. Wall-clock timings vary with system load.
 
 A separate Callgrind run at a 64-cell radius, two measured frames, drops from
@@ -47,3 +47,30 @@ callgrind_annotate --auto=no /tmp/tfx-render.callgrind
 
 Building with Valgrind headers enables the profiling-region markers; the
 benchmark still builds and runs normally when those optional headers are absent.
+
+## Horizon span drawing
+
+At 1920×1080 with a 16-cell radius and LOD scale 0, the same warmed scene
+(306 parts, 20,391 primitives) now measures:
+
+| Stage | Per-pixel horizon | Span horizon |
+| --- | ---: | ---: |
+| Horizon | 41.24 ms | 0.49 ms |
+| Scene | 12.52 ms | 12.28 ms |
+| UI | 2.32 ms | 2.29 ms |
+| Total | 56.08 ms | 15.06 ms |
+
+This is about 3.7 times faster for the isolated renderer, without changing its
+software pipeline. The horizon previously normalised a ray and tested palette
+bands at every pixel. Each band's intersection with a scanline is quadratic;
+solving those boundaries once lets us fill spans with the same palette index.
+`redux_view_test` compares every pixel against the independent ray calculation
+across banked, inverted, steep and high-altitude views. The arbitrary near-ground
+colour-253 circle has been removed deliberately. Scaled point lights also change
+the final image, so the earlier whole-image hash is historical.
+
+At 3840×2160 the same scene takes about 32.6 ms (2.5 horizon, 20.9 geometry,
+9.2 UI). These exclude simulation, audio, colour conversion and desktop upload;
+they are not promised gameplay frame rates. Full-map visibility still incurs
+much more geometry work. The benchmark explicitly holds LOD scale at 0, while
+the game's new default of 0.1 can reduce that work further.

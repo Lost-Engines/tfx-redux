@@ -174,9 +174,12 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
     auto const point{view.project(v,camera_vertices.front().projection_scale)};
     if(point.x < -100 || point.x > output.size.x + 100 || point.y < -100 || point.y > output.size.y + 100) return;
     int const x{static_cast<int>(std::lround(point.x))}, y{static_cast<int>(std::lround(point.y))};
+    double const pixel_scale{std::max(1.0,std::min(output.size.x / static_cast<double>(screen_width),output.size.y / static_cast<double>(screen_height)))};
     if(source.pixel_size) {
-      for(unsigned int row{0}; row != source.pixel_size; ++row) for(unsigned int col{0}; col != source.pixel_size; ++col) ink(x + static_cast<int>(col),y + static_cast<int>(row),ink_index,source.mode);
-    } else circle(x,y,static_cast<unsigned int>(source.radius * view.focal_distance / v.z),ink_index,source.mode);
+      int const extent{static_cast<int>(std::lround(source.pixel_size * pixel_scale))};
+      int const offset{(extent - static_cast<int>(source.pixel_size)) / 2};
+      for(int row{0}; row != extent; ++row) for(int col{0}; col != extent; ++col) ink(x + col - offset,y + row - offset,ink_index,source.mode);
+    } else circle(x,y,static_cast<unsigned int>(std::max(source.radius * view.focal_distance / v.z,std::floor(pixel_scale / 2))),ink_index,source.mode);
     return;
   }
   if(source.kind == models::primitive_kind::line && camera_vertices.size() == 2) {

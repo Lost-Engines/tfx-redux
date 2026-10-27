@@ -10,9 +10,10 @@ namespace tfx::render {
 
 struct view_settings {
   vec2<int> resolution{1280,800};
+  bool automatic_resolution{true}; // Windows follow framebuffer pixels unless --resolution was supplied.
   double field_of_view{64.01076641616699}; // 2 atan(160 / 256), original horizontal FOV.
   unsigned int draw_distance{16}; // Terrain cells; zero draws the complete map.
-  double lod_scale{0}; // Zero holds the most detailed visual representation.
+  double lod_scale{.1}; // Zero holds the most detailed visual representation.
 };
 
 struct interface_layout {

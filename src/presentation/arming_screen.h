@@ -32,6 +32,7 @@ public:
   bool rotating() const;
   bool cancelled() const;
   bool advance(vec2<int16_t> const &position, vec2<int16_t> const &movement, uint8_t buttons);
+  void resize(vec2<int> const &size);
   render::framebuffer const &image() const;
   render::palette colours() const;
 };

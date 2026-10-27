@@ -58,6 +58,34 @@ int main() try {
   require(!instrument_camera(source,settings,{20,240},{70,269}),"offscreen MFD allocated a visible target");
   image.resize(settings.resolution);paint_horizon(image,view,0);
   require(image.pixels[10] >= 240 && image.pixels.back() < 240,"wide-FOV horizon lost its sky/ground division");
+  // Independent per-pixel reference for the span renderer, including banked,
+  // inverted and vertical views and the old blue-circle area near the nadir.
+  for(auto const &size : {vec2<int>{320,200},vec2<int>{1001,603}}) {
+    settings.resolution = size;settings.field_of_view = 120;
+    for(int pose{0}; pose != 12; ++pose) {
+      auto source{inspection_camera({0,pose < 6 ? -1000.0 : -20000.0,0},.7,-1.5 + pose * .28)};
+      double const bank{pose * .63};auto const right{source.right};
+      source.right = right * std::cos(bank) + source.down * std::sin(bank);
+      source.down = source.down * std::cos(bank) - right * std::sin(bank);
+      auto const camera{scene_camera(source,settings)};
+      image.resize(size);paint_horizon(image,camera,1374);
+      double const height{std::max(100.0,-camera.position.y / 4)};
+      std::array<vec2d,10> const bands{{{698,21998},{940,21979},{1270,21963},{1714,21933},{2315,21878},{3119,21778},{4198,21595},{5638,21265},{7542,20666},{10013,19509}}};
+      for(int y{0}; y < size.y; ++y) for(int x{0}; x < size.x; ++x) {
+        uint8_t expected{0};
+        if(y <= camera.viewport_maximum.y) {
+          auto const ray{camera.forward + camera.down * ((y + .5 - camera.projection_origin.y) / camera.focal_distance) + camera.right * ((x + .5 - camera.projection_origin.x) / camera.focal_distance)};
+          double const horizontal{std::hypot(ray.x,ray.z)};
+          if(ray.y > 0) expected = static_cast<uint8_t>(224 + std::clamp(static_cast<int>(std::min(16.0,(height * horizontal / ray.y + 1374) / 1375)),0,15));
+          else {
+            expected = 240;
+            for(auto const &band : bands) if(-ray.y / std::max(1e-9,horizontal) >= (band.x - height - 350) / band.y) ++expected;
+          }
+        }
+        require(image.pixels[static_cast<size_t>(y * size.x + x)] == expected,"horizon span differs from independent pixel ray");
+      }
+    }
+  }
   std::cout << "Variable targets, square-pixel FOV, explicit UI opacity and wide horizon passed\n";
   return 0;
 } catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }

@@ -319,8 +319,12 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       if(native && delivery == part_delivery::queued) model_parameters = item.parameters;
       if(native) item.camera_origin = render::scale_model_cache(item.camera_origin,item.rotation_scale);
       item.metrics.distance = render::measure_model(item.camera_origin,item.shape->sort_depth_bias).distance;
-      int16_t const visual_distance{native && visual_lod_scale == 1 ? item.metrics.distance : static_cast<int16_t>(std::clamp((native ? item.metrics.distance : item.depth) * visual_lod_scale,0.0,32767.0))};
-      auto const *detail{visual_lod_scale == 0 ? &item.shape->details.front() : item.shape->detail_for_distance(visual_distance)};
+      // Missile smoke changes from a tiny dithered sphere to several pixel
+      // blocks with distance. These compensate for shrinking particles; the
+      // nearest representation is not a higher-detail mesh to hold forever.
+      double const detail_scale{item.name == "smokecld" ? 1 : visual_lod_scale};
+      int16_t const visual_distance{native && detail_scale == 1 ? item.metrics.distance : static_cast<int16_t>(std::clamp((native ? item.metrics.distance : item.depth) * detail_scale,0.0,32767.0))};
+      auto const *detail{detail_scale == 0 ? &item.shape->details.front() : item.shape->detail_for_distance(visual_distance)};
       if(!detail) return;
       double const fog_distance{std::isfinite(view.far_distance) ? view.far_distance : std::hypot(static_cast<double>(map_width),static_cast<double>(map_height)) * cell_units};
       uint8_t const distance_row{native ? item.metrics.colour_row : static_cast<uint8_t>(std::clamp(item.depth * 15 / fog_distance,0.0,15.0))};

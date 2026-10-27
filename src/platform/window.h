@@ -21,11 +21,12 @@ private:
   glfw_runtime runtime;
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)> handle;
   unsigned int texture{0};
-  vec2<int> render_size;
+  mutable vec2<int> render_size;
+  bool follow_window;
   vec2<int> source_size{render::screen_width,render::screen_height};
 
 public:
-  window(unsigned int scale, vec2<int> const &resolution = {render::screen_width,render::screen_height});
+  window(unsigned int scale, vec2<int> const &resolution = {render::screen_width,render::screen_height}, bool follow_window = false);
   ~window();
   window(window const&) = delete;
   window &operator=(window const&) = delete;
