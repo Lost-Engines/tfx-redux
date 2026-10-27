@@ -405,6 +405,7 @@ add_library(tfx_core
   src/render/point_visibility.cpp
   src/render/point_size.h
   src/render/point_visibility.h
+  src/render/preview_state.h
   src/render/software_renderer.cpp
   src/render/software_renderer.h
   src/math/native.cpp

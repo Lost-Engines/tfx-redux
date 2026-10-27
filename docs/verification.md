@@ -132,3 +132,8 @@ checks the actual window on a private X11 display with a disposable install.
 GDB observes simulation ticks and projectile launches: P/Pause stop simulation;
 Enter, Space and G resume; holding the Space resume press cannot fire; a fresh
 press after release can fire normally. Modifier keys alone leave flight paused.
+
+The same check switches F4/F5/F1 while paused, waits for camera transitions,
+compares a settled view across repeated frames, and saves an in-game screenshot.
+Simulation ticks and scenery animation calls must stay unchanged throughout.
+Redux additionally checks that paused mouse orbit changes the rendered view.
