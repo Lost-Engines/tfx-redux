@@ -3016,7 +3016,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         };
         pitch_input -= controls.pitch_delta;
         roll_input -= controls.roll_delta;
-        if(!designator_view && simple_controls.source == tfx::flight::control_source::mouse && !arcade_mode) mouse_control.advance({controls.roll_delta,controls.pitch_delta});
+        if(!designator_view && simple_controls.source == tfx::flight::control_source::mouse && !arcade_mode) mouse_control.advance_clamped({controls.roll_delta,controls.pitch_delta});
         advance_world(controls,step->world_ticks,step->physics_seconds,down(GLFW_KEY_SPACE),store_trigger);
         if(service_modal_closed) {
           service_modal_closed = false;
