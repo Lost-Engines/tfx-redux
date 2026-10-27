@@ -1,4 +1,6 @@
 #include "attitude_display.h"
+#include "vector_hud.h"
+#include <numbers>
 #include <algorithm>
 #include <cmath>
 #include "presentation/drawing.h"
@@ -31,7 +33,10 @@ vec2<int> attitude_display::draw_heading(render::software_renderer &renderer, at
   vec2<int> const low{std::max(0,word(128 + state.offset.x)),std::max(0,word(1 + state.offset.y))};
   vec2<int> const high{std::min(319,word(200 + state.offset.x)),std::min(199,word(86 + state.offset.y))};
   renderer.clipping = render::raster_clip::viewport(low,high);
-  render::draw_sprite(renderer.output,heading_strip,{static_cast<uint16_t>(160 + displacement + state.offset.x),static_cast<uint16_t>(6 + state.offset.y)},coverage,renderer.clipping);
+  if(renderer.output.hud_capture) {
+    double degrees{state.angles.y*360.0/65536};if(degrees>180) degrees-=360;
+    renderer.output.hud_capture->sprite(heading_strip,{160-degrees/2+state.offset.x,6.0+state.offset.y},renderer.clipping);
+  } else render::draw_sprite(renderer.output,heading_strip,{static_cast<uint16_t>(160 + displacement + state.offset.x),static_cast<uint16_t>(6 + state.offset.y)},coverage,renderer.clipping);
   return {std::min(319,word(214 + state.offset.x)),std::min(199,word(77 + state.offset.y))};
 }
 void attitude_display::draw_pitch(render::software_renderer &renderer, attitude_display_state const &state, render::framebuffer *const coverage, vec2<int> const &line_limit) const {
@@ -65,6 +70,24 @@ void attitude_display::draw_pitch(render::software_renderer &renderer, attitude_
       auto const rotated{math::rotate_words(vertex,state.angles.z)};
       return vec2<int>{word(rotated.x + origin.x),word(rotated.y + origin.y)};
     }};
+    if(renderer.output.hud_capture) {
+      // Keep subpixel positions and bank rotation until final rasterisation.
+      auto const project_precise{[&](vec2<int32_t> const &axis,int centre) {
+        double const numerator{wrapped_sum(point.y*axis.x,point.x*axis.y)/256.0};
+        return std::clamp(numerator/divisor*state.focal_distance/render::projection_focal_length(render::aperture::normal),-32000.0,32000.0)+centre;
+      }};
+      vec2d const centre{project_precise(horizontal,state.projection_origin.x)+state.offset.x,project_precise(vertical,state.projection_origin.y)};
+      double const angle{state.angles.z*2*std::numbers::pi/65536};
+      auto const rotate_precise{[&](vec2<int16_t> const &v) {
+        return centre+vec2d{v.x*std::cos(angle)-v.y*std::sin(angle),v.x*std::sin(angle)+v.y*std::cos(angle)};
+      }};
+      for(unsigned side=0;side<2;++side) for(unsigned segment=0;segment<2;++segment) {
+        auto const start{side*3+segment};
+        renderer.output.hud_capture->line(rotate_precise(mark.vertices[start]),rotate_precise(mark.vertices[start+1]),low,high,mark.dashed ? 0xaa : 255);
+      }
+      if(mark.label!=-1) for(int side : {-35,38}) renderer.output.hud_capture->sprite(numbers.at(static_cast<unsigned>(mark.label)),rotate_precise({static_cast<int16_t>(side),0}),renderer.clipping);
+      continue;
+    }
     for(unsigned int side{0}; side != 2; ++side) for(unsigned int segment{0}; segment != 2; ++segment) {
       unsigned int const start{side * 3 + segment};
       auto const from{rotate(mark.vertices[start])}, to{rotate(mark.vertices[start + 1])};

@@ -31,6 +31,11 @@ int main() try {
     if(frame == 3) image.resize({803,451});
     for(unsigned int y{0}; y != static_cast<unsigned int>(image.size.y); ++y) for(unsigned int x{0}; x != static_cast<unsigned int>(image.size.x); ++x) image.pixels[y * static_cast<unsigned int>(image.size.x) + x] = static_cast<uint8_t>(x / 17 + y / 11);
     image.pixels[17] = static_cast<uint8_t>(frame);palette[17] = static_cast<uint8_t>(frame * 7);
+    image.hud_coverage.clear();
+    if(frame!=0 && frame!=4) {
+      image.hud_coverage.resize(image.pixels.size(),0);
+      for(size_t i=17;i<image.hud_coverage.size();i+=53) image.hud_coverage[i]=static_cast<uint8_t>(i+frame);
+    }
     expected.push_back(image);palettes.push_back(palette);
     writer.append(image,palette,std::chrono::microseconds{20000 + frame});
   }
@@ -40,6 +45,8 @@ int main() try {
   for(unsigned int frame{0}; frame != expected.size(); ++frame) {
     auto const decoded{playback.next()};
     require(decoded && decoded->image.size == expected[frame].size && decoded->image.pixels == expected[frame].pixels,"lossless video changed the displayed pixels or resolution");
+    require(decoded->image.hud_coverage==expected[frame].hud_coverage,"recording lost optical HUD coverage");
+    require(decoded->image.colourise(render::expand_dac_palette(decoded->palette))==expected[frame].colourise(render::expand_dac_palette(palettes[frame])),"recording changed additive HUD colour");
     require(decoded->palette == palettes[frame] && decoded->duration == std::chrono::microseconds{20000 + frame},"palette changes or timing were lost");
   }
   require(!playback.next(),"video playback did not finish");
@@ -54,12 +61,22 @@ int main() try {
   for(auto const offset : {size_t{8},size_t{12},size_t{24},size_t{28},size_t{43},size_t{44},size_t{45}}) {
     auto bad{valid};bad[offset] = 255;require(rejected(bad),"invalid version, dimensions, packet size or encoding was accepted");
   }
+  auto const length_at{[&](size_t at) { uint32_t n=0;for(unsigned i=0;i<4;++i)n|=static_cast<uint32_t>(valid.at(at+i))<<(i*8);return n; }};
+  size_t const second_frame{24+24+768+length_at(24+16)};
+  size_t const optical_length{second_frame+24+768+length_at(second_frame+16)};
+  require(valid.at(second_frame+21)==1,"optical test frame missing");
+  auto invalid_optical{valid};for(unsigned i=0;i<4;++i)invalid_optical.at(optical_length+i)=255;
+  require(rejected(invalid_optical),"oversized optical payload was accepted");
+  require(rejected({valid.begin(),valid.begin()+static_cast<ptrdiff_t>(optical_length+5)}),"truncated optical payload was accepted");
   auto bad{valid};bad.push_back(0);require(rejected(bad),"trailing video data was accepted");
   // The new format must retain valid literal data as well as large flat runs.
   image.resize({257,17});uint32_t random{42};
   for(auto &pixel : image.pixels) { random = random * 1664525u + 1013904223u;pixel = static_cast<uint8_t>(random >> 24); }
   writer.begin(path);writer.append(image,palette,std::chrono::microseconds{80000});writer.append(image,palette,std::chrono::microseconds{90000});writer.finish();
   recording::video_playback noisy{path};require(noisy.next()->image.pixels == image.pixels && noisy.next()->image.pixels == image.pixels,"literal/delta packets changed pixels");
+  // Version 1 has the same indexed frames, without optical payloads.
+  auto legacy{resources::read_file(path)};legacy[8]=1;save(path,legacy);
+  recording::video_playback old{path};require(old.next()->image.pixels==image.pixels && old.next()->image.hud_coverage.empty(),"version-1 playback compatibility lost");
   // Exercise the old 16-bit frame-count boundary with tiny streaming frames.
   image.resize({1,1});writer.begin(path);
   for(unsigned int frame{0}; frame != 65537; ++frame) { image.pixels[0] = static_cast<uint8_t>(frame);writer.append(image,palette,std::chrono::microseconds{1}); }

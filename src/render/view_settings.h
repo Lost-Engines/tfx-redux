@@ -98,7 +98,11 @@ inline void composite_interface(framebuffer &target, framebuffer const &source) 
       int const column{columns[static_cast<size_t>(x)]};
       if(column < 0 || column >= screen_width) continue;
       auto const at{static_cast<size_t>(row * screen_width + column)};
-      if(source.coverage[at]) target.pixels[static_cast<size_t>(y * target.size.x + x)] = source.pixels[at];
+      if(source.coverage[at]) {
+        auto const destination{static_cast<size_t>(y * target.size.x + x)};
+        target.pixels[destination] = source.pixels[at];
+        if(!target.hud_coverage.empty()) target.hud_coverage[destination]=0;
+      }
     }
   }
 }

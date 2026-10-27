@@ -103,6 +103,13 @@ update divisions, wider-FOV visibility, circular light sizes, single-pixel objec
 proxies, and occlusion independent of polygon drawing order. `redux_arming_probe`
 also checks target resizing.
 
+`redux_hud_probe DATA_DIR [CAPTURE_DIR]` checks the vector HUD at native,
+fractional-scale and 1080p resolutions: subpixel motion, antialiased edges,
+non-brightening stroke joins, additive colour, cockpit occlusion and all three
+weapon layouts. The video and screenshot tests preserve the optical coverage
+and blended RGB values; version-1 recordings remain readable. The live recording
+check also compares the optical layer and every final RGBA pixel.
+
 `python3 tools/check_window_playtest.py --redux` uses a private X11 display and
 GDB as an observer. It checks continued flight without focus, ignored background
 input, holding the first Ctrl+Escape safely, a second press ejecting, Escape menu

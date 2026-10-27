@@ -45,6 +45,7 @@
 #include "flight/simple.h"
 #include "flight/fuel_gauge.h"
 #include "cockpit/hud.h"
+#include "cockpit/vector_hud.h"
 #include "cockpit/radio_ticker.h"
 #include "simulation/acceleration.h"
 #include "cockpit/weapon_display.h"
@@ -193,6 +194,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   std::array<tfx::render::software_renderer,2> instrument_renderers{tfx::render::software_renderer{tables},tfx::render::software_renderer{tables}};
   std::array<std::optional<vec2<int>>,2> instrument_positions{};
   world_renderer.output.resize(video.resolution);
+  tfx::cockpit::vector_hud hud_vectors{tables.instruments()};
+  std::vector<uint8_t> hud_underlay;
   tfx::render::framebuffer display_frame;
   display_frame.resize(video.resolution);
   scene.set_visual_lod_scale(video.lod_scale);
@@ -1830,7 +1833,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         return vec2<int16_t>{static_cast<int16_t>(std::clamp(screen.x,-32768.0,32767.0)),static_cast<int16_t>(std::clamp(screen.y,-32768.0,32767.0))};
       });
       renderer.clipping = previous_clipping;
-    })};
+    },&hud_vectors)};
     physical_player.powerplant.afterburner_control = instruments.animation().redraw_phase;
     player_damage.systems[std::to_underlying(tfx::flight::aircraft_system::fuel)] = result.fuel_condition;
     if(result.threat_sound) sample(audio::sample_priority::urgent,audio::sample_id::threat);
@@ -1979,7 +1982,13 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       }
       if(state.mode != tfx::cockpit::aiming_mode::navigation && weapon.category == tfx::weapons::bomb_impact_category) state.bomb_impact.emplace(project_prediction(projectiles.predict_bomb_impact(weapon_index,anchor,player.angles,player.fixed_speed,movement_height_bounds)));
     }
-    if(aiming.draw_forward(renderer,state).lock_acquired) {
+    auto const aiming_effects{[&] {
+      tfx::cockpit::capture_hud capture{renderer.output,&hud_vectors};
+      return aiming.draw_forward(renderer,state);
+    }()};
+    hud_underlay=renderer.output.coverage;
+    std::ranges::fill(renderer.output.coverage,0);
+    if(aiming_effects.lock_acquired) {
       // Native 7FC50: formation leaders receive the two-sample announcement;
       // other aircraft and the cruise ground point use the urgent tracking call.
       bool const leader{seeker.guidance && air_simulation.aircraft()[*seeker.guidance] && air_simulation.aircraft()[*seeker.guidance]->flight.pose.leader == 255};
@@ -1995,6 +2004,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       tfx::render::composite_interface(display_frame,renderer.output);
       return;
     }
+    hud_vectors.begin(video.resolution);hud_underlay.clear();
     instrument_positions = {};
     if(!inspect) frame_pages.begin_frame(renderer.output);
     auto const prepare_lighting{[&](tfx::render::camera const &view) {
@@ -2230,7 +2240,15 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       for(int row{0}; row != image.size.y; ++row) std::copy_n(image.pixels.begin() + row * image.size.x,image.size.x,display_frame.pixels.begin() + (position.y + row) * display_frame.size.x + position.x);
     }
     if(result_evaluated) display_frame = tfx::render::scale_image(renderer.output,video.resolution);
-    else tfx::render::composite_interface(display_frame,renderer.output);
+    else {
+      hud_vectors.compose(display_frame,renderer.output.coverage);
+      if(!hud_underlay.empty()) for(size_t i=0;i<hud_underlay.size();++i) renderer.output.coverage[i]|=hud_underlay[i];
+      // Preserve the HUD above earlier precipitation; only later cockpit
+      // writes were used as its occlusion mask.
+      auto optical{std::move(display_frame.hud_coverage)};
+      tfx::render::composite_interface(display_frame,renderer.output);
+      display_frame.hud_coverage=std::move(optical);
+    }
     if(flight_recorder.active() && !inspect && !result_evaluated) {
       double const now{glfwGetTime()};
       auto const duration{std::chrono::microseconds{std::max(int64_t{1},static_cast<int64_t>(std::llround((recording_timestamp ? now - *recording_timestamp : 4 / tfx::simulation::timer_hz) * 1000000)))}};

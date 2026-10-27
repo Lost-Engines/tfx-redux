@@ -1,14 +1,15 @@
 # Flight recordings
 
-Redux records the displayed palette-index image and its complete DAC palette,
-including the cockpit, HUD and full-resolution MFD cameras. Starting Alt+V
-preserves the chosen resolution, FOV, draw distance and detail settings. Video
-is lossless and retains frame timing; pauses, focus loss and modal menus are
-omitted. Audio is not recorded. The WNN prelude still precedes automatic replay
-after a completed mission. A recording can also be opened with
-`--replay FILE`; `--skip-intro` omits the prelude for that direct playback.
+Redux records the displayed palette-index image, its complete DAC palette and
+the additive HUD coverage, including the cockpit and full-resolution MFD cameras.
+Starting Alt+V preserves the chosen resolution, FOV, draw distance and detail
+settings. Video is lossless and retains frame timing. Pauses and modal menus are
+omitted; recording continues while unfocused. Audio is not recorded. The WNN
+prelude still precedes automatic replay after a completed mission. A recording
+can also be opened with `--replay FILE`; `--skip-intro` omits the prelude for that
+direct playback.
 
-## Redux video, version 1
+## Redux video, version 2
 
 `src/recording/video.*` implements streaming capture/playback. Only the current
 and previous indexed frame need to be resident. Files use the existing chosen
@@ -22,7 +23,7 @@ All integers are little-endian. The 24-byte file header contains:
 | Offset | Type | Meaning |
 | --- | --- | --- |
 | 0 | 8 bytes | `TFXRVID` followed by NUL |
-| 8 | u32 | Version, currently 1 |
+| 8 | u32 | Version, currently 2 (version 1 remains readable) |
 | 12 | u32 | Reserved, zero |
 | 16 | u64 | Frame count, patched when closed |
 
@@ -36,7 +37,8 @@ pixel payload:
 | 8 | u64 | Display duration in microseconds |
 | 16 | u32 | Compressed payload length |
 | 20 | u8 | 0: full indexed image; 1: XOR with previous indexed image |
-| 21 | 3 bytes | Reserved, zero |
+| 21 | u8 | Version 2: 1 if an optical HUD payload follows the pixels; otherwise 0 |
+| 22 | 2 bytes | Reserved, zero |
 
 The dimensions can change between frames. An XOR frame must match the previous
 frame's dimensions. The encoder chooses the shorter of full-image and XOR
@@ -45,11 +47,18 @@ copy the next 1–128 literal bytes; controls 129–255 repeat the next byte 128
 times. Control 128 is reserved and rejected. Runs can cross scanline boundaries.
 The decoded stream must contain exactly width × height indices.
 
+When the optical flag is set, the indexed payload is followed by a u32 compressed
+length and a second ByteRun stream containing exactly width × height HUD coverage
+bytes. This layer is always complete, never XOR encoded. At presentation, each
+RGB channel receives `round(palette[6] × coverage × 0.9 / 255)`, saturated at 255.
+The original scene indices are unchanged. Version 1 requires all three bytes at
+offsets 21–23 to be zero and has no optical payload.
+
 The reader validates dimensions, allocation limits, durations, reserved fields,
 packet lengths, frame counts and trailing data. Unit checks include changing
 palettes/resolution, noisy literals, sparse deltas, malformed files and 65,537
 streamed frames. The private-window check independently decodes captured files,
-compares every pixel index and DAC byte against read-only observations of the
+compares every pixel index, DAC byte and optical coverage sample against read-only observations of the
 live frame, then compares every RGBA pixel submitted to the production replay
 window. It also checks that main and MFD cameras keep the selected draw distance
 and that recording does not change the main FOV.

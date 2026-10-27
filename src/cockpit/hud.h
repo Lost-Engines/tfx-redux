@@ -92,7 +92,7 @@ public:
   hud(instrument_assets const &assets, resources::archive const &game, std::span<weapons::definition const> weapons, std::string const &schematic);
   hud_animation animation() const;
   void draw_radio(render::software_renderer &renderer, std::string_view message) const;
-  hud_effects draw(render::software_renderer &renderer, hud_selection &selection, hud_state const &state, math::random_state &random, render::framebuffer *coverage = nullptr, scene_display const &scene = {});
+  hud_effects draw(render::software_renderer &renderer, hud_selection &selection, hud_state const &state, math::random_state &random, render::framebuffer *coverage = nullptr, scene_display const &scene = {}, vector_hud *optical = nullptr);
 };
 
 } // namespace tfx::cockpit

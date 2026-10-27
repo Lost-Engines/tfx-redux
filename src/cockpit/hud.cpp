@@ -1,4 +1,5 @@
 #include "hud.h"
+#include "vector_hud.h"
 #include <stdexcept>
 #include <utility>
 
@@ -49,12 +50,15 @@ hud_animation hud::animation() const {
     .redraw_phase{redraw_phase},
   };
 }
-hud_effects hud::draw(render::software_renderer &renderer, hud_selection &selection, hud_state const &state, math::random_state &random, render::framebuffer *const coverage, scene_display const &scene) {
+hud_effects hud::draw(render::software_renderer &renderer, hud_selection &selection, hud_state const &state, math::random_state &random, render::framebuffer *const coverage, scene_display const &scene, vector_hud *const optical) {
   // Native 0x803e8: fuel status changes before either MFD or the warning lamps reads it.
   renderer.clipping = render::raster_clip::viewport({0,0},{render::screen_width - 1,render::screen_height - 1});
   redraw_phase = state.redraw_phase;
   auto const &offset{state.instruments.offset};
-  if(state.in_range) renderer.text(math::signed_word(static_cast<uint16_t>(96 + offset.x)),math::signed_word(static_cast<uint16_t>(73 + offset.y)),assets.in_range_label,6,coverage);
+  if(state.in_range) {
+    capture_hud capture{renderer.output,optical};
+    renderer.text(math::signed_word(static_cast<uint16_t>(96 + offset.x)),math::signed_word(static_cast<uint16_t>(73 + offset.y)),assets.in_range_label,6,coverage);
+  }
   auto const fuel{numbers.draw(renderer,{
     .elapsed_ticks{state.ticks},
     .clock_offset{state.clock_offset},
