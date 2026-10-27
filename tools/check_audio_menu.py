@@ -60,7 +60,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-audio-menu-') as temporary:
    data=values();return statistics.median((data[i]-data[i+1])/2 for i in range(0,len(data),2))
   with pcm.open('wb') as output,log.open('w') as logging:
    capture=subprocess.Popen(['parec','--device='+sink+'.monitor','--format=float32le','--rate=48000','--channels=2','--latency-msec=20'],env=env,stdout=output,stderr=subprocess.DEVNULL)
-   game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501','--music','cd','--cd-audio-dir',str(tracks),'--scale','2','--qsound','auto' if a.qsound_firmware else 'off'],env=env,cwd=root,stdout=logging,stderr=subprocess.STDOUT)
+   game=subprocess.Popen([str((a.build/'tfx').resolve()),'--data-dir',str(install),'--mission','501','--music','cd','--cd-audio-dir',str(tracks),'--resolution','640x400','--scale','1','--qsound','auto' if a.qsound_firmware else 'off'],env=env,cwd=root,stdout=logging,stderr=subprocess.STDOUT)
    deadline=time.monotonic()+30;window=None
    while time.monotonic()<deadline and game.poll() is None:
     found=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True).stdout.splitlines()
