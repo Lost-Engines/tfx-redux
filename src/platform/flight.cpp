@@ -2282,6 +2282,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   unsigned int frames{0}, interval_frames{0};
   bool captured{false}, mouse_started{false}, store_trigger{false};
   std::array<bool,GLFW_KEY_LAST + 1> held{false};
+  // A key that closed the launch screen is not a new in-flight press.
+  for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = glfwGetKey(host,key) == GLFW_PRESS;
   tfx::simulation::timer_counter counter{0};
   tfx::simulation::flight_clock flight_clock{counter};
   flight_clock.begin({
@@ -2291,18 +2293,21 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   while(window.poll()) {
     double const now{glfwGetTime()}, real_elapsed{now - previous_time}, elapsed{std::clamp(real_elapsed,0.0,.1)};
     previous_time = now;
-    if(!window.focused()) {
-      recording_timestamp.reset();
+    bool const focused{window.focused()};
+    if(!focused) {
       captured = false;
       mouse_started = false;
       held.fill(false);
       store_trigger = false;
       pitch_input = 0;
       roll_input = 0;
-      glfwWaitEventsTimeout(.05);
-      continue;
+      keyboard = {};
+      simple_controls.keys = {};
+      simple_controls.joystick = {0,0};
+      stick_buttons = {};
+      mouse_control = {};
     }
-    auto const down{[host](int const key){ return glfwGetKey(host,key) == GLFW_PRESS; }};
+    auto const down{[host,focused](int const key){ return focused && glfwGetKey(host,key) == GLFW_PRESS; }};
     auto const pressed{[&](int const key){
       bool const active{down(key)}, edge{active && !held[static_cast<unsigned int>(key)]};
       held[static_cast<unsigned int>(key)] = active;
@@ -2421,8 +2426,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       continue;
     }
     if(!inspect && !result_evaluated && pressed(GLFW_KEY_P)) paused = !paused;
-    uint8_t const stick_mask{!inspect && !paused && !result_evaluated ? poll_stick() : uint8_t{0}};
-    bool const capture{inspect ? glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS : (arcade_mode || simple_controls.source == tfx::flight::control_source::mouse) && !paused && !result_evaluated};
+    uint8_t const stick_mask{focused && !inspect && !paused && !result_evaluated ? poll_stick() : uint8_t{0}};
+    bool const capture{focused && (inspect ? glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS : (arcade_mode || simple_controls.source == tfx::flight::control_source::mouse) && !paused && !result_evaluated)};
     if(capture != captured) {
       captured = capture;
       mouse_started = false;
@@ -2890,7 +2895,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
           .roll_delta{input_word(roll_input)},
           .accelerate{keyboard.accelerate},
           .decelerate{keyboard.decelerate},
-          .mouse_buttons{static_cast<uint8_t>((glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0))},
+          .mouse_buttons{static_cast<uint8_t>((focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0))},
         };
         pitch_input -= controls.pitch_delta;
         roll_input -= controls.roll_delta;

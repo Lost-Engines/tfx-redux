@@ -41,9 +41,9 @@ For the original LAPC-I effects arrangement, set `SOUNDFX=2` and `MUSIC=2`, with
 
 ### QSound spatial effects
 
-For Sound Blaster effects (`SOUNDFX=1` or `3`), `--qsound=auto` enables the recovered QSound model when firmware is found; this is the default. `--qsound=off` selects the ordinary dual-mono DAC path. `--qsound=on` requires a supported Sound Blaster selection and reports missing or invalid firmware instead of silently falling back.
+For Sound Blaster effects (`SOUNDFX=1` or `3`), `--qsound=auto` enables the built-in QSound model; this is the default. `--qsound=off` selects the ordinary dual-mono DAC path. `--qsound=on` explicitly requires a supported Sound Blaster selection.
 
-The fetch scripts place Creative's verified `MAIN.PVL` in the installation's `qsound` directory. The game unpacks its QSound member in C++; no Python, DOS driver or physical ASP card is required. An original `WFM0001A.CSP` beside the game files or in their `CSP` directory also works. The existing automatic firmware locations and `--rom-dir` override apply. A damaged candidate is skipped if another valid copy is available.
+The recovered numerical coefficients are compiled into the application. QSound needs no firmware download, file lookup or `--rom-dir` setting. The fetch scripts still supply the ROMs needed by the separate Roland synth emulators.
 
 This reconstruction uses the original 8 kHz coefficient bank at each sample's DAC rate, and the recovered timer-driven pan controller. Position 33 and larger position bytes clamp to the rightmost recovered position, 32; the controller retains its unsigned wrapping. Clamping and fixed-point arithmetic are explicit compatibility choices, with [verification limits](verification.md). The effect processes recorded speech and sampled Sound Blaster effects only; Gravis, MIDI synthesis and CD music bypass it. It is intended for stereo speakers and also emits cancellation audio on the opposite channel from a virtual source.
 

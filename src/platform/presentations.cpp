@@ -129,19 +129,15 @@ void play_game(resources::archive const &game, resources::executable_tables cons
   unsigned int frames{0};
   while(window.poll() && !frontend.finished() && !finished) {
     double const now{glfwGetTime()};
-    if(!window.focused()) {
-      controls.input = {};
-      next = now;
-      glfwWaitEventsTimeout(.05);
-      continue;
-    }
+    bool const focused{window.focused()};
+    if(!focused) controls.input = {};
     if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
     next = now + 1.0 / 70;
-    controls.input.shift = glfwGetKey(host,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(host,GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+    controls.input.shift = focused && (glfwGetKey(host,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(host,GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
     if(controls.input.shift && glfwGetKey(host,GLFW_KEY_Q) == GLFW_PRESS) break;
-    controls.input.mouse_buttons = static_cast<uint8_t>((glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0));
-    glfwSetInputMode(host,GLFW_CURSOR,frontend.pointer_visible() ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
-    step(now - started,window.cursor_position(),&window);
+    controls.input.mouse_buttons = static_cast<uint8_t>((focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0));
+    glfwSetInputMode(host,GLFW_CURSOR,focused && frontend.pointer_visible() ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+    step(now - started,focused ? window.cursor_position() : std::nullopt,&window);
     window.title("TFX Redux — " + frontend.function_name());
     window.present(frontend.image().colourise(frontend.colours()));
     if(options.frame_limit && ++frames >= options.frame_limit) break;
@@ -224,18 +220,14 @@ void play_presentation(resources::archive const &game, resources::executable_tab
   double next{started};
   while(window.poll() && !finished) {
     double const now{glfwGetTime()};
-    if(!window.focused()) {
-      controls.input = {};
-      next = now;
-      glfwWaitEventsTimeout(.05);
-      continue;
-    }
+    bool const focused{window.focused()};
+    if(!focused) controls.input = {};
     if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
     next = now + 1.0 / 70;
-    controls.input.shift = glfwGetKey(host,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(host,GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-    controls.input.mouse_buttons = static_cast<uint8_t>((glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0));
-    glfwSetInputMode(host,GLFW_CURSOR,menu ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
-    step(now - started,window.cursor_position());
+    controls.input.shift = focused && (glfwGetKey(host,GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(host,GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
+    controls.input.mouse_buttons = static_cast<uint8_t>((focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ? 1 : 0) | (focused && glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? 2 : 0));
+    glfwSetInputMode(host,GLFW_CURSOR,focused && menu ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+    step(now - started,focused ? window.cursor_position() : std::nullopt);
     window.title("TFX Redux — " + name + " / " + (session ? session->function_name() : std::string{"menu"}));
     window.present(display.colourise(colours));
     if(frame_limit && ++frames >= frame_limit) break;

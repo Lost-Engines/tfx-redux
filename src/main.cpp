@@ -302,14 +302,8 @@ auto main(int const argc, char const *const argv[])->int try {
     bool const sound_blaster{effects_device == tfx::audio::sound_device::sound_blaster || effects_device == tfx::audio::sound_device::sound_blaster16};
     if(selected_qsound == qsound_mode::on && !sound_blaster) throw std::runtime_error{"QSound requires Sound Blaster sound effects (SOUNDFX=1 or 3)"};
     if(sound_blaster && selected_qsound != qsound_mode::off) {
-      try {
-        spatial = tfx::audio::load_qsound_effect(tfx::resources::rom_directories(archive_path.parent_path(),rom_directory),tfx::platform::audio_output::sample_rate);
-      } catch(std::exception const &error) {
-        if(selected_qsound == qsound_mode::on) throw;
-        std::cerr << "QSound unavailable: " << error.what() << "; rerun scripts/fetch-assets to repair the firmware.\n";
-      }
-      if(!spatial && selected_qsound == qsound_mode::on) throw std::runtime_error{"QSound firmware not found; run scripts/fetch-assets or supply WFM0001A.CSP in the audio-firmware directory"};
-      if(spatial) std::cout << "QSound: recovered 8 kHz model, endpoint-clamped positions.\n";
+      spatial = std::make_unique<tfx::audio::qsound_effect>(tfx::platform::audio_output::sample_rate);
+      std::cout << "QSound: built-in 8 kHz model, endpoint-clamped positions.\n";
     }
     if(preferences.sound_effects || music || cd) {
       try {

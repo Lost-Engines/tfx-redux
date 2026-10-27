@@ -110,7 +110,7 @@ exit /b 0
 
 :help
 echo Usage: %~nx0 [destination]
-echo Fetch the TFX 2.05 CD, QSound firmware and CM-32L, SC-55 and SCC-1A ROMs (default: package directory, beside tfx.exe).
+echo Fetch the TFX 2.05 CD and CM-32L, SC-55 and SCC-1A ROMs (default: package directory, beside tfx.exe).
 exit /b 0
 :usage_error
 echo Usage: %~nx0 [destination] 1>&2
