@@ -2458,7 +2458,10 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       interval_frames = 0;
       continue;
     }
-    if(!inspect && !result_evaluated && pressed(GLFW_KEY_P)) paused = !paused;
+    if(!inspect && !result_evaluated) {
+      bool const pause_letter{pressed(GLFW_KEY_P)}, pause_key{pressed(GLFW_KEY_PAUSE)};
+      if(pause_letter || pause_key) paused = !paused;
+    }
     uint8_t const stick_mask{focused && !inspect && !paused && !result_evaluated ? poll_stick() : uint8_t{0}};
     bool const orbit_input{!inspect && !designator_view && external_orbit.select(views.value().current)};
     if(orbit_input != orbiting) {
