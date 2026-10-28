@@ -252,3 +252,22 @@ redout pixels, all three urgent breathing requests, audible PCM, recovery,
 paused camera redraws and shutdown. Ordinary key-click sounds are allowed
 while changing paused views. Add `--redux` to check the higher-resolution
 virtual cockpit and vector HUD. No saved configuration or pilot is used.
+
+## Runtime Redux graphics
+
+`configuration.redux_graphics` exercises the shared command-line/menu/file
+validation, invalid and oversized values, arbitrary resolutions, zero LOD and
+infinite distance, Apply/Cancel/Defaults, exact floating-point persistence and
+keeping the original `TFX.CFG` separate. A temporary build of the preceding
+Redux revision matched all 240 tested existing-menu states and complete frames
+with the graphics extension disabled. The direct DOS pixel comparison still
+reports the earlier Redux Eject button at the bottom right; it is not a pixel
+reference for the extended menu.
+
+`python3 tools/check_window_graphics.py --data-dir DATA_DIR` uses a private Xvfb
+display and disposable install. Real clicks and typing change size, FOV, draw
+radius and LOD while GDB observes the actual scene arguments. It checks invalid
+edits, cancellation, pause retention, switching to automatic resolution and
+resizing the window, saved preferences on a second launch, individual CLI
+overrides, Defaults/window fit and clean exit. It writes menu and flight
+captures under `/tmp/tfx-graphics-menu` by default.

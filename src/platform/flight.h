@@ -18,6 +18,7 @@
 #include "render/horizon.h"
 #include "render/precipitation.h"
 #include "render/view_settings.h"
+#include "configuration/graphics.h"
 #include "weapons/loadout.h"
 
 namespace tfx::platform {
@@ -53,6 +54,7 @@ struct flight_options {
   audio::runtime *sound{nullptr};
   bool inspect{false};
   render::view_settings video{};
+  configuration::graphics_settings *graphics{nullptr}; // Shared across campaign missions.
 };
 enum class flight_result { finished, quit, enrol, cancelled };
 // FINISH resumes the authored campaign; the settings dialog can return to enrolment.

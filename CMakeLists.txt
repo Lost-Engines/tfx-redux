@@ -74,6 +74,8 @@ add_library(tfx_core
   src/flight/joystick.h
   src/configuration/save.cpp
   src/configuration/save.h
+  src/configuration/graphics.cpp
+  src/configuration/graphics.h
   src/configuration/settings.cpp
   src/configuration/settings.h
   src/flight/player_flight.cpp
@@ -245,6 +247,8 @@ add_library(tfx_core
   src/planning/notes.h
   src/planning/map_view.cpp
   src/planning/map_view.h
+  src/presentation/graphics_menu.cpp
+  src/presentation/graphics_menu.h
   src/presentation/configuration_menu.cpp
   src/presentation/configuration_menu.h
   src/presentation/dialogue.cpp
@@ -491,6 +495,10 @@ configure_first_party(tfx)
 include(cmake/install.cmake)
 
 if(BUILD_TESTING)
+  add_executable(graphics_tests tests/graphics_test.cpp)
+  target_link_libraries(graphics_tests PRIVATE tfx_core)
+  configure_first_party(graphics_tests)
+  add_test(NAME configuration.redux_graphics COMMAND graphics_tests)
   add_executable(mouse_flight_input_tests tests/mouse_flight_input_test.cpp)
   target_link_libraries(mouse_flight_input_tests PRIVATE tfx_core)
   configure_first_party(mouse_flight_input_tests)
