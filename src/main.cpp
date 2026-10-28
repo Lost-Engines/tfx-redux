@@ -61,6 +61,9 @@ auto main(int const argc, char const *const argv[])->int try {
   std::string presentation, presentation_function, language{"english"};
   std::optional<vec2<unsigned int>> override_cell;
   std::optional<std::filesystem::path> screenshot, replay;
+#ifndef NDEBUG
+  std::optional<std::filesystem::path> capture_recipe;
+#endif
   for(int i{1}; i != argc; ++i) {
     std::string_view const argument{argv[i]};
     auto const equals{argument.find('=')};
@@ -130,6 +133,7 @@ auto main(int const argc, char const *const argv[])->int try {
                    "  --grid NAME           Inspect an alternate stored terrain grid\n"
                    "  --cell X,Z            Inspect a particular terrain cell\n"
                    "  --scene-radius N      Inspection neighbourhood in tiles (default 6)\n"
+                   "  --capture-scene FILE   Stage a reproducible still (requires --mission and --screenshot)\n"
                    "  --screenshot FILE     Save the current scene as a PPM image without opening a window\n"
                    "  --frames N            Exit the window after N frames (0 is unlimited)\n";
 #endif // NDEBUG
@@ -202,6 +206,7 @@ auto main(int const argc, char const *const argv[])->int try {
       presentation = selection.substr(0,colon);
       if(colon != std::string_view::npos) presentation_function = selection.substr(colon + 1);
     }
+    else if(key == "--capture-scene") capture_recipe = value();
     else if(key == "--inspect") inspect = true;
     else if(key == "--flight-steps") flight_steps = number(value());
     else if(key == "--flight-frames") flight_frames = number(value());
@@ -222,6 +227,10 @@ auto main(int const argc, char const *const argv[])->int try {
 #endif // NDEBUG
     else throw std::runtime_error{"unrecognised option: " + std::string{key} + "; use --help"};
   }
+#ifndef NDEBUG
+  if(capture_recipe && (!direct_mission || !screenshot || inspect || flight_steps || flight_frames || !presentation.empty() || replay))
+    throw std::runtime_error{"--capture-scene requires --mission and --screenshot; cannot combine with inspection, presentations, replay or flight stepping"};
+#endif
   if(cd_cue && cd_audio_directory) throw std::runtime_error{"choose either --cd-cue or --cd-audio-dir"};
   if(career_rules && !direct_mission) throw std::runtime_error{"--career-rules requires --mission"};
   auto const archive_path{tfx::resources::select_game_archive(data_directory,cd_cue)};
@@ -380,6 +389,9 @@ auto main(int const argc, char const *const argv[])->int try {
     .inspect{inspect},
     .video{video},
     .graphics{&graphics},
+#ifndef NDEBUG
+    .capture_recipe{capture_recipe},
+#endif
   };
   if(replay) {
     tfx::world::mission const selected{game,mission_name};
