@@ -55,6 +55,9 @@ struct flight_options {
   bool inspect{false};
   render::view_settings video{};
   configuration::graphics_settings *graphics{nullptr}; // Shared across campaign missions.
+#ifndef NDEBUG
+  std::optional<std::filesystem::path> capture_recipe{};
+#endif
 };
 enum class flight_result { finished, quit, enrol, cancelled };
 // FINISH resumes the authored campaign; the settings dialog can return to enrolment.

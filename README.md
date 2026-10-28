@@ -161,6 +161,8 @@ python3 tools/check_redux_arming.py --data-dir /path/to/TFX
 python3 tools/check_redux_recording.py --data-dir /path/to/TFX
 ```
 
+[Screenshot staging](docs/screenshot-gallery.md) describes the debug-only camera/actor recipes and the local 4K gallery builder. It captures the real flight renderer, including live cockpit instruments, without writing to the selected installation. Generated images stay outside Git.
+
 [Renderer profiling](docs/rendering-performance.md) records the measured optimisation results and how to reproduce them.
 
 The [verification matrix](docs/verification.md) records the inherited baseline’s complete-session evidence, persistent campaign checks and long-session audio/lifetime coverage; its original-renderer comparisons are historical evidence rather than a promise of identical Redux pixels. [Implementation notes](docs/implementation.md) retain the research details. The research tree is the sibling `tfx-reverse` directory.

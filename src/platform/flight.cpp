@@ -8,6 +8,7 @@
 #include <format>
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <ranges>
 #include <stdexcept>
@@ -35,6 +36,7 @@
 #include "flight/joystick.h"
 #include "flight/mouse_input.h"
 #include "pause_input.h"
+#include "capture_scene.h"
 #include "render/preview_state.h"
 #include "flight/keyboard.h"
 #include "flight/damage.h"
@@ -163,7 +165,14 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto const scale{options.graphics ? options.graphics->window_scale : options.scale}, frame_limit{options.frame_limit}, flight_steps{options.flight_steps}, flight_frames{options.flight_frames};
   bool inspect{options.inspect};
   tfx::world::mission const selected{game,mission_name};
-  auto const mission_setup{tfx::missions::initialise(selected.script,options.mission_state)};
+  auto mission_setup{tfx::missions::initialise(selected.script,options.mission_state)};
+#ifndef NDEBUG
+  std::optional<capture_scene> capture;
+  if(options.capture_recipe) {
+    capture.emplace(*options.capture_recipe);
+    capture->initialise(mission_setup);
+  }
+#endif
   // Native mission entry 0x71138 replaces the executable image's prelaunch
   // limits with the TFX world bounds. Camera movement and HUD trajectories
   // share those initialized globals with moving actors and live projectiles.
@@ -1673,6 +1682,55 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }
   }};
   if(!inspect || flight_steps || flight_frames) restart();
+#ifndef NDEBUG
+  if(capture) {
+    auto const staged_orientation{player_render_basis};
+    // Mission launch normally snaps X/Z to tile centres. Photographic poses
+    // deliberately retain their exact sub-tile coordinates.
+    if(capture->position) {
+      player.position=vec3f{*capture->position};
+      player.integer_position=*capture->position;
+      physical_player.view.position=vec3f{*capture->position};
+      physical_player.view.integer_position=*capture->position;
+    }
+    // Warm real airdata/sensors at the staged position, not the tile centre
+    // (which may be inside a mountain or offshore platform).
+    advance_world({},4,static_cast<double>(4 * .02f));
+    if(player.collision || ejected()) throw std::runtime_error{"capture pose collides with scenery; choose a clear position"};
+    if(capture->position) {
+      player.position=vec3f{*capture->position};
+      player.integer_position=*capture->position;
+      physical_player.view.position=vec3f{*capture->position};
+      physical_player.view.integer_position=*capture->position;
+    }
+    player_render_basis=staged_orientation;
+    if(capture->angles) {
+      player.angles=*capture->angles;
+      player.orientation=player_render_basis;
+      physical_player.view.angles=*capture->angles;
+      physical_player.view.orientation=player_render_basis;
+    }
+    views=cockpit::view_control{{.current{capture->view},.previous{capture->view},.offset{0,0}}};
+    cockpit_look.move(capture->look * (std::numbers::pi / (180 * .004)));
+    options.flight_information=false;
+    if(capture->hud=="nav" || capture->hud=="guns") {
+      armament.guns=true;armament.selected=weapons::cannon_pylon;
+      cannon_navigation=capture->hud=="nav";
+    } else if(capture->hud=="air" || capture->hud=="ground") {
+      select_weapon(capture->hud=="air" ? weapons::weapon_role::air : weapons::weapon_role::ground);
+    }
+    if(capture->displays) display_selection={
+      .left{static_cast<uint16_t>(capture->displays->x)},
+      .centre{static_cast<cockpit::centre_display>(capture->displays->y)},
+      .right{static_cast<uint16_t>(capture->displays->z)},
+    };
+    for(auto const event : capture->player_events) scene.actor_event(player_visual,event);
+    for(auto const &actor : capture->actors) {
+      auto const handle{scene.create_actor(actor.definition,actor.position,actor.angles)};
+      if(actor.entry) scene.actor_event(handle,actor.entry);
+    }
+  }
+#endif
   mission_handoff const remember{inspect ? nullptr : &options.mission_state,player,mission_setup.weapons};
   if(sound && !inspect && !override_cell && !screenshot) sound->begin_flight(flight_audio());
   for(unsigned int step{0}; step != flight_steps; ++step) {
@@ -2154,6 +2212,13 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       queue_projectiles(reference);
       scene.set_query_reference(inspect ? nullptr : &player.integer_position);
       if(!inspect) select_actor_draw_region(reference);
+#ifndef NDEBUG
+      if(capture && !capture->mission_actors) {
+        for(auto const &visual : air_visuals) if(visual) scene.show_actor(*visual,false);
+        for(auto const &actor : surface_actors) scene.show_actor(actor.visual,false);
+        for(auto const handle : fixed_scenery) scene.show_actor(handle,false);
+      }
+#endif
       options.projection_origin = vec2<int16_t>{view.projection_origin};
       std::function<void()> const effects{primary ? std::function<void()>{[&] { queue_effects(view); }} : std::function<void()>{}};
       auto const render_view{tfx::render::scene_camera(view,video)};
@@ -2222,6 +2287,12 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       if(!arcade_mode && simple_controls.source!=tfx::flight::control_source::mouse
           && tfx::cockpit::mouse_look::supports(views.value().current)) view=cockpit_look.apply(view);
     }
+#ifndef NDEBUG
+    if(capture) {
+      if(capture->camera) view=*capture->camera;
+      if(capture->hide_player) scene.show_actor(player_visual,false);
+    }
+#endif
     if(!inspect) {
       auto const &layout{tables.instruments().viewports[view_index()]};
       view.viewport_maximum = {tfx::render::screen_width - 1,static_cast<int16_t>(layout.bottom + (layout.panel.empty() ? 0 : cockpit_position.value().y))};
@@ -2365,6 +2436,15 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   }};
   // A diagnostic still/inspector can draw an unadvanced scene. Ordinary
   // flight first advances the simulation, then consumes camera/HUD/SSD state.
+#ifndef NDEBUG
+  if(capture) for(unsigned int frame=0;frame<capture->warmup_frames;++frame) {
+    // Advance native scenery/effect animation and instrument/camera caches,
+    // keeping the staged flight pose and authored mission actors in place.
+    scene.advance(4);
+    scene.animate_player_model(player_visual);
+    draw();
+  }
+#endif
   if(inspect || (screenshot && !flight_frames)) draw();
   unsigned int complete_frames{0};
   for(; complete_frames != flight_frames && !result_evaluated; ++complete_frames) {

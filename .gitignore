@@ -3,3 +3,6 @@
 __pycache__/
 *.ppm
 /roms/
+
+# Local screenshots and contact sheets (never packaged with the source).
+/captures/

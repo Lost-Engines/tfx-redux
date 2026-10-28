@@ -481,6 +481,8 @@ add_executable(tfx
   src/platform/keyboard.h
   src/platform/arming.cpp
   src/platform/arming.h
+  src/platform/capture_scene.cpp
+  src/platform/capture_scene.h
   src/platform/flight.cpp
   src/platform/flight.h
   src/platform/presentations.cpp
@@ -495,6 +497,11 @@ configure_first_party(tfx)
 include(cmake/install.cmake)
 
 if(BUILD_TESTING)
+  add_executable(capture_scene_tests tests/capture_scene_test.cpp src/platform/capture_scene.cpp)
+  target_link_libraries(capture_scene_tests PRIVATE tfx_core)
+  configure_first_party(capture_scene_tests)
+  add_test(NAME redux.capture_scene COMMAND capture_scene_tests)
+
   add_executable(graphics_tests tests/graphics_test.cpp)
   target_link_libraries(graphics_tests PRIVATE tfx_core)
   configure_first_party(graphics_tests)
