@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iostream>
 #include "cockpit/hud.h"
+#include "cockpit/frame.h"
 #include "cockpit/virtual_displays.h"
 #include "cockpit/vector_hud.h"
 #include "missions/initialisation.h"
@@ -35,7 +36,12 @@ int main(int argc, char const *const argv[]) try {
     texture[i]=static_cast<uint8_t>(i*13+i/256);
     if(i%7==0) replacement[i]=static_cast<uint16_t>(0x100|(i%5==0 ? 0 : 6));
   }
-  for(auto const &size : {vec2<int>{320,200},vec2<int>{997,603}}) for(unsigned flags=0;flags<16;++flags) {
+  tfx::render::framebuffer canvas;
+  for(int y=0;y<200;++y) for(int x=0;x<320;++x) canvas.pixels[static_cast<size_t>(y*320+x)]=static_cast<uint8_t>(x%251);
+  std::array<tfx::render::texture_patch,1> const direct_patch{{{{0,0},{256,192},{0,0},{320,200}}}};
+  std::vector<uint8_t> direct_cells(256*192,1);
+  tfx::render::texture_overlay const direct{.patches{direct_patch},.cells{direct_cells},.source{canvas.pixels}};
+  for(auto const &size : {vec2<int>{320,200},vec2<int>{997,603}}) for(unsigned flags=0;flags<32;++flags) {
     for(auto *r : {&reference,&fast}) {
       r->output.resize(size);r->output.pixels.fill(99);
       r->clipping=flags&8 ? tfx::render::raster_clip::pixels({-20,-30},size+vec2<int>{40,50}) : tfx::render::raster_clip::pixels({9,7},size-vec2<int>{13,17});
@@ -50,7 +56,7 @@ int main(int argc, char const *const argv[]) try {
         {.position{20.25,size.y*.92},.uv{0,-7.5},.shade{-1}},
       }};
       auto const *map{flags&1 ? &remap : nullptr};
-      auto const overlay{flags&2 ? std::span<uint16_t const>{replacement} : std::span<uint16_t const>{}};
+      auto const overlay{flags&16 ? direct : flags&2 ? tfx::render::texture_overlay{.texels{replacement}} : tfx::render::texture_overlay{}};
       reference.polygon(quad,0,5,texture,map,overlay); // General, non-stippled painter.
       fast.polygon(quad,0,-1,texture,map,overlay);
     }
@@ -66,7 +72,7 @@ int main(int argc, char const *const argv[]) try {
     {.position{0,0},.uv{0,0},.shade{-1}}, {.position{3,0},.uv{3,0},.shade{-1}},
     {.position{3,1},.uv{3,1},.shade{-1}}, {.position{0,1},.uv{0,1},.shade{-1}},
   }};
-  fast.polygon(test_quad,0,-1,texture,&remap,replacement);
+  fast.polygon(test_quad,0,-1,texture,&remap,{.texels{replacement}});
   require(fast.output.pixels[0]==0 && fast.output.pixels[1]==6 && fast.output.pixels[2]==99,"live texture opacity/emission changed");
   // Distance remapping must never turn the source transparent texel into a
   // pale UI colour (the crash decal's previously visible rectangular splash).
@@ -74,6 +80,19 @@ int main(int argc, char const *const argv[]) try {
     fast.output.pixels.fill(99);std::ranges::fill(texture,0);
     fast.polygon(test_quad,0,mode,texture,&remap);
     require(std::ranges::all_of(fast.output.pixels,[](auto p){return p==99;}),"distance map made transparent texture pixels opaque");
+  }
+  // Project a 320-column canvas through a 256-column atlas to 640 pixels.
+  // Every source column must remain exactly two pixels wide; copying it into
+  // the small atlas first would alternate missing and over-wide columns.
+  fast.output.resize({640,400});fast.clipping=tfx::render::raster_clip::pixels({0,0},{639,399});
+  std::array<tfx::render::screen_vertex,4> const stripes{{
+    {.position{0,0},.uv{0,0},.shade{-1}}, {.position{640,0},.uv{256,0},.shade{-1}},
+    {.position{640,400},.uv{256,192},.shade{-1}}, {.position{0,400},.uv{0,192},.shade{-1}},
+  }};
+  for(int mode : {-1,5}) {
+    fast.output.pixels.fill(99);fast.polygon(stripes,0,mode,texture,&remap,direct);
+    for(int y=0;y<400;++y) for(int x=0;x<640;++x)
+      require(fast.output.pixels[static_cast<size_t>(y*640+x)]==static_cast<uint8_t>((x/2)%251),"live pixels were resampled through the atlas");
   }
   tfx::cockpit::virtual_displays displays{tables.instruments()};
   tfx::render::framebuffer pattern;
@@ -86,13 +105,14 @@ int main(int argc, char const *const argv[]) try {
   displays.update(pattern);
   auto left{displays.texture("cpt_f22",{tfx::models::texture_source::global,1,{}})};
   auto right{displays.texture("cpt_f22",{tfx::models::texture_source::global,0,{}})};
-  require(left[140*256+60]<0x140 && right[140*256+60]>=0x180,"outer screens were swapped");
-  require(left[160*256+159]+1==right[160*256],"centre display seam repeats/skips a column");
-  require(!left[0] && !right[120*256+80],"overlay changed the cockpit surround");
+  require(left.sample(140*256+60,60,140)<0x140 && right.sample(140*256+60,60,140)>=0x180,"outer screens were swapped");
+  require(left.sample(160*256+159,159.5,160)+1==right.sample(160*256,.5,160),"centre display seam repeats/skips a column");
+  require(!left.sample(0,0,0) && !right.sample(120*256+80,80,120),"overlay changed the cockpit surround");
   require(displays.texture("f22",{tfx::models::texture_source::global,0,{}}).empty(),"overlay reached an external model");
   require(displays.texture("cpt_f22",{tfx::models::texture_source::model,0,"!global_1"}).empty(),"overlay reached an unrelated binding");
   tfx::render::software_renderer native{tables};
   tfx::cockpit::hud hud{tables.instruments(),game,tables.weapons,environment.lighting.schematic_name};
+  tfx::cockpit::frame panel_frame{tables.instruments(),game};
   for(auto const *name : {"cpt_efa","cpt_f17","cpt_f22","cptefa_f","cptf17_f","cptf22_f"}) {
     // Exercise the actual scene interpreter/culling path, rather than only
     // painting already-decoded faces. With the eye stationary, head turns
@@ -123,11 +143,58 @@ int main(int argc, char const *const argv[]) try {
     tfx::cockpit::hud_state state;
     state.instruments.aircraft=plane;state.instruments.inventory=&inventory;
     state.instruments.fuel=5000;state.instruments.speed=3500;state.instruments.height=-1200;
-    state.position={100000,-1200,110000};state.redraw_phase=3;
-    tfx::cockpit::hud_selection selection{.left{2},.centre{tfx::cockpit::centre_display::moving_map},.right{4}};
+    state.position={100000,-1200,110000};state.redraw_phase=3;state.refresh_panel=true;
+    state.ticks=54u*(4u*3600u+17u*60u+23u);state.chaff=15;state.flares=9;
+    state.instruments.throttle=.85f;state.afterburner_pips=3;
+    state.hook=true;state.fire_permission_notice=true;state.tracked_weapon_category=1;
+    state.instruments.controls.autopilot.enabled=true;
+    state.radio_message="AWACS CONFIRMS LOCK";
+    for(auto system : {tfx::flight::aircraft_system::landing_gear,tfx::flight::aircraft_system::wheel_brakes,tfx::flight::aircraft_system::left_engine,tfx::flight::aircraft_system::right_engine})
+      state.instruments.systems[std::to_underlying(system)]=tfx::flight::system_condition::active;
+    tfx::cockpit::hud_selection selection{.left{2},.centre{plane==tfx::flight::player_aircraft::nighthawk ? tfx::cockpit::centre_display::moving_map : tfx::cockpit::centre_display::horizontal_radar},.right{4}};
     tfx::math::random_state random;
-    native.output.pixels.fill(0);hud.draw(native,selection,state,random);
+    native.output.pixels.fill(0);panel_frame.paint(native.output,0,{0,0});hud.draw(native,selection,state,random);
+    auto const first_panel{native.output.pixels};
+    for(unsigned repeat=0;repeat<6;++repeat) {
+      panel_frame.paint(native.output,0,{0,0});hud.draw(native,selection,state,random);
+      for(int y=162;y<168;++y) for(int x=17;x<32;++x)
+        require(native.output.pixels[static_cast<size_t>(y*320+x)]==first_panel[static_cast<size_t>(y*320+x)],"fresh virtual panel lost cached engine lamps");
+      for(int y=193;y<200;++y) for(int x=13;x<35;++x)
+        require(native.output.pixels[static_cast<size_t>(y*320+x)]==first_panel[static_cast<size_t>(y*320+x)],"fresh virtual panel lost reheat pips");
+    }
+    if(argc==3) {
+      std::filesystem::create_directories(argv[2]);
+      native.output.screenshot(std::filesystem::path{argv[2]}/(std::string{name}+"-flat.ppm"),palette);
+    }
     displays.update(native.output);
+    struct region { unsigned page;int x,y,width,height;char const *name; };
+    std::array<region,10> const changing{{
+      {1,77,97,40,18,"gear/brakes/autopilot/hook"}, {0,49,97,30,19,"weapon warnings"},
+      {1,17,128,13,6,"autopilot mode"}, {1,6,141,26,10,"clock"},
+      {1,14,153,15,6,"engine lights"}, {1,13,163,21,9,"fuel"},
+      {1,14,175,22,9,"throttle"}, {1,14,185,22,6,"afterburner"},
+      {0,141,160,8,7,"chaff"}, {1,121,113,39,8,"radio ticker"},
+    }};
+    auto const region_pixels{[&](region const &r) {
+      auto const overlay{displays.texture(name,{tfx::models::texture_source::global,static_cast<uint16_t>(r.page),{}})};
+      std::vector<uint16_t> result;
+      for(int y=r.y;y<r.y+r.height;++y) for(int x=r.x;x<r.x+r.width;++x)
+        result.push_back(overlay.sample(static_cast<unsigned>(y*256+x),x+.5,y+.5));
+      return result;
+    }};
+    std::vector<std::vector<uint16_t>> lit;
+    for(auto const &region : changing) lit.push_back(region_pixels(region));
+    auto const active_frame{native.output};
+    auto idle{state};idle.instruments.systems.fill(tfx::flight::system_condition::normal);
+    idle.hook=false;idle.fire_permission_notice=false;idle.tracked_weapon_category.reset();
+    idle.instruments.controls.autopilot.enabled=false;idle.instruments.controls.autopilot.mode=tfx::cockpit::autopilot_mode::heading;
+    idle.instruments.fuel=2000;idle.instruments.throttle=.35f;idle.chaff=3;
+    idle.ticks=54*3600;idle.afterburner_pips=0;idle.radio_message.reset();
+    panel_frame.paint(native.output,0,{0,0});hud.draw(native,selection,idle,random);displays.update(native.output);
+    for(unsigned i=0;i<changing.size();++i) {
+      if(lit[i]==region_pixels(changing[i])) throw std::runtime_error{std::string{"virtual instrument did not update: "}+changing[i].name};
+    }
+    native.output=active_frame;displays.update(native.output);
     auto const geometry{tfx::models::interpret(assets.shape(name),{.facing=false})};
     require(geometry.warnings.empty(),"cockpit geometry failed to decode");
     for(auto const &corner:tfx::cockpit::vector_hud::glass_vertices) {
@@ -147,7 +214,7 @@ int main(int argc, char const *const argv[]) try {
         for(auto const &primitive : geometry.primitives) {
           std::vector<tfx::models::model_vertex> vertices;
           for(auto const &v : primitive.vertices) vertices.push_back({.position{view.transform(v.position)},.uv{vec2d{v.uv}}});
-          renderer.primitive(primitive,vertices,view,primitive.texture ? assets.texture(*primitive.texture) : std::span<uint8_t const>{},&assets.model_colours(0),live && primitive.texture ? displays.texture(name,*primitive.texture) : std::span<uint16_t const>{});
+          renderer.primitive(primitive,vertices,view,primitive.texture ? assets.texture(*primitive.texture) : std::span<uint8_t const>{},&assets.model_colours(0),live && primitive.texture ? displays.texture(name,*primitive.texture) : tfx::render::texture_overlay{});
         }
       }};
       draw(false);auto const original{renderer.output.pixels};draw(true);

@@ -457,7 +457,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
           ++primitives_drawn;continue;
         }
         auto const texture{primitive.texture ? resources.texture(*primitive.texture) : std::span<uint8_t const>{}};
-        auto const overlay{primitive.texture && texture_overlay ? texture_overlay(item.name,*primitive.texture) : std::span<uint16_t const>{}};
+        auto const overlay{primitive.texture && texture_overlay ? texture_overlay(item.name,*primitive.texture) : render::texture_overlay{}};
         if(primitive.texture && texture.empty()) warnings.insert("unresolved runtime texture: " + item.name);
         uint8_t colour_row{distance_row};
         if(primitive.palette == models::palette_source::fixed) colour_row = 0;

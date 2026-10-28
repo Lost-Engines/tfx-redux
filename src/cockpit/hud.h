@@ -49,6 +49,7 @@ struct hud_state {
   bool stall_recovery{false};
   bool threat{false};
   uint8_t redraw_phase{0};
+  bool refresh_panel{false}; // A fresh virtual canvas needs even cached lamps repainted.
   unsigned int afterburner_pips{0};
   std::optional<uint8_t> approach_cue;
   bool approach_suppressed{false};

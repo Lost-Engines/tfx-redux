@@ -156,11 +156,18 @@ general texture painters, including clipped/out-of-bounds spans, lighting remaps
 transparency and write coverage. It checks unlit opaque-black display texels,
 port/starboard mapping, the continuous centre-display seam and all six ordinary
 and refuelling canopy models at 960×600, 1080p and 4K. Optional captures use the
-real instrument artwork; the benchmark prints isolated canopy costs.
+real instrument artwork; the benchmark prints isolated canopy costs. A 320-column
+source projected through a 256-column atlas to 640 screen pixels must preserve
+exactly two pixels per column, catching intermediate resampling. Both general
+and fast texture paths are compared with direct mappings and texel overrides.
+The probe also exercises changing/clearing gear, warning, autopilot, clock,
+engine, fuel, throttle, reheat, chaff and radio regions, and repaints cached
+engine lamps/reheat pips across six fresh canvases. The existing native HUD
+comparison still matches all 504 complete F1 pixel/state frames.
 
 `python3 tools/check_window_virtual_cockpit.py --data-dir DATA_DIR` launches
 mission 703 on a private X11 display with temporary configuration and no audio.
-It cycles the MFDs in F10, exercises scene-camera pages, checks that paused images
+It cycles the MFDs in F10, exercises scene-camera pages and L radio replay, checks that paused images
 and flight inputs stop changing, and switches between paused F5, F1 and F10.
 GDB observes execution without changing simulation state. Screenshots go to
 `/tmp/tfx-virtual-live` by default (`--captures` selects another directory).
