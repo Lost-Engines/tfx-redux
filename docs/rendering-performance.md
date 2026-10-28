@@ -127,7 +127,7 @@ The isolated three-layout HUD probe measured about 0.26 ms at 320×200, 0.81 ms 
 1001×603 and 1.99 ms at 1920×1080, including coverage composition but excluding
 final colour conversion. These are local CPU measurements, not gameplay rates.
 
-## Virtual cockpit textures and live MFDs
+## Virtual cockpit textures and live instruments
 
 The continuous texture painter now writes clipped spans directly. Its ordinary
 opaque mode avoids two general pixel calls, repeated clipping checks, and unused
@@ -147,13 +147,23 @@ world rendering, simulation and presentation. They show a 35–39% reduction in
 that rendering cost, not an equivalent increase in overall game frame rate.
 The indexed image hashes match before and after at both sizes.
 
-The live MFDs reuse the existing instrument renderer once per frame, on a small
-320×200 canvas. Only display regions replace texels in `global_1` and `global_2`,
-and only for the six front-canopy models. The port panel is in `global_2`; the
-centre screen spans both pages. Replacement texels bypass the model's lighting
-lookup, and black is opaque rather than transparent. The original panel art and
-lighting remain everywhere else. The regular and refuelling models share these
-UVs; external aircraft and other users of the texture pages are unaffected.
+The complete F1 panel and instrument renderer run once per frame on a small
+320×200 canvas. MFDs, warning lamps, the radio ticker, engine indicators and
+side readouts map to their corresponding regions in `global_1` and `global_2`,
+only for the six front-canopy models. The port panel is in `global_2`; both the
+centre display and message panel cross the seam. Fractional atlas coordinates
+sample the original canvas directly, without first squeezing the graphics into
+integer atlas texels. This removes the extra uneven pixel widths/heights while
+keeping nearest-neighbour palette artwork. A cell lookup selects each mapping;
+rectangular mapping scales are precomputed.
+
+Instrument regions include the F1 idle artwork, so clearing a lamp or message
+restores its background. Engine lamps and reheat pips refresh on each new
+canvas without changing the shared native page counter. The radio ticker
+advances once per frame and appears on the physical message panel. Replacement
+pixels bypass model lighting, with black opaque; the rest of the cockpit keeps
+its authored art and lighting. Normal and refuelling canopies share these UVs;
+external aircraft and other users of the atlases are unaffected.
 
 Camera MFDs render at their native screen dimensions before projection onto the
 panel, avoiding oversized intermediate images. These additional world passes
@@ -169,5 +179,12 @@ python3 tools/check_window_virtual_cockpit.py --data-dir /path/to/TFX
 
 The asset probe checks all six models, left/right mapping, the centre seam,
 opaque black, palette handling, clipping and coverage, and prints static/live
-canopy timings. Static and live texture sampling costs were close (within roughly
-1 ms locally); active camera pages still require their own scene passes.
+canopy timings. The earlier atlas-copy implementation added roughly 1 ms
+locally; direct source sampling trades additional per-pixel mapping work for
+consistent instrument pixels. The probe reports current static/live costs;
+active camera pages still require their own scene passes.
+
+With the full panel and direct source sampling, the same isolated F-22 probe
+measured 13.33 ms static / 18.47 ms live at 1080p, and 52.54 ms / 72.99 ms at
+4K. These are canopy-only CPU timings, not whole-game frame rates; the more
+accurate sampling adds about 5 ms / 20 ms respectively on this machine.

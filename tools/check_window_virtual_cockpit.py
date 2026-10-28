@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check live virtual-cockpit screens on a private, silent X11 display.
 
-Cycles both MFDs, including scene pages, and checks paused cockpit images and
+Cycles both MFDs, including scene pages, replays radio calls, and checks paused images and
 view switching. GDB only observes frame delivery and input; it never changes
 simulation state. Requires Xvfb, GDB, xdotool and Pillow.
 """
@@ -62,6 +62,12 @@ silent
 printf "MFD %u %u %u %u\n", state.instruments.aircraft, selection.left, selection.centre, selection.right
 continue
 end
+break tfx::cockpit::radio_ticker::replay
+commands
+silent
+printf "REPLAY\n"
+continue
+end
 break tfx::cockpit::virtual_displays::update
 commands
 silent
@@ -115,11 +121,14 @@ run
             frames(4)
             tap('F10')
             wait(lambda: 'LIVE' in log.read_text(), 'virtual displays were never rendered')
-            run('xdotool','keydown','Shift_R','keydown','Down')
+            run('xdotool','keydown','Shift_R','keydown','Up')
             frames(12)
-            run('xdotool','keyup','Down','keyup','Shift_R')
+            run('xdotool','keyup','Up','keyup','Shift_R')
             frames(12)
             ImageGrab.grab(xdisplay=env['DISPLAY']).save(args.captures/'initial.png')
+            tap('l')
+            wait(lambda: 'REPLAY' in log.read_text(), 'L did not replay the radio message')
+            frames(8)
             seen_left, seen_centre, seen_right=set(),set(),set()
             for page in range(9):
                 tap('1')
@@ -151,7 +160,7 @@ run
             tap('F10')
             frames(12)
             ImageGrab.grab(xdisplay=env['DISPLAY']).save(args.captures/'paused.png')
-            print(f'Live virtual cockpit (aircraft {rows("MFD")[-1][0]}): outer pages {sorted(seen_left)}/{sorted(seen_right)}, centre pages {sorted(seen_centre)}, scene cameras and paused switching passed')
+            print(f'Live virtual cockpit (aircraft {rows("MFD")[-1][0]}): outer pages {sorted(seen_left)}/{sorted(seen_right)}, centre pages {sorted(seen_centre)}, scene cameras, radio replay and paused switching passed')
     finally:
         if game and game.poll() is None:
             os.killpg(game.pid,signal.SIGTERM)

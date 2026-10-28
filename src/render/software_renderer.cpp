@@ -53,7 +53,7 @@ void software_renderer::background(camera const &view, uint8_t const sky, uint8_
   }
 }
 
-void software_renderer::polygon(std::span<screen_vertex const> const vertices, uint8_t const colour, int const mode, std::span<uint8_t const> const texture, colour_map const *const remap, std::span<uint16_t const> const overlay) {
+void software_renderer::polygon(std::span<screen_vertex const> const vertices, uint8_t const colour, int const mode, std::span<uint8_t const> const texture, colour_map const *const remap, texture_overlay const overlay) {
   /// Half-open software spans; interpolate palette indices and UVs in screen space, preserving authored paint order
   if(vertices.size() < 3) return;
   bool const shaded{texture.empty() && std::ranges::all_of(vertices,[](auto const &v){ return v.shade >= 0; })};
@@ -114,18 +114,20 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
           auto *destination{output.pixels.data() + y * output.size.x};
           for(int x=start; x<end; ++x) {
             double const t{(x + .5 - left.position.x) * inverse_width};
-            int const u{std::clamp(static_cast<int>(left.uv.x + du*t),0,255)};
-            int const v{std::clamp(static_cast<int>(left.uv.y + dv*t),0,191)};
+            double const su{left.uv.x+du*t}, sv{left.uv.y+dv*t};
+            int const u{std::clamp(static_cast<int>(su),0,255)};
+            int const v{std::clamp(static_cast<int>(sv),0,191)};
             auto const at{static_cast<unsigned int>(v*256+u)};
             uint8_t index{texture[at]};
             // Transparent texels must stay holes when distance shading maps
             // black into the reserved UI colours. Live screens can supply
             // explicitly opaque black over those same source texels.
-            if constexpr(live) { if(!index && !overlay[at]) continue; }
+            uint16_t replacement{0};
+            if constexpr(live) { replacement=overlay.sample(at,su,sv);if(!index && !replacement) continue; }
             else if(!index) continue;
             if constexpr(mapped) index=(*remap)[index];
             if constexpr(live) {
-              if(overlay[at]) index=static_cast<uint8_t>(overlay[at]);
+              if(replacement) index=static_cast<uint8_t>(replacement);
               else if(!index) continue;
             } else if(!index) continue;
             destination[x]=index;
@@ -152,7 +154,7 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
           int const u{std::clamp(static_cast<int>(uv.x),0,255)}, v{std::clamp(static_cast<int>(uv.y),0,191)};
           auto const at{static_cast<unsigned int>(v * 256 + u)};
           index = texture[at];
-          if(!overlay.empty()) replacement=overlay[at];
+          if(!overlay.empty()) replacement=overlay.sample(at,uv.x,uv.y);
           if(!index && !replacement) continue;
         } else if(shaded) index = static_cast<uint8_t>(static_cast<int>(std::floor(colour_start + colour_step * (x - colour_origin))));
         if(remap && (!texture.empty() || shaded)) index = (*remap)[index];
@@ -217,7 +219,7 @@ void software_renderer::line(vec2d const &a, vec2d const &b, uint8_t const colou
   }
 }
 
-void software_renderer::primitive(models::primitive const &source, std::span<models::model_vertex const> const camera_vertices, camera const &source_view, std::span<uint8_t const> const texture, colour_map const *const remap, std::span<uint16_t const> const overlay) {
+void software_renderer::primitive(models::primitive const &source, std::span<models::model_vertex const> const camera_vertices, camera const &source_view, std::span<uint8_t const> const texture, colour_map const *const remap, texture_overlay const overlay) {
   auto view{source_view};
   if(output.size != vec2<int>{screen_width,screen_height} && view.projection == projection_mode::original_model) {
     double const scale{std::min(output.size.x / static_cast<double>(screen_width),output.size.y / static_cast<double>(screen_height))};

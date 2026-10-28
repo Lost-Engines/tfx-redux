@@ -1790,6 +1790,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     state.stall_recovery = player.recovering;
     state.hook = player.arrestor_hook;
     state.redraw_phase = physical_player.powerplant.afterburner_control;
+    state.refresh_panel = virtual_panel;
     state.afterburner_pips = player.afterburner;
     state.low_speed_ground_contact = player.low_speed_ground_contact;
     state.landed = player.landed;
@@ -2258,9 +2259,12 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     bool const virtual_panel{!inspect && !result_evaluated && !designator_view
       && view_index()!=tfx::cockpit::forward_cockpit
       && view_motion.last_pose().player_model_entry==19u+camera_context().refuel_phase};
+    std::optional<std::string> panel_radio;
     if(virtual_panel) {
+      panel_radio=radio_frame->advance(paused ? 0 : launch_elapsed,acceleration.active);
       virtual_renderer.output.pixels.fill(0);
-      draw_instruments(virtual_renderer,std::nullopt,true);
+      cockpit_frame.paint(virtual_renderer.output,tfx::cockpit::forward_cockpit,{0,0});
+      draw_instruments(virtual_renderer,panel_radio,true);
       virtual_displays.update(virtual_renderer.output);
       scene.set_texture_overlay([&](std::string_view model, models::texture_binding const &binding) { return virtual_displays.texture(model,binding); });
     } else scene.set_texture_overlay({});
@@ -2295,7 +2299,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       bool const hide_external_information{!designator_view && callback == 0x80794 && !options.flight_information};
       // Several loss/ejection viewports have no display callback at all.
       // They neither draw nor advance the retained radio ticker.
-      auto const radio_window{!callback || designator_view || callback == 0x80704 || hide_external_information ? std::optional<std::string>{} : radio_frame->advance(paused ? 0 : launch_elapsed,acceleration.active)};
+      auto const radio_window{virtual_panel ? panel_radio : !callback || designator_view || callback == 0x80704 || hide_external_information ? std::optional<std::string>{} : radio_frame->advance(paused ? 0 : launch_elapsed,acceleration.active)};
       auto const paint_cockpit{[&] {
         frame_pages.refresh_panel(physical_player.powerplant.afterburner_control,requested_offset_y);
         cockpit_frame.paint(renderer.output,view_index(),cockpit_position.value(),nullptr,cockpit::panel_copy::refresh);
@@ -2310,7 +2314,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
           .speed{player.fixed_speed},
           .heading{player.angles.y},
         });
-        if(radio_window) instruments.draw_radio(renderer,*radio_window);
+        if(radio_window && !virtual_panel) instruments.draw_radio(renderer,*radio_window);
       }
       if(designator_view) designator_frame->draw(renderer,impact_projection->integer(designator.point).value_or(vec2<int16_t>{-1,-1}),designator_tracking_frame);
       if(flight_recorder.active()) {

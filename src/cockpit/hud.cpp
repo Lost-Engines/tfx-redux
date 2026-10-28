@@ -146,7 +146,7 @@ hud_effects hud::draw(render::software_renderer &renderer, hud_selection &select
   numbers.draw_autopilot(renderer,instruments.controls.autopilot,offset,coverage);
   auxiliary.draw(renderer.output,{
     .engines{instruments.systems[std::to_underlying(flight::aircraft_system::left_engine)],instruments.systems[std::to_underlying(flight::aircraft_system::right_engine)]},
-    .redraw_phase{redraw_phase},
+    .redraw_phase{state.refresh_panel ? uint8_t{2} : redraw_phase},
     .afterburner_pips{state.afterburner_pips},
     .approach_cue{state.approach_cue},
     .approach_suppressed{state.approach_suppressed},

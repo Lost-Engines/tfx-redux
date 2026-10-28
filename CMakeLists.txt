@@ -410,6 +410,7 @@ add_library(tfx_core
   src/render/preview_state.h
   src/render/software_renderer.cpp
   src/render/software_renderer.h
+  src/render/texture_overlay.h
   src/math/native.cpp
   src/math/native.h
   src/models/shape.cpp

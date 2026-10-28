@@ -9,6 +9,7 @@
 #include "render/colour_remap.h"
 #include "render/framebuffer.h"
 #include "render/point_visibility.h"
+#include "render/texture_overlay.h"
 #include "resources/executable_tables.h"
 
 namespace tfx::render {
@@ -46,12 +47,12 @@ public:
   void background(camera const &view, uint8_t sky, uint8_t ground);
   unsigned int text_width(std::string_view message) const;
   void text(int x, int y, std::string_view message, uint8_t colour, framebuffer *coverage = nullptr);
-  // Optional 256x192 overlay: zero keeps the texture; 0x100|index is an
-  // opaque, unlit palette texel. It shares the original UVs and clipping.
-  void polygon(std::span<screen_vertex const> vertices, uint8_t colour, int mode = -1, std::span<uint8_t const> texture = {}, colour_map const *remap = nullptr, std::span<uint16_t const> overlay = {});
+  // Optional opaque, unlit instrument overlay. Direct canvas mappings sample
+  // fractional UVs once; ordinary texture artwork retains its original UVs.
+  void polygon(std::span<screen_vertex const> vertices, uint8_t colour, int mode = -1, std::span<uint8_t const> texture = {}, colour_map const *remap = nullptr, texture_overlay overlay = {});
   void circle(int x, int y, unsigned int radius, uint8_t colour, int mode = -1);
   void line(vec2d const &a, vec2d const &b, uint8_t colour);
-  void primitive(models::primitive const &source, std::span<models::model_vertex const> camera_vertices, camera const &view, std::span<uint8_t const> texture, colour_map const *remap = nullptr, std::span<uint16_t const> overlay = {});
+  void primitive(models::primitive const &source, std::span<models::model_vertex const> camera_vertices, camera const &view, std::span<uint8_t const> texture, colour_map const *remap = nullptr, texture_overlay overlay = {});
 };
 
 } // namespace tfx::render

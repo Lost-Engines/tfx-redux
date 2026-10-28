@@ -83,7 +83,7 @@ private:
   std::optional<player_rendering> player_model;
   std::optional<render::camera> installed_camera;
   double visual_lod_scale{1};
-  std::function<std::span<uint16_t const>(std::string_view,models::texture_binding const&)> texture_overlay;
+  std::function<render::texture_overlay(std::string_view,models::texture_binding const&)> texture_overlay;
 
 public:
   std::set<std::string> warnings;
