@@ -53,6 +53,45 @@ int main(int argc,char const *const argv[]) try {
     }
     std::cout<<size.x<<'x'<<size.y<<" vector HUD layouts: "<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()/3<<" ms each (includes optional captures)\n";
   }
+  // The real Military-spec layout should use the glass, not sit in a small
+  // patch at its bottom. Measure angular coverage independently of the HUD's
+  // own focal length; both resolution and the camera FOV must cancel out.
+  for(auto const &size : {vec2<int>{1001,603},vec2<int>{1920,1080}}) for(double fov : {64.,100.,140.}) {
+    auto const view{tfx::render::scene_camera(tfx::render::inspection_camera({0,0,-.25},0,0),{.resolution{vec2<int>{size}},.field_of_view{fov}})};
+    vec2d glass_low{size},glass_high{0,0};
+    for(auto const &vertex : tfx::cockpit::vector_hud::glass_vertices) {
+      auto const point{view.project(view.transform(vertex))};
+      for(unsigned axis=0;axis<2;++axis) {
+        glass_low[axis]=std::min(glass_low[axis],point[axis]);
+        glass_high[axis]=std::max(glass_high[axis],point[axis]);
+      }
+    }
+    auto const glass_size{glass_high-glass_low};
+    for(auto aircraft : {tfx::flight::player_aircraft::eurofighter,tfx::flight::player_aircraft::nighthawk,tfx::flight::player_aircraft::raptor}) {
+      tfx::cockpit::weapon_display display{tables.instruments(),game};
+      tfx::cockpit::weapon_display_state state;
+      state.aircraft=aircraft;state.cannon=false;state.ammunition=1760;
+      state.attitude.projection_origin=vec2<int16_t>{tfx::cockpit::vector_hud::glass_origin};
+      state.attitude.focal_distance=tfx::cockpit::vector_hud::glass_focal_distance;
+      state.flight.speed=4500;state.flight.height=-1400;state.flight.mach=.85;
+      state.flight.load=1;state.flight.throttle=.85f;
+      state.aerodynamic.emplace(tfx::cockpit::aerodynamic_hud_state{.down_metres_per_second{12}});
+      tfx::render::software_renderer native{tables};
+      tfx::render::framebuffer frame;frame.resize(size);
+      hud.begin(size);hud.attach_to_glass(view,{0,0,0},tfx::math::rotation({0,0,0}));
+      {tfx::cockpit::capture_hud capture{native.output,&hud};display.draw_forward(native,state);}
+      hud.compose(frame,{});
+      vec2<int> low{size},high{0,0};
+      for(int y=0;y<size.y;++y) for(int x=0;x<size.x;++x) if(!frame.hud_coverage.empty() && frame.hud_coverage[static_cast<size_t>(y*size.x+x)]) {
+        low.x=std::min(low.x,x);low.y=std::min(low.y,y);
+        high.x=std::max(high.x,x);high.y=std::max(high.y,y);
+      }
+      require(high.x-low.x > .82*glass_size.x,"virtual HUD leaves too much unused glass at the sides");
+      require(low.y-glass_low.y < .08*glass_size.y,"virtual HUD sits too far below the top of the glass");
+      require(glass_high.y-high.y < .10*glass_size.y,"virtual HUD leaves too much unused glass below");
+      if(argc==3 && size.x==1920 && fov==64) frame.screenshot(std::filesystem::path{argv[2]}/("glass-"+std::to_string(std::to_underlying(aircraft))+".ppm"),palette);
+    }
+  }
   // The optical boresight must follow the aircraft, stay on the real glass,
   // and disappear when the glass is behind the head camera.
   for(auto const &size : {vec2<int>{960,600},vec2<int>{3840,2160}}) for(double fov:{10.,64.,100.,140.,170.}) {
@@ -60,8 +99,9 @@ int main(int argc,char const *const argv[]) try {
       auto view{tfx::render::scene_camera(tfx::render::inspection_camera({0,0,-.25},yaw,0),{.resolution{vec2<int>{size}},.field_of_view{fov}})};
       tfx::render::framebuffer frame;frame.resize(size);
       hud.begin(size);hud.attach_to_glass(view,{0,0,0},tfx::math::rotation({0,0,0}));
-      hud.line({80,60},{240,60},{0,0},{319,199});
-      hud.line({160,0},{160,97},{0,0},{319,199});
+      auto const origin{tfx::cockpit::vector_hud::glass_origin};
+      hud.line({80,origin.y},{240,origin.y},{0,0},{319,199});
+      hud.line({origin.x,0},{origin.x,97},{0,0},{319,199});
       hud.compose(frame,{});
       size_t visible{0};
       for(int y=0;y<size.y;++y) for(int x=0;x<size.x;++x) {

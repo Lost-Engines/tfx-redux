@@ -1187,9 +1187,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       },
       .surface_celsius{surface_celsius()},
     },mission_setup.speed_factor,wind_parameters,player_damage,options.session_random);
-    // Original 95F3C/96411 clears the live wind setting, including a saved
-    // REALISM=... wind enable. It can be enabled again from the flight menu.
-    preferences.effects.wind = 0;
+    // Redux retains the selected wind setting across mission starts. Native
+    // 95F3C/96411 clears it here, which would silently disable the saved choice.
     player_render_basis = player.orientation;
     view_motion=tfx::cockpit::view_camera{{
       .head{0,0,-2},.offset_q16{-player_render_basis.forward/2},
@@ -1490,7 +1489,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         },
         .surface_celsius{surface_celsius()},
       },1.0f,wind_parameters,player_damage,air_simulation.random_stream());
-      preferences.effects.wind = 0; // The same 96411 reset runs after servicing.
+      // Retain the chosen wind setting after servicing, as on mission start.
       automatic_landing = retained_approach; // Shared approach scratch survives 8FAD4.
       // 8FAD4/95F3C retain route and guidance scratch, including the coordinates
       // shared with the approach callback. This is not a new mission launch.

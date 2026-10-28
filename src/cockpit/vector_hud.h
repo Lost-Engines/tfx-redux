@@ -29,9 +29,13 @@ class vector_hud {
 public:
   explicit vector_hud(instrument_assets const &assets) : assets{assets} {}
   // Shared geometry of the retail cpt_*/cpt*_f HUD frames. The source HUD
-  // spans x=80..240, y=0..97; this collimator keeps it inside the glass.
-  static constexpr double glass_focal_distance{680};
-  static constexpr vec2d glass_origin{160,60};
+  // spans x=80..240, y=0..97. At the normal eye position (z=-.25), the
+  // glass covers slopes y=-.173..+.058 and x=+/- .18.. .20. Fit that angular
+  // window with a small border; the optical axis falls below its centre.
+  // Aiming projection must use this same origin/focal length, so resizing the
+  // layout never moves the horizon or world-space target cues off their rays.
+  static constexpr double glass_focal_distance{450};
+  static constexpr vec2d glass_origin{160,76};
   static constexpr std::array<vec3d,6> glass_vertices{{
     {-.1375,-.13,.5025},{.1375,-.13,.5025},{.15,-.12,.515},
     {.1825,.0525,.6625},{-.1825,.0525,.6625},{-.15,-.12,.515},
