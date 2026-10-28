@@ -7,18 +7,72 @@ namespace tfx::cockpit {
 void vector_hud::begin(vec2<int> const &dimensions) {
   size=vec2<int>{dimensions};scale=std::min(size.x/320.0,size.y/200.0);
   offset={(size.x-320*scale)/2,(size.y-200*scale)/2};
-  ink.assign(render::framebuffer::pixel_count(size),0);painted=false;
+  ink.assign(render::framebuffer::pixel_count(size),0);painted=false;glass.reset();
+}
+void vector_hud::attach_to_glass(render::camera const &view, vec3d const &model_position, mat3d const &rotation) {
+  glass.emplace(glass_projection{view,mat3d{rotation},{}});
+  std::array<vec3d,6> points;
+  vec3d centre{0,0,0};
+  for(size_t i=0;i<points.size();++i) {
+    points[i]=view.transform(model_position+rotation*glass_vertices[i]);centre+=points[i];
+  }
+  for(size_t i=0;i<points.size();++i) {
+    auto normal{points[i].cross(points[(i+1)%points.size()])};
+    if(normal.dot(centre)<0) normal=-normal;
+    glass->edges[i]=normal/normal.length();
+  }
+}
+vec3d vector_hud::glass_ray(vec2d const &point) const {
+  auto const local{(point-glass_origin)/glass_focal_distance};
+  auto const world{glass->rotation*vec3d{local.x,local.y,1}};
+  return {world.dot(glass->view.right),world.dot(glass->view.down),world.dot(glass->view.forward)};
+}
+bool vector_hud::on_glass(vec2d const &pixel) const {
+  auto const local{(pixel-glass->view.projection_origin)/glass->view.focal_distance};
+  vec3d const ray{local.x,local.y,1};
+  return std::ranges::all_of(glass->edges,[&](auto const &edge){ return edge.dot(ray)>=0; });
 }
 void vector_hud::stroke(vec2d const &from, vec2d const &to, vec2<int> const &low, vec2<int> const &high, double const width) {
-  auto const a{offset+(from+vec2d{.5,.5})*scale}, b{offset+(to+vec2d{.5,.5})*scale};
-  auto const delta{b-a};double const length2{delta.dot(delta)}, radius{std::max(1.0,width*scale)/2};
-  int const x0{std::max({0,static_cast<int>(std::ceil(offset.x+low.x*scale-.5)),static_cast<int>(std::floor(std::min(a.x,b.x)-radius-1))})};
-  int const x1{std::min({size.x-1,static_cast<int>(std::ceil(offset.x+(high.x+1)*scale-.5))-1,static_cast<int>(std::ceil(std::max(a.x,b.x)+radius))})};
-  int const y0{std::max({0,static_cast<int>(std::ceil(offset.y+low.y*scale-.5)),static_cast<int>(std::floor(std::min(a.y,b.y)-radius-1))})};
-  int const y1{std::min({size.y-1,static_cast<int>(std::ceil(offset.y+(high.y+1)*scale-.5))-1,static_cast<int>(std::ceil(std::max(a.y,b.y)+radius))})};
+  vec2d a{offset+(from+vec2d{.5,.5})*scale}, b{offset+(to+vec2d{.5,.5})*scale};
+  double stroke_scale{scale};
+  vec2<int> clip_low{std::max(0,static_cast<int>(std::ceil(offset.x+low.x*scale-.5))),std::max(0,static_cast<int>(std::ceil(offset.y+low.y*scale-.5)))};
+  vec2<int> clip_high{std::min(size.x-1,static_cast<int>(std::ceil(offset.x+(high.x+1)*scale-.5))-1),std::min(size.y-1,static_cast<int>(std::ceil(offset.y+(high.y+1)*scale-.5))-1)};
+  if(glass) {
+    double first{0},last{1};
+    auto const clip{[&](double begin,double end) {
+      if(begin<0 && end<0) return false;
+      if(begin<0) first=std::max(first,begin/(begin-end));
+      if(end<0) last=std::min(last,begin/(begin-end));
+      return first<=last;
+    }};
+    for(unsigned axis=0;axis<2;++axis) {
+      if(!clip(from[axis]-low[axis],to[axis]-low[axis]) || !clip(high[axis]-from[axis],high[axis]-to[axis])) return;
+    }
+    auto const start{glass_ray(from+vec2d{.5,.5})},end{glass_ray(to+vec2d{.5,.5})};
+    if(!clip(start.z-1e-5,end.z-1e-5)) return;
+    for(auto const &edge:glass->edges) if(!clip(start.dot(edge),end.dot(edge))) return;
+    // Clip before dividing: at a side-on head angle, off-screen rays can
+    // approach zero depth. Do not turn those into huge raster coordinates.
+    double const focal{glass->view.focal_distance};
+    auto const &origin{glass->view.projection_origin};
+    for(unsigned axis=0;axis<2;++axis) {
+      if(!clip(start[axis]*focal+start.z*(origin[axis]+1),end[axis]*focal+end.z*(origin[axis]+1))) return;
+      if(!clip(-start[axis]*focal+start.z*(size[axis]+1-origin[axis]),-end[axis]*focal+end.z*(size[axis]+1-origin[axis]))) return;
+    }
+    auto const ray_a{start+(end-start)*first},ray_b{start+(end-start)*last};
+    a=glass->view.project(ray_a);b=glass->view.project(ray_b);
+    stroke_scale=glass->view.focal_distance/glass_focal_distance/std::min(ray_a.z,ray_b.z);
+    clip_low={0,0};clip_high=size-vec2<int>{1,1};
+  }
+  auto const delta{b-a};double const length2{delta.dot(delta)}, radius{std::max(1.0,width*stroke_scale)/2};
+  int const x0{std::max(clip_low.x,static_cast<int>(std::floor(std::min(a.x,b.x)-radius-1)))};
+  int const x1{std::min(clip_high.x,static_cast<int>(std::ceil(std::max(a.x,b.x)+radius)))};
+  int const y0{std::max(clip_low.y,static_cast<int>(std::floor(std::min(a.y,b.y)-radius-1)))};
+  int const y1{std::min(clip_high.y,static_cast<int>(std::ceil(std::max(a.y,b.y)+radius)))};
   for(int y=y0;y<=y1;++y) for(int x=x0;x<=x1;++x) {
     vec2d const point{x+.5,y+.5};double const t{length2 ? std::clamp((point-a).dot(delta)/length2,0.0,1.0) : 0};
     double const coverage{std::clamp(radius+.5-(point-a-delta*t).length(),0.0,1.0)};
+    if(glass && coverage>0 && !on_glass(point)) continue;
     auto &value{ink[static_cast<size_t>(y*size.x+x)]};
     value=std::max(value,static_cast<uint8_t>(std::lround(coverage*255)));painted|=value!=0;
   }

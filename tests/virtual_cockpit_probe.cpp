@@ -2,6 +2,7 @@
 #include <iostream>
 #include "cockpit/hud.h"
 #include "cockpit/virtual_displays.h"
+#include "cockpit/vector_hud.h"
 #include "missions/initialisation.h"
 #include "world/assets.h"
 #include "world/environment.h"
@@ -67,6 +68,13 @@ int main(int argc, char const *const argv[]) try {
   }};
   fast.polygon(test_quad,0,-1,texture,&remap,replacement);
   require(fast.output.pixels[0]==0 && fast.output.pixels[1]==6 && fast.output.pixels[2]==99,"live texture opacity/emission changed");
+  // Distance remapping must never turn the source transparent texel into a
+  // pale UI colour (the crash decal's previously visible rectangular splash).
+  for(int mode : {-1,5}) {
+    fast.output.pixels.fill(99);std::ranges::fill(texture,0);
+    fast.polygon(test_quad,0,mode,texture,&remap);
+    require(std::ranges::all_of(fast.output.pixels,[](auto p){return p==99;}),"distance map made transparent texture pixels opaque");
+  }
   tfx::cockpit::virtual_displays displays{tables.instruments()};
   tfx::render::framebuffer pattern;
   for(unsigned i=0;i<3;++i) {
@@ -122,6 +130,12 @@ int main(int argc, char const *const argv[]) try {
     displays.update(native.output);
     auto const geometry{tfx::models::interpret(assets.shape(name),{.facing=false})};
     require(geometry.warnings.empty(),"cockpit geometry failed to decode");
+    for(auto const &corner:tfx::cockpit::vector_hud::glass_vertices) {
+      bool found{false};
+      for(auto const &face:geometry.primitives) for(auto const &vertex:face.vertices)
+        found |= (vertex.position-corner).length()<1e-10;
+      require(found,"HUD glass no longer matches the authored cockpit frame");
+    }
     for(auto const &size : {vec2<int>{960,600},vec2<int>{1920,1080},vec2<int>{3840,2160}}) {
       tfx::render::software_renderer renderer{tables};renderer.output.resize(size);
       renderer.clipping=tfx::render::raster_clip::pixels({0,0},size-vec2<int>{1,1});

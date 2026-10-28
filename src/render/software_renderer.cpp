@@ -118,6 +118,11 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
             int const v{std::clamp(static_cast<int>(left.uv.y + dv*t),0,191)};
             auto const at{static_cast<unsigned int>(v*256+u)};
             uint8_t index{texture[at]};
+            // Transparent texels must stay holes when distance shading maps
+            // black into the reserved UI colours. Live screens can supply
+            // explicitly opaque black over those same source texels.
+            if constexpr(live) { if(!index && !overlay[at]) continue; }
+            else if(!index) continue;
             if constexpr(mapped) index=(*remap)[index];
             if constexpr(live) {
               if(overlay[at]) index=static_cast<uint8_t>(overlay[at]);
@@ -148,6 +153,7 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
           auto const at{static_cast<unsigned int>(v * 256 + u)};
           index = texture[at];
           if(!overlay.empty()) replacement=overlay[at];
+          if(!index && !replacement) continue;
         } else if(shaded) index = static_cast<uint8_t>(static_cast<int>(std::floor(colour_start + colour_step * (x - colour_origin))));
         if(remap && (!texture.empty() || shaded)) index = (*remap)[index];
         // Original texture transparency is tested after its lighting lookup.

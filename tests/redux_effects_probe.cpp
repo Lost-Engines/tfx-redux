@@ -17,6 +17,13 @@ int main(int argc, char const *const argv[]) try {
   auto const setup{tfx::missions::initialise(mission.script)};
   tfx::world::environment const environment{game,mission.grid_name(),setup.environment};
   tfx::world::assets assets{game};
+  tfx::world::trail_pool distant_trails;
+  distant_trails.spawn({128000000,-25600,128000000});
+  auto const alive{[](tfx::world::trail_slot){return false;}};
+  distant_trails.clean({0,0,0},alive,false);
+  require(!distant_trails.active_slots().empty(),"extended-range trail was retired by a player-distance check");
+  distant_trails.clean({0,0,0},[](tfx::world::trail_slot){return true;},false);
+  require(distant_trails.active_slots().empty(),"extended-range trail outlived its animation");
   for(auto const &size : {vec2<int>{320,200},vec2<int>{1280,800},vec2<int>{1920,1080},vec2<int>{3840,2160}}) {
     tfx::render::software_renderer renderer{tables};renderer.output.resize(size);
     renderer.clipping = tfx::render::raster_clip::viewport({0,0},{size.x-1,size.y-1});
@@ -105,7 +112,7 @@ int main(int argc, char const *const argv[]) try {
       }
       std::ranges::fill(texels,0);remap[0]=5;
       visibility.begin(size);visibility.add(occluder,view,-1,texels,&remap);
-      require(!visibility.visible(view.projection_origin,100),"source texel zero incorrectly treated as transparent before remapping");
+      require(visibility.visible(view.projection_origin,100),"distance shading made a transparent texel occlude a point");
       visibility.begin(size);visibility.add(occluder,view,0,{},nullptr);
       for(int dx : {0,1}) {
         vec2d const ray{view.projection_origin+vec2d{static_cast<double>(dx),0}};
@@ -120,14 +127,14 @@ int main(int argc, char const *const argv[]) try {
   }
   // The minimum also applies to real aircraft whose full meshes have
   // shrunk below it: LOD 0 must not make them harder to see than native dots.
-  for(auto const &name : {"efa","f_117a","f_22"}) for(double lod : {0.,.1,1.}) {
+  for(auto const &name : {"efa","f_117a","f_22","mig_21","mig_29","f_16"}) for(double lod : {0.,.1,1.}) {
     tfx::render::software_renderer renderer{tables};renderer.output.resize({3840,2160});
     renderer.clipping=tfx::render::raster_clip::pixels({0,0},{3839,2159});
     tfx::render::view_settings settings{.resolution{3840,2160},.draw_distance{0}};
     auto const view{tfx::render::scene_camera(tfx::render::inspection_camera({500000,-1000,500000},0,0),settings)};
     tfx::world::scene scene{environment,assets};scene.set_visual_lod_scale(lod);
     auto const actor{scene.create_actor(name,{500000,-1000,500000},{0,0,0},true)};
-    for(double distance : {8000.,16000.,32000.}) for(auto const &angles : {vec3<tfx::math::angle>{0,0,0},vec3<tfx::math::angle>{0,16384,0},vec3<tfx::math::angle>{0,32768,0},vec3<tfx::math::angle>{8192,8192,8192}}) {
+    for(double distance : {3000.,4000.,5000.,6000.,8000.,16000.,32000.}) for(auto const &angles : {vec3<tfx::math::angle>{0,0,0},vec3<tfx::math::angle>{0,16384,0},vec3<tfx::math::angle>{0,32768,0},vec3<tfx::math::angle>{8192,8192,8192}}) {
       scene.place_actor(actor,{500000,-1000,500000+distance},angles);
       renderer.output.pixels.fill(255);scene.draw(renderer,view,1);
       auto const count{std::ranges::count_if(renderer.output.pixels,[](auto c){return c!=255;})};

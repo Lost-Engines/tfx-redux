@@ -164,3 +164,58 @@ It cycles the MFDs in F10, exercises scene-camera pages, checks that paused imag
 and flight inputs stop changing, and switches between paused F5, F1 and F10.
 GDB observes execution without changing simulation state. Screenshots go to
 `/tmp/tfx-virtual-live` by default (`--captures` selects another directory).
+
+## Redux cockpit and distant effects (28 October 2026)
+
+Fresh installations now select Military-spec and keyboard controls in both
+ports. Saved configuration still takes precedence. Redux starts in F10;
+keyboard/joystick flight permits captured mouse head movement in the virtual
+cockpit, including while paused. An isolated Xvfb run checked F1/F2/F3/F4/F10,
+paused head movement and configuration without touching the working install.
+
+The collimated HUD uses the six inner frame vertices shared by all six retail
+cockpit/refuelling models. `virtual_cockpit_probe` verifies these against the
+actual decoded geometry. `redux_hud_probe` checks the glass aperture and optical
+boresight at 960×600 and 3840×2160, FOV 10/64/100/140/170°, left/right turns, a side-on view and a rear
+view. Ordinary flat HUD layouts and opaque-black live MFD texels still pass.
+
+Transparent texture index zero is rejected before distance remapping, including
+for point occlusion. Previously its darker rows selected fixed UI colours,
+causing pale/green areas around distant crash decals. Aircraft minimum-size
+selection now measures projected surface area: the previous bounding box missed
+thin MiG-21, MiG-29 and F-16 silhouettes that covered zero or one pixel. The
+real-model visibility probe includes these aircraft across the LOD transitions.
+
+Redux trail emission uses the actual camera instead of the DOS 4000-unit
+player radius, and the 8000-unit cleanup radius no longer deletes visible distant
+puffs. Full coordinates avoid word-wrap aliases. The 200-slot pool and authored
+animation lifetime remain bounded; original trail fixtures still pass.
+
+### Missiles around a wreck
+
+No guidance rule was changed. `check_projectiles.original` executed the original
+2.05 motion callbacks for 15,600 additional states, matching C++ state hashes
+throughout. Four air-to-air weapons were tested against a stationary point at
+three initial headings. A further AMRAAM case compared targets at ground level,
+one world unit above it, and 100 units above it. The ground-level case first
+reached y=0 at frame 160; the one-unit case circled until frame 629 before ground
+contact. The 100-unit case circled without touching y=0 and exhausted its flight
+stage at frame 761. Each frame supplied four timer ticks. These isolated motion
+runs exclude terrain geometry and proximity contacts; they do not claim to
+reproduce a particular playtest wreck.
+
+To repeat the latter cases, feed the following row to `original(data_dir,row,False)`
+from `tools/check_projectiles.py` and compare its hashes with `projectile_probe`:
+
+```python
+# target_y is 0, -256 or -25600; coordinates are Q8.
+row = [4, 2400, 4, 0, 0, 0, 0, 5000,
+       1000000, -25600, 1000000, 0, 32768, 0, 400,
+       1005000, target_y, 1005000, 0, 0]
+```
+
+The runtime separately destroys missiles at y>=0 and on terrain contacts.
+`projectile_tail_tests` now explicitly checks ground impact and retirement, as
+well as extended-distance smoke dispatch. A missile need not touch the ground
+merely because its target has crashed; the native guidance follows the target
+position until impact or flight-stage expiry.

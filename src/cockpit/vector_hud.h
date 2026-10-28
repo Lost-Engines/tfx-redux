@@ -2,6 +2,7 @@
 
 #include "cockpit/instrument_assets.h"
 #include "render/clipping.h"
+#include "render/camera.h"
 
 namespace tfx::cockpit {
 
@@ -15,11 +16,28 @@ class vector_hud {
   double scale{1};
   std::vector<uint8_t> ink;
   bool painted{false};
+  struct glass_projection {
+    render::camera view;
+    mat3d rotation;
+    std::array<vec3d,6> edges;
+  };
+  std::optional<glass_projection> glass;
+  vec3d glass_ray(vec2d const &point) const;
+  bool on_glass(vec2d const &pixel) const;
   void stroke(vec2d const &from, vec2d const &to, vec2<int> const &low, vec2<int> const &high, double width);
   void bitmap(std::span<uint8_t const> pixels, vec2<int> const &dimensions, vec2d const &origin, render::raster_clip const &clip);
 public:
   explicit vector_hud(instrument_assets const &assets) : assets{assets} {}
+  // Shared geometry of the retail cpt_*/cpt*_f HUD frames. The source HUD
+  // spans x=80..240, y=0..97; this collimator keeps it inside the glass.
+  static constexpr double glass_focal_distance{680};
+  static constexpr vec2d glass_origin{160,60};
+  static constexpr std::array<vec3d,6> glass_vertices{{
+    {-.1375,-.13,.5025},{.1375,-.13,.5025},{.15,-.12,.515},
+    {.1825,.0525,.6625},{-.1825,.0525,.6625},{-.15,-.12,.515},
+  }};
   void begin(vec2<int> const &dimensions);
+  void attach_to_glass(render::camera const &view, vec3d const &model_position, mat3d const &rotation);
   void line(vec2d const &from, vec2d const &to, vec2<int> const &low, vec2<int> const &high, uint8_t pattern = 255);
   void circle(vec2d const &centre, double radius, render::raster_clip const &clip, bool dotted = false);
   void pixel(vec2d const &point, render::raster_clip const &clip = {});

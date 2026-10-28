@@ -408,26 +408,28 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
       auto const geometry{models::interpret(*item.shape,context)};
       warnings.insert(geometry.warnings.begin(),geometry.warnings.end());
       ++parts_drawn;
-      // Keep a distant aircraft visible even when LOD 0 retains its mesh.
-      // Include thin silhouettes; stop measuring once the mesh is large enough.
+      // Measure the projected surface area, not just its bounding box: thin
+      // distant LOD meshes can span several pixels yet cover none of them.
       bool minimum_proxy{false};
       if(!native && item.minimum_size && item.shape->has_surfaces && !shadow) {
         double const minimum{render::object_point_diameter(renderer.output.size)};
-        vec2d low{1e30,1e30}, high{-1e30,-1e30};
-        models::primitive const *body{nullptr};bool small{true};
+        models::primitive const *body{nullptr};bool small{true};double area{0};
         for(auto const &primitive : geometry.primitives) {
           if(primitive.kind==models::primitive_kind::point) continue;
           if(!body) body=&primitive;
+          vec2d first{0,0}, previous{0,0};double twice_area{0};unsigned count{0};
           for(auto const &vertex : primitive.vertices) {
             auto const camera{camera_point(vertex.position,vertex.projection_scale)};
             if(camera.z<=view.near_distance*vertex.projection_scale) { small=false;break; }
             auto const screen{view.project(camera,vertex.projection_scale)};
-            low.x=std::min(low.x,screen.x);low.y=std::min(low.y,screen.y);
-            high.x=std::max(high.x,screen.x);high.y=std::max(high.y,screen.y);
-            double const width{high.x-low.x}, height{high.y-low.y};
-            if(std::max(width,height)>=2*minimum || (std::max(width,height)>=minimum && width*height>=minimum*minimum)) { small=false;break; }
+            if(!count++) first=vec2d{screen};
+            else twice_area += previous.x*screen.y-previous.y*screen.x;
+            previous=vec2d{screen};
           }
           if(!small) break;
+          if(primitive.kind==models::primitive_kind::line) area+=(previous-first).length();
+          else area+=std::abs(twice_area+previous.x*first.y-previous.y*first.x)/2;
+          if(area>=minimum*minimum) {small=false;break;}
         }
         if(body && small) {
           models::primitive dot{.kind{models::primitive_kind::point},.vertices{},.colour{body->colour},.pixel_size{1},.attachment_slot{},.point_role{models::point_role::object}};

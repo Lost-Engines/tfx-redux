@@ -90,7 +90,7 @@ bool point_visibility::visible(vec2d const &ray, double const depth) const {
       auto const uv{left_uv+(right_uv-left_uv)*((x-left)/(right-left))};
       int const u{std::clamp(static_cast<int>(uv.x),0,255)}, v{std::clamp(static_cast<int>(uv.y),0,191)};
       auto const colour{surface.texture[static_cast<size_t>(v*256+u)]};
-      if(!(surface.remap ? (*surface.remap)[colour] : colour)) continue;
+      if(!colour || !(surface.remap ? (*surface.remap)[colour] : colour)) continue;
     }
     return false;
   }

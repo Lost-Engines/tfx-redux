@@ -192,7 +192,7 @@ void runtime::advance(simulation::timer_ticks const elapsed, math::random_state 
           int32_t const distance{callbacks.player_distance(shot)};
           auto const warning{observe_player_threat(warnings,distance,shot.target.actor && shot.target.actor->pool == actor_pool::player,context.player_ejected,random)};
           if(warning && callbacks.warning) callbacks.warning(*warning);
-          if(callbacks.trail && has_smoke_trail(shot.state.motion,distance)) callbacks.trail(shot);
+          if(callbacks.trail && has_smoke_trail(shot.state.motion,callbacks.camera_controls_trails ? 0 : distance)) callbacks.trail(shot);
         }
         if(tfx_effects && shot.state.position.y >= 0) {
           if(callbacks.ground_impact) callbacks.ground_impact(shot,ground_appearance);

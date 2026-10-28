@@ -14,7 +14,7 @@ int main() try {
   auto const check{[](bool const value) { if(!value) throw std::runtime_error{"preference file integration mismatch"}; }};
   auto const fresh{tfx::configuration::load(path)};
   check(fresh.control == tfx::flight::control_source::keyboard && fresh.preferred_control == fresh.control);
-  check(fresh.model == tfx::simulation::flight_model::simple);
+  check(fresh.model == tfx::simulation::flight_model::military_spec);
   tfx::configuration::settings state;
   state.detail = 1;
   state.joystick_scale = 513.5f;

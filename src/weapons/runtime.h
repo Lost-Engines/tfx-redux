@@ -61,6 +61,8 @@ struct runtime_callbacks {
   std::function<void(active_projectile const&)> trail{};
   std::function<void(active_projectile const&,int16_t&)> ground_impact{};
   std::function<void(active_projectile&,uint16_t)> contacts{};
+  // Redux lets the rendering camera select trails beyond the DOS player radius.
+  bool camera_controls_trails{false};
 };
 
 class runtime {
