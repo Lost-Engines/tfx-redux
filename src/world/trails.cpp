@@ -65,10 +65,11 @@ void trail_pool::retire_oldest() {
   first = (first + 1) % trail_capacity;
   --count;
 }
-void trail_pool::clean(vec3<int32_t> const &reference, std::function_ref<bool(trail_slot)> destroyed) {
+void trail_pool::clean(vec3<int32_t> const &reference, std::function_ref<bool(trail_slot)> destroyed, bool const limit_distance) {
   vec3<int16_t> const origin{reference};
   while(count) {
     if(!destroyed(first)) {
+      if(!limit_distance) break;
       auto const &p{records[first].position_q8};
       vec3<int16_t> const point{
         math::signed_word(static_cast<uint16_t>(p.x >> actors::position_fraction_bits)),

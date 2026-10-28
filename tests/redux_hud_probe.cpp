@@ -3,6 +3,7 @@
 #include "cockpit/vector_hud.h"
 #include "cockpit/weapon_display.h"
 #include "render/view_settings.h"
+#include "cockpit/mouse_orbit.h"
 
 void require(bool ok,char const *message){if(!ok)throw std::runtime_error{message};}
 int main(int argc,char const *const argv[]) try {
@@ -51,6 +52,45 @@ int main(int argc,char const *const argv[]) try {
       }
     }
     std::cout<<size.x<<'x'<<size.y<<" vector HUD layouts: "<<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()/3<<" ms each (includes optional captures)\n";
+  }
+  // The optical boresight must follow the aircraft, stay on the real glass,
+  // and disappear when the glass is behind the head camera.
+  for(auto const &size : {vec2<int>{960,600},vec2<int>{3840,2160}}) for(double fov:{10.,64.,100.,140.,170.}) {
+    for(double yaw:{-.4,0.,.4,1.5707963267948966,3.141592653589793}) {
+      auto view{tfx::render::scene_camera(tfx::render::inspection_camera({0,0,-.25},yaw,0),{.resolution{vec2<int>{size}},.field_of_view{fov}})};
+      tfx::render::framebuffer frame;frame.resize(size);
+      hud.begin(size);hud.attach_to_glass(view,{0,0,0},tfx::math::rotation({0,0,0}));
+      hud.line({80,60},{240,60},{0,0},{319,199});
+      hud.line({160,0},{160,97},{0,0},{319,199});
+      hud.compose(frame,{});
+      size_t visible{0};
+      for(int y=0;y<size.y;++y) for(int x=0;x<size.x;++x) {
+        if(frame.hud_coverage.empty() || !frame.hud_coverage[static_cast<size_t>(y*size.x+x)]) continue;
+        ++visible;
+        vec3d const ray{(x+.5-view.projection_origin.x)/view.focal_distance,(y+.5-view.projection_origin.y)/view.focal_distance,1};
+        auto const &glass{tfx::cockpit::vector_hud::glass_vertices};
+        vec3d centre{0,0,0};for(auto const &v:glass) centre+=view.transform(v);
+        for(size_t i=0;i<glass.size();++i) {
+          auto normal{view.transform(glass[i]).cross(view.transform(glass[(i+1)%glass.size()]))};
+          if(normal.dot(centre)<0) normal=-normal;
+          require(normal.dot(ray)>=-1e-10,"HUD escaped cockpit glass");
+        }
+      }
+      if(yaw>3) require(!visible,"HUD appeared behind pilot");
+      else {
+        auto const world_direction{vec3d{.5/tfx::cockpit::vector_hud::glass_focal_distance,.5/tfx::cockpit::vector_hud::glass_focal_distance,1}};
+        vec3d const camera_direction{world_direction.dot(view.right),world_direction.dot(view.down),world_direction.dot(view.forward)};
+        auto const p{view.project(camera_direction)};
+        if(camera_direction.z<=0 || p.x<2 || p.y<2 || p.x>=size.x-2 || p.y>=size.y-2) continue;
+        require(visible>0,"head turn or FOV removed visible HUD");
+        bool hit{false};
+        for(int dy=-2;dy<=2;++dy) for(int dx=-2;dx<=2;++dx) {
+          int x=static_cast<int>(p.x)+dx,y=static_cast<int>(p.y)+dy;
+          if(x>=0 && y>=0 && x<size.x && y<size.y && frame.hud_coverage[static_cast<size_t>(y*size.x+x)]) hit=true;
+        }
+        require(hit,"optical boresight no longer points along the aircraft");
+      }
+    }
   }
   std::cout<<"Vector HUD: subpixel strokes, AA, additive colour, union joins, cockpit occlusion and all weapon layouts passed\n";
 } catch(std::exception const &e){std::cerr<<e.what()<<'\n';return 1;}

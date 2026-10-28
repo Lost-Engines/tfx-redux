@@ -41,7 +41,7 @@ void apply(settings &state, std::string_view key, std::string_view value);
 // Complete file-reader semantics, including fallback and the coupled SB mode.
 settings parse(std::string_view text);
 // Load saved DOS choices unchanged. A missing file starts the port with
-// Simple/keyboard; empty or oversized files retain the native parser fallback.
+// Military-spec/keyboard; empty or oversized files retain the native parser fallback.
 // Hardware calibration stays external.
 settings load(std::filesystem::path const &directory);
 

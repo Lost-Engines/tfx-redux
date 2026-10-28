@@ -45,7 +45,7 @@ public:
   void reset();
   trail_slot spawn(vec3<int32_t> const &position_q8);
   void retire_oldest();
-  void clean(vec3<int32_t> const &reference, std::function_ref<bool(trail_slot)> destroyed);
+  void clean(vec3<int32_t> const &reference, std::function_ref<bool(trail_slot)> destroyed, bool limit_distance = true);
   trail_record const &record(trail_slot slot) const;
   auto active_slots() const {
     return std::views::iota(0u,count) | std::views::transform([this](unsigned int const index) { return (first + index) % trail_capacity; });

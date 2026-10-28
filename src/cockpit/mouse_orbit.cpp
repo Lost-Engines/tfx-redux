@@ -69,4 +69,31 @@ render::camera mouse_orbit::apply(render::camera view, view_camera_context const
   return view;
 }
 
+bool mouse_look::supports(view_mode mode) {
+  switch(mode) {
+  case view_mode::virtual_cockpit: case view_mode::look_left: case view_mode::look_right:
+  case view_mode::look_far_left: case view_mode::look_far_right: case view_mode::rear:
+  case view_mode::centre_head: case view_mode::target_tracking:
+    return true;
+  default: return false;
+  }
+}
+void mouse_look::reset() { heading=pitch=0; }
+void mouse_look::move(vec2d const &delta) {
+  heading=std::remainder(heading+delta.x*.004,2*std::numbers::pi);
+  pitch=std::clamp(pitch+delta.y*.004,-std::numbers::pi*.47,std::numbers::pi*.47);
+}
+render::camera mouse_look::apply(render::camera view) const {
+  if(heading==0 && pitch==0) return view;
+  auto const normalise{[](vec3d const &v) { return v/v.length(); }};
+  auto const forward{normalise(view.forward)}, right{normalise(view.right-forward*view.right.dot(forward))};
+  auto const down{forward.cross(right)};
+  auto const yaw_right{right*std::cos(heading)-forward*std::sin(heading)};
+  auto const yaw_forward{right*std::sin(heading)+forward*std::cos(heading)};
+  view.right=vec3d{yaw_right};
+  view.forward=yaw_forward*std::cos(pitch)+down*std::sin(pitch);
+  view.down=down*std::cos(pitch)-yaw_forward*std::sin(pitch);
+  return view;
+}
+
 } // namespace tfx::cockpit

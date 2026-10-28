@@ -52,6 +52,28 @@ int main() try {
   projectiles.advance(1,random,false);
   projectiles.finish_frame();
   require(projectiles.projectiles().empty(),"the final spent record must leave an empty pool");
+  definitions[1].stages={{100,flight_stage::coasting}};
+  definitions[1].player_proximity=true;definitions[1].range=10000;
+  unsigned emissions{0}, impacts{0};
+  for(bool camera_trails:{false,true}) {
+    runtime airborne{definitions,{
+      .motion_inputs{[](active_projectile const&,uint16_t) { return motion_context{}; }},
+      .player_distance{[](active_projectile const&) { return 12000; }},
+      .trail{[&](active_projectile const&) { ++emissions; }},
+      .camera_controls_trails{camera_trails},
+    }};
+    airborne.launch({.weapon{1},.position{0,-25600,0},.angles{0,0,0},.speed{400},.owner{},.target{}});
+    airborne.advance(1,random,true);
+    require(emissions==(camera_trails ? 1u : 0u),"camera trail policy retained the DOS distance cutoff");
+  }
+  runtime grounded{definitions,{
+    .motion_inputs{[](active_projectile const&,uint16_t) { return motion_context{}; }},
+    .ground_impact{[&](active_projectile const&,int16_t&) { ++impacts; }},
+  }};
+  auto const ground_shot{grounded.launch({.weapon{1},.position{0,0,0},.angles{0,0,0},.speed{400},.owner{},.target{.position{100,0,100}}})};
+  grounded.advance(1,random,true);
+  require(impacts==1 && grounded.projectiles().at(ground_shot)->spent,"ground contact did not destroy missile");
+  grounded.finish_frame();require(grounded.projectiles().empty(),"ground impact left a circling missile alive");
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {
   std::cerr << "ERROR: " << error.what() << '\n';

@@ -78,6 +78,20 @@ int main() {
   context.missile->position_q8 += vec3<int32_t>{25600,0,-51200};
   auto translated{original};translated.position += vec3d{100,0,-200};
   close(orbit.apply(translated,context,missile).position,active.position+vec3d{100,0,-200},"orbit stopped following its subject");
+  for(auto mode : {view_mode::virtual_cockpit,view_mode::look_left,view_mode::look_right,
+                    view_mode::look_far_left,view_mode::look_far_right,view_mode::rear}) {
+    require(mouse_look::supports(mode),"virtual view lost mouse look");
+    mouse_look look;
+    auto eye{tfx::render::inspection_camera({4,-10,7},.8,-.3)};
+    close(look.apply(eye).forward,eye.forward,"idle head look changed view");
+    look.move({50,30});auto moved{look.apply(eye)};
+    close(moved.position,eye.position,"head look moved pilot's eye");
+    require(moved.forward.dot(eye.right)>0 && moved.forward.dot(eye.down)>0,"head look reversed mouse axes");
+    close(moved.forward.cross(moved.right),moved.down,"head look lost orthogonality");
+    look.move({-50,-30});close(look.apply(eye).forward,eye.forward,"reverse head look did not restore view");
+    look.move({100,100});look.reset();close(look.apply(eye).forward,eye.forward,"head look did not recenter");
+  }
+  require(!mouse_look::supports(view_mode::cockpit) && !mouse_look::supports(view_mode::designator),"head look entered another control mode");
   mouse_orbit whole, fractional;
   whole.select(view_mode::chase);fractional.select(view_mode::chase);
   whole.scroll(1);

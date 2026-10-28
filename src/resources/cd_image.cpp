@@ -233,7 +233,7 @@ void install_reference_cd(std::filesystem::path const &cue, std::filesystem::pat
     std::filesystem::create_directories(destination / "TUNES");write(name,bytes);
   }
   if(!std::filesystem::exists(destination / "TFX.CFG")) {
-    std::string_view constexpr defaults{"SOUNDFX=1\r\nMUSIC=1\r\nLANG=1\r\nCONTROL=0\r\nMODEL=1\r\nDETAIL=2\r\n"};
+    std::string_view constexpr defaults{"SOUNDFX=1\r\nMUSIC=1\r\nLANG=1\r\nCONTROL=0\r\nMODEL=3\r\nDETAIL=2\r\n"};
     write("TFX.CFG",{reinterpret_cast<uint8_t const*>(defaults.data()),defaults.size()});
   }
   write("DID.DAT",archive_bytes); // Publish the archive only after its dependencies.

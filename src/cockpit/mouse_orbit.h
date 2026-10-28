@@ -19,4 +19,14 @@ public:
                        missile_camera_pose const &last_missile) const;
 };
 
+// Head rotation leaves the pilot's eye in place. It never modifies flight input.
+class mouse_look {
+  double heading{0}, pitch{0};
+public:
+  static bool supports(view_mode mode);
+  void reset();
+  void move(vec2d const &delta);
+  render::camera apply(render::camera view) const;
+};
+
 } // namespace tfx::cockpit
