@@ -12,6 +12,9 @@ int main() try {
     ~cleanup() { std::error_code error;std::filesystem::remove_all(directory,error); }
   } const cleanup{path};
   auto const check{[](bool const value) { if(!value) throw std::runtime_error{"preference file integration mismatch"}; }};
+  auto const fresh{tfx::configuration::load(path)};
+  check(fresh.control == tfx::flight::control_source::keyboard && fresh.preferred_control == fresh.control);
+  check(fresh.model == tfx::simulation::flight_model::simple);
   tfx::configuration::settings state;
   state.detail = 1;
   state.joystick_scale = 513.5f;
@@ -19,6 +22,8 @@ int main() try {
   state.effects.wind = 1;
   check(!tfx::configuration::save_preferences(path,state));
   auto const config{path / "tfx.cfg"};
+  { std::ofstream output{config,std::ios::binary};output << "CONTROL=0\r\n"; }
+  check(tfx::configuration::load(path).model == tfx::simulation::flight_model::arcade);
   std::string const original{"CONTROL=2\r\nMODEL=3\r\nBLASTER=A220 I7 D1 T6\r\nEXTRA=keep this\r\nDETAIL=2\r\nJOYSCALE=512\r\nHUDCOL=120\r\nREALISM=2,1,1,1,0,1,0\r\n"};
   { std::ofstream output{config,std::ios::binary};output << original; }
   check(tfx::configuration::save_preferences(path,state));

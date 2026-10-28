@@ -4,6 +4,8 @@ An enhanced native C++26 version of Digital Image Design’s **TFX: Tactical Fig
 
 The supplied fetch script downloads the reference game CD and audio firmware. You can also use your own TFX 2.05 installation. Research exports are neither required nor bundled.
 
+New installations start with **Simple flight and keyboard steering**, matching TFX C++. Existing `TFX.CFG` choices are preserved. In the backtick menu, choose a non-Arcade flight model to enable Keyboard or Joystick; Arcade only supports mouse steering. See [controls](docs/controls.md).
+
 ## Getting started
 
 ```sh
@@ -79,6 +81,7 @@ The following departures from the original are intentional:
 - In the Z laser-designator view, moving the mouse aims the camera and the wheel zooms, including while paused. A locked target continues tracking until X releases it. Mouse input cannot steer or throttle the aircraft in this view; joystick flight controls remain available. Entering or leaving the view clears retained mouse steering.
 - Escape opens the flight menu; ejection has a separate confirmation or a two-press Ctrl+Escape shortcut. Focus loss releases controls without pausing flight or playback.
 - Mouse steering in Military-spec and Realistic stays within the intended stick range, including at low frame rates. Large mouse movements no longer produce excessive pitch or roll commands.
+- Looking left and right inside the virtual cockpit keeps its interior surfaces visible, including below the instrument panel. Face visibility is evaluated before projection so surfaces crossing behind the camera do not disappear at wide fields of view.
 - Looking steeply down no longer paints a blue circular patch beneath the camera. The software horizon uses faster span drawing while retaining its palette bands.
 - In-flight screenshots capture the full render resolution and declare square pixels in their ILBM metadata. Images with the optical HUD use true colour to preserve its blending.
 - Pixel clipping includes the complete render target; MFD target reticles stay within their display. Rendering also avoids unnecessary polygon allocation and clipping work without changing the palette or drawing style.
