@@ -2112,6 +2112,10 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         .blackout_level{g_effects.blackout_level},
         .redout_level{g_effects.redout_level},
       })};
+      // Native 0x73a0c sends G-strain breathing through urgent sample A4DFC.
+      // The sample scheduler retains its authored cooldown; paused repainting
+      // must not start or restart a breath.
+      if(!paused && lighting.sound && sound) sound->sample(audio::sample_priority::urgent,*lighting.sound);
       if(lighting.changed) palette_selection.invalidate_normal();
       if(auto const upload{palette_selection.advance({
         .view{views.value().current},

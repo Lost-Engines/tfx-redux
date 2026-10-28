@@ -6210,3 +6210,19 @@ remain explicit boundaries. Development and strict ASan/UBSan results agree.
 The [verification matrix](verification.md) consolidates the current claims,
 reproduction commands and intentional omissions without retaining the old
 chronological backlog as current work.
+
+### Connect G-strain breathing to flight audio
+
+The live palette painter already implemented the original blackout/redout
+colour changes and returned the native breathing request, but flight discarded
+that request. Both ports now submit it through urgent sample playback, matching
+`0x73a0c` → `0xa4dfc`. Sample IDs 65–67 (`breath1q`–`breath3q`) retain their
+authored cooldowns and the existing scheduler's priority/preemption rules.
+Paused redraws do not submit new requests. The original blackout selector's
+second threshold still reads the redout word; no threshold or palette changes
+were made. G effects remain a separate saved realism setting.
+
+The native G-controller and palette comparisons pass unchanged. The private
+window/audio regression supplies G-load only at the controller input and
+checks its real visual and audio consumers, including recovery and paused
+view changes. See [verification](verification.md#g-effects-and-breathing).

@@ -98,6 +98,8 @@ To replay a saved flight directly:
 
 Omit `--skip-intro` to include the original WNN prelude. [Recording details](docs/recording.md) describe both file formats.
 
+G effects have their own setting in the in-flight **Realism** menu. Choose **Reduced** or **Realistic** for blackout, redout and strained breathing during hard manoeuvres. Existing saved settings are retained, including **None**. Breathing uses sound effects, independently of music.
+
 ## Sound
 
 Sampled Sound Blaster and Gravis effects and speech, FM music, Roland LAPC-I and Sound Canvas emulation are connected. The saved `SOUNDFX=4` setting selects Gravis; `SOUNDFX=2` with `MUSIC=2` selects the original LAPC-I synthesised flight effects. `--music=soundblaster-fm` selects synthesised FM music explicitly; `--music=none` disables music. Roland modes find matching ROMs automatically beside the game files or in the default installation directory. Details are in [controls and configuration](docs/controls.md).
