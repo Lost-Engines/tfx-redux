@@ -63,10 +63,13 @@ By default, 3D rendering uses the **window’s actual pixel dimensions**, includ
 - `--draw-distance CELLS` controls the terrain radius; `0` or `infinite` removes the far plane and includes the whole finite map. The original radius is 8 cells. Whole-map rendering can be expensive in the software renderer.
 - `--lod-scale FACTOR` controls visual detail cutoffs. The default, `0.1`, postpones detail reductions to ten times their original distance. `0` keeps the most detailed models and disables drawing-distance tests in scenery scripts; `1` restores the original thresholds. Missile smoke retains its authored distance-dependent particle sizes at every setting. Gameplay and collision ranges are unaffected.
 
-These display settings are command-line options for now.
+Open **Escape/backtick → Graphics** during flight to change render resolution, window scale, FOV, draw distance and LOD scale. Click a value to type it, or use the arrows for adjustments and common sizes. `AUTO` renders at the window’s actual pixel size; `INFINITE` (or `0`) selects the whole map. **Apply** saves the choices and returns to flight immediately, keeping the game paused if it was already paused. **Cancel** discards the edits; **Defaults**, then **Apply**, restores the graphics defaults.
+
+Graphics choices are saved separately in `REDUX.CFG` beside the selected installation’s `TFX.CFG`. They carry over to later missions and launches. Command-line graphics options override the corresponding saved choices at startup. Removing or renaming `REDUX.CFG` also resets graphics defaults. Changing render resolution leaves the window size alone; changing **Window scale** resizes it (`FIT` fits the desktop).
 
 The following departures from the original are intentional:
 
+- A Graphics page in the flight menu changes resolution, FOV, draw distance and LOD during play and saves Redux-specific preferences.
 - New configurations enable realistic G effects and wind. Existing saved realism choices are retained; both settings remain adjustable in the Realism menu. Wind stays enabled across mission starts and rearming when selected, rather than being silently switched off by the original startup routine.
 - World rendering uses a wider coordinate range, an unrestricted visible-model queue and resolution-independent clipping and projection. Terrain, buildings, aircraft and effects can remain visible beyond the original limits. The original palette colours, quantised lighting and authored model drawing order remain in use; exact DOS pixel matching is no longer the rendering target.
 - Distance shading extends across the selected draw distance (the map diagonal for whole-map views), retaining the original palette lookup rather than introducing blended colours. Sky and ground bands are projected for the actual view instead of relying on the original narrow-view shortcuts.

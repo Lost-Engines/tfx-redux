@@ -135,6 +135,36 @@ vec2<int> const &window::resolution() const {
   }
   return render_size;
 }
+void window::configure(vec2<int> const &size, bool const automatic, std::optional<unsigned int> const scale) {
+  render::framebuffer::pixel_count(size);
+  if(scale && *scale>16) throw std::invalid_argument{"window scale must be 0..16"};
+  render_size=vec2<int>{size};follow_window=automatic;
+  if(!scale) return;
+  if(*scale) {
+    glfwRestoreWindow(handle.get());
+    auto const base{automatic ? vec2<int>{render::screen_width,render::screen_height} : vec2<int>{size}};
+    glfwSetWindowSize(handle.get(),base.x*static_cast<int>(*scale),base.y*static_cast<int>(*scale));
+  } else if(glfwGetPlatform()==GLFW_PLATFORM_WAYLAND) {
+    // The compositor chooses the work area and monitor; Wayland does not
+    // expose window positions. Automatic rendering follows its size event.
+    glfwMaximizeWindow(handle.get());
+  } else {
+    glfwRestoreWindow(handle.get());
+    int x{0},y{0},width{0},height{0};glfwGetWindowPos(handle.get(),&x,&y);glfwGetWindowSize(handle.get(),&width,&height);
+    auto *monitor{glfwGetPrimaryMonitor()};int count{0};auto **monitors{glfwGetMonitors(&count)};
+    for(int i=0;i<count;++i) {
+      int mx{0},my{0},mw{0},mh{0};glfwGetMonitorWorkarea(monitors[i],&mx,&my,&mw,&mh);
+      if(x+width/2>=mx && x+width/2<mx+mw && y+height/2>=my && y+height/2<my+mh) {monitor=monitors[i];break;}
+    }
+    if(!monitor) return;
+    int left{0},top{0},right{0},bottom{0};glfwGetMonitorWorkarea(monitor,&x,&y,&width,&height);
+    glfwGetWindowFrameSize(handle.get(),&left,&top,&right,&bottom);
+    width=std::max(1,width-left-right);height=std::max(1,height-top-bottom);
+    auto const fitted{automatic ? display_area{{0,0},{width,height}} : viewport(width,height,size)};
+    glfwSetWindowSize(handle.get(),fitted.size.x,fitted.size.y);
+    glfwSetWindowPos(handle.get(),x+left+fitted.position.x,y+top+fitted.position.y);
+  }
+}
 void window::present(std::span<render::rgba_pixel const> const pixels, vec2<int> const &size) {
   if(pixels.size() != static_cast<size_t>(size.x) * static_cast<size_t>(size.y)) throw std::invalid_argument{"display pixels do not match their resolution"};
   glBindTexture(GL_TEXTURE_2D,texture);

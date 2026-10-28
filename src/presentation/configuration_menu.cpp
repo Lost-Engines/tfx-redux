@@ -48,8 +48,8 @@ configuration_menu_assets::configuration_menu_assets(std::span<uint8_t const> co
   unavailable_on = string(0x2654);
 }
 
-configuration_menu::configuration_menu(configuration::settings &preferences, configuration_menu_assets const &assets, widget_font const &font, std::string &recording_name, configuration_audio *const audio) :
-  preferences{preferences}, assets{assets}, font{font}, video_name{recording_name}, audio{audio} {
+configuration_menu::configuration_menu(configuration::settings &preferences, configuration_menu_assets const &assets, widget_font const &font, std::string &recording_name, configuration_audio *const audio, bool const graphics_enabled) :
+  preferences{preferences}, assets{assets}, font{font}, video_name{recording_name}, audio{audio}, graphics_enabled{graphics_enabled} {
   rebuild();
 }
 configuration_page configuration_menu::page() const { return current; }
@@ -132,6 +132,7 @@ void configuration_menu::rebuild() {
   add(assets.quit,5,17,configuration_item::quit);
   add(assets.resume,13,17,configuration_item::resume);
   add(current == configuration_page::main ? assets.realism_title : assets.main_title,23,17,configuration_item::change_page);
+  if(graphics_enabled) add("GRAPHICS",29,0,configuration_item::graphics);
 }
 configuration_action configuration_menu::select(unsigned int const index) {
   if(index >= buttons.size()) return configuration_action::none;
@@ -174,6 +175,7 @@ configuration_action configuration_menu::select(unsigned int const index) {
     case configuration_item::confirm_quit: return configuration_action::quit;
     case configuration_item::enrol: return configuration_action::enrol;
     case configuration_item::resume: return configuration_action::resume;
+    case configuration_item::graphics: return configuration_action::graphics;
     case configuration_item::eject: current = configuration_page::confirm_eject;break;
     case configuration_item::cancel_eject: current = configuration_page::main;break;
     case configuration_item::confirm_eject: return configuration_action::eject;

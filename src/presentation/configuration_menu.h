@@ -26,8 +26,8 @@ struct configuration_audio {
   bool music_enabled{false};
 };
 enum class configuration_page { main, realism, confirm_quit, confirm_eject };
-enum class configuration_action { none, resume, quit, enrol, eject };
-enum class configuration_item { source, sensitivity, detail, model, sound, music, recovery, g_force, precipitation, crashing, gear_damage, wind, temperature, recording, quit, resume, change_page, cancel_quit, confirm_quit, enrol, eject, cancel_eject, confirm_eject };
+enum class configuration_action { none, resume, quit, enrol, eject, graphics };
+enum class configuration_item { source, sensitivity, detail, model, sound, music, recovery, g_force, precipitation, crashing, gear_damage, wind, temperature, recording, quit, resume, change_page, cancel_quit, confirm_quit, enrol, eject, cancel_eject, confirm_eject, graphics };
 struct configuration_button {
   dialogue_widget drawing;
   configuration_item item;
@@ -45,11 +45,12 @@ private:
   std::string &video_name;
   bool editing_video_name{false};
   configuration_audio *audio;
+  bool graphics_enabled;
   dialogue_form form;
   void rebuild();
 
 public:
-  configuration_menu(configuration::settings &preferences, configuration_menu_assets const &assets, widget_font const &font, std::string &recording_name, configuration_audio *audio = nullptr);
+  configuration_menu(configuration::settings &preferences, configuration_menu_assets const &assets, widget_font const &font, std::string &recording_name, configuration_audio *audio = nullptr, bool graphics_enabled = false);
   configuration_page page() const;
   void request_quit();
   std::span<configuration_button const> widgets() const;

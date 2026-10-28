@@ -14,10 +14,12 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 #include "audio/runtime.h"
 #include "audio/sc55_synth.h"
 #include "platform/audio_output.h"
 #include "platform/flight.h"
+#include "configuration/graphics.h"
 #include "platform/recording.h"
 #include "platform/presentations.h"
 #include "resources/installation.h"
@@ -47,8 +49,10 @@ auto main(int const argc, char const *const argv[])->int try {
   qsound_mode selected_qsound{qsound_mode::automatic};
   tfx::audio::sound_canvas_model canvas_model{tfx::audio::sound_canvas_model::scc1a};
   std::string mission_name{"miss501"}, override_environment, override_grid;
-  tfx::render::view_settings video;
-  unsigned int scale{0}, scene_radius{6}, frame_limit{0}, flight_steps{0}, flight_frames{0};
+  tfx::configuration::graphics_settings graphics;
+  auto &video{graphics.video};auto &scale{graphics.window_scale};
+  std::vector<std::pair<tfx::configuration::graphics_field,std::string>> graphics_overrides;
+  unsigned int scene_radius{6}, frame_limit{0}, flight_steps{0}, flight_frames{0};
   tfx::simulation::flight_model model{tfx::simulation::flight_model::arcade};
   bool inspect{false}, direct_mission{false}, skip_intro{false}, model_selected{false}, language_selected{false};
   bool career_rules{false};
@@ -82,11 +86,13 @@ auto main(int const argc, char const *const argv[])->int try {
                    "  --cd-audio-dir DIR    Play numbered local FLAC, Ogg, MP3 or WAV CD tracks\n"
                    "  --qsound MODE         auto, on or off; reconstructed Sound Blaster spatial effects (default: auto)\n"
                    "  --rom-dir DIRECTORY   Override automatic audio-firmware lookup\n"
-                   "  --resolution WxH      Fixed render size (default: actual window pixels)\n"
+                   "  --resolution WxH      Fixed render size, or auto for actual window pixels\n"
                    "  --fov DEGREES         Horizontal field of view, 10..170 (original/default: 64.01)\n"
                    "  --draw-distance N     Terrain radius in cells (default: 16; original: 8); 0/infinite draws the whole map\n"
                    "  --lod-scale N         Visual LOD distance multiplier; default 0.1; 0 disables mesh cutoffs, 1 is original\n"
                    "  --scale N             Initial window scale (320x200 or --resolution); 0 fits desktop\n"
+                   "\nGraphics: Escape/backtick > Graphics; saved in REDUX.CFG beside the game data.\n"
+                   "Command-line graphics options override saved choices at startup.\n"
                    "\nGame files: current directory, then " << tfx::resources::default_game_directory().string() << "\n"
                    "ROMs: selected game directory, then the same default asset directory.\n"
                    "\nFlight: hold left/right mouse or =/- for thrust.\n"
@@ -179,31 +185,13 @@ auto main(int const argc, char const *const argv[])->int try {
       else if(selected == "military-spec") model = tfx::simulation::flight_model::military_spec;
       else if(selected == "realistic") model = tfx::simulation::flight_model::realistic;
       else throw std::runtime_error{"flight model must be arcade, simple, military-spec or realistic"};
-    } else if(key == "--resolution") {
-      auto const text{value()};auto const separator{text.find_first_of("xX")};
-      if(separator == text.npos) throw std::invalid_argument{"resolution must be WIDTHxHEIGHT"};
-      auto const width{number(text.substr(0,separator))}, height{number(text.substr(separator + 1))};
-      if(width > 16384 || height > 16384) throw std::invalid_argument{"resolution dimensions must be at most 16384"};
-      video.resolution = {static_cast<int>(width),static_cast<int>(height)};
-      video.automatic_resolution = false;
-      tfx::render::framebuffer checked;checked.resize(video.resolution);
-    } else if(key == "--fov" || key == "--lod-scale") {
-      auto const text{value()};double parsed{0};
-      auto const [end,error]{std::from_chars(text.data(),text.data() + text.size(),parsed)};
-      if(error != std::errc{} || end != text.data() + text.size() || !std::isfinite(parsed)) throw std::invalid_argument{"expected a finite number for " + std::string{key}};
-      if(key == "--fov") {
-        if(parsed < 10 || parsed > 170) throw std::invalid_argument{"FOV must be between 10 and 170 degrees"};
-        video.field_of_view = parsed;
-      } else {
-        if(parsed < 0 || parsed > 100) throw std::invalid_argument{"LOD scale must be between 0 and 100"};
-        video.lod_scale = parsed;
-      }
-    } else if(key == "--draw-distance") {
-      auto const text{value()};video.draw_distance = text == "infinite" ? 0 : number(text);
-      if(video.draw_distance > 10000) throw std::invalid_argument{"draw distance must be 0..10000 cells, or infinite"};
-    } else if(key == "--scale") {
-      scale = number(value());
-      if(scale > 16) throw std::runtime_error{"window scale must be between 0 (automatic) and 16"};
+    } else if(key == "--resolution" || key == "--scale" || key == "--fov" || key == "--draw-distance" || key == "--lod-scale") {
+      using tfx::configuration::graphics_field;
+      auto const field{key=="--resolution" ? graphics_field::resolution : key=="--scale" ? graphics_field::window_scale
+        : key=="--fov" ? graphics_field::field_of_view : key=="--draw-distance" ? graphics_field::draw_distance : graphics_field::lod_scale};
+      auto const text{value()};
+      tfx::configuration::set_graphics_value(graphics,field,text);
+      graphics_overrides.emplace_back(field,text);
     }
 #ifndef NDEBUG
     else if(key == "--career-rules") career_rules = true;
@@ -237,6 +225,12 @@ auto main(int const argc, char const *const argv[])->int try {
   if(cd_cue && cd_audio_directory) throw std::runtime_error{"choose either --cd-cue or --cd-audio-dir"};
   if(career_rules && !direct_mission) throw std::runtime_error{"--career-rules requires --mission"};
   auto const archive_path{tfx::resources::select_game_archive(data_directory,cd_cue)};
+  try { graphics=tfx::configuration::load_graphics(archive_path.parent_path()); }
+  catch(std::exception const &error) {
+    std::cerr << "Graphics preferences unavailable: " << error.what() << "; using defaults.\n";
+    graphics={};
+  }
+  for(auto const &[field,value] : graphics_overrides) tfx::configuration::set_graphics_value(graphics,field,value);
   auto preferences{tfx::configuration::load(archive_path.parent_path())};
   if(model_selected) preferences.model = model;
   if(music_override) preferences.music = *music_override;
@@ -385,6 +379,7 @@ auto main(int const argc, char const *const argv[])->int try {
     .sound{sound.get()},
     .inspect{inspect},
     .video{video},
+    .graphics{&graphics},
   };
   if(replay) {
     tfx::world::mission const selected{game,mission_name};

@@ -34,6 +34,8 @@ public:
   bool focused() const;
   vec2<int> const &resolution() const;
   bool poll();
+  // Change render sizing in place; only an explicit scale request resizes the window.
+  void configure(vec2<int> const &resolution, bool automatic, std::optional<unsigned int> scale = {});
   vec2d take_scroll();
   std::optional<vec2d> cursor_coordinates() const;
   std::optional<vec2<int16_t>> cursor_position() const;

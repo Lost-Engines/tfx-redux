@@ -140,7 +140,7 @@ public:
 
 flight_result fly_mission(resources::archive const &game, resources::executable_tables const &tables,
   flight_options const &options, missions::variables &campaign, window *const shared_window) {
-  auto video{options.video};
+  auto video{options.graphics ? options.graphics->video : options.video};
   if(shared_window && video.automatic_resolution) video.resolution = vec2<int>{shared_window->resolution()};
   auto &preferences{options.preferences};
   auto *const sound{options.sound};
@@ -159,8 +159,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto const &override_grid{options.grid};
   auto const &override_cell{options.cell};
   auto const &screenshot{options.screenshot};
-  unsigned int const scene_radius{options.inspect && options.scene_radius != 6 ? options.scene_radius : video.draw_distance};
-  auto const scale{options.scale}, frame_limit{options.frame_limit}, flight_steps{options.flight_steps}, flight_frames{options.flight_frames};
+  unsigned int scene_radius{options.inspect && options.scene_radius != 6 ? options.scene_radius : video.draw_distance};
+  auto const scale{options.graphics ? options.graphics->window_scale : options.scale}, frame_limit{options.frame_limit}, flight_steps{options.flight_steps}, flight_frames{options.flight_frames};
   bool inspect{options.inspect};
   tfx::world::mission const selected{game,mission_name};
   auto const mission_setup{tfx::missions::initialise(selected.script,options.mission_state)};
@@ -2568,11 +2568,18 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         reset_weapon_targets();
         // Native 0x85d1d still performs D/Shift+D after the arming call.
         finish_information_key(information_shift);
-      } else action = configure_flight(window,tables,preferences,options.recording_name,options.data_directory,renderer.output,*frame_colours,sound,quit_prompt);
+      } else action = configure_flight(window,tables,preferences,options.recording_name,options.data_directory,renderer.output,*frame_colours,sound,quit_prompt,options.graphics);
       if(action == tfx::presentation::configuration_action::enrol) return flight_result::enrol;
       if(action == tfx::presentation::configuration_action::quit) break;
       if(action == tfx::presentation::configuration_action::eject) { handle_ejection(true);paused = false; }
       if(!map_prompt && !rearm_prompt) {
+        if(options.graphics) {
+          video=options.graphics->video;
+          if(video.automatic_resolution) video.resolution=vec2<int>{window.resolution()};
+          scene_radius=video.draw_distance;
+          if(world_renderer.output.size!=video.resolution) world_renderer.output.resize(video.resolution);
+          if(display_frame.size!=video.resolution) display_frame.resize(video.resolution);
+        }
         simple_mode = preferences.model == tfx::simulation::flight_model::simple;
         arcade_mode = preferences.model == tfx::simulation::flight_model::arcade;
         player_flight.select_model(preferences.model);
