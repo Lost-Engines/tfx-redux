@@ -15,8 +15,9 @@ std::optional<std::vector<vec2<int16_t>>> project_model_face(std::span<models::m
 // are changed in that case.
 bool integer_model_polygon(framebuffer &output, std::span<models::model_vertex const> vertices, camera const &view, uint8_t colour, colour_map const *remap = nullptr);
 
-// Original opcode-21 branch and polygon winding are distinct tests. Null means
-// the supplied camera/coordinates do not have a native projection here.
+// Original opcode-21 branch and polygon winding are distinct tests. Continuous
+// cameras test the face plane before perspective division, including vertices
+// behind the eye. Null means the supplied vertices cannot be evaluated.
 std::optional<bool> model_facing(std::span<models::model_vertex const> vertices, camera const &view, models::facing_test purpose);
 
 } // namespace tfx::render

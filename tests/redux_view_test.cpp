@@ -5,6 +5,7 @@
 #include "render/clipping.h"
 #include "render/horizon.h"
 #include "render/model_point.h"
+#include "render/integer_model_polygon.h"
 #include "render/view_settings.h"
 
 namespace {
@@ -45,6 +46,28 @@ int main() try {
   auto const a{view.project({100,0,1000})}, b{view.project({0,100,1000})};
   require(std::abs((a.x - view.projection_origin.x) - (b.y - view.projection_origin.y)) < 1e-8,"projection stretches pixels on a widescreen target");
   require(std::isinf(view.far_distance),"whole-map rendering retained a far plane");
+  // Rotating the eye cannot change which side of a stationary plane it is
+  // on. Test fronts and backs with zero, one, two and three vertices behind
+  // the eye, for both polygon culling and model drawing-order branches.
+  std::array<vec3d,3> const plane{{{-100,-100,200},{100,-100,200},{100,100,200}}};
+  unsigned int behind_cases{0};
+  for(double yaw : {0.,1.3,2.,3.14}) for(double pitch : {-.4,0.,.4}) {
+    auto const eye{inspection_camera({0,0,0},yaw,pitch)};
+    std::array<tfx::models::model_vertex,3> vertices;
+    unsigned behind{0};
+    for(unsigned i=0;i<3;++i) {
+      vertices[i].position=eye.transform(plane[i]);
+      behind += vertices[i].position.z<0;
+    }
+    behind_cases |= 1u<<behind;
+    for(auto purpose : {tfx::models::facing_test::polygon,tfx::models::facing_test::branch}) {
+      require(model_facing(vertices,view,purpose)==true,"head turn culled a front-facing plane");
+      std::swap(vertices[0],vertices[2]);
+      require(model_facing(vertices,view,purpose)==false,"head turn exposed a back-facing plane");
+      std::swap(vertices[0],vertices[2]);
+    }
+  }
+  require(behind_cases==15,"face test did not cover every behind-eye vertex count");
   source.opening = aperture::missile_nose;
   require(std::abs(scene_camera(source,settings).focal_distance - 400) < 1e-8,"missile camera did not retain its wider FOV");
   source.opening = aperture::normal;source.projection_origin = {44,150};source.focal_distance = 256;

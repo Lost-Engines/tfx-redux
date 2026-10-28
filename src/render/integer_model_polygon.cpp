@@ -121,6 +121,14 @@ bool integer_model_polygon(framebuffer &output, std::span<models::model_vertex c
 }
 
 std::optional<bool> model_facing(std::span<models::model_vertex const> const vertices, camera const &view, models::facing_test const purpose) {
+  if(view.projection == projection_mode::continuous) {
+    if(vertices.size() < 3) return std::nullopt;
+    // Test the plane in camera space. Projecting an unclipped face reverses
+    // its winding when an odd number of vertices lie behind the eye. This is
+    // common inside a cockpit, and also changes opcode-21 drawing branches.
+    auto const &a{vertices[0].position}, &b{vertices[1].position}, &c{vertices[2].position};
+    return (b - a).cross(c - a).dot(a) >= 0;
+  }
   auto const native{native_points(vertices,view)};
   if(!native) return std::nullopt;
   if(purpose == models::facing_test::branch) {

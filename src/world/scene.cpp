@@ -389,7 +389,13 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         if(std::abs(point.z) < view.near_distance * scale) point.z = std::copysign(view.near_distance * scale,point.z);
         return view.project(point,scale);
       };
-      if(view.projection == render::projection_mode::original_model) context.face_visibility = [&view,&camera_point](std::span<models::model_vertex const> const vertices, models::facing_test const purpose) {
+      context.face_visibility = [&view,&camera_point,native](std::span<models::model_vertex const> const vertices, models::facing_test const purpose) {
+        if(!native) {
+          if(vertices.size()<3) return std::optional<bool>{};
+          std::array<models::model_vertex,3> camera;
+          for(unsigned i=0;i<3;++i) camera[i].position=camera_point(vertices[i].position,vertices[i].projection_scale);
+          return render::model_facing(camera,view,purpose);
+        }
         std::vector<models::model_vertex> camera;
         camera.reserve(vertices.size());
         for(auto const &vertex : vertices) camera.push_back({

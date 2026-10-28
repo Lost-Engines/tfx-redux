@@ -5,6 +5,8 @@
 #include "missions/initialisation.h"
 #include "world/assets.h"
 #include "world/environment.h"
+#include "world/scene.h"
+#include "render/view_settings.h"
 
 void require(bool value, char const *message) { if(!value) throw std::runtime_error{message}; }
 
@@ -84,6 +86,28 @@ int main(int argc, char const *const argv[]) try {
   tfx::render::software_renderer native{tables};
   tfx::cockpit::hud hud{tables.instruments(),game,tables.weapons,environment.lighting.schematic_name};
   for(auto const *name : {"cpt_efa","cpt_f17","cpt_f22","cptefa_f","cptf17_f","cptf22_f"}) {
+    // Exercise the actual scene interpreter/culling path, rather than only
+    // painting already-decoded faces. With the eye stationary, head turns
+    // must not hide cockpit surfaces as their vertices pass behind the eye.
+    std::optional<unsigned int> surface_count;
+    for(unsigned setting=0;setting<3;++setting) for(int turn : {-1,0,1}) {
+      std::array<vec2<int>,3> const sizes{{{320,200},{960,600},{3840,2160}}};
+      std::array<double,3> const fovs{64.01076641616699,90,120};
+      auto const size{sizes[setting]};
+      tfx::world::scene scene{environment,assets};
+      tfx::render::software_renderer renderer{tables};renderer.output.resize(size);
+      renderer.clipping=tfx::render::raster_clip::pixels({0,0},size-vec2<int>{1,1});
+      auto const view{tfx::render::scene_camera(tfx::render::inspection_camera({500000,0,500000},turn*.4,-.2),{.resolution{vec2<int>{size}},.field_of_view{fovs[setting]}})};
+      renderer.output.pixels.fill(125);
+      scene.queue_model(name,{500000,0,500000});scene.draw(renderer,view,1);
+      require(scene.warnings.empty() && scene.primitives_drawn>0,"cockpit scene failed to draw");
+      if(surface_count) require(scene.primitives_drawn==*surface_count,"head turn or FOV made cockpit surfaces disappear");
+      else surface_count=scene.primitives_drawn;
+      if(setting==1 && argc==3) {
+        std::filesystem::create_directories(argv[2]);
+        renderer.output.screenshot(std::filesystem::path{argv[2]}/(std::string{name}+"-turn"+std::to_string(turn)+".ppm"),palette);
+      }
+    }
     auto const plane{std::string_view{name}.find("17")!=std::string_view::npos ? tfx::flight::player_aircraft::nighthawk : std::string_view{name}.find("22")!=std::string_view::npos ? tfx::flight::player_aircraft::raptor : tfx::flight::player_aircraft::eurofighter};
     tfx::weapons::armament inventory{plane,tables.weapons,tables.arming};
     for(auto &pylon : inventory.pylons) { pylon.weapon=1;pylon.count=1; }
@@ -125,5 +149,5 @@ int main(int argc, char const *const argv[]) try {
       }
     }
   }
-  std::cout<<"Texture span equivalence, opaque black, instrument mapping and all six cockpit models passed\n";
+  std::cout<<"Texture span equivalence, opaque black, instrument mapping and all six cockpit models at left/centre/right views passed\n";
 } catch(std::exception const &error) { std::cerr<<error.what()<<'\n';return 1; }

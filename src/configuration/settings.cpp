@@ -104,7 +104,14 @@ settings load(std::filesystem::path const &directory) {
   auto path{directory / "TFX.CFG"};
   if(!std::filesystem::exists(path)) path = directory / "tfx.cfg";
   std::ifstream stream{path,std::ios::binary};
-  if(!stream) return fallback();
+  if(!stream) {
+    // A fresh native port starts with keyboard flight. Arcade has no keyboard
+    // steering law, so pair this with Simple; existing DOS files still parse
+    // with their original defaults, including an omitted MODEL.
+    auto state{fallback()};
+    state.model = simulation::flight_model::simple;
+    return state;
+  }
   std::string text(configuration_buffer_size,'\0');
   stream.read(text.data(),text.size());
   auto const count{stream.gcount()};
