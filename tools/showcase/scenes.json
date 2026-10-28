@@ -200,7 +200,7 @@
     {
       "id": "16-raptor-carrier-pass",
       "title": "Over the flight deck",
-      "caption": "A close F-22 flyby with a staged carrier and escorts on the original Atlantic water.",
+      "caption": "A close F-22 bank past the carrier\u2019s flight deck, with an escort staged on the original Atlantic water.",
       "category": "External",
       "aircraft": "f22",
       "mission": 843,
@@ -208,7 +208,7 @@
       "fov": 56,
       "draw_distance": 24,
       "lod_scale": 0.1,
-      "recipe": "position 146232.0 -150 148780.0\nangles 0 315 15\naircraft f22\nview external\nhud nav\nwarmup 24\ncamera 146212.0 -168 148814.0 146234.0 -148 148776.0 0\nactor carrier 146432 0 148480 0 0 0 0\nactor frig 146652 0 148640 0 0 0 0\nmission-actors 0\n"
+      "recipe": "position 146232.0 -150 148780.0\nangles 0 315 15\naircraft f22\nview external\nhud nav\nwarmup 24\ncamera 146212.0 -168 148814.0 146234.0 -148 148776.0 0\nactor carrier 146432 0 148480 0 0 0 0\nactor frigate 146652 0 148640 0 0 0 0\nmission-actors 0\n"
     },
     {
       "id": "17-nighthawk-night-city",
@@ -325,7 +325,7 @@
       "fov": 60,
       "draw_distance": 24,
       "lod_scale": 0.1,
-      "recipe": "position 146432 -500 148480\nangles 0 0 0\naircraft f22\nview external\nhud nav\nwarmup 24\ncamera 145972 -350 149060 146432 0 148510 0\nhide-player 1\nactor carrier 146432 0 148480 0 0 0 0\nactor battlesh 146682 0 148350 0 0 0 0\nactor frig 146202 0 148280 0 0 0 0\nactor frig 146512 0 148830 0 0 0 0\nmission-actors 0\n"
+      "recipe": "position 146432 -500 148480\nangles 0 0 0\naircraft f22\nview external\nhud nav\nwarmup 24\ncamera 145972 -350 149060 146432 0 148510 0\nhide-player 1\nactor carrier 146432 0 148480 0 0 0 0\nactor battlesh 146682 0 148350 0 0 0 0\nactor frigate 146202 0 148280 0 0 0 0\nactor frigate 146512 0 148830 0 0 0 0\nmission-actors 0\n"
     },
     {
       "id": "26-oil-platform",
