@@ -180,6 +180,16 @@ keyboard/joystick flight permits captured mouse head movement in the virtual
 cockpit, including while paused. An isolated Xvfb run checked F1/F2/F3/F4/F10,
 paused head movement and configuration without touching the working install.
 
+The HUD layout now fills the glass with a small border. `redux_hud_probe`
+measures the actual Military-spec layouts for all three aircraft against the
+projected glass at two resolutions and three FOVs, as well as checking optical
+alignment and clipping. Fresh configurations enable realistic G effects and
+wind; preference-file and CD-install checks also verify that existing choices
+are preserved. A silent private Xvfb flight of mission 702 at FOV 35 and 64
+confirmed that wind reaches the live physics input and G effects use the
+Realistic setting; F10/F1 captures were inspected. Redux retains the wind
+choice across mission initialisation and servicing, where DOS clears it.
+
 The collimated HUD uses the six inner frame vertices shared by all six retail
 cockpit/refuelling models. `virtual_cockpit_probe` verifies these against the
 actual decoded geometry. `redux_hud_probe` checks the glass aperture and optical

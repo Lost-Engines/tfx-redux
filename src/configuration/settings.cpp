@@ -110,6 +110,8 @@ settings load(std::filesystem::path const &directory) {
     // with their original defaults, including an omitted MODEL.
     auto state{fallback()};
     state.model = simulation::flight_model::military_spec;
+    state.effects.g_force = g_effects::realistic;
+    state.effects.wind = 1;
     return state;
   }
   std::string text(configuration_buffer_size,'\0');

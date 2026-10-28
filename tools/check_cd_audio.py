@@ -109,4 +109,10 @@ FILE "audio3.bin" BINARY
   for name in ('DID.DAT','TFX.DAT','START.EXE','GUS.COM','TFX.ADV','TUNES/INTRO.ADL','TUNES/INTRO.RLD','TUNES/INTRO.SCC'):
    assert (destination/name).read_bytes()==(research/'installs/cd_1994_09/TFX'/name).read_bytes(),name
   assert (destination/'TFX.CFG').read_bytes()==b'preserve user settings' and (destination/'TFXSAV.0').read_bytes()==b'preserve pilot'
-  print('Reference: all 16 ISO files match the retained original hashes; eight installed runtime assets match byte for byte, preserving settings and pilots')
+  # Reset only this private fixture to check the new-install path too.
+  (destination/'TFX.CFG').unlink()
+  run('install',cue,destination)
+  config=dict(line.split('=',1) for line in (destination/'TFX.CFG').read_text().splitlines())
+  assert config['CONTROL']=='0' and config['MODEL']=='3' and config['REALISM']=='2,1,1,1,1,1,1', config
+  assert (destination/'TFXSAV.0').read_bytes()==b'preserve pilot'
+  print('Reference: all 16 ISO files and eight runtime assets match; settings/pilots preserved; fresh Redux realism defaults passed')
