@@ -165,6 +165,10 @@ of 46.94 ms before and 46.02 ms after. HUD time was 3.75/3.77 ms. This does not
 establish a speedup; it shows no rendering penalty in this bounded workload.
 The real-asset HUD and all-six-cockpits probes also pass.
 
+A separate AddressSanitizer/UndefinedBehaviorSanitizer build passes 13 selected
+trig, camera, targeting, model-transform and flight-motion checks without
+diagnostics.
+
 `tools/record_redux_trig_fixtures.py` audits the snapshot values without writing
 them. Its explicit `--record` mode first requires the independent trig and
 continuous-camera checks to pass, then records only expectation tokens read by
