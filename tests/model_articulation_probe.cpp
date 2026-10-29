@@ -62,8 +62,10 @@ int main(int const argc, char const *const argv[]) try {
     });
     context.attachments = attachments;
     auto const geometry{tfx::models::interpret(source,context)};
-    if(!geometry.warnings.empty() || geometry.primitives.size() != 3) throw std::runtime_error{"articulation emitted incomplete geometry"};
-    tfx::render::framebuffer output;output.pixels.fill(99);bool defined{true};std::vector<int32_t> positions;
+    if(!geometry.warnings.empty() || (!geometry.projection_aborted && geometry.primitives.size() != 3)) throw std::runtime_error{"articulation emitted incomplete geometry"};
+    // Projection can deliberately stop where the original IDIV faults. Report
+    // that case to the reference harness instead of aborting the whole batch.
+    tfx::render::framebuffer output;output.pixels.fill(99);bool defined{!geometry.projection_aborted};std::vector<int32_t> positions;
     for(auto const &face : geometry.primitives) {
       for(auto const &v : face.vertices) for(auto const axis : v.position) positions.push_back(static_cast<int32_t>(std::nearbyint(axis / v.projection_scale * 65536)));
       if(!tfx::render::integer_model_polygon(output,face.vertices,view,static_cast<uint8_t>(face.colour))) defined = false;
