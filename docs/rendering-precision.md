@@ -120,6 +120,9 @@ benchmark uses the selected standard-function implementation; the temporary
 A/B build changed only `render::sin_cos` to the same 4,096-entry interpolation
 algorithm in `tests/trigonometry_benchmark.cpp`.
 
+See also the [square-root and normalisation measurements](square-root-benchmarks.md)
+for the separate comparison of Vectorstorm's approximation modes.
+
 ## Verification
 
 `continuous_pose_tests` advances the aircraft basis in single angle-word steps
