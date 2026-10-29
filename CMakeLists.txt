@@ -200,6 +200,7 @@ add_library(tfx_core
   src/render/point_projection.h
   src/cockpit/view_camera.cpp
   src/cockpit/view_camera.h
+  src/render/continuous_pose.h
   src/cockpit/mouse_orbit.cpp
   src/cockpit/mouse_orbit.h
   src/cockpit/view_control.cpp
@@ -524,6 +525,10 @@ if(BUILD_TESTING)
   target_link_libraries(designator_mouse_tests PRIVATE tfx_core)
   configure_first_party(designator_mouse_tests)
   add_test(NAME render.redux_designator_mouse COMMAND designator_mouse_tests)
+  add_executable(continuous_pose_tests tests/continuous_pose_test.cpp)
+  target_link_libraries(continuous_pose_tests PRIVATE tfx_core)
+  configure_first_party(continuous_pose_tests)
+  add_test(NAME render.redux_continuous_pose COMMAND continuous_pose_tests)
   add_executable(mouse_orbit_tests tests/mouse_orbit_test.cpp)
   target_link_libraries(mouse_orbit_tests PRIVATE tfx_core)
   configure_first_party(mouse_orbit_tests)

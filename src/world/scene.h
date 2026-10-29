@@ -79,6 +79,7 @@ private:
     vec3d position;
     vec3<math::angle> angles;
     animation_policy animation;
+    std::optional<mat3d> display_basis;
   };
   std::optional<player_rendering> player_model;
   std::optional<render::camera> installed_camera;
@@ -126,7 +127,7 @@ public:
   instance_result terrain_event(unsigned int x, unsigned int z, unsigned int entry);
   scene_events advance(timer_ticks elapsed);
   bool animate_player_model(scene_handle handle);
-  void set_player_rendering(scene_handle handle, vec3d const &position, vec3<math::angle> const &angles, animation_policy policy);
+  void set_player_rendering(scene_handle handle, vec3d const &position, vec3<math::angle> const &angles, animation_policy policy, std::optional<mat3d> display_basis = {});
   std::optional<render::camera> const &last_camera() const;
   scene_events draw(render::software_renderer &renderer, render::camera const &view, unsigned int radius, std::function<void()> const &final_submissions = {}, std::optional<int32_t> camera_anchor_y = {}, int16_t shadow_ground_height = 0, scene_pass pass = scene_pass::primary, recording::scene_frame *capture = nullptr, recording::scene_frame const *playback = nullptr);
   void replay(render::software_renderer &renderer, render::camera const &view, recording::scene_frame const &source);

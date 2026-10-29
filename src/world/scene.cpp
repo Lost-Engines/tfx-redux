@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "render/continuous_pose.h"
 #include "render/preview_state.h"
 #include "render/point_size.h"
 #include "terrain_cells.h"
@@ -280,12 +281,13 @@ bool scene::animate_player_model(scene_handle const handle) {
   auto &actor{actors.at(handle.value)};
   return advance_instance(actor.state,actor.position);
 }
-void scene::set_player_rendering(scene_handle const handle, vec3d const &position, vec3<math::angle> const &angles, animation_policy const policy) {
+void scene::set_player_rendering(scene_handle const handle, vec3d const &position, vec3<math::angle> const &angles, animation_policy const policy, std::optional<mat3d> display_basis) {
   player_model.emplace(player_rendering{
     .handle{handle},
     .position{vec3d{position}},
     .angles{vec3<math::angle>{angles}},
     .animation{policy},
+    .display_basis{std::move(display_basis)},
   });
 }
 
@@ -575,9 +577,9 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
   auto const layer{select_terrain_layer(upper_terrain && terrain.lighting.cloud_layer,terrain.lighting.layer_y,terrain.lighting.layer_offset_y,camera_anchor_y.value_or(static_cast<int32_t>(std::floor(view.position.y))))};
   auto const &grid{layer.upper ? *upper_terrain : terrain};
   auto &states{layer.upper ? upper_instances : instances};
-  auto const submit{[&](moving_instance &actor, vec3d const &position, vec3<math::angle> const &angles, animation_policy const policy = animation_policy::when_visible) {
+  auto const submit{[&](moving_instance &actor, vec3d const &position, vec3<math::angle> const &angles, animation_policy const policy = animation_policy::when_visible, std::optional<mat3d> const &display_basis = {}) {
     if(!native && !visible(position,std::max(256,static_cast<int>(actor.state.bounding_radius())))) return;
-    auto const rotation{math::rotation(angles)};
+    auto const rotation{native ? math::rotation(angles) : (display_basis ? mat3d{*display_basis} : render::continuous_rotation(angles))};
     // Native moving SSD effect placement retains quarter-turn zero; its full
     // visual Euler transform is separate from the request callback.
     auto const assembly{fixed_position(position)};
@@ -608,7 +610,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         auto const origin{(shadow || (native && draw.placement != part_position::assembly_origin)) ? vec3d{effect_position(placement.position,vec3<int32_t>{position})} : position + rotation * draw.anchor};
         double const depth{view.transform(origin).z};
         if(!native && (depth < -cell_units || depth > view.far_distance + cell_units)) continue;
-        queue_part(shape,part,origin,rotation * math::rotation(part.rotation),0,model_orientation(angles,part),placement.camera_origin,shadow ? render::model_render_path::ground_shadow : render::model_render_path::scaled,draw.delivery,actor.aircraft && !shadow);
+        queue_part(shape,part,origin,rotation * (native ? math::rotation(part.rotation) : render::continuous_rotation(part.rotation)),0,model_orientation(angles,part),placement.camera_origin,shadow ? render::model_render_path::ground_shadow : render::model_render_path::scaled,draw.delivery,actor.aircraft && !shadow);
       } catch(std::exception const &error) {
         warnings.insert(part.name + ": " + error.what());
       }
@@ -634,7 +636,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
   // aircraft before A26CC queues the sky, independently of their constructors.
   if(pass == scene_pass::primary && player_model) {
     auto &actor{actors.at(player_model->handle.value)};
-    if(actor.visible) submit(actor,player_model->position,player_model->angles,player_model->animation);
+    if(actor.visible) submit(actor,player_model->position,player_model->angles,player_model->animation,player_model->display_basis);
   }
   submit_queued(submission_phase::before_sky);
   // Native sky models enter the bounded queue before world/actor models.

@@ -18,6 +18,7 @@ Redux prepares the game files on first launch, then opens pilot enrolment. You c
 - **Much longer view distances.** See cities, mountains, fleets and aircraft far beyond the original horizon, with adjustable detail and an option to draw the entire theatre.
 - **Adjustable field of view.** Change your viewing angle, resolution and draw distance from the in-game Graphics menu.
 - **A fully working virtual cockpit.** Live radar, maps, weapon displays, radio messages and warning lights replace the original static instruments.
+- **Finer camera movement.** Slow turns stay smooth at high resolutions instead of jumping between the original coarse angles.
 - **Mouse look inside the cockpit.** With keyboard or joystick flight controls, look freely around the canopy, down at the instruments or over your shoulder.
 - **A sharp, glowing HUD.** Smooth lines and lettering stay clear at high resolutions. In the virtual cockpit, the display sits on the HUD glass as you look around.
 - **Free external cameras.** Orbit aircraft, missiles and targets with the mouse and move closer or farther away with the wheel. The laser designator also supports mouse aiming and wheel zoom.
