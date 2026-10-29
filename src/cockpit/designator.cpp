@@ -1,4 +1,5 @@
 #include "designator.h"
+#include "render/continuous_pose.h"
 #include "render/sprites.h"
 #include <bit>
 
@@ -17,6 +18,11 @@ view_pose designator_pose(sensors::designator const &state) {
   // above the word boundary survive in the fractional half of the cache.
   for(unsigned int axis{0}; axis != 3; ++axis) result.position_q16[axis] = std::bit_cast<int32_t>(std::rotr(static_cast<uint32_t>(state.camera[axis]),16));
   return result;
+}
+
+render::camera designator_display_camera(sensors::designator const &state,vec2d const &projection_origin) {
+  auto const original{designator_pose(state).camera(projection_origin)};
+  return render::continuous_camera(original,render::continuous_rotation(vec3<math::angle>{state.pitch,state.heading,0}));
 }
 
 designator_display::designator_display(instrument_assets const &source, resources::archive const &game, designator_animation const initial)

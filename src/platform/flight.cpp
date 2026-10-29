@@ -1970,6 +1970,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       : role == tfx::weapons::weapon_role::air ? tfx::cockpit::aiming_mode::air
       : role == tfx::weapons::weapon_role::ground ? tfx::cockpit::aiming_mode::ground
       : tfx::cockpit::aiming_mode::stores};
+    auto const display_attitude{tfx::render::continuous_angles(tfx::render::continuous_basis(player_render_basis))};
     tfx::cockpit::weapon_display_state state{
       .mode{mode},
       .aircraft{player.aircraft},
@@ -1989,6 +1990,8 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         .projection_origin{static_cast<int16_t>(view.projection_origin.x),static_cast<int16_t>(view.projection_origin.y)},
         .offset{vec2<int16_t>{offset}},
         .focal_distance{view.point_focal_distance.value_or(view.focal_distance)},
+        .display_angles{vec3d{display_attitude}},
+        .display_projection_angles{vec2d{-display_attitude.x,-display_attitude.z}},
       },
       .flight{
         .height{player.position.y},
@@ -2283,7 +2286,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(!inspect) update_designator(paused);
     if(!inspect) options.ground_reference = vec3<int32_t>{view_motion.value().ground_reference};
     auto const projection_origin{cockpit_frame.projection_origin(view_index(),cockpit_position.value())};
-    auto view{inspect ? tfx::render::inspection_camera(position,heading,pitch) : designator_view ? tfx::cockpit::designator_pose(designator).camera(projection_origin) : view_motion.display_camera(projection_origin)};
+    auto view{inspect ? tfx::render::inspection_camera(position,heading,pitch) : designator_view ? tfx::cockpit::designator_display_camera(designator,projection_origin) : view_motion.display_camera(projection_origin)};
     if(!inspect && !designator_view) {
       external_orbit.select(views.value().current);
       view = external_orbit.apply(view,camera_context(),view_motion.value().last_missile);

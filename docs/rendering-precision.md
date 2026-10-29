@@ -11,20 +11,29 @@ then looks up a new view matrix. The high-resolution renderer previously inherit
 both reductions. Continuous mouse-look offsets did not restore the lost aircraft
 or camera precision.
 
-Redux now retains a separate display orientation:
+Redux now retains separate display transforms using double-precision
+`std::sin`, `std::cos` and `std::atan2`:
 
 - Cockpit and head/chase views use the stored aircraft axes without first
   rounding them to native angle phases. Q15 length drift is normalised away.
 - Head/chase follow angles retain fractional values through the existing
   quarter/eighth follow factors and tracking-roll behavior. Differences wrap
   across the 0/360-degree boundary. Fixed camera angles use all sixteen bits.
-- Moving-model and component transforms use continuous sine/cosine evaluation
-  in the enhanced scene pass. The player model and the HUD glass use the same
-  aircraft basis, keeping the canopy and attached display registered.
+- Camera setbacks follow the continuous orientation, including chase, missile,
+  impact, ejection and target views. Fly-past and tactical bearings use `atan2`
+  without first shrinking their coordinate differences to signed words. The
+  fly-past camera also retains fractional target positions.
+- The designator camera uses all sixteen angle bits. The vector HUD receives
+  the aircraft's stored basis and keeps the pitch-ladder projection in floating
+  point through to rasterisation, avoiding native depth and pixel rounding.
+- Moving models, scenery components and nested rotated model helpers use
+  continuous sine/cosine evaluation in the enhanced scene pass. The player model
+  and the HUD glass use the same aircraft basis, keeping the canopy and attached display registered.
 
 The native camera pose, word matrices, smoothing state, model selection and
-projection metadata are still calculated as before. Physics, actor rules,
-original-code probes and the faithful `tfx-cpp` renderer keep their original
+projection metadata are still calculated as before. Native raster instruments,
+lighting tables and authored animation steps retain their original calculations.
+Physics, actor rules, original-code probes and the faithful `tfx-cpp` renderer keep their original
 arithmetic. This is a presentation change, not a change to aircraft handling.
 
 This does not interpolate the entire simulation between updates or invent
@@ -35,6 +44,82 @@ Offline video should sample its camera and aircraft pose at a consistent cadence
 alternating one and two simulation ticks per 30fps image adds another source of
 uneven movement independently of the angular tables.
 
+## Standard functions or larger tables?
+
+Measured on 29 October 2026 with GCC 16.2.0, C++26, `RelWithDebInfo` (`-O2`,
+`-ffp-contract=off`, no fast-math), on an Intel Xeon E5-2699A v4. The benchmark
+was pinned to one available logical CPU. Times are local measurements, not
+portable speed guarantees.
+
+The asset-free `trigonometry_benchmark` uses 65,536 deterministic nonconstant
+angles in [−π, π], eight passes per measurement, and the median of seven runs.
+Each sine/cosine case also evaluates the nine rotation-matrix components.
+Lookup tables are initialised outside the timed loop; range reduction and
+interpolation are included. Accuracy uses 131,073 samples around the full cycle.
+
+| Sine/cosine implementation | ns per pair | ns per rotation | Maximum absolute error versus double standard functions |
+| --- | ---: | ---: | ---: |
+| Original 1,024-phase Q15 table | 7.39 | 29.39 | 0.00616 |
+| `std::sin` + `std::cos`, double | 23.23 | 73.52 | Reference |
+| Vectorstorm `sincos_any`, double | 23.50 | 75.09 | Same results as reference |
+| Standard functions, float | 12.41 | 39.10 | 1.29 × 10⁻⁷ |
+| 65,536-entry double table, phase rounded down | 7.25 | 26.28 | 9.59 × 10⁻⁵ |
+| 4,096-entry double table, linear interpolation | 8.88 | 30.02 | 2.94 × 10⁻⁷ |
+| 16,384-entry double table, linear interpolation | 9.08 | 31.49 | 1.84 × 10⁻⁸ |
+
+The original-table error here includes rounding arbitrary input angles down to
+a table phase. It is different from the much smaller amplitude error *at the
+stored sample angles*. “Reference” means the double library result, not an exact
+symbolic evaluation of sine.
+
+Vectorstorm's bundled `sincos.h` calls the compiler/library paired sine/cosine
+routine. It is not an approximation. GCC can combine adjacent standard sine and
+cosine calls too. Its `sqrt_fast.h` contains square-root and reciprocal-square-root
+approximations, which are separate from trigonometry. On compilers without the
+generic double builtin, the benchmark explicitly labels its standard-function
+fallback rather than reporting that as a Vectorstorm result.
+
+For `atan2`, the same 65,536 directions give:
+
+| Implementation | ns per bearing | Maximum angular error versus `std::atan2` |
+| --- | ---: | ---: |
+| Native signed-word direction/phase conversion | 55.47 | 0.263° |
+| `std::atan2`, double | 29.54 | Reference |
+| 4,096-interval ratio table, linear interpolation and octant reconstruction | 11.53 | 0.000000277° |
+
+These are the complete benchmark wrappers, including conversion into native
+signed-word inputs where applicable, rather than isolated assembly instruction
+costs.
+
+A table is faster in the small sine/cosine test, but the renderer is dominated
+by other work. A second experiment substituted the 4,096-entry interpolated
+implementation for the display sine/cosine helper in a private build. Nine
+alternating pairs of runs rendered 48 frames each at 3,840 × 2,160, with a
+32-cell draw distance and LOD scale zero. Each frame contained 1,021 model parts
+and 62,205 primitives; warm-up, archive loading and screenshots were excluded.
+
+| Display trig backend | Median complete frame | Range of run means | Median scene drawing |
+| --- | ---: | ---: | ---: |
+| Double standard functions | 42.69 ms | 41.75–47.30 ms | 39.77 ms |
+| 4,096-entry interpolated table | 43.18 ms | 42.12–46.21 ms | 40.19 ms |
+
+Both produced the same indexed-image hash for that scene. The overlapping
+measurements show no useful whole-frame win from the table; they do not establish
+that standard trig is intrinsically faster. Redux therefore uses the standard
+double functions for these display paths. The tested lookup approximations stay
+in the benchmark, with no new runtime setting or approximation dependency.
+
+```sh
+cmake --build build --target trigonometry_benchmark redux_render_benchmark -j
+build/trigonometry_benchmark
+build/redux_render_benchmark /path/to/TFX 32 48 3840 2160
+```
+
+The first command measures all mathematical candidates. The normal renderer
+benchmark uses the selected standard-function implementation; the temporary
+A/B build changed only `render::sin_cos` to the same 4,096-entry interpolation
+algorithm in `tests/trigonometry_benchmark.cpp`.
+
 ## Verification
 
 `continuous_pose_tests` advances the aircraft basis in single angle-word steps
@@ -42,17 +127,31 @@ through several table boundaries. At 4K / 56 degrees, the largest adjacent-frame
 landmark movement is 0.443 pixels with the display path, versus 22.159 pixels
 with the native path. It also checks handedness, orthonormality, wraparound,
 vertical attitudes, rearward transitions, tracking roll and repeated paused reads.
+Additional checks exercise sub-phase camera setbacks, fractional fly-past
+movement, the lost-missile handoff, designator rotation, nested model helpers,
+and the HUD's level/banked geometry and negative-pitch wrap.
 
 All 224 CTest cases pass. The native camera harness still matches 12,288
 pose/matrix updates across 24 cockpit, head/chase, missile and impact modes,
 including split physics/render bases, refuelling model selection, aperture and
-horizon handoffs. The live instrument probe covers all six cockpit models at
-left, centre and right views, including 4K and wide fields of view.
+horizon handoffs. Another 1,024 original HUD frames and 1,024 designator
+controller/overlay cases agree. The nested-helper comparison matches all
+submitted vertices and VGA pixels in 1,022 completed original frames; two cases
+fault in the original divide instruction and are reported separately. Its probe
+now handles those expected projection aborts instead of stopping the batch; that
+test-only fix is shared with `tfx-cpp` through the upstream merge.
+
+The live instrument probe covers all six cockpit models at left, centre and
+right views, including 4K and wide fields of view.
 
 ```sh
 cmake --build build -j
 ctest --test-dir build --output-on-failure
 python3 tools/check_view_cameras.py --model-submission --refuelling --projection --horizon --split-basis
+python3 tools/check_attitude_display.py
+python3 tools/check_designator.py
+python3 tools/check_model_articulation.py
+build/redux_hud_probe /path/to/TFX
 build/virtual_cockpit_probe /path/to/TFX
 ```
 

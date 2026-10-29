@@ -220,6 +220,7 @@ add_library(tfx_core
   src/weapons/cannon_prediction.h
   src/cockpit/attitude_display.cpp
   src/cockpit/attitude_display.h
+  src/cockpit/attitude_projection.h
   src/cockpit/hud_text.cpp
   src/cockpit/hud_text.h
   src/cockpit/frame.cpp
@@ -525,6 +526,9 @@ if(BUILD_TESTING)
   target_link_libraries(designator_mouse_tests PRIVATE tfx_core)
   configure_first_party(designator_mouse_tests)
   add_test(NAME render.redux_designator_mouse COMMAND designator_mouse_tests)
+  add_executable(trigonometry_benchmark tests/trigonometry_benchmark.cpp)
+  target_link_libraries(trigonometry_benchmark PRIVATE tfx_core)
+  configure_first_party(trigonometry_benchmark)
   add_executable(continuous_pose_tests tests/continuous_pose_test.cpp)
   target_link_libraries(continuous_pose_tests PRIVATE tfx_core)
   configure_first_party(continuous_pose_tests)

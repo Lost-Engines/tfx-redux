@@ -14,10 +14,14 @@ inline double angle_radians(math::angle const angle) {
 inline vec3d angle_radians(vec3<math::angle> const &angles) {
   return {angle_radians(angles.x),angle_radians(angles.y),angle_radians(angles.z)};
 }
+struct sine_cosine { double sine,cosine; };
+inline sine_cosine sin_cos(double const radians) {
+  return {std::sin(radians),std::cos(radians)};
+}
 inline mat3d continuous_rotation(vec3d const &radians) {
-  auto const sp{std::sin(radians.x)}, cp{std::cos(radians.x)};
-  auto const sh{std::sin(radians.y)}, ch{std::cos(radians.y)};
-  auto const sr{std::sin(radians.z)}, cr{std::cos(radians.z)};
+  auto const [sp,cp]=sin_cos(radians.x);
+  auto const [sh,ch]=sin_cos(radians.y);
+  auto const [sr,cr]=sin_cos(radians.z);
   mat3d result;
   result.data = {
     ch*cr+sh*sp*sr, -cp*sr, -sh*cr+ch*sp*sr,
@@ -52,6 +56,12 @@ inline double wrapped_radians(double const value) {
   double const result{std::remainder(value,2*std::numbers::pi)};
   // Native signed-word differences choose the negative arc at exactly 180°.
   return result>=std::numbers::pi ? result-2*std::numbers::pi : result;
+}
+inline vec3d continuous_bearing(vec3d const &from,vec3d const &to) {
+  auto const delta{to-from};
+  // Preserve the native camera's Chebyshev horizontal distance convention;
+  // remove its integer scaling and 1,024-phase atan conversion only.
+  return {std::atan2(delta.y,std::max(std::abs(delta.x),std::abs(delta.z))),std::atan2(delta.x,delta.z),0};
 }
 inline vec3d follow_angles(vec3d const &previous, vec3d const &target, double const fraction, bool const tracking_roll) {
   auto result{previous};
