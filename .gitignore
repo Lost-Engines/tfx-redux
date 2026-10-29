@@ -19,3 +19,8 @@ __pycache__/
 !/captures/showcase-4k/recipes/
 !/captures/showcase-4k/contact-sheets/
 !/captures/showcase-4k/contact-sheet.jpg
+
+# CI compiler caches and package staging.
+/.cache/
+/package/
+/dist/

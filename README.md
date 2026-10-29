@@ -8,6 +8,8 @@ New installations start with **Military-spec flight and keyboard steering**, mat
 
 Browse the [4K screenshot gallery](https://lost-engines.github.io/tfx-redux/) for cockpit views, city lights, formations and staged action scenes. The [capture guide](docs/screenshot-gallery.md) covers the recipes, Git LFS images and gallery publishing.
 
+Download the [latest tested release](https://github.com/Lost-Engines/tfx-redux/releases/latest) for Linux, Windows or Intel macOS, or build from source below. Packages include setup helpers; game data and ROMs are supplied separately. See [builds and releases](docs/build-release.md) for the CI matrix and release policy.
+
 ## Getting started
 
 ```sh
