@@ -1,0 +1,10 @@
+# Cloud tops through the canopy — stormtop
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -3400 148480
+angles 0 0 -12
+aircraft f22
+view virtual
+mission-actors 0
+warmup 24
+hud nav
+look 35 -3

@@ -16,7 +16,7 @@ python3 tools/capture_showcase.py --data-dir /path/to/TFX
 
 Open `captures/showcase-4k/index.html` directly in a browser. The gallery works offline. Filters separate classic cockpits, virtual cockpits, formations, external views and scenery; click an image for the viewer, then use the arrow keys to browse. Each entry links to its lossless PNG and scene recipe. `contact-sheet.jpg` provides an overview; `manifest.json` records resolution, settings, Git revision, renderer hash, image hashes and whether tracked source changes were present.
 
-The builder uses a temporary installation containing read-only asset links and its own preferences. It does not alter the selected installation’s preferences or pilot saves, play audio, open a game window, fetch assets, upload anything or publish a website. `captures/` is ignored by Git. The PNG library is a separate local resource, not part of the source distribution.
+The builder uses a temporary installation containing read-only asset links and its own preferences. It does not alter the selected installation’s preferences or pilot saves, play audio, open a game window, fetch assets, upload anything or publish a website. The selected `captures/showcase-4k/` gallery is checked into Git; its PNGs, thumbnails and contact sheets use Git LFS. Other capture directories, engine logs, previews and scratch output remain ignored. The game’s runtime packages do not include the gallery.
 
 For quick composition checks:
 
@@ -29,7 +29,7 @@ Previews render at 960 × 540 in a separate `previews/` directory. They never re
 
 ## Scene recipes
 
-The editable inventory is [tools/showcase/scenes.json](../tools/showcase/scenes.json). Each entry specifies mission, environment, FOV, draw distance, LOD scale, caption and a line-based recipe. The renderer accepts these through:
+The complete gallery inventory is [scene-library.json](../captures/showcase-4k/scene-library.json); pass it with `--manifest` to reproduce these compositions. [tools/showcase/scenes.json](../tools/showcase/scenes.json) contains the initial smaller selection. Each entry specifies mission, environment, FOV, draw distance, LOD scale, caption and a line-based recipe. The renderer accepts these through:
 
 ```sh
 ./build/tfx --data-dir /path/to/private/TFX --mission 801 \
@@ -79,4 +79,20 @@ The MiG-29, MiG-21 and F-16 SSDs use entries 15/16 to start and finish their par
 
 For ordnance in flight use the weapon table's **fired** SSD (for example `xgbu_24b` or `xagm_109`). The similarly named loadout presentation models have a different scale. Match the selected aircraft to a mission with a compatible loadout; changing `aircraft` preserves the mission's authored pylon indices.
 
-Keep additional scene inventories beside their local output, for example `captures/showcase-4k/scene-library.json`, and pass them with `--manifest`. Screenshots, contact sheets, captions and expanded composition recipes belong to the separate media library, not Git. Copy the finished gallery directory to shared storage as one unit; it needs no server or game installation to browse.
+Keep additional scene inventories beside their output and pass them with `--manifest`. Copy the finished gallery directory to shared storage as one unit; it needs no server or game installation to browse.
+
+## Git LFS and GitHub Pages
+
+The [public gallery](https://lost-engines.github.io/tfx-redux/) is deployed by `.github/workflows/pages.yml`. Install Git LFS before cloning, or run `git lfs install` followed by `git lfs pull` in an existing checkout. LFS covers only the selected gallery images; HTML, captions, metadata and recipes remain ordinary Git files.
+
+After changing captions or compositions, run `python3 captures/showcase-4k/rebuild_gallery.py` (requires Pillow). This refreshes the catalogue and contact sheets without running the game.
+
+The Pages job checks out LFS content and runs the standard-library-only publisher:
+
+```sh
+python3 tools/publish_gallery.py --output build/gallery-pages
+```
+
+Use a new or empty output directory. The publisher verifies all original PNG checksums and 4K dimensions, rejects unresolved LFS pointers and symlinks, and checks local page links. It copies only the page, catalogue, images, contact sheets and per-image recipes into this dedicated staging directory. Logs, capture tools, game data, ROMs, saves and the rest of the repository are excluded. Only that staging directory is uploaded as the Pages artifact. No game build or asset download runs during publication.
+
+Pull requests validate the gallery; pushes affecting it on `master` publish it. Manual deployment is also available through Actions.

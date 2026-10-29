@@ -1,0 +1,8 @@
+# Eurofighter: air-to-air
+# Photographic staging, not an unscripted gameplay recording.
+position 122880 -650 48742.4
+angles 0 180 0
+aircraft efa
+view cockpit
+hud air
+warmup 24

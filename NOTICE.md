@@ -4,7 +4,7 @@ The RA version 2 decompressor is a C++ adaptation of our GPL-3.0-or-later [did-u
 
 > (c) 2006 Benjamin Haisch. You may use this code freely as long as you give me credit for it :)
 
-The archive lookup/hash and game formats were reconstructed from TFX. Game binaries, archives, extracted resources and audiovisual assets are not included.
+The archive lookup/hash and game formats were reconstructed from TFX. Game binaries, archives and extracted resources are not included. The selected gallery in `captures/showcase-4k/` contains screenshots rendered from the original TFX artwork. That artwork remains the property of its respective rights holders and is not covered by this repository’s source-code licence.
 
 Vectorstorm is the bundled Armchair Software shared mathematics component, included without project-specific modifications. Canonical source: https://github.com/Armchair-Software/vectorstorm.
 

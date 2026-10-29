@@ -1,0 +1,9 @@
+# Low visibility
+# Photographic staging, not an unscripted gameplay recording.
+position 279552.0 -950 236544.0
+angles 0 35 -12
+aircraft f117
+view external
+hud nav
+warmup 24
+camera 279534.0 -978.0 236569.0 279552.0 -950.0 236544.0 0

@@ -1,0 +1,10 @@
+# Raptor — breaking past the platform
+# Photographic staging, not an unscripted gameplay recording.
+position 109638 -180 185084
+aircraft f22
+angles -5 0 -75
+view external
+mission-actors 0
+warmup 24
+camera 109651 -194 185048 109638 -177 185088 0
+player-event 9

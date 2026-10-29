@@ -1,0 +1,12 @@
+# Tomahawk approaching the industrial complex
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -500 226404
+angles 0 0 0
+aircraft f117
+view external
+mission-actors 0
+warmup 12
+camera 246677.0 -187 225933.0 246684.0 -180 225944.0 0
+hide-player 1
+actor fact_1 246784 0 226304 0 0 0 0
+actor xagm_109 246684 -180 225944 12 0 0 0

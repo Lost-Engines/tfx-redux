@@ -1,0 +1,12 @@
+# F-16 — wingtip trails in the turn
+# Photographic staging, not an unscripted gameplay recording.
+position 287744 -1000 146432
+aircraft efa
+angles 0 0 0
+view external
+mission-actors 0
+warmup 30
+camera 287726 -708 146403 287744 -700 146428 0
+hide-player 1
+actor f_16 287744 -700 146432 -15 0 68 15
+at 0 actor-event 0 9

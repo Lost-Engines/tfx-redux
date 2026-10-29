@@ -1,0 +1,17 @@
+# Scorched ground beside the depot
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -500 226304
+aircraft efa
+angles 0 0 0
+view external
+mission-actors 0
+warmup 60
+camera 246444 -90 225984 246664 -8 226244 0
+hide-player 1
+actor fact_1 246784 0 226304 0 0 0 0
+at 0 actor-event 0 6
+at 0 actor-event 0 9
+at 0 actor-event 0 12
+at 0 actor-event 0 15
+actor miss 246554 0 226214 0 0 0 0
+actor hit 246504 0 226134 0 0 0 0

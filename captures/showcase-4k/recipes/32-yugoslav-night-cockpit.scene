@@ -1,0 +1,11 @@
+# Yugoslav — instruments after dark
+# Photographic staging, not an unscripted gameplay recording.
+position 279552 -230 238744
+angles 0 180 0
+aircraft efa
+view virtual
+mission-actors 0
+warmup 24
+hud nav
+look 10 6
+displays 2 2 1

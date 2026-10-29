@@ -1,0 +1,13 @@
+# Three Fulcrums
+# Photographic staging, not an unscripted gameplay recording.
+position 121856.0 -650 47104
+angles 0 0 0
+aircraft efa
+view external
+hud nav
+warmup 24
+camera 121826.0 -660 47149 121856.0 -648 47086 0
+hide-player 1
+actor mig_29 121856.0 -650.0 47104.0 0 0 -8 0
+actor mig_29 121880.0 -646.0 47074.0 0 0 -8 0
+actor mig_29 121832.0 -646.0 47074.0 0 0 -8 0

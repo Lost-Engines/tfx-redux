@@ -1,0 +1,11 @@
+# Over the shoulder — EFA / desert
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -550 226304
+angles 0 0 0
+aircraft efa
+view virtual
+mission-actors 0
+warmup 24
+hud nav
+look -135 12
+actor efa 246752 -550 226274 0 0 0 21

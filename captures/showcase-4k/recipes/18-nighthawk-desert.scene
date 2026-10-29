@@ -1,0 +1,9 @@
+# Desert geometry
+# Photographic staging, not an unscripted gameplay recording.
+position 278528 -700 212992
+angles 0 100 20
+aircraft f117
+view external
+hud nav
+warmup 24
+camera 278538 -735 213012 278528 -700 212992 18

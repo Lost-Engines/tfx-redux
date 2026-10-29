@@ -1,0 +1,9 @@
+# Desert dawn — from behind
+# Photographic staging, not an unscripted gameplay recording.
+position 246579 -420 226304
+angles -2 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 246588 -432 226252 246579 -415 226314 0

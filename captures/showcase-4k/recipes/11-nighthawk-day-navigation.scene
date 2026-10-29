@@ -1,0 +1,10 @@
+# Above the river valley
+# Photographic staging, not an unscripted gameplay recording.
+position 284672 -1100 149504
+angles 0 60 -12
+aircraft f117
+view virtual
+hud nav
+warmup 24
+look 18 11
+displays 2 2 1

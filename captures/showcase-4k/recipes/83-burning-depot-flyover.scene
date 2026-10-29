@@ -1,0 +1,20 @@
+# Returning past the burning depot
+# Photographic staging, not an unscripted gameplay recording.
+position 246634 -160 225984
+angles 0 25 -15
+aircraft efa
+view external
+mission-actors 0
+warmup 48
+camera 246604 -175 225939 246644 -155 226004 0
+actor fact_1 246784 0 226304 0 0 0 0
+at 0 actor-event 0 6
+at 0 actor-event 0 9
+at 0 actor-event 0 12
+at 0 actor-event 0 15
+at 0 actor-event 0 18
+at 0 actor-event 0 21
+at 0 actor-event 0 24
+at 0 actor-event 0 27
+at 0 actor-event 0 30
+at 0 actor-event 0 33

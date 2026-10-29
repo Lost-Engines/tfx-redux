@@ -1,0 +1,9 @@
+# Nighthawk — steep desert turn
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -600 226304
+aircraft f117
+angles -9 20 60
+view external
+mission-actors 0
+warmup 24
+camera 246750.0 -612.0 226264.0 246784.0 -597.0 226301.0 0

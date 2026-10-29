@@ -1,0 +1,11 @@
+# F117 — bomb away
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -550 226304
+angles 0 0 0
+aircraft f117
+view external
+mission-actors 0
+warmup 12
+camera 246812.0 -538.0 226274.0 246784.0 -545.0 226304.0 0
+player-event 5
+actor xgbu_24b 246784 -538 226308 12 0 0 0

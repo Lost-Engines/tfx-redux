@@ -1,0 +1,9 @@
+# Above the clouds — mountain
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -2850.0 148480
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 144396.0 -2855.0 148442.0 144384.0 -2852.0 148480.0 0

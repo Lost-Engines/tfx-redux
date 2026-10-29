@@ -1,0 +1,13 @@
+# Returning to the carrier at twilight
+# Photographic staging, not an unscripted gameplay recording.
+position 146432 -80 149180
+angles 0 180 0
+aircraft efa
+view cockpit
+mission-actors 0
+warmup 36
+actor carrier 146432 0 148480 0 0 0 0
+actor frigate 146632 0 148630 0 0 0 0
+actor battlesh 146182 0 148320 0 0 0 0
+player-event 3
+hud nav

@@ -1,0 +1,10 @@
+# Yugoslav — lights on the horizon
+# Photographic staging, not an unscripted gameplay recording.
+position 279652 -650 239044
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 279552 -800 240244 279552 -60 236544 0
+hide-player 1

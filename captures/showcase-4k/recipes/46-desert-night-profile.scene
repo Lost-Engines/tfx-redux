@@ -1,0 +1,9 @@
+# Desert night — level crossing
+# Photographic staging, not an unscripted gameplay recording.
+position 246579 -420 226304
+angles 0 180 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 246534 -423 226304 246579 -418 226304 0

@@ -1,0 +1,10 @@
+# Under the cloud deck
+# Photographic staging, not an unscripted gameplay recording.
+position 137216 -650 174080
+angles 0 35 -8
+aircraft f22
+view virtual
+hud air
+warmup 24
+look 0 5
+displays 0 1 2

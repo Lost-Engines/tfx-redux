@@ -1,0 +1,9 @@
+# Libya — dusk above the streets
+# Photographic staging, not an unscripted gameplay recording.
+position 279726 -170 211120
+angles 0 90 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 279712 -175 211158 279726 -166 211120 0

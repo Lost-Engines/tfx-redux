@@ -1,0 +1,8 @@
+# All-weather cockpit
+# Photographic staging, not an unscripted gameplay recording.
+position 284672 -400 149504
+angles 0 25 -4
+aircraft f117
+view cockpit
+hud ground
+warmup 24

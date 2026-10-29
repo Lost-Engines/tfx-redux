@@ -1,0 +1,12 @@
+# MiG-29 — wingtip trails in the turn
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -950 47104
+aircraft efa
+angles 0 0 0
+view external
+mission-actors 0
+warmup 30
+camera 121838 -658 47075 121856 -650 47100 0
+hide-player 1
+actor mig_29 121856 -650 47104 -15 0 65 15
+at 0 actor-event 0 9

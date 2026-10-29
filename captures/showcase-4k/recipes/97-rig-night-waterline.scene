@@ -1,0 +1,10 @@
+# Offshore flares after dark
+# Photographic staging, not an unscripted gameplay recording.
+position 109568 -220 185344
+angles 0 0 0
+aircraft f22
+view external
+mission-actors 0
+warmup 42
+camera 109428 -35 185174 109568 -40 185344 0
+hide-player 1

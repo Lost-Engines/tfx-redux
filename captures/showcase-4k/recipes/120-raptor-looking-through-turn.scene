@@ -1,0 +1,10 @@
+# Raptor — looking through the turn
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -2850 148480
+aircraft f22
+angles -8 0 58
+view left
+mission-actors 0
+warmup 24
+hud air
+look 8 -3

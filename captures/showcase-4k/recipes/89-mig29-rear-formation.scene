@@ -1,0 +1,13 @@
+# MIG29 — following the formation
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -900 47104
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 121856 -717 47004 121856 -697 47104 0
+hide-player 1
+actor mig_29 121856 -700 47104 0 0 0 0
+actor mig_29 121831 -698 47069 0 0 0 0
+actor mig_29 121881 -702 47069 0 0 0 0

@@ -1,0 +1,10 @@
+# Libya-Dawn — runway edge lights
+# Photographic staging, not an unscripted gameplay recording.
+position 275456 -80 209422
+angles 0 0 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 275636 -45 209022 275456 0 207872 0
+hide-player 1

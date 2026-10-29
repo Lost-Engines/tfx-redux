@@ -1,0 +1,11 @@
+# Under the parachute above the city
+# Photographic staging, not an unscripted gameplay recording.
+position 279552 -950 236544
+aircraft efa
+angles 0 0 0
+view external
+mission-actors 0
+warmup 50
+camera 279562 -457 236559 279552 -453 236544 0
+hide-player 1
+actor man 279552 -450 236544 0 0 0 4

@@ -1,0 +1,12 @@
+# Paveway approaching the industrial complex
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -500 226404
+angles 0 0 0
+aircraft f117
+view external
+mission-actors 0
+warmup 12
+camera 246707.0 -206.0 226033.0 246714.0 -200.0 226044.0 0
+hide-player 1
+actor fact_1 246784 0 226304 0 0 0 0
+actor xgbu_24b 246714 -200 226044 35 0 0 0

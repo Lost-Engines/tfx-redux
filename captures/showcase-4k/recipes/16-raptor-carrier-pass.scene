@@ -1,0 +1,12 @@
+# Over the flight deck
+# Photographic staging, not an unscripted gameplay recording.
+position 146232.0 -150 148780.0
+angles 0 315 15
+aircraft f22
+view external
+hud nav
+warmup 24
+camera 146212.0 -168 148814.0 146234.0 -148 148776.0 0
+actor carrier 146432 0 148480 0 0 0 0
+actor frigate 146652 0 148640 0 0 0 0
+mission-actors 0

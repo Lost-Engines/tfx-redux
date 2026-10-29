@@ -1,0 +1,10 @@
+# Colombia — lights on the horizon
+# Photographic staging, not an unscripted gameplay recording.
+position 287844 -650 148932
+angles 0 0 0
+aircraft f117
+view external
+mission-actors 0
+warmup 24
+camera 287744 -800 150132 287744 -60 146432 0
+hide-player 1

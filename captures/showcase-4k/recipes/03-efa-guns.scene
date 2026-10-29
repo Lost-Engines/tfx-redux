@@ -1,0 +1,9 @@
+# Across the skyline
+# Photographic staging, not an unscripted gameplay recording.
+position 279552.0 -520 236544.0
+angles 0 40 -32
+aircraft efa
+view virtual
+hud guns
+warmup 24
+look 0 8

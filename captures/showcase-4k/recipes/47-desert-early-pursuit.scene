@@ -1,0 +1,9 @@
+# Desert early — from behind
+# Photographic staging, not an unscripted gameplay recording.
+position 246579 -420 226304
+angles -2 270 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 246631 -432 226313 246569 -415 226304 0

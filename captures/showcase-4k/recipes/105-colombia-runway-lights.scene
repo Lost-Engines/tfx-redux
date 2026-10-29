@@ -1,0 +1,10 @@
+# Colombia — runway edge lights
+# Photographic staging, not an unscripted gameplay recording.
+position 191488 -80 82446
+angles 0 0 0
+aircraft f117
+view external
+mission-actors 0
+warmup 24
+camera 191668 -45 82046 191488 0 80896 0
+hide-player 1

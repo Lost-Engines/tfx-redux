@@ -6,6 +6,8 @@ The supplied fetch script downloads the reference game CD and audio firmware. Yo
 
 New installations start with **Military-spec flight and keyboard steering**, matching TFX C++. Redux also enables **realistic G effects and wind** by default. Existing `TFX.CFG` choices are preserved. In the backtick menu, choose a non-Arcade flight model to enable Keyboard or Joystick; Arcade only supports mouse steering. See [controls](docs/controls.md).
 
+Browse the [4K screenshot gallery](https://lost-engines.github.io/tfx-redux/) for cockpit views, city lights, formations and staged action scenes. The [capture guide](docs/screenshot-gallery.md) covers the recipes, Git LFS images and gallery publishing.
+
 ## Getting started
 
 ```sh

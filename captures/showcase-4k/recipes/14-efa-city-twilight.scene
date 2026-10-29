@@ -1,0 +1,9 @@
+# City at dusk
+# Photographic staging, not an unscripted gameplay recording.
+position 279552.0 -520 236544.0
+angles 0 50 18
+aircraft efa
+view external
+hud nav
+warmup 24
+camera 279525.0 -530.0 236566.0 279552.0 -520.0 236544.0 -8

@@ -1,0 +1,12 @@
+# MiG-21 — wingtip trails in the turn
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -950 226304
+aircraft efa
+angles 0 0 0
+view external
+mission-actors 0
+warmup 30
+camera 246766 -658 226275 246784 -650 226300 0
+hide-player 1
+actor mig_21 246784 -650 226304 -15 0 -72 15
+at 0 actor-event 0 9

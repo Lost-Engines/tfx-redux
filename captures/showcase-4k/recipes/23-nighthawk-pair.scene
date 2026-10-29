@@ -1,0 +1,10 @@
+# Quiet company
+# Photographic staging, not an unscripted gameplay recording.
+position 287744.0 -600 146432.0
+angles 0 0 -10
+aircraft f117
+view external
+hud nav
+warmup 24
+camera 287714.0 -620.0 146472.0 287744.0 -600.0 146432.0 0
+actor f_117a 287771.0 -596.0 146404.0 0 0 -10 21

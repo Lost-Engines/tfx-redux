@@ -1,0 +1,10 @@
+# Eurofighter — the valley on its side
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -750 47104
+aircraft efa
+angles -8 180 65
+view virtual
+mission-actors 0
+warmup 24
+hud guns
+look 0 5
