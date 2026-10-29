@@ -32,7 +32,7 @@ install(FILES "${nuked_sc55_SOURCE_DIR}/LICENSE"
   DESTINATION licenses/nuked-sc55 COMPONENT Runtime)
 install(FILES "${miniaudio_SOURCE_DIR}/LICENSE"
   DESTINATION licenses/miniaudio COMPONENT Runtime)
-install(FILES "${qsound_SOURCE_DIR}/LICENSE" "${qsound_SOURCE_DIR}/NOTICE.md"
+install(FILES "${qsound_SOURCE_DIR}/NOTICE.md"
   DESTINATION licenses/qsound COMPONENT Runtime)
 if(DEFINED glfw_SOURCE_DIR AND EXISTS "${glfw_SOURCE_DIR}/LICENSE.md")
   install(FILES "${glfw_SOURCE_DIR}/LICENSE.md"
