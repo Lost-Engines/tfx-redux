@@ -1683,6 +1683,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   }};
   if(!inspect || flight_steps || flight_frames) restart();
 #ifndef NDEBUG
+  std::vector<tfx::world::scene_handle> capture_actors;
   if(capture) {
     auto const staged_orientation{player_render_basis};
     // Mission launch normally snaps X/Z to tile centres. Photographic poses
@@ -1727,6 +1728,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     for(auto const event : capture->player_events) scene.actor_event(player_visual,event);
     for(auto const &actor : capture->actors) {
       auto const handle{scene.create_actor(actor.definition,actor.position,actor.angles)};
+      capture_actors.push_back(handle);
       if(actor.entry) scene.actor_event(handle,actor.entry);
     }
   }
@@ -2437,9 +2439,16 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   // A diagnostic still/inspector can draw an unadvanced scene. Ordinary
   // flight first advances the simulation, then consumes camera/HUD/SSD state.
 #ifndef NDEBUG
-  if(capture) for(unsigned int frame=0;frame<capture->warmup_frames;++frame) {
-    // Advance native scenery/effect animation and instrument/camera caches,
-    // keeping the staged flight pose and authored mission actors in place.
+  if(capture) for(unsigned int frame=0;frame<=capture->warmup_frames;++frame) {
+    for(auto const &event : capture->events) if(event.frame==frame) {
+      switch(event.target) {
+      case capture_event_target::player: scene.actor_event(player_visual,event.entry);break;
+      case capture_event_target::actor: scene.actor_event(capture_actors.at(event.actor),event.entry);break;
+      case capture_event_target::terrain: scene.terrain_event(event.x,event.z,event.entry);break;
+      }
+    }
+    if(frame==capture->warmup_frames) break; // The ordinary screenshot path draws the final frame.
+    // Hold photographic poses while the original animation streams run.
     scene.advance(4);
     scene.animate_player_model(player_visual);
     draw();
