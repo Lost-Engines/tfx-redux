@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -87,7 +88,7 @@ int main(int const argc, char const *const argv[]) try {
     } else throw std::runtime_error{"unknown ground sensor operation"};
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(check) { uint64_t expected{0};if(!(input >> expected) || expected != digest) throw std::runtime_error{"native ground sensor state differs"}; }
+    if(check) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native ground sensor state differs"}; }
     else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
   }
   return EXIT_SUCCESS;

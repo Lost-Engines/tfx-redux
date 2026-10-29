@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <array>
 #include <bit>
 #include <charconv>
@@ -30,8 +31,8 @@ auto main(int const argc, char const *const argv[])->int try {
   if(!input) throw std::runtime_error{"cannot open air reference fixture"};
   unsigned int ticks{0},intact{0},cases{0};
   std::string profile_hex,program_hex,formation_hex;
-  uint64_t expected{0};
-  while(input >> ticks >> intact >> profile_hex >> program_hex >> formation_hex >> expected) {
+  while(input >> ticks >> intact >> profile_hex >> program_hex >> formation_hex) {
+    tfx::test::fixture_expectation<uint64_t> const expected{input};
     auto const profiles{tfx::actors::profiles(bytes(profile_hex))};
     tfx::actors::program const program{bytes(program_hex)};
     auto const formation_bytes{bytes(formation_hex)};
@@ -55,7 +56,7 @@ auto main(int const argc, char const *const argv[])->int try {
       auto const sample{tfx::test::air_snapshot(program,state,requests)};
       for(unsigned int shift{0}; shift != 64; shift += 8) digest = (digest ^ ((sample >> shift) & 255)) * 1099511628211ULL;
     }
-    if(digest != expected) throw std::runtime_error{"native aircraft route differs in case " + std::to_string(cases)};
+    if(!expected.matches(digest)) throw std::runtime_error{"native aircraft route differs in case " + std::to_string(cases)};
     ++cases;
   }
   if(!input.eof() || !cases) throw std::runtime_error{"incomplete aircraft route fixture"};

@@ -43,10 +43,8 @@ vec2<int> attitude_display::draw_heading(render::software_renderer &renderer, at
 void attitude_display::draw_pitch(render::software_renderer &renderer, attitude_display_state const &state, render::framebuffer *const coverage, vec2<int> const &line_limit) const {
   // Native 0x80ab8 and the separate sky/HUD projection setter 0xc82b9.
   // This two-angle matrix is distinct from the model renderer's view matrix.
-  auto const &table{math::sine_table()};
-  auto const sine{[&](int const phase) { return static_cast<int32_t>(table[static_cast<unsigned int>(phase) & (math::angle_steps - 1)]); }};
-  auto const cosine{[&](int const phase) { return sine(phase + math::angle_steps / 4); }};
-  int const pitch{state.projection_angles.x >> 6}, roll{state.projection_angles.y >> 6};
+  auto const sine{math::sine_q15}, cosine{math::cosine_q15};
+  int const pitch{state.projection_angles.x}, roll{state.projection_angles.y};
   vec2<int32_t> const depth{-sine(pitch),cosine(pitch)};
   vec2<int32_t> const horizontal{(sine(pitch + roll) >> 1) - (sine(pitch - roll) >> 1),(cosine(pitch - roll) >> 1) - (cosine(pitch + roll) >> 1)};
   vec2<int32_t> const vertical{(cosine(pitch + roll) >> 1) + (cosine(pitch - roll) >> 1),(sine(pitch + roll) >> 1) + (sine(pitch - roll) >> 1)};
@@ -55,7 +53,7 @@ void attitude_display::draw_pitch(render::software_renderer &renderer, attitude_
   renderer.clipping = render::raster_clip::viewport(low,high);
   auto const display_angles{state.display_angles ? vec3d{*state.display_angles} : render::angle_radians(state.angles)};
   vec2d const display_projection{state.display_projection_angles ? vec2d{*state.display_projection_angles} : vec2d{render::angle_radians(state.projection_angles.x),render::angle_radians(state.projection_angles.y)}};
-  unsigned int const first{renderer.output.hud_capture ? pitch_mark_first(display_angles.x) : (state.angles.x & 0xffc0u) / 1820 + 1};
+  unsigned int const first{renderer.output.hud_capture ? pitch_mark_first(display_angles.x) : state.angles.x / 1820 + 1};
   uint8_t constexpr colour{6};
   for(unsigned int ordinal{0}; ordinal != 5; ++ordinal) {
     unsigned int const index{first + ordinal};

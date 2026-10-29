@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -96,7 +97,7 @@ int main(int const argc, char const *const argv[]) try {
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
     if(check) {
-      uint64_t expected{0};if(!(input >> expected) || digest != expected) throw std::runtime_error{"native pylon state differs"};
+      if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native pylon state differs"};
     } else { for(auto const value : values) std::cout << value << ' '; std::cout << '\n'; }
   }
   return EXIT_SUCCESS;

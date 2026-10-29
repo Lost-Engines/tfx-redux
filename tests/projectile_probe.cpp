@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -83,8 +84,7 @@ auto main(int const argc, char const *const argv[])->int try {
       for(unsigned int shift{0}; shift != 64; shift += 8) digest = (digest ^ ((sample >> shift) & 255)) * 1099511628211ULL;
     }
     if(check) {
-      uint64_t expected{0};
-      if(!(input >> expected) || expected != digest) throw std::runtime_error{"native projectile sequence differs in case " + std::to_string(cases)};
+      if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native projectile sequence differs in case " + std::to_string(cases)};
     }
     ++cases;
   }

@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -39,7 +40,7 @@ int main(int const argc, char const *const argv[]) try {
     if(!input) throw std::runtime_error{"incomplete sky input"};
     uint64_t hash{14695981039346656037ULL};
     for(auto const v : values) for(unsigned int shift{0}; shift != 32; shift += 8) hash = (hash ^ ((static_cast<uint32_t>(v) >> shift) & 255)) * 1099511628211ULL;
-    if(argc == 2) { uint64_t expected;if(!(input >> expected) || expected != hash) throw std::runtime_error{"native sky mismatch at case " + std::to_string(cases)}; }
+    if(argc == 2) { if(!tfx::test::fixture_matches(input,hash)) throw std::runtime_error{"native sky mismatch at case " + std::to_string(cases)}; }
     else std::cout << hash << '\n';
     ++cases;
   }

@@ -50,10 +50,8 @@ private:
 
 public:
   band_builder(horizon_context const &source, math::angle const pitch, math::angle const roll) : context{source} {
-    auto const &table{math::sine_table()};
-    unsigned int const p{static_cast<unsigned int>(pitch) >> 6}, r{static_cast<unsigned int>(roll) >> 6};
-    auto const sin{[&](unsigned int const a) { return static_cast<int32_t>(table[a & (math::angle_steps - 1)]); }};
-    auto const cos{[&](unsigned int const a) { return sin(a + math::angle_steps / 4); }};
+    int32_t const p{pitch}, r{roll};
+    auto const sin{math::sine_q15}, cos{math::cosine_q15};
     int const positive_sine{sin(p + r) >> 1}, negative_sine{sin(p - r) >> 1};
     int const positive_cosine{cos(p + r) >> 1}, negative_cosine{cos(p - r) >> 1};
     // Native 0xc81e6 forms sum/difference identities with separately rounded

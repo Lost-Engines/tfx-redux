@@ -104,10 +104,9 @@ void target_display::direction_marker(render::software_renderer &renderer, vec3<
   math::angle angle{0};
   if((x < -1 || x > 1) && (y < -1 || y > 1)) angle = math::direction_angle(static_cast<int16_t>(x),static_cast<int16_t>(y));
   if(horizontal < 0) angle = static_cast<math::angle>(-angle);
-  auto const &sines{math::sine_table()};
-  unsigned int const phase{static_cast<unsigned int>(angle) >> 6};
+
   int constexpr radius{35}, half_size{5}, sine_unit{32767};
-  vec2<int> const centre{word(160 + state.offset.x + sines[phase] * radius / sine_unit),word(56 + state.offset.y + sines[(phase + math::angle_steps / 4) % math::angle_steps] * radius / sine_unit)};
+  vec2<int> const centre{word(160 + state.offset.x + math::sine_q15(angle) * radius / sine_unit),word(56 + state.offset.y + math::cosine_q15(angle) * radius / sine_unit)};
   std::array<vec2<int>,4> const corners{{{-half_size,0},{0,-half_size},{half_size,0},{0,half_size}}};
   auto const line{[&](vec2<int> const &a, vec2<int> const &b) {
     presentation::draw_clipped_line(renderer.output,centre + a,centre + b,minimum,maximum,6);

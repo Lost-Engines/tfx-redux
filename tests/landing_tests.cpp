@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -26,8 +27,7 @@ int main(int const argc, char const *const argv[]) try {
     auto const &state{controller.value()};
     std::array<int32_t,20> const actual{state.enabled,state.carrier,state.beacon,state.cell.x,state.cell.y,state.port.offset.x,state.port.offset.y,state.port.heading,state.beacon_position.x,state.beacon_position.y,state.bearing.x,state.bearing.y,state.correction.x,state.correction.y,state.pitch_error,static_cast<int32_t>(std::to_underlying(state.height)),cue.speed_request,projected.x,projected.y,projected.z};
     for(auto const value : actual) {
-      int32_t expected;input >> expected;
-      if(!input || value != expected) throw std::runtime_error{"native ILS fixture differs at case " + std::to_string(index)};
+      if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native ILS fixture differs at case " + std::to_string(index)};
     }
     ++count;
   }

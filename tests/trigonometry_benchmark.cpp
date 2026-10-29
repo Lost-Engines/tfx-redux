@@ -1,4 +1,5 @@
 #include "render/continuous_pose.h"
+#include "legacy_trigonometry.h"
 #include "vectorstorm/sincos.h"
 #include <algorithm>
 #include <array>
@@ -31,7 +32,7 @@ struct single_precision {
 struct original {
   pair operator()(double x) const {
     auto const phase=static_cast<unsigned>(static_cast<int>(std::floor(x*1024/tau)))&1023;
-    auto const &values=tfx::math::sine_table();
+    auto const &values=tfx::test_reference::sine_table();
     return {values[phase]/32768.0,values[(phase+256)&1023]/32768.0};
   }
 };
@@ -52,7 +53,7 @@ template<size_t N,bool Interpolate=true> struct lookup {
   }
 };
 struct atan_standard { double operator()(double y,double x)const{return std::atan2(y,x);} };
-struct atan_original { double operator()(double y,double x)const{return tfx::render::angle_radians(tfx::math::direction_angle(static_cast<int16_t>(y*32767),static_cast<int16_t>(x*32767)));} };
+struct atan_original { double operator()(double y,double x)const{return tfx::render::angle_radians(tfx::test_reference::direction_angle(static_cast<int16_t>(y*32767),static_cast<int16_t>(x*32767)));} };
 template<size_t N> struct atan_lookup {
   std::array<double,N+1> values{};
   atan_lookup(){for(size_t i=0;i<=N;++i)values[i]=std::atan(static_cast<double>(i)/N);}

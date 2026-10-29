@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <bit>
 #include <cstdlib>
 #include <iostream>
@@ -78,8 +79,7 @@ auto main(int const argc, char const *const argv[])->int try {
       else std::cout << row.str();
     }
     if(check) {
-      uint64_t expected{0};
-      if(!(input >> expected) || hash != expected) throw std::runtime_error{"Arcade native trace differs in case " + std::to_string(cases)};
+      if(!tfx::test::fixture_matches(input,hash)) throw std::runtime_error{"Arcade native trace differs in case " + std::to_string(cases)};
     }
     ++cases;
   }

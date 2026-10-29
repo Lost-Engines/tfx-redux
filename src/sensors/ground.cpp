@@ -36,18 +36,17 @@ cruise_target acquire_cruise_target(vec3<int32_t> const &player, vec2<int32_t> c
 
 vec3<int32_t> ground_intersection(vec3<int32_t> const &player, math::angle const pitch, math::angle const heading) {
   // Native 0x93040 intersects the Y=0 plane, truncating distance to a signed word before the heading transform.
-  auto const &sine{math::sine_table()};
-  unsigned int const phase{static_cast<unsigned int>(pitch) >> 6};
-  int32_t const numerator{std::bit_cast<int32_t>((0u - static_cast<uint32_t>(player.y)) * static_cast<uint32_t>(sine[(phase + 256) % 1024]))};
+  int32_t const sine{math::sine_q15(pitch)}, cosine{math::cosine_q15(pitch)};
+  int32_t const numerator{std::bit_cast<int32_t>((0u - static_cast<uint32_t>(player.y)) * static_cast<uint32_t>(cosine))};
   int32_t distance{0};
-  if(sine[phase] && numerator) {
-    if(numerator == std::numeric_limits<int32_t>::min() && sine[phase] == -1) throw std::runtime_error{"native designator division overflows"};
-    distance = numerator / sine[phase];
+  if(sine && numerator) {
+    if(numerator == std::numeric_limits<int32_t>::min() && sine == -1) throw std::runtime_error{"native designator division overflows"};
+    distance = numerator / sine;
   }
   int16_t const radius{word(distance)};
-  unsigned int const yaw{static_cast<unsigned int>(static_cast<uint16_t>(-heading)) >> 6};
-  int16_t const x{word((-static_cast<int32_t>(radius) * sine[yaw]) >> 15)};
-  int16_t const z{word((static_cast<int32_t>(radius) * sine[(yaw + 256) % 1024]) >> 15)};
+  int32_t const yaw{-static_cast<int32_t>(heading)};
+  int16_t const x{word((-static_cast<int32_t>(radius) * math::sine_q15(yaw)) >> 15)};
+  int16_t const z{word((static_cast<int32_t>(radius) * math::cosine_q15(yaw)) >> 15)};
   return {add(player.x,x),0,add(player.z,z)};
 }
 

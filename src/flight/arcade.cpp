@@ -111,8 +111,8 @@ void rotate(arcade_state &state, math::rotation_axis const axis, float const amo
   auto &remainder{state.rotation_remainder[index]};
   calculation const accumulated{static_cast<calculation>(remainder) + amount};
   remainder = static_cast<float>(accumulated);
-  int32_t const phase{integer(accumulated * (1.0f / 64))};
-  auto const rotation{static_cast<uint16_t>(static_cast<uint32_t>(phase) << 6)};
+  int32_t const units{integer(accumulated)};
+  auto const rotation{static_cast<uint16_t>(units)};
   remainder = static_cast<float>(static_cast<calculation>(remainder) - math::signed_word(rotation));
   state.orientation.rotate(axis,rotation);
 }
@@ -124,8 +124,7 @@ void recover(arcade_state &state, uint16_t const elapsed) {
   rotate(state,math::rotation_axis::heading,static_cast<float>(heading));
   int32_t rate{-1048576};
   if(pitch > 0) {
-    auto const phase{static_cast<uint16_t>(pitch * 2) >> 6};
-    rate = -static_cast<int32_t>(math::sine_table()[(phase + 256) % 1024]) * 32;
+    rate = -math::cosine_q15(pitch * 2) * 32;
   }
   int32_t const delta{std::bit_cast<int32_t>(static_cast<uint32_t>(rate) * elapsed) >> 15};
   rotate(state,math::rotation_axis::pitch,static_cast<float>(delta));
@@ -336,10 +335,9 @@ arcade_update advance_arcade(arcade_state &state, flight_controls const &control
   auto turn{state.orientation.transposed()};
   uint16_t const turn_ticks{static_cast<uint16_t>(time_warp ? elapsed / 5 : elapsed)};
   auto const bank{state.orientation.angles().z};
-  auto const &sine{math::sine_table()};
-  int const bank_sine{std::clamp(static_cast<int>(sine[bank >> 6]),-16384,16384)};
+  int const bank_sine{std::clamp(math::sine_q15(bank),-16384,16384)};
   auto const half_pitch{static_cast<uint16_t>(state.orientation.forward.y / 2)};
-  int32_t const turn_rate{(static_cast<int32_t>(sine[((half_pitch >> 6) + 256) % 1024]) * bank_sine) >> 15};
+  int32_t const turn_rate{(math::cosine_q15(half_pitch) * bank_sine) >> 15};
   turn.rotate(math::rotation_axis::heading,static_cast<uint16_t>(math::signed_word(static_cast<uint16_t>(turn_rate)) * turn_ticks / 80));
   state.orientation = turn.transposed();
   if(state.normalisation_counter & 31) state.orientation.normalise();

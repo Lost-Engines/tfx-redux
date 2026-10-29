@@ -143,12 +143,10 @@ std::optional<air_visual_event> advance_air_motion(air_state &state) {
   /// Native 0x77f50 after the controller yields: bank, coupled heading/pitch, speed and Q8 translation, then afterburner visual edge.
   auto &pose{state.pose};
   pose.angles.z = static_cast<math::angle>(pose.angles.z + state.angular_rate.z);
-  auto const &sine{math::sine_table()};
-  unsigned int const negative_bank{static_cast<unsigned int>(static_cast<uint16_t>(-pose.angles.z)) >> 6};
-  unsigned int const positive_bank{static_cast<unsigned int>(pose.angles.z) >> 6};
+  int32_t const negative_bank{-static_cast<int32_t>(pose.angles.z)};
   state.input_ticks = word(state.input_ticks - 1);
-  pose.angles.y = static_cast<math::angle>(pose.angles.y + bank_component(state.angular_rate.y,sine[negative_bank]));
-  pose.angles.x = static_cast<math::angle>(pose.angles.x + bank_component(state.angular_rate.x,sine[(positive_bank + 256) % 1024]));
+  pose.angles.y = static_cast<math::angle>(pose.angles.y + bank_component(state.angular_rate.y,static_cast<int16_t>(math::sine_q15(negative_bank))));
+  pose.angles.x = static_cast<math::angle>(pose.angles.x + bank_component(state.angular_rate.x,static_cast<int16_t>(math::cosine_q15(pose.angles.z))));
   pose.speed = wrap(static_cast<int64_t>(pose.speed) + state.acceleration);
   move(pose.position,pose.angles,pose.speed >> speed_fraction_bits);
   bool const burning{(pose.flags & std::to_underlying(air_flag::afterburner)) != 0};

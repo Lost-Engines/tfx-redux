@@ -174,10 +174,9 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
     }
     if(state.aircraft != flight::player_aircraft::nighthawk) {
       auto const pointer{[&](int const x, int const length, int const degrees) {
-        // Original truncates to a signed word, wraps the 16.16 numerator, then
-        // discards the six angle bits absent from its 1,024-entry sine table.
+        // Retain the original units and numerator wrapping, using all angle bits.
         int32_t const numerator{std::bit_cast<int32_t>(static_cast<uint32_t>(degrees) * 65536u)};
-        auto const angle{static_cast<math::angle>(numerator / 360) & uint16_t{0xffc0}};
+        auto const angle{static_cast<math::angle>(numerator / 360)};
         auto const delta{math::rotate_words({0,static_cast<int16_t>(-length)},static_cast<math::angle>(angle))};
         auto const from{point({x,5})};
         vec2<int> const to{math::signed_word(static_cast<uint16_t>(from.x + delta.x)),math::signed_word(static_cast<uint16_t>(from.y + delta.y))};

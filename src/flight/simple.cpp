@@ -16,7 +16,7 @@ float constexpr mach_per_metre_per_second{.0029411765281111f};
 float constexpr geometric_metres_per_foot{.30480000376701355f}, kilometres_per_metre{.0010000000474974513f};
 float constexpr fixed_speed_scale{256};
 int32_t constexpr airborne_start_speed{250};
-unsigned int constexpr angle_step{64}, normalisation_mask{31};
+unsigned int constexpr normalisation_mask{31};
 float constexpr collision_reset_height{-2}, collision_reset_position{-5};
 
 int32_t truncate(calculation const value) {
@@ -27,8 +27,7 @@ void rotate(arcade_state &state, math::rotation_axis const axis, float const amo
   auto &remainder{state.rotation_remainder[static_cast<unsigned int>(axis)]};
   calculation const accumulated{static_cast<calculation>(remainder) + amount};
   remainder = static_cast<float>(accumulated);
-  int32_t const phase{truncate(accumulated * (1.0f / angle_step))};
-  auto const rotation{static_cast<math::angle>(static_cast<uint32_t>(phase) * angle_step)};
+  auto const rotation{static_cast<math::angle>(truncate(accumulated))};
   remainder = static_cast<float>(static_cast<calculation>(remainder) - math::signed_word(rotation));
   state.orientation.rotate(axis,rotation);
 }

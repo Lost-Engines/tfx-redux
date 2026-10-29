@@ -3,21 +3,16 @@
 #include <array>
 #include <bit>
 #include <cstdint>
+#include "math/trigonometry.h"
 #include "vectorstorm/vector/vector2.h"
 #include "vectorstorm/vector/vector3.h"
 #include "vectorstorm/matrix/matrix3.h"
 
 namespace tfx::math {
 
-using angle = uint16_t;
-unsigned int constexpr angle_steps{1024};
 int constexpr matrix_fraction_bits{15};
 int constexpr matrix_unit{1 << matrix_fraction_bits};
 
-constexpr int16_t signed_word(uint16_t const value) {
-  return std::bit_cast<int16_t>(value);
-}
-std::array<int16_t, angle_steps> const &sine_table();
 vec2<angle> bearing(vec3<int32_t> const &from, vec3<int32_t> const &to);
 int32_t distance_estimate(vec3<int32_t> const &from, vec3<int32_t> const &to);
 void advance_position(vec3<int32_t> &position, vec3<angle> const &angles, int32_t distance, int32_t minimum_y, int32_t maximum_y);

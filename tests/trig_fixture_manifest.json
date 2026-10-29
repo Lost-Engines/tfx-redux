@@ -1,0 +1,420 @@
+[
+  {
+    "test": "actors.redux_surface_combat",
+    "fixture": "tests/reference/surface_combat.txt",
+    "command": [
+      "surface_combat_probe",
+      "@fixture"
+    ],
+    "original_sha256": "15104e337918fd10e197922437f3b33b8798810091ab9f29f80d51667da3341c",
+    "redux_sha256": "d217ef9fabbb1e658fb8c55872ee66814a48a6fd641902f0b2d306a76ff52a0d"
+  },
+  {
+    "test": "sensors.redux_ground_geometry_and_selection",
+    "fixture": "tests/reference/ground_sensors.txt",
+    "command": [
+      "ground_probe",
+      "@fixture"
+    ],
+    "original_sha256": "8265a42fad626d37666a3f4dfc182525b3a190a9e0e74386499d20138d9589cb",
+    "redux_sha256": "9fda013781d6318f0835ef0003bb44e1c28a60e8a9266bfa8246bdc517743da3"
+  },
+  {
+    "test": "render.redux_model_articulation",
+    "fixture": "tests/reference/model_articulation.txt",
+    "command": [
+      "model_articulation_probe",
+      "@fixture"
+    ],
+    "original_sha256": "14dc6899d70474f901bd62e00f3a955a6c7170083088de2409c741df0da1a442",
+    "redux_sha256": "2c957da92c9cc2325be6b12e530b94278a8ea81125a16da55641468b7ed55a7c"
+  },
+  {
+    "test": "render.redux_queued_model_transforms",
+    "fixture": "tests/reference/model_transforms.txt",
+    "command": [
+      "model_transform_probe",
+      "@fixture"
+    ],
+    "original_sha256": "5e0c4b2568c21febf7a30d8499ec571280cd9bdbc3dbc7f8d708284bc2b0b5ad",
+    "redux_sha256": "c7b6593b2f4000c15dad1a32162976df3b13d6e68cf80fcfa595a1cdab9436ff"
+  },
+  {
+    "test": "render.redux_transformed_model_lines",
+    "fixture": "tests/reference/model_transformed_lines.txt",
+    "command": [
+      "model_transform_probe",
+      "--lines",
+      "@fixture"
+    ],
+    "original_sha256": "bba973af50e9057bed69d498ea7da4edab29f3237726d40fa7e80dfe672db54b",
+    "redux_sha256": "4ab794fa377ba9dc0ccda41e8885802cd1cd9171405c672c7044c3f4a5c7eb5a"
+  },
+  {
+    "test": "render.redux_ground_shadow_frames",
+    "fixture": "tests/reference/model_shadow_frames.txt",
+    "command": [
+      "model_transform_probe",
+      "--shadow",
+      "@fixture"
+    ],
+    "original_sha256": "0492d54049c41a83723274f8060f49a1c19612e95c0549d9c9d7cb27225bcb08",
+    "redux_sha256": "e8003a77257e693ab8842b70ebcbcff23d8506a78e241fcf4b5eb6ed17db50e1"
+  },
+  {
+    "test": "render.redux_gouraud_shadow_frames",
+    "fixture": "tests/reference/model_shadow_frames.txt",
+    "command": [
+      "model_transform_probe",
+      "--shadow",
+      "--shaded",
+      "@fixture"
+    ],
+    "original_sha256": "0492d54049c41a83723274f8060f49a1c19612e95c0549d9c9d7cb27225bcb08",
+    "redux_sha256": "e8003a77257e693ab8842b70ebcbcff23d8506a78e241fcf4b5eb6ed17db50e1"
+  },
+  {
+    "test": "render.redux_shadow_detail_primitives",
+    "fixture": "tests/reference/model_shadow_details.txt",
+    "command": [
+      "model_transform_probe",
+      "--shadow",
+      "--effects",
+      "@fixture"
+    ],
+    "original_sha256": "73e0682e3d71411c24febdb4a9fc5cfda675f7ffee59825f152144b00337eb05",
+    "redux_sha256": "8ad83cde5724f76b912e3c0ce65bda1bbd53567e796455501989ab1861d03c5a"
+  },
+  {
+    "test": "render.redux_horizon_pixels",
+    "fixture": "tests/reference/horizon_pixels.txt",
+    "command": [
+      "horizon_pixels_probe",
+      "@fixture"
+    ],
+    "original_sha256": "d9250b7a644ef9776e8bb37125ad2b19e534fe884a13b9d360fdc1a10e32e704",
+    "redux_sha256": "2ba5a57bbb823219b872451612b9b8d473bd8fd92a35832977f7c7d06ec9b183"
+  },
+  {
+    "test": "render.redux_wide_horizon_pixels",
+    "fixture": "tests/reference/horizon_wide_pixels.txt",
+    "command": [
+      "horizon_pixels_probe",
+      "@fixture"
+    ],
+    "original_sha256": "4db4ae94190bd4b9c199958f07f4541190e5c612a70f9421603371d99c3f67e1",
+    "redux_sha256": "810ecbf14129a18f119c31eae14550422992007a4ea85f621406394a26edd89e"
+  },
+  {
+    "test": "render.redux_horizon_surfaces",
+    "fixture": "tests/reference/horizon.txt",
+    "command": [
+      "horizon_probe",
+      "@fixture"
+    ],
+    "original_sha256": "2cf1ad55b4db0687d94f5a40162cb8aab3a99a8d957411f57475469d0c1d2ef0",
+    "redux_sha256": "b4d3a135de7f34dd9cdae7ac9ad13047f5bf1c8e0e853b2feddbe9729cc672d1"
+  },
+  {
+    "test": "world.redux_sky_and_layers",
+    "fixture": "tests/reference/sky.txt",
+    "command": [
+      "sky_probe",
+      "@fixture"
+    ],
+    "original_sha256": "a85cdf4759c1d57af61741523b823e2a3cfc00d2e3b01df53d8eb0bf84c1e469",
+    "redux_sha256": "6f369e594f35d3a7309ba89f6420740f3a5d422e4e601586b445464c5a588788"
+  },
+  {
+    "test": "world.redux_area_flak_controller",
+    "fixture": "tests/reference/flak.txt",
+    "command": [
+      "flak_probe",
+      "@fixture"
+    ],
+    "original_sha256": "3b6fe798f52e031ed3631d991d9300ae54ddfc1a4d37db5bf2aab09f853c75c3",
+    "redux_sha256": "71cbd96add1fbe584cc7e8d365aab79ec84a38738e2a0080aae79062552ddbfe"
+  },
+  {
+    "test": "flight.redux_automatic_approach",
+    "fixture": "tests/fixtures/automatic_approach.txt",
+    "command": [
+      "automatic_approach_probe",
+      "@fixture"
+    ],
+    "original_sha256": "517f262c927bed85f4b995f08e06588ea2aab12b26f1b840d7fa27fa063a8741",
+    "redux_sha256": "08c97ab68accd44d3ac4f2c8173f0924964d0b6828dfc58bb246c437e71da6e9"
+  },
+  {
+    "test": "flight.redux_aerodynamic_navigation",
+    "fixture": "tests/fixtures/aerodynamic_navigation.txt",
+    "command": [
+      "aerodynamic_navigation_probe",
+      "@fixture"
+    ],
+    "original_sha256": "aac08bed5b8b50f5f12e504c15f519fff09a79bc05b75ca711ccf75c4df5597a",
+    "redux_sha256": "cea768f76f1808c14bd8e99125576d411c923bb5bf9fd5163dda0355e996dd83"
+  },
+  {
+    "test": "flight.redux_aerodynamic_guidance",
+    "fixture": "tests/fixtures/aerodynamic_guidance.txt",
+    "command": [
+      "aerodynamic_guidance_probe",
+      "@fixture"
+    ],
+    "original_sha256": "933e57a85b0f578be436503952f198683b60d69304770ec7c2c8fd8595c66baf",
+    "redux_sha256": "3602b095c6657e308b7f082a92c52eee7af45227842d2fc8ba8113968ed2f161"
+  },
+  {
+    "test": "flight.redux_aerodynamic_motion",
+    "fixture": "tests/fixtures/aerodynamic_motion.txt",
+    "command": [
+      "aerodynamic_motion_probe",
+      "@fixture"
+    ],
+    "original_sha256": "39de7643849d66c3b2bcfd849deb218e8f594f8f74e64cdf0b0c742a52764fc0",
+    "redux_sha256": "1c9934507589869e7ef1a882c3608a3303117015061125eb7a7a2268ec8e986a"
+  },
+  {
+    "test": "flight.redux_aerodynamic_world_pose",
+    "fixture": "tests/fixtures/aerodynamic_pose.txt",
+    "command": [
+      "aerodynamic_pose_probe",
+      "@fixture"
+    ],
+    "original_sha256": "3be2876910b2723c7aa06f643362848b921e291343ad1ec5b3a85299d54288c4",
+    "redux_sha256": "f9842ef910575f70d0f60793a2a7102ae546b74a1d316d9780ece3ecef23cf67"
+  },
+  {
+    "test": "flight.redux_simple_sequences",
+    "fixture": "tests/fixtures/simple.txt",
+    "command": [
+      "simple_probe",
+      "--check",
+      "@fixture"
+    ],
+    "original_sha256": "e597f38f7a9929a6d1e454dc4fce8b29ffeba25e27c2e2f2f3ccd6f19b7136e2",
+    "redux_sha256": "0b3e4903c67458216605bbeb7560d6f907325ddb76a6c39f37f7c5f7aa924d34"
+  },
+  {
+    "test": "flight.redux_simple_disabled_sequences",
+    "fixture": "tests/fixtures/simple_disabled.txt",
+    "command": [
+      "simple_probe",
+      "--check-disabled",
+      "@fixture"
+    ],
+    "original_sha256": "7203d7c19d4f732512827d0fff1d4487cf1f3110a4ea4a1572c8954dc1dac89b",
+    "redux_sha256": "884e0f46a9a37ae3b6a1da895e3320108aceec3578afc5ab65777e6999885d5d"
+  },
+  {
+    "test": "flight.redux_simple_ground_contact",
+    "fixture": "tests/fixtures/simple_ground.txt",
+    "command": [
+      "simple_ground_probe",
+      "@fixture"
+    ],
+    "original_sha256": "c960fa4806298f16ffb70101f6da125a6a8be713b8b95b4edf21203517b83b70",
+    "redux_sha256": "de097a2952ebb3e5427522938e8aa1d12f2b6710e250167b72731aaec616863d"
+  },
+  {
+    "test": "flight.redux_simple_coordinated_turn",
+    "fixture": "tests/fixtures/simple_turn.txt",
+    "command": [
+      "simple_turn_probe",
+      "@fixture"
+    ],
+    "original_sha256": "b14be33c4c3c8f450599210ac3a8cea08c767b69f08246d26bf9159687fee10c",
+    "redux_sha256": "a3929dcc461f35cd183849767f8aa7e69b25116a6be4a9265d0c95fa612abc32"
+  },
+  {
+    "test": "flight.redux_ejected_pilot_motion",
+    "fixture": "tests/fixtures/ejection.txt",
+    "command": [
+      "ejection_probe",
+      "@fixture"
+    ],
+    "original_sha256": "fcc3d7a608f930d26f378bfe4ae59d78743a067e9eb31304ff6b2eb102c9e394",
+    "redux_sha256": "da5ca04bc3c646aad193e7a4f11c6e9aa7253fc041e14251de78243651ff14f3"
+  },
+  {
+    "test": "flight.redux_ils_guidance",
+    "fixture": "tests/fixtures/landing.txt",
+    "command": [
+      "landing_tests",
+      "@fixture"
+    ],
+    "original_sha256": "e9e55c9e0b90f754705cf87f29330f1f8b0678c63d1173434b14b16800bae073",
+    "redux_sha256": "1beccf3d4e7066d5a840bd9cfa70d37a3a82e3aa00d79b02f737f47784a1e64c"
+  },
+  {
+    "test": "cockpit.redux_designator_pose",
+    "fixture": "tests/reference/designator_pose.txt",
+    "command": [
+      "designator_probe",
+      "--camera",
+      "@fixture"
+    ],
+    "original_sha256": "681cfdaf6d9da1d7a0816b6fd253285f827bdedbcceaa2e570528cbd812cfb0c",
+    "redux_sha256": "2bd61a0ef46b3a94e5bfc8536ad017eefa59ea250b4b46820b12ef177bb39860"
+  },
+  {
+    "test": "weapons.redux_pylons",
+    "fixture": "tests/reference/loadout.txt",
+    "command": [
+      "loadout_probe",
+      "--check",
+      "@fixture"
+    ],
+    "original_sha256": "a22d8ec75ceefcee7705eaaa5c0265dd4b1227756bfb6dbf744c8a3c9d22324b",
+    "redux_sha256": "8a67068d54534eea2b2b7b675d8248a8414022248d2857d69c41270ab47eb599"
+  },
+  {
+    "test": "weapons.redux_stores_jettison",
+    "fixture": "tests/reference/jettison.txt",
+    "command": [
+      "jettison_probe",
+      "@fixture"
+    ],
+    "original_sha256": "0d2d6d954eb43ed0828d30012796430ae5c33c4f648a408991aaaae54a52bc19",
+    "redux_sha256": "a24e371bc9e9fac5fe3e3c247cfaf1120e5c71ca887a29768c080481ab063960"
+  },
+  {
+    "test": "weapons.redux_keyboard_cannon",
+    "fixture": "tests/reference/cannon.txt",
+    "command": [
+      "cannon_probe",
+      "--check",
+      "@fixture"
+    ],
+    "original_sha256": "bd7155a1f3fbd917b931f153dd90654f799b64abc66eb13a06a2f3af848f5f80",
+    "redux_sha256": "dc964b25e59090e81c1a4dbeaa239598f524796acdab2817aba813f0e8547735"
+  },
+  {
+    "test": "weapons.redux_anchor_transform",
+    "fixture": "tests/reference/anchor.txt",
+    "command": [
+      "anchor_probe",
+      "@fixture"
+    ],
+    "original_sha256": "6dd6b3d40f3c33c90843bb9d2a312cc005d78871534bd3fa1aa711a2560c3ca7",
+    "redux_sha256": "b5f28af9a4f5111d61ad7ef129b6619bfe0df934ac830b6b418124b17abafa70"
+  },
+  {
+    "test": "weapons.redux_projectile_motion",
+    "fixture": "tests/reference/projectile.txt",
+    "command": [
+      "projectile_probe",
+      "--check",
+      "@fixture"
+    ],
+    "original_sha256": "8e838afedcead7d7ff3e7bb17f9e373799c5329108273178b264141031a70650",
+    "redux_sha256": "3134c4e37168e8b5745b9c386ee1363fee8679ad2f0bb141f024120804db578a"
+  },
+  {
+    "test": "actors.redux_air_combat",
+    "fixture": "tests/reference/air_combat.txt",
+    "command": [
+      "air_combat_tests",
+      "@fixture"
+    ],
+    "original_sha256": "ff1a7885d6261fea770f3183b34e369b6224952e4ccaecfaa4153e68d5509049",
+    "redux_sha256": "3f88d64f689bb77d857da3b8bf7ab0d9980fae5cecca21c1826f4b92d1d3092f"
+  },
+  {
+    "test": "actors.redux_air_crossfire_notices",
+    "fixture": "tests/reference/air_crossfire.txt",
+    "command": [
+      "air_combat_tests",
+      "@fixture"
+    ],
+    "original_sha256": "72b0e8702cb37fef0a40798276427b68289a80e98343b334bf9e92ec865b0367",
+    "redux_sha256": "e1ca27687845b7a69cf23f9b4c10b0df86f4b000f2b2d9f64da69b5465bf87bd"
+  },
+  {
+    "test": "actors.redux_air_collision_fall",
+    "fixture": "tests/reference/air_collision.txt",
+    "command": [
+      "air_combat_tests",
+      "@fixture",
+      "--collision"
+    ],
+    "original_sha256": "c0f86a9b207e7088281153613efce1bda79617b9ae9223e54eb0a66a50c7fefe",
+    "redux_sha256": "c7c00ea9be772fa3d131c74a8ad12b9dfe19f9ac9945fbc43203728761c157b6"
+  },
+  {
+    "test": "actors.redux_air_death",
+    "fixture": "tests/reference/air_death.txt",
+    "command": [
+      "air_combat_tests",
+      "@fixture",
+      "--death"
+    ],
+    "original_sha256": "7b8c1389f94d2b75ff067ace20ef1d924606c67e1f04d8458322d55f55db46ae",
+    "redux_sha256": "140babfdd9e8095b254aa2143dab54ebb03e01080a1e61ec7a0eaf16ef6033d1"
+  },
+  {
+    "test": "actors.redux_air_sequences",
+    "fixture": "tests/reference/air.txt",
+    "command": [
+      "air_tests",
+      "@fixture"
+    ],
+    "original_sha256": "2c86570778e454910588cef05af8a70a4b49d4d3ac5ca723dd640571b9e2d2d7",
+    "redux_sha256": "39d748b31a8133ff935dedb69a124d3694e075fea0e2c3bcaae5a90090a4b488"
+  },
+  {
+    "test": "actors.redux_air_motion",
+    "fixture": "tests/reference/air_motion.txt",
+    "command": [
+      "air_motion_probe",
+      "--check",
+      "@fixture"
+    ],
+    "original_sha256": "abba90c39fa4af1f2a19bfa115bf73f80176a176d6cf16bbb2c69beaaf753470",
+    "redux_sha256": "76a6257d0445b35d69531ab76a7ead89a65ed5f288a24a4a0a27676c48d81996"
+  },
+  {
+    "test": "actors.redux_surface_sequences",
+    "fixture": "tests/reference/surface.txt",
+    "command": [
+      "surface_tests",
+      "@fixture"
+    ],
+    "original_sha256": "c3c3e6b2d38eada62e0c5e343b36430553c4be8bb433e5ae9b4c00387188d87f",
+    "redux_sha256": "cbb1b6cff9a78511b72edbf03d94129a298e8a261122a8d29e6181dc8e69595a"
+  },
+  {
+    "test": "flight.redux_arcade_sequences",
+    "fixture": "tests/reference/arcade.txt",
+    "command": [
+      "arcade_probe",
+      "--check",
+      "@fixture"
+    ],
+    "original_sha256": "1c7f582ff1397767be6796ef023ddb66103cd7d2ffb13cf8da964f87f9e9c3f6",
+    "redux_sha256": "76664a844a145c81180edd57895680cb16c2e9459705852dff55592ed16c178e"
+  },
+  {
+    "test": "flight.redux_disabled_sequences",
+    "fixture": "tests/reference/disabled.txt",
+    "command": [
+      "arcade_probe",
+      "--check-disabled",
+      "@fixture"
+    ],
+    "original_sha256": "18ebef3c32180bb68cf1aa7b867c48c78e6411e7802d6e11dce41a515fd30bbe",
+    "redux_sha256": "4526ffa6e3c6095321d82cc5ef7f68d4a03f7e28dfd78639b6b3f9e260d64b62"
+  },
+  {
+    "test": "flight.redux_ground_sequences",
+    "fixture": "tests/reference/ground_flight.txt",
+    "command": [
+      "arcade_probe",
+      "--check-ground",
+      "@fixture"
+    ],
+    "original_sha256": "568b81454ccbff824157f181aa85d63b427ba12c47f51e7f46aa44e3d5a725e0",
+    "redux_sha256": "747198f33d1d7a61b08683f36cfba3b51f7c7d728282255844591d75a69ef07c"
+  }
+]

@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -70,8 +71,7 @@ auto main(int const argc, char const *const argv[])->int try {
         .turn_envelope{envelope},
       };
       auto const digest{sample(input,performance,context,action,!check)};
-      uint64_t expected{0};
-      if(check && (!(input >> expected) || digest != expected)) throw std::runtime_error{"native air motion differs in case " + std::to_string(cases)};
+      if(check && (!tfx::test::fixture_matches(input,digest))) throw std::runtime_error{"native air motion differs in case " + std::to_string(cases)};
       ++cases;
     }
     if(!input.eof() || !cases) throw std::runtime_error{"invalid air motion fixture"};

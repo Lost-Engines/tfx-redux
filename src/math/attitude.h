@@ -16,7 +16,7 @@ struct attitude {
   vec3<angle> angles() const;
 };
 
-angle direction_angle(int16_t vertical, int16_t horizontal);
+angle direction_angle(int32_t vertical, int32_t horizontal);
 uint32_t integer_sqrt(uint32_t value);
 
 } // namespace tfx::math

@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -73,8 +74,8 @@ int main(int const argc, char const *const argv[]) try {
     uint64_t hash{14695981039346656037ull};for(auto const value : output.pixels) hash = (hash ^ value) * 1099511628211;
     if(pixels) std::cout.write(reinterpret_cast<char const*>(output.pixels.data()),output.pixels.size());
     else if(fixture.is_open()) {
-      for(auto const value : positions) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native articulated vertex mismatch at " + std::to_string(cases)}; }
-      uint64_t expected;if(!defined || !(input >> expected) || hash != expected) throw std::runtime_error{"native articulated frame mismatch at " + std::to_string(cases)};
+      for(auto const value : positions) { if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native articulated vertex mismatch at " + std::to_string(cases)}; }
+      if(!defined || !tfx::test::fixture_matches(input,hash)) throw std::runtime_error{"native articulated frame mismatch at " + std::to_string(cases)};
     } else { for(auto const value : positions) std::cout << value << ' ';std::cout << hash;if(!defined) std::cout << " overflow";std::cout << '\n'; }
     ++cases;
   }

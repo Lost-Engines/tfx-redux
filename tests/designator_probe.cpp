@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include "cockpit/designator.h"
 #include <fstream>
 #include <iostream>
@@ -31,7 +32,7 @@ int main(int const argc, char const *const argv[]) try {
     while(input >> state.pitch >> state.heading >> state.camera.x >> state.camera.y >> state.camera.z >> point.x >> point.y >> point.z >> origin.x >> origin.y) {
       auto const values{pose_values(state,point,origin)};
       if(fixture.is_open()) {
-        for(auto const value : values) { int32_t expected;if(!(input >> expected) || expected != value) throw std::runtime_error{"native designator pose mismatch at " + std::to_string(count)}; }
+        for(auto const value : values) { if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native designator pose mismatch at " + std::to_string(count)}; }
       } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
       ++count;
     }

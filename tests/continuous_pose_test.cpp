@@ -80,7 +80,7 @@ int main() {
       require(camera.last_pose().position_q16==native.projector().position_q16,"display altered native camera translation");
     }
   }
-  require(largest_display_step<.6 && largest_native_step>10,"4K slow-turn regression did not distinguish sub-phase movement");
+  require(largest_display_step<.6 && largest_native_step<2,"4K slow turn still jumps across coarse phase bins");
   // HUD positions remain continuous across the old 64-word phase boundaries,
   // including the negative-pitch wrap. Check known level and banked geometry.
   vec2d const hud_origin{1920,1080};
@@ -170,7 +170,7 @@ int main() {
       auto const &native_point=original.primitives[0].vertices[0].position;
       if(step>1) {
         require(point.x>last && point.x-last<.2,"nested model rotation lost sub-phase precision");
-        require(native_point==last_native,"native helper arithmetic changed");
+        require((native_point-last_native).length()<2,"fixed-point helper jumps across coarse phase bins");
       }
       last=point.x;last_native=vec3d{native_point};
     }

@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -44,8 +45,7 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const value : view.angles) values.push_back(value);
     if(argc == 2) {
       for(auto const value : values) {
-        uint32_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native aerodynamic world pose differs"};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native aerodynamic world pose differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';

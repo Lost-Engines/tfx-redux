@@ -31,10 +31,8 @@ std::optional<flak_event> advance_flak(flak_state &state, flak_context const &co
   unsigned int constexpr day_radius_mask{1023}, night_radius_mask{2047};
   int32_t constexpr flash_radius{80};
   int32_t const radius{static_cast<int32_t>(state.random.scatter & (context.night ? night_radius_mask : day_radius_mask))};
-  auto const &sine{math::sine_table()};
-  unsigned int const angle{static_cast<unsigned int>(phase) >> 6};
-  int32_t const x{-radius * sine[angle] >> math::matrix_fraction_bits};
-  int32_t const z{radius * sine[(angle + math::angle_steps / 4) % math::angle_steps] >> math::matrix_fraction_bits};
+  int32_t const x{-radius * math::sine_q15(phase) >> math::matrix_fraction_bits};
+  int32_t const z{radius * math::cosine_q15(phase) >> math::matrix_fraction_bits};
   bool const flash{!context.night && radius < flash_radius};
   uint8_t const model{context.night ? state.night_model : uint8_t{0}};
   if(context.night && ++state.night_model >= flak_night_models) state.night_model = 0;

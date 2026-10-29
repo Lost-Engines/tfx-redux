@@ -11,7 +11,6 @@ int constexpr stall_pitch_rate{24};
 double constexpr stall_speed_interval{50}, stall_pitch_fraction{.02};
 float constexpr stall_pitch_scale{1024}, low_speed_sink_per_tick{.1f};
 float constexpr indicated_speed_scale{.515f};
-unsigned int constexpr angle_step{64};
 int16_t constexpr carrier_surface{3};
 
 int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
@@ -23,8 +22,7 @@ void rotate_body(simple_ground_state &state, math::rotation_axis const axis, flo
   auto &remainder{state.rotation_remainder[static_cast<unsigned int>(axis)]};
   calculation const accumulated{static_cast<calculation>(remainder) + amount};
   remainder = static_cast<float>(accumulated);
-  int32_t const phase{truncate(accumulated * (1.0f / angle_step))};
-  auto const rotation{static_cast<math::angle>(static_cast<uint32_t>(phase) * angle_step)};
+  auto const rotation{static_cast<math::angle>(truncate(accumulated))};
   remainder = static_cast<float>(static_cast<calculation>(remainder) - math::signed_word(rotation));
   state.body.rotate(axis,rotation);
 }

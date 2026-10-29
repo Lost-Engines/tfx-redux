@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -55,7 +56,7 @@ int main(int const argc, char const *const argv[]) try {
     values.insert(values.end(),draws.begin(),draws.end());
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(argc == 2) { uint64_t expected;if(!(input >> expected) || expected != digest) throw std::runtime_error{"flak mismatch at case " + std::to_string(cases)}; }
+    if(argc == 2) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"flak mismatch at case " + std::to_string(cases)}; }
     else std::cout << digest << '\n';
     ++cases;
   }
