@@ -1,0 +1,56 @@
+name: Publish screenshot gallery
+
+on:
+  push:
+    branches: [master]
+    paths: &gallery_paths
+      - 'captures/showcase-4k/**'
+      - 'tools/publish_gallery.py'
+      - 'tools/test_publish_gallery.py'
+      - '.gitattributes'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    paths: *gallery_paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gallery-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          persist-credentials: false
+      - name: Check publication boundaries
+        run: python3 -m unittest discover -s tools -p test_publish_gallery.py
+      - name: Stage the selected gallery
+        run: python3 tools/publish_gallery.py --output build/gallery-pages
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          path: build/gallery-pages
+
+  deploy:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy gallery
+        id: deployment
+        uses: actions/deploy-pages@v4

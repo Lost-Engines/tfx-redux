@@ -1,0 +1,10 @@
+# Raptor — on a wing above the clouds
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -2850 148480
+aircraft f22
+angles -10 0 -88
+view external
+mission-actors 0
+warmup 24
+camera 144409 -2857 148456 144384 -2850 148480 0
+player-event 9

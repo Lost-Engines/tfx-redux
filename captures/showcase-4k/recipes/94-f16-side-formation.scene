@@ -1,0 +1,13 @@
+# F16 — alongside the formation
+# Photographic staging, not an unscripted gameplay recording.
+position 287744 -650 146432
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 287829 -455 146412 287744 -447 146420 0
+hide-player 1
+actor f_16 287744 -450 146432 0 0 0 0
+actor f_16 287719 -448 146397 0 0 0 0
+actor f_16 287769 -452 146397 0 0 0 0

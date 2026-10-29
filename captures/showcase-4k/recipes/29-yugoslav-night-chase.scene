@@ -1,0 +1,9 @@
+# Yugoslav after dark — chase
+# Photographic staging, not an unscripted gameplay recording.
+position 279652 -650 239044
+angles 0 180 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 279659 -660 239076.0 279652 -650 239034 0

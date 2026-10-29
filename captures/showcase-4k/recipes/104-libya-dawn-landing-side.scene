@@ -1,0 +1,10 @@
+# Libya-Dawn — gear down on short final
+# Photographic staging, not an unscripted gameplay recording.
+position 275456 -80 209422
+angles -2 180 0
+aircraft f22
+view external
+mission-actors 0
+warmup 36
+camera 275496 -74 209429 275456 -80 209421 0
+player-event 3

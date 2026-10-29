@@ -1,0 +1,9 @@
+# Raptor — a steep turn over the Atlantic
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -750 148480
+aircraft f22
+angles -4 0 -70
+view cockpit
+mission-actors 0
+warmup 24
+hud air

@@ -1,0 +1,10 @@
+# Eurofighter — hard turn over the city
+# Photographic staging, not an unscripted gameplay recording.
+position 279552 -650 236544
+aircraft efa
+angles -8 0 65
+view external
+mission-actors 0
+warmup 24
+camera 279524 -664 236517 279552 -650 236544 0
+player-event 9

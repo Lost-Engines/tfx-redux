@@ -1,0 +1,10 @@
+# Winter pair
+# Photographic staging, not an unscripted gameplay recording.
+position 122880 -1000 51200
+angles 0 0 -20
+aircraft f22
+view external
+hud nav
+warmup 24
+camera 122860.5 -1009.36 51228.08 122880.0 -1000.0 51200.0 0.0
+actor f_22 122908 -997 51173 0 0 -20 21

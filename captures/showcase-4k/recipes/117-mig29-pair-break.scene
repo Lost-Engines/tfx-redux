@@ -1,0 +1,14 @@
+# MiG-29s — breaking together
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -1050 47104
+aircraft efa
+angles 0 0 0
+view external
+mission-actors 0
+warmup 30
+camera 121838 -760 47039 121862 -750 47094 0
+hide-player 1
+actor mig_29 121856 -750 47104 -12 0 60 15
+actor mig_29 121877 -754 47080 -15 0 72 15
+at 0 actor-event 0 9
+at 0 actor-event 1 9

@@ -1,0 +1,11 @@
+# Looking alongside — EFA / mountains
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -650 47104
+angles 0 0 0
+aircraft efa
+view virtual
+mission-actors 0
+warmup 24
+hud nav
+look 78 8
+actor efa 121892 -651 47112 0 0 0 21

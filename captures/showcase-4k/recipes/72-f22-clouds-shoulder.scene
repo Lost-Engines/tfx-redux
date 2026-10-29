@@ -1,0 +1,11 @@
+# Over the shoulder — F22 / clouds
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -2850.0 148480
+angles 0 0 0
+aircraft f22
+view virtual
+mission-actors 0
+warmup 24
+hud nav
+look -135 12
+actor f_22 144352 -2850.0 148450 0 0 0 21

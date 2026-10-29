@@ -1,0 +1,9 @@
+# Desert departure
+# Photographic staging, not an unscripted gameplay recording.
+position 280576 -800 212992
+angles 0 80 0
+aircraft f22
+view cockpit
+hud nav
+warmup 24
+displays 2 2 1

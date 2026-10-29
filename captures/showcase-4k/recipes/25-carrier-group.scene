@@ -1,0 +1,15 @@
+# Carrier group
+# Photographic staging, not an unscripted gameplay recording.
+position 146432 -500 148480
+angles 0 0 0
+aircraft f22
+view external
+hud nav
+warmup 24
+camera 145972 -350 149060 146432 0 148510 0
+hide-player 1
+actor carrier 146432 0 148480 0 0 0 0
+actor battlesh 146682 0 148350 0 0 0 0
+actor frigate 146202 0 148280 0 0 0 0
+actor frigate 146512 0 148830 0 0 0 0
+mission-actors 0

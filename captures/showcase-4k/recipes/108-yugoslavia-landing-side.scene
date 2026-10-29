@@ -1,0 +1,10 @@
+# Yugoslavia — gear down on short final
+# Photographic staging, not an unscripted gameplay recording.
+position 125952 -80 49678
+angles -2 180 0
+aircraft efa
+view external
+mission-actors 0
+warmup 36
+camera 125992 -74 49685 125952 -80 49677 0
+player-event 3

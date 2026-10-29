@@ -1,0 +1,8 @@
+# Night work
+# Photographic staging, not an unscripted gameplay recording.
+position 287744.0 -500 146432.0
+angles 0 15 -5
+aircraft f117
+view cockpit
+hud ground
+warmup 24

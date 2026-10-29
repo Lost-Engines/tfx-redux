@@ -1,0 +1,9 @@
+# Libya after dark — chase
+# Photographic staging, not an unscripted gameplay recording.
+position 280676 -650 212420
+angles 0 180 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 280683 -660 212452.0 280676 -650 212410 0

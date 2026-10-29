@@ -1,0 +1,9 @@
+# Mountain break
+# Photographic staging, not an unscripted gameplay recording.
+position 121856.0 -550 47104
+angles 0 0 -30
+aircraft efa
+view external
+hud nav
+warmup 24
+camera 121832.0 -556 47130 121856.0 -550 47104 0

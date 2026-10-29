@@ -1,0 +1,9 @@
+# Desert dusk — from behind
+# Photographic staging, not an unscripted gameplay recording.
+position 246579 -420 226304
+angles -2 90 0
+aircraft f117
+view external
+mission-actors 0
+warmup 24
+camera 246527 -432 226295 246589 -415 226304 0

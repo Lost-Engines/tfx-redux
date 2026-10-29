@@ -1,0 +1,10 @@
+# Through the winter valleys
+# Photographic staging, not an unscripted gameplay recording.
+position 122880 -650 48742.4
+angles -2 180 -12
+aircraft efa
+view virtual
+hud nav
+warmup 24
+look 6 9
+displays 2 2 1

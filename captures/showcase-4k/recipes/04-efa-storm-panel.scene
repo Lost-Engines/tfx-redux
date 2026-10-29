@@ -1,0 +1,9 @@
+# Storm front
+# Photographic staging, not an unscripted gameplay recording.
+position 284672 -420 149504
+angles 0 15 5
+aircraft efa
+view cockpit
+hud nav
+warmup 24
+displays 2 2 1

@@ -1,0 +1,11 @@
+# Colombia — instruments after dark
+# Photographic staging, not an unscripted gameplay recording.
+position 287744 -230 148632
+angles 0 180 0
+aircraft f117
+view virtual
+mission-actors 0
+warmup 24
+hud nav
+look 10 6
+displays 2 2 1

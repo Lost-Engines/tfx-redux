@@ -1,0 +1,10 @@
+# Burning off
+# Photographic staging, not an unscripted gameplay recording.
+position 109568 -120 185094
+angles 0 0 0
+aircraft f22
+view external
+hud nav
+warmup 24
+camera 109380.8 -142.2 185142.4 109568.0 -45.0 185344.0 0.0
+hide-player 1

@@ -1,0 +1,9 @@
+# Offshore pass
+# Photographic staging, not an unscripted gameplay recording.
+position 109648.0 -140 185044.0
+angles 0 55 -20
+aircraft f22
+view external
+hud nav
+warmup 24
+camera 109658.0 -155 185012.0 109645.0 -138 185048.0 0

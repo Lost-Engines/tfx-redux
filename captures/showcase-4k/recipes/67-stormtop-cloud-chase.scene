@@ -1,0 +1,9 @@
+# Above the clouds — stormtop
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -3400 148480
+angles 0 0 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 144396.0 -3405.0 148442.0 144384.0 -3402.0 148480.0 0

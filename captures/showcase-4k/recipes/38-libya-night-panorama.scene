@@ -1,0 +1,10 @@
+# Libya — lights on the horizon
+# Photographic staging, not an unscripted gameplay recording.
+position 280676 -650 212420
+angles 0 0 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 280576 -800 213620 280576 -60 209920 0
+hide-player 1

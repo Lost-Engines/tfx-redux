@@ -1,0 +1,9 @@
+# Colombia — dusk above the streets
+# Photographic staging, not an unscripted gameplay recording.
+position 286894 -170 147632
+angles 0 90 0
+aircraft f117
+view external
+mission-actors 0
+warmup 24
+camera 286880 -175 147670 286894 -166 147632 0

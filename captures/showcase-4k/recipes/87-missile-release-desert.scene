@@ -1,0 +1,65 @@
+# Missile away — desert
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -500 226304
+angles 0 0 0
+aircraft f22
+view external
+mission-actors 0
+warmup 20
+player-event 5
+actor xamraam 246788 -499 226332 0 0 0 0
+camera 246834.0 -510.0 226310.0 246784.0 -499.0 226314.0 0
+actor smokecld 246788.0 -499.0 226330.0 0 0 0 0
+at 19 actor-event 1 0
+actor smokecld 246788.0 -499.0 226329.0 0 0 0 0
+at 19 actor-event 2 0
+actor smokecld 246788.0 -499.0 226328.0 0 0 0 0
+at 18 actor-event 3 0
+actor smokecld 246788.0 -499.0 226327.0 0 0 0 0
+at 18 actor-event 4 0
+actor smokecld 246788.0 -499.0 226326.0 0 0 0 0
+at 17 actor-event 5 0
+actor smokecld 246788.0 -499.0 226325.0 0 0 0 0
+at 17 actor-event 6 0
+actor smokecld 246788.0 -499.0 226324.0 0 0 0 0
+at 16 actor-event 7 0
+actor smokecld 246788.0 -499.0 226323.0 0 0 0 0
+at 16 actor-event 8 0
+actor smokecld 246788.0 -499.0 226322.0 0 0 0 0
+at 15 actor-event 9 0
+actor smokecld 246788.0 -499.0 226321.0 0 0 0 0
+at 15 actor-event 10 0
+actor smokecld 246788.0 -499.0 226320.0 0 0 0 0
+at 14 actor-event 11 0
+actor smokecld 246788.0 -499.0 226319.0 0 0 0 0
+at 14 actor-event 12 0
+actor smokecld 246788.0 -499.0 226318.0 0 0 0 0
+at 13 actor-event 13 0
+actor smokecld 246788.0 -499.0 226317.0 0 0 0 0
+at 13 actor-event 14 0
+actor smokecld 246788.0 -499.0 226316.0 0 0 0 0
+at 12 actor-event 15 0
+actor smokecld 246788.0 -499.0 226315.0 0 0 0 0
+at 12 actor-event 16 0
+actor smokecld 246788.0 -499.0 226314.0 0 0 0 0
+at 11 actor-event 17 0
+actor smokecld 246788.0 -499.0 226313.0 0 0 0 0
+at 11 actor-event 18 0
+actor smokecld 246788.0 -499.0 226312.0 0 0 0 0
+at 10 actor-event 19 0
+actor smokecld 246788.0 -499.0 226311.0 0 0 0 0
+at 10 actor-event 20 0
+actor smokecld 246788.0 -499.0 226310.0 0 0 0 0
+at 9 actor-event 21 0
+actor smokecld 246788.0 -499.0 226309.0 0 0 0 0
+at 9 actor-event 22 0
+actor smokecld 246788.0 -499.0 226308.0 0 0 0 0
+at 8 actor-event 23 0
+actor smokecld 246788.0 -499.0 226307.0 0 0 0 0
+at 8 actor-event 24 0
+actor smokecld 246788.0 -499.0 226306.0 0 0 0 0
+at 7 actor-event 25 0
+actor smokecld 246788.0 -499.0 226305.0 0 0 0 0
+at 7 actor-event 26 0
+actor smokecld 246788.0 -499.0 226304.0 0 0 0 0
+at 6 actor-event 27 0

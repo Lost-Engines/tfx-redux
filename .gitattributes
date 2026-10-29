@@ -4,3 +4,9 @@ tests/scenarios/*.mis text eol=crlf
 
 # The bundled CUE is hashed as an asset; preserve its canonical CRLF bytes.
 scripts/cd-cue.txt -text whitespace=cr-at-eol
+
+# Gallery artwork lives in LFS; Pages checks out the actual image content.
+captures/showcase-4k/images/*.png filter=lfs diff=lfs merge=lfs -text
+captures/showcase-4k/thumbs/*.jpg filter=lfs diff=lfs merge=lfs -text
+captures/showcase-4k/contact-sheets/*.jpg filter=lfs diff=lfs merge=lfs -text
+captures/showcase-4k/*.jpg filter=lfs diff=lfs merge=lfs -text

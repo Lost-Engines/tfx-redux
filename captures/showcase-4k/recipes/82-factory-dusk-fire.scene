@@ -1,0 +1,21 @@
+# After the strike — dusk
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -500 226404
+angles 0 0 0
+aircraft f117
+view external
+mission-actors 0
+warmup 45
+camera 247274 -135 225924 246804 -15 226304 0
+hide-player 1
+actor fact_1 246784 0 226304 0 0 0 0
+at 0 actor-event 0 6
+at 0 actor-event 0 9
+at 0 actor-event 0 12
+at 0 actor-event 0 15
+at 0 actor-event 0 18
+at 0 actor-event 0 21
+at 0 actor-event 0 24
+at 0 actor-event 0 27
+at 0 actor-event 0 30
+at 0 actor-event 0 33

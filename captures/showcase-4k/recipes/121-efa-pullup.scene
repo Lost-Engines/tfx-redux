@@ -1,0 +1,10 @@
+# Eurofighter — climbing out of the valley
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -1100 47104
+aircraft efa
+angles -50 0 25
+view external
+mission-actors 0
+warmup 24
+camera 121822.0 -1107.0 47068.0 121856.0 -1097.0 47101.0 0
+player-event 9

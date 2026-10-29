@@ -1,0 +1,8 @@
+# Atlantic patrol
+# Photographic staging, not an unscripted gameplay recording.
+position 137216 -500 174080
+angles 0 35 0
+aircraft f22
+view cockpit
+hud air
+warmup 24

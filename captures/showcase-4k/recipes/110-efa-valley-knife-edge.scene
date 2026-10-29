@@ -1,0 +1,10 @@
+# Eurofighter — knife-edge in the valley
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -700 47104
+aircraft efa
+angles -12 0 82
+view external
+mission-actors 0
+warmup 24
+camera 121832 -703 47129 121856 -700 47104 0
+player-event 9

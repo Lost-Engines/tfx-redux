@@ -1,0 +1,11 @@
+# TFX flight
+# Photographic staging, not an unscripted gameplay recording.
+position 139264 -700 174080
+angles 0 0 -8
+aircraft efa
+view external
+hud nav
+warmup 24
+camera 139234.36 -717.16 174119.0 139264.0 -700.0 174080.0 0.0
+actor f_117a 139291 -696 174050 0 0 -8 21
+actor f_22 139237 -696 174050 0 0 -8 21

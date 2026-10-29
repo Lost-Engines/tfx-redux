@@ -1,0 +1,10 @@
+# Yugoslavia — runway edge lights
+# Photographic staging, not an unscripted gameplay recording.
+position 125952 -80 49678
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 126132 -45 49278 125952 0 48128 0
+hide-player 1

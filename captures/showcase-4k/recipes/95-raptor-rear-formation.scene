@@ -1,0 +1,13 @@
+# RAPTOR — following the formation
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -3200 148480
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 144384 -3017 148380 144384 -2997 148480 0
+hide-player 1
+actor f_22 144384 -3000 148480 0 0 0 21
+actor f_22 144359 -2998 148445 0 0 0 21
+actor f_22 144409 -3002 148445 0 0 0 21

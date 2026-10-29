@@ -1,0 +1,14 @@
+# Desert interceptors
+# Photographic staging, not an unscripted gameplay recording.
+position 278528 -850 212992
+angles 0 0 0
+aircraft efa
+view external
+hud nav
+warmup 24
+camera 278503 -867 213042 278552 -847 212960 0
+hide-player 1
+actor mig_21 278528 -850 212992 0 0 0 0
+actor mig_21 278546 -848 212968 0 0 0 0
+actor mig_21 278564 -846 212944 0 0 0 0
+actor mig_21 278582 -844 212920 0 0 0 0

@@ -1,0 +1,65 @@
+# Missile away — mountains
+# Photographic staging, not an unscripted gameplay recording.
+position 121856 -650 47104
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 20
+player-event 5
+actor xamraam 121860 -649 47132 0 0 0 0
+camera 121906.0 -660.0 47110.0 121856.0 -649.0 47114.0 0
+actor smokecld 121860.0 -649.0 47130.0 0 0 0 0
+at 19 actor-event 1 0
+actor smokecld 121860.0 -649.0 47129.0 0 0 0 0
+at 19 actor-event 2 0
+actor smokecld 121860.0 -649.0 47128.0 0 0 0 0
+at 18 actor-event 3 0
+actor smokecld 121860.0 -649.0 47127.0 0 0 0 0
+at 18 actor-event 4 0
+actor smokecld 121860.0 -649.0 47126.0 0 0 0 0
+at 17 actor-event 5 0
+actor smokecld 121860.0 -649.0 47125.0 0 0 0 0
+at 17 actor-event 6 0
+actor smokecld 121860.0 -649.0 47124.0 0 0 0 0
+at 16 actor-event 7 0
+actor smokecld 121860.0 -649.0 47123.0 0 0 0 0
+at 16 actor-event 8 0
+actor smokecld 121860.0 -649.0 47122.0 0 0 0 0
+at 15 actor-event 9 0
+actor smokecld 121860.0 -649.0 47121.0 0 0 0 0
+at 15 actor-event 10 0
+actor smokecld 121860.0 -649.0 47120.0 0 0 0 0
+at 14 actor-event 11 0
+actor smokecld 121860.0 -649.0 47119.0 0 0 0 0
+at 14 actor-event 12 0
+actor smokecld 121860.0 -649.0 47118.0 0 0 0 0
+at 13 actor-event 13 0
+actor smokecld 121860.0 -649.0 47117.0 0 0 0 0
+at 13 actor-event 14 0
+actor smokecld 121860.0 -649.0 47116.0 0 0 0 0
+at 12 actor-event 15 0
+actor smokecld 121860.0 -649.0 47115.0 0 0 0 0
+at 12 actor-event 16 0
+actor smokecld 121860.0 -649.0 47114.0 0 0 0 0
+at 11 actor-event 17 0
+actor smokecld 121860.0 -649.0 47113.0 0 0 0 0
+at 11 actor-event 18 0
+actor smokecld 121860.0 -649.0 47112.0 0 0 0 0
+at 10 actor-event 19 0
+actor smokecld 121860.0 -649.0 47111.0 0 0 0 0
+at 10 actor-event 20 0
+actor smokecld 121860.0 -649.0 47110.0 0 0 0 0
+at 9 actor-event 21 0
+actor smokecld 121860.0 -649.0 47109.0 0 0 0 0
+at 9 actor-event 22 0
+actor smokecld 121860.0 -649.0 47108.0 0 0 0 0
+at 8 actor-event 23 0
+actor smokecld 121860.0 -649.0 47107.0 0 0 0 0
+at 8 actor-event 24 0
+actor smokecld 121860.0 -649.0 47106.0 0 0 0 0
+at 7 actor-event 25 0
+actor smokecld 121860.0 -649.0 47105.0 0 0 0 0
+at 7 actor-event 26 0
+actor smokecld 121860.0 -649.0 47104.0 0 0 0 0
+at 6 actor-event 27 0

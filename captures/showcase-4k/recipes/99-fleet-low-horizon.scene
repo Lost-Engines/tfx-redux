@@ -1,0 +1,13 @@
+# The fleet at the waterline
+# Photographic staging, not an unscripted gameplay recording.
+position 146432 -400 148480
+angles 0 0 0
+aircraft f22
+view external
+mission-actors 0
+warmup 24
+camera 146242 -24 149000 146432 -12 148480 0
+hide-player 1
+actor carrier 146432 0 148480 0 0 0 0
+actor frigate 146632 0 148630 0 0 0 0
+actor battlesh 146182 0 148320 0 0 0 0

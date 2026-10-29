@@ -4,5 +4,18 @@ __pycache__/
 *.ppm
 /roms/
 
-# Local screenshots and contact sheets (never packaged with the source).
-/captures/
+# Only the selected finished gallery is tracked; other captures stay local.
+/captures/*
+!/captures/showcase-4k/
+/captures/showcase-4k/*
+!/captures/showcase-4k/index.html
+!/captures/showcase-4k/README.txt
+!/captures/showcase-4k/manifest.json
+!/captures/showcase-4k/captions.csv
+!/captures/showcase-4k/scene-library.json
+!/captures/showcase-4k/rebuild_gallery.py
+!/captures/showcase-4k/images/
+!/captures/showcase-4k/thumbs/
+!/captures/showcase-4k/recipes/
+!/captures/showcase-4k/contact-sheets/
+!/captures/showcase-4k/contact-sheet.jpg

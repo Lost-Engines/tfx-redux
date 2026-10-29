@@ -1,0 +1,11 @@
+# Looking alongside — F117 / city
+# Photographic staging, not an unscripted gameplay recording.
+position 287744 -350 146432
+angles 0 0 0
+aircraft f117
+view right
+mission-actors 0
+warmup 24
+hud nav
+actor f_117a 287780 -351 146440 0 0 0 21
+look 0 -5

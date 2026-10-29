@@ -1,0 +1,9 @@
+# Yugoslav — dusk above the streets
+# Photographic staging, not an unscripted gameplay recording.
+position 278702 -170 237744
+angles 0 90 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 278688 -175 237782 278702 -166 237744 0

@@ -1,0 +1,13 @@
+# MIG21 — following the formation
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -700 226304
+angles 0 0 0
+aircraft efa
+view external
+mission-actors 0
+warmup 24
+camera 246784 -517 226204 246784 -497 226304 0
+hide-player 1
+actor mig_21 246784 -500 226304 0 0 0 0
+actor mig_21 246759 -498 226269 0 0 0 0
+actor mig_21 246809 -502 226269 0 0 0 0

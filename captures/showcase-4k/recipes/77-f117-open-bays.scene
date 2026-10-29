@@ -1,0 +1,10 @@
+# F117 — weapon bays open
+# Photographic staging, not an unscripted gameplay recording.
+position 246784 -550 226304
+angles 0 0 0
+aircraft f117
+view external
+mission-actors 0
+warmup 5
+camera 246810 -535 226328 246784 -550 226304 0
+player-event 5

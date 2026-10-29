@@ -1,0 +1,9 @@
+# Colombia after dark — chase
+# Photographic staging, not an unscripted gameplay recording.
+position 287844 -650 148932
+angles 0 180 0
+aircraft f117
+view external
+mission-actors 0
+warmup 24
+camera 287851 -660 148964.0 287844 -650 148922 0

@@ -1,0 +1,10 @@
+# With the tanker
+# Photographic staging, not an unscripted gameplay recording.
+position 282599 -1200 145426
+angles 0 0 0
+aircraft efa
+view external
+hud nav
+warmup 24
+camera 282573.75 -1209.0 145457.25 282624.0 -1200.0 145416.0 0.0
+actor refuel2 282624 -1200 145408 0 0 0 0

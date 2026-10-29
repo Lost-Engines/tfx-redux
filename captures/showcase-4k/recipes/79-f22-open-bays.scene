@@ -1,0 +1,10 @@
+# F22 — weapon bays open
+# Photographic staging, not an unscripted gameplay recording.
+position 144384 -600 148480
+angles 0 0 0
+aircraft f22
+view external
+mission-actors 0
+warmup 12
+camera 144410 -585 148504 144384 -600 148480 0
+player-event 5

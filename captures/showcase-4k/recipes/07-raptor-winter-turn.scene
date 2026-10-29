@@ -1,0 +1,9 @@
+# Winter turn
+# Photographic staging, not an unscripted gameplay recording.
+position 122880 -650 48742.4
+angles 0 180 28
+aircraft f22
+view virtual
+hud guns
+warmup 24
+look -10 8

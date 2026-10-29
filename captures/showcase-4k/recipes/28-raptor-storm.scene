@@ -1,0 +1,9 @@
+# Out of the grey
+# Photographic staging, not an unscripted gameplay recording.
+position 139264 -500 174080
+angles 3 0 18
+aircraft f22
+view external
+hud nav
+warmup 24
+camera 139288 -505 174110 139264 -500 174080 -12

@@ -1,0 +1,10 @@
+# Colombia — gear down on short final
+# Photographic staging, not an unscripted gameplay recording.
+position 191488 -80 82446
+angles -2 180 0
+aircraft f117
+view external
+mission-actors 0
+warmup 36
+camera 191528 -74 82453 191488 -80 82445 0
+player-event 3

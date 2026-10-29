@@ -1,0 +1,9 @@
+# Skyward
+# Photographic staging, not an unscripted gameplay recording.
+position 284672 -900 149504
+angles 6 0 -12
+aircraft efa
+view external
+hud nav
+warmup 24
+camera 284654.75 -894.0 149526.5 284672.0 -900.0 149504.0 0.0
