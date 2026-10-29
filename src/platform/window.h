@@ -21,6 +21,7 @@ private:
   glfw_runtime runtime;
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)> handle;
   unsigned int texture{0};
+  std::vector<render::rgba_pixel> display_pixels;
   mutable vec2<int> render_size;
   bool follow_window;
   vec2<int> source_size{render::screen_width,render::screen_height};
@@ -41,6 +42,7 @@ public:
   std::optional<vec2<int16_t>> cursor_position() const;
   void title(std::string const &text);
   void present(std::span<render::rgba_pixel const> pixels, vec2<int> const &size = {render::screen_width,render::screen_height});
+  void present_frame(render::framebuffer const &image, render::palette const &colours);
 };
 
 } // namespace tfx::platform

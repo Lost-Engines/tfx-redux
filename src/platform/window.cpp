@@ -165,6 +165,10 @@ void window::configure(vec2<int> const &size, bool const automatic, std::optiona
     glfwSetWindowPos(handle.get(),x+left+fitted.position.x,y+top+fitted.position.y);
   }
 }
+void window::present_frame(render::framebuffer const &image, render::palette const &colours) {
+  image.colourise(colours,display_pixels);
+  present(display_pixels,image.size);
+}
 void window::present(std::span<render::rgba_pixel const> const pixels, vec2<int> const &size) {
   if(pixels.size() != static_cast<size_t>(size.x) * static_cast<size_t>(size.y)) throw std::invalid_argument{"display pixels do not match their resolution"};
   glBindTexture(GL_TEXTURE_2D,texture);

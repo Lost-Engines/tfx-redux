@@ -178,6 +178,10 @@ run
             window = windows()[0]
             run('xdotool', 'windowfocus', '--sync', window)
             wait(lambda: 'REDUX_VIEW ' in log.read_text(), 'flight did not render')
+            # This check measures the full-resolution F1 camera displays;
+            # Redux now starts in F10, whose panel samples native-size MFDs.
+            tap('F1')
+            observation_start = log.stat().st_size
             for side, key in (('L', '1'), ('R', '3')):
                 for _ in range(10):
                     tap(key)
@@ -195,7 +199,7 @@ run
             game.wait(timeout=20)
         text = log.read_text()
         assert game.returncode == 0 and 'exited normally' in text and 'Cannot record' not in text and 'Sanitizer' not in text and 'runtime error:' not in text, text[-5000:]
-        views = [line.split()[1:] for line in text.splitlines() if line.startswith('REDUX_VIEW ')]
+        views = [line.split()[1:] for line in text[observation_start:].splitlines() if line.startswith('REDUX_VIEW ')]
         expected_focal = width / (2 * math.tan(math.radians(50)))
         assert views and all(int(radius) == 64 for _, _, _, radius, _, _ in views), 'recording or MFD retained the old draw distance'
         main = [view for view in views if view[0] == '0']

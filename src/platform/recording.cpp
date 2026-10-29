@@ -85,7 +85,7 @@ void replay_recording(window &window, resources::archive const &game,
     if(video) {
       auto const frame{video->next()};
       if(!frame) break;
-      window.present(frame->image.colourise(render::expand_dac_palette(frame->palette)),frame->image.size);
+      window.present_frame(frame->image,render::expand_dac_palette(frame->palette));
       next = now + std::chrono::duration<double>{frame->duration}.count();
       continue;
     }

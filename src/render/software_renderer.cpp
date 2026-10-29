@@ -94,6 +94,13 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
         continue;
       }
       if(start >= end) continue;
+      if(mode == -1 && texture.empty() && !shaded) {
+        auto const at{static_cast<size_t>(y * output.size.x + start)};
+        auto const count{static_cast<size_t>(end - start)};
+        std::fill_n(output.pixels.data() + at,count,colour);
+        if(!output.coverage.empty()) std::fill_n(output.coverage.data() + at,count,uint8_t{255});
+        continue;
+      }
       int const colour_origin{static_cast<int>(std::ceil(left.position.x))};
       double colour_start{0}, colour_step{0};
       if(shaded) {
