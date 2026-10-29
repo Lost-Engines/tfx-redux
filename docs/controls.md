@@ -41,6 +41,24 @@ While paused, Enter, Space, letters and arrows resume flight. F1–F10 still sel
 
 Military-spec and Realistic mouse steering uses a bounded virtual stick. Large movements and slow frames cannot push it beyond the normal range; movement back from a stop takes effect immediately. Arcade keeps its relative-motion controls.
 
+## Graphics settings
+
+By default, 3D rendering uses the **window’s actual pixel dimensions**, including after resizing. The other defaults are the original **64.01° horizontal FOV**, a **16-cell draw radius** and **LOD scale 0.1**. For example:
+
+```sh
+./tfx --resolution=1920x1080 --fov=90 --draw-distance=64
+./tfx --resolution=1280x800 --draw-distance=infinite
+```
+
+- `--resolution WIDTHxHEIGHT` fixes the 3D render resolution, including aircraft and weapons in the arming screen. Without it, both follow the window’s framebuffer size. Widescreen and other aspect ratios use square pixels.
+- `--fov DEGREES` sets the horizontal field of view, from 10° to 170°. The main camera uses this angle. The missile-nose camera retains its wider view; the HUD pitch ladder and target markers follow the selected projection.
+- `--draw-distance CELLS` controls the terrain radius; `0` or `infinite` removes the far plane and includes the whole finite map. The original radius is 8 cells. Whole-map rendering can be expensive in the software renderer.
+- `--lod-scale FACTOR` controls visual detail cutoffs. The default, `0.1`, postpones detail reductions to ten times their original distance. `0` keeps the most detailed models and disables drawing-distance tests in scenery scripts; `1` restores the original thresholds. Missile smoke retains its authored distance-dependent particle sizes at every setting. Gameplay and collision ranges are unaffected.
+
+Open **Escape/backtick → Graphics** during flight to change render resolution, window scale, FOV, draw distance and LOD scale. Click a value to type it, or use the arrows for adjustments and common sizes. `AUTO` renders at the window’s actual pixel size; `INFINITE` (or `0`) selects the whole map. **Apply** saves the choices and returns to flight immediately, keeping the game paused if it was already paused. **Cancel** discards the edits; **Defaults**, then **Apply**, restores the graphics defaults.
+
+Graphics choices are saved separately in `REDUX.CFG` beside the selected installation’s `TFX.CFG`. They carry over to later missions and launches. Command-line graphics options override the corresponding saved choices at startup. Removing or renaming `REDUX.CFG` also resets graphics defaults. Changing render resolution leaves the window size alone; changing **Window scale** resizes it (`FIT` fits the desktop).
+
 ## Sound
 
 Sound Blaster FM music follows the original `MUSIC` setting, and `--music=soundblaster-fm` selects it explicitly. For Roland LAPC-I music, use `--music=roland-lapc` with compatible CM-32L/MT-32 control and PCM ROMs. `--music=none` disables music. The original Sound Canvas setting uses SCC-1A emulation; `--music=roland-scc1a` or `--music=roland-sc55` selects the available hardware model, with its matching ROMs found automatically beside the game files or in the default installation directory. `--rom-dir` overrides that lookup for custom locations. These are compatible alternatives to the original SCC-1, whose exact ROM set is unavailable. Flight music now uses the original theme selection, temporary cues and engine sounds, including engine playback with music switched off. The original SB/CD mode uses synthesised presentation music and CD flight music; the explicit FM option selects synthesised flight music.
