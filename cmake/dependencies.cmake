@@ -58,8 +58,8 @@ FetchContent_MakeAvailable(nuked_sc55)
 
 # Source inclusion only: compile the reusable component into tfx_audio.
 FetchContent_Declare(qsound
-  URL https://codeload.github.com/Lost-Engines/qsound-cpp/tar.gz/9bae937d9797708a7ec971457b416fccf920b29f
-  URL_HASH SHA256=f138d25c6cbfd2c3080588d33fd41d6d5b9d753ff98e5c530bddd436e0ca4fab
+  URL https://codeload.github.com/Lost-Engines/qsound-cpp/tar.gz/0e8bd213333af28a8b6eda9e8dafd30b5d09f577
+  URL_HASH SHA256=4710bf3e4c2cde8f177cd7f37911cecfde1e92ffd1ee1c8f788c2e2b535e69c7
   SOURCE_SUBDIR unused_upstream_build
 )
 FetchContent_MakeAvailable(qsound)
