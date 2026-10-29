@@ -256,3 +256,10 @@ ignored build directory. Live private-window checks cover virtual MFDs, pause,
 graphics changes and resizing. Recording/playback verification additionally
 compares the indexed image, DAC palette, optical coverage and every displayed
 RGBA pixel at 3840×2160.
+
+## Square-root alternatives
+
+The [square-root benchmarks](square-root-benchmarks.md) compare Vectorstorm's
+fast, coarse and SSE routines with standard functions, including 4K HUD drawing
+and pixel differences. The measured drawing paths retain standard square roots;
+the approximations did not improve their performance.
