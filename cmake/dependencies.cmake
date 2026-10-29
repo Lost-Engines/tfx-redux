@@ -11,6 +11,17 @@ if(NOT TARGET glfw)
     URL_HASH SHA256=7e85e39ade1efdda00734d323a0230b5c938074e9fb2ddbe453bdbb281064d2c
   )
   FetchContent_MakeAvailable(glfw)
+  if(APPLE)
+    # GLFW's C files include Cocoa headers with Apple's blocks extension too.
+    # Match Darker: compile these sources with Apple's Objective-C compiler.
+    get_target_property(glfw_sources glfw SOURCES)
+    foreach(source IN LISTS glfw_sources)
+      if(source MATCHES "\\.c$")
+        get_filename_component(source_path "${source}" ABSOLUTE BASE_DIR "${glfw_SOURCE_DIR}/src")
+        set_source_files_properties("${source_path}" DIRECTORY "${glfw_SOURCE_DIR}/src" PROPERTIES LANGUAGE OBJC)
+      endif()
+    endforeach()
+  endif()
 endif()
 
 include(FetchContent)
