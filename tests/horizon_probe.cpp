@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -27,7 +28,7 @@ int main(int const argc, char const *const argv[]) try {
       for(auto const &v : surface.vertices) { add(v.x);add(v.y); }
     }
     if(dump) std::cout << '\n';
-    else if(argc == 2) { uint64_t expected;if(!(input >> expected) || expected != hash) throw std::runtime_error{"native horizon mismatch at case " + std::to_string(cases)}; }
+    else if(argc == 2) { if(!tfx::test::fixture_matches(input,hash)) throw std::runtime_error{"native horizon mismatch at case " + std::to_string(cases)}; }
     else std::cout << hash << '\n';
     ++cases;
   }

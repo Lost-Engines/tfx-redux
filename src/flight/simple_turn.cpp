@@ -20,7 +20,6 @@ float constexpr load_fraction{.3333333432674408f}, load_scale{3}, load_tail{.200
 int32_t constexpr bank_sector_begin{8192}, bank_sector_midpoint{16384}, bank_sector_end{24576};
 int32_t constexpr bank_correction_peak{4096}, bank_correction_divisor{160};
 int constexpr maximum_bank_sine{16384};
-unsigned int constexpr remainder_step{64};
 
 calculation normalised(int32_t const component) {
   return static_cast<calculation>(math::signed_word(static_cast<uint16_t>(component))) * normalised_word;
@@ -33,8 +32,7 @@ void rotate_heading(simple_turn_state &state, float const amount) {
   // Native 0x8c008 shares its residual between both heading operations.
   calculation const accumulated{static_cast<calculation>(state.heading_remainder) + amount};
   state.heading_remainder = static_cast<float>(accumulated);
-  int32_t const phase{truncate(accumulated * (1.0f / remainder_step))};
-  auto const rotation{static_cast<math::angle>(static_cast<uint32_t>(phase) * remainder_step)};
+  auto const rotation{static_cast<math::angle>(truncate(accumulated))};
   state.heading_remainder = static_cast<float>(static_cast<calculation>(state.heading_remainder) - math::signed_word(rotation));
   state.orientation.rotate(math::rotation_axis::heading,rotation);
 }
@@ -52,7 +50,7 @@ void update_simple_turn(simple_turn_state &state, simple_turn_context const &con
   state.bank_correction = static_cast<int16_t>(state.bank_correction * 3 / 4);
   if(bank < -bank_sector_begin && bank > -bank_sector_end) state.bank_correction = static_cast<int16_t>(std::abs((bank + bank_sector_midpoint) / 2) - bank_correction_peak);
   else if(bank > bank_sector_begin && bank < bank_sector_end) state.bank_correction = static_cast<int16_t>(bank_correction_peak - std::abs((bank - bank_sector_midpoint) / 2));
-  int const bank_sine{std::clamp(static_cast<int>(math::sine_table()[static_cast<uint16_t>(weighted) >> 6]),-maximum_bank_sine,maximum_bank_sine)};
+  int const bank_sine{std::clamp(math::sine_q15(weighted),-maximum_bank_sine,maximum_bank_sine)};
   if(state.bank_correction) rotate_heading(state,static_cast<float>(-state.bank_correction * context.elapsed / bank_correction_divisor));
   state.turn_response = static_cast<float>(static_cast<calculation>(context.mach) * mach_response * response_fraction);
   if(context.mach > minimum_turn_mach) {

@@ -1,9 +1,10 @@
 # Native reference verification
 
-This records the TFX C++ baseline inherited by Redux. Rendering now intentionally
-differs; see the [Redux changes and checks](../README.md#redux-improvements).
-The original-code pixel comparisons below apply to the baseline, not the new
-resolution-independent renderer.
+This records the TFX C++ baseline inherited by Redux. Rendering and trigonometric calculations now intentionally
+differ; see the [Redux improvements](../README.md#improvements) and
+[angular precision](rendering-precision.md). The original-code pixel and motion
+comparisons below apply to the baseline, not current Redux rendering or the
+flight/AI paths that now use standard trig.
 
 Current coverage: 19 October 2026, reference **TFX 2.05, September 1994 CD**.
 This is the current coverage summary. [Implementation notes](implementation.md)
@@ -91,6 +92,15 @@ python3 tools/check_audio_menu.py --build build-rel --qsound auto
 ```
 
 The live check creates a private display, audio sink and installation. It observes CD progress, mute/restart, effects alongside music, a single output device and clean shutdown. The default built-in QSound path is exercised with no CSP/PVL in the private installation. `--qsound off` checks ordinary mono effects separately. Original firmware extraction remains an optional research workflow in the QSound component repository.
+
+## Redux trigonometry
+
+The runtime no longer uses the original sine/cosine or tangent-threshold tables.
+The [precision notes](rendering-precision.md) explain the retained fixed-point
+interfaces, exhaustive angle checks and changed simulation expectations.
+The current 225-test suite includes 40 updated regressions for affected flight,
+AI, targeting and rendering paths. The native-data evidence described earlier
+remains a statement about TFX C++, not numerical identity of Redux trajectories.
 
 ## Redux playtesting regressions
 

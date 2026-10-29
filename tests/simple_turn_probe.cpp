@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <array>
 #include <bit>
 #include <fstream>
@@ -38,8 +39,7 @@ int main(int const argc, char const *const argv[]) try {
     values[15] = values[16] = std::bit_cast<uint32_t>(state.g_load);
     if(argc == 2) {
       for(auto const value : values) {
-        uint32_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native Simple turn fixture differs"};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native Simple turn fixture differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';

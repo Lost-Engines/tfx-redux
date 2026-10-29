@@ -109,14 +109,13 @@ landing_cue landing_system::advance(vec3<int32_t> const &player, bool const spee
     return cue;
   }
   if(!state.carrier) {
-    auto const &sine{math::sine_table()};
-    unsigned int const phase{static_cast<unsigned int>(state.port.heading) >> 6};
+
     float constexpr approach_run{700}, normalised_sine{1.0f / 32767.0f};
     // Both float constants are multiplied in the original extended-precision
     // register before truncation; the word offsets overwrite authored values.
     state.port.offset = {
-      word(static_cast<int32_t>(static_cast<long double>(sine[phase]) * approach_run * normalised_sine)),
-      word(static_cast<int32_t>(static_cast<long double>(sine[(phase + 256) % 1024]) * approach_run * normalised_sine)),
+      word(static_cast<int32_t>(static_cast<long double>(math::sine_q15(state.port.heading)) * approach_run * normalised_sine)),
+      word(static_cast<int32_t>(static_cast<long double>(math::cosine_q15(state.port.heading)) * approach_run * normalised_sine)),
     };
   }
   auto const destination{runway(state)};

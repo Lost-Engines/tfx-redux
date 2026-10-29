@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -98,7 +99,7 @@ int main(int const argc, char const *const argv[]) try {
       add(random.low);add(random.high);add(state.player_shots);add(launches.size());
       for(auto const &shot : launches) emit(shot);
     }
-    if(argc == 2) { uint64_t expected{0};if(!(input >> expected) || expected != digest) throw std::runtime_error{"surface combat differs from original"}; }
+    if(argc == 2) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"surface combat differs from original"}; }
     else std::cout << digest << '\n';
   }
   return EXIT_SUCCESS;

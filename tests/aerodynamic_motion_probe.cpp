@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -46,8 +47,7 @@ int main(int const argc, char const *const argv[]) try {
     values.push_back(static_cast<uint32_t>(state.integer_world_y));
     if(argc == 2) {
       for(auto const value : values) {
-        uint64_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native aerodynamic motion differs"};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native aerodynamic motion differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';

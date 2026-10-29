@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -117,8 +118,7 @@ int main(int const argc, char const *const argv[]) try {
     if(fixture_path) {
       unsigned int field{0};
       for(auto const value : values) {
-        uint64_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native aerodynamic guidance differs at case " + std::to_string(cases) + " field " + std::to_string(field)};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native aerodynamic guidance differs at case " + std::to_string(cases) + " field " + std::to_string(field)};
         ++field;
       }
     } else {

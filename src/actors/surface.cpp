@@ -21,9 +21,7 @@ void reduce_ticks(surface_state &state, int const ticks) {
   if(ticks > 0 && ticks < state.input_ticks) state.input_ticks = static_cast<int16_t>(ticks);
 }
 math::angle bearing(int32_t x, int32_t z) {
-  // Native c96c4 shifts both signed dwords together until the atan operands fit signed words.
-  while(x < -32768 || x > 32767 || z < -32768 || z > 32767) { x >>= 1; z >>= 1; }
-  return math::direction_angle(static_cast<int16_t>(x),static_cast<int16_t>(z));
+  return math::direction_angle(x,z);
 }
 void course(surface_state &state, profile const &profile, vec3<int32_t> const &destination, int32_t const distance) {
   resources::binary_view const parameters{profile.source};

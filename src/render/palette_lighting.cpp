@@ -5,7 +5,7 @@ namespace tfx::render {
 namespace {
 
 int16_t view_phase(math::angle const pitch, math::angle const roll) {
-  auto const cosine{[](math::angle const angle) { return math::sine_table()[((angle >> 6) + math::angle_steps / 4) % math::angle_steps]; }};
+  auto const cosine{math::cosine_q15};
   int constexpr phase_radius{lighting_stages / 2};
   int const vertical{cosine(pitch) * phase_radius >> math::matrix_fraction_bits};
   int const banked{cosine(roll) * phase_radius >> math::matrix_fraction_bits};

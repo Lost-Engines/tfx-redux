@@ -6,10 +6,10 @@
 
 namespace tfx::render {
 
-// Presentation-only transforms. Simulation and native reference paths retain
-// their original 1,024-phase tables and fixed-point arithmetic.
+// Floating-point display transforms. Simulation uses the same standard trig
+// with Q15 conversion at its existing fixed-point interfaces.
 inline double angle_radians(math::angle const angle) {
-  return math::signed_word(angle) * (2 * std::numbers::pi / 65536);
+  return math::angle_radians(angle);
 }
 inline vec3d angle_radians(vec3<math::angle> const &angles) {
   return {angle_radians(angles.x),angle_radians(angles.y),angle_radians(angles.z)};

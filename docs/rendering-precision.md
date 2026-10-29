@@ -30,11 +30,28 @@ Redux now retains separate display transforms using double-precision
   continuous sine/cosine evaluation in the enhanced scene pass. The player model
   and the HUD glass use the same aircraft basis, keeping the canopy and attached display registered.
 
-The native camera pose, word matrices, smoothing state, model selection and
-projection metadata are still calculated as before. Native raster instruments,
-lighting tables and authored animation steps retain their original calculations.
-Physics, actor rules, original-code probes and the faithful `tfx-cpp` renderer keep their original
-arithmetic. This is a presentation change, not a change to aircraft handling.
+Redux also uses standard trig in every remaining runtime caller: aircraft
+rotation and movement, AI steering, target bearings, designator intersections,
+landing guidance, flak placement, raster instruments, palette lighting and the
+fixed-point model/camera interfaces. `std::atan2` replaces the original tangent
+threshold table. World bearings accept full coordinate differences instead of
+first shrinking them to signed words. Rotation accumulators apply single angle
+units instead of waiting for a 64-unit table step; fractional remainders are
+retained. The orbit calculation no longer adds the old one-sample complement
+offset.
+
+The fixed-point interfaces still store Q15 amplitudes and 16-bit angles. The
+new helpers evaluate `std::sin` and `std::cos` with all angle bits, then convert
+the result to the existing 32767 amplitude scale. Both sine peaks now have equal
+magnitude. This removes table quantisation without changing the game's coordinate
+units, simulation timing, turn limits or authored animation states. It does not
+replace every fixed-point calculation with floating point.
+
+Simulation outputs can therefore differ numerically from the original, including
+trajectories and decisions near thresholds. The faithful `tfx-cpp` retains the
+original arithmetic and its native verification. Redux has no runtime sine,
+cosine or arctangent lookup table; historical copies in
+`tests/legacy_trigonometry.h` are used only by the comparison benchmark.
 
 This does not interpolate the entire simulation between updates or invent
 intermediate authored animation states. An actor supplied only with already
@@ -124,6 +141,43 @@ See also the [square-root and normalisation measurements](square-root-benchmarks
 for the separate comparison of Vectorstorm's approximation modes.
 
 ## Verification
+
+The full-circle `trigonometry_tests` checks every stored angle against independent
+long-double functions, including symmetry, cardinal values, bearing quadrants,
+fixed-point matrix geometry, sub-phase movement, ground targeting, orbit alignment
+and fractional military-flight rotations.
+
+The current suite has 225 tests. Forty inherited comparisons now have
+Redux-specific expectations in the same fixture files: every input remains
+unchanged, while the expected numerical outputs reflect the finer trig. Their
+CTest names use `redux_`; the original evidence remains in `tfx-cpp` and this
+repository's history. The manifest records hashes of both versions. These
+snapshots guard against later regressions; they are not independent proof of
+the new maths, which is checked by the full-circle and geometry tests above.
+
+The fixed-point camera's maximum adjacent-frame movement in the 4K slow-turn
+check is now 0.442585 pixels, alongside 0.442467 pixels for the floating display
+camera. The former table-based path reached 22.159 pixels in that test.
+
+Five alternating before/after pairs of the 4K virtual-HUD benchmark (24 warmed
+frames each, 32-cell distance, same CPU/compiler as above) measured median totals
+of 46.94 ms before and 46.02 ms after. HUD time was 3.75/3.77 ms. This does not
+establish a speedup; it shows no rendering penalty in this bounded workload.
+The real-asset HUD and all-six-cockpits probes also pass.
+
+`tools/record_redux_trig_fixtures.py` audits the snapshot values without writing
+them. Its explicit `--record` mode first requires the independent trig and
+continuous-camera checks to pass, then records only expectation tokens read by
+the probes. Malformed fixtures and other probe failures remain errors; normal
+CTest runs always compare the stored outputs exactly. Do not record new values
+without reviewing the reason for their changes.
+
+### Earlier display-only verification
+
+The following original-code results were recorded before the runtime trig
+replacement. They describe the inherited baseline; they are not claims of
+byte-exact Redux simulation after the change.
+
 
 `continuous_pose_tests` advances the aircraft basis in single angle-word steps
 through several table boundaries. At 4K / 56 degrees, the largest adjacent-frame

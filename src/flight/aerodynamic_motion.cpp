@@ -9,8 +9,8 @@ namespace {
 
 using calculation = long double;
 double constexpr half_step{.5}, native_pi{3.141592654};
-double constexpr angle_units_per_half_turn{32768}, inverse_rotation_step{1.0 / 64};
-unsigned int constexpr rotation_step{64}, time_warp_multiplier{5};
+double constexpr angle_units_per_half_turn{32768};
+unsigned int constexpr time_warp_multiplier{5};
 double constexpr impact_down_metres{2};
 int32_t constexpr fallback_height_limit{-2}, fallback_world_y{-5};
 
@@ -21,8 +21,7 @@ int32_t truncate(calculation const value) {
 math::angle rotation_amount(double const amount, double *const remainder) {
   calculation const sum{static_cast<calculation>(amount) + (remainder ? *remainder : 0)};
   if(remainder) *remainder = static_cast<double>(sum);
-  auto const phase{truncate(sum * inverse_rotation_step)};
-  auto const result{static_cast<math::angle>(static_cast<uint32_t>(phase) * rotation_step)};
+  auto const result{static_cast<math::angle>(truncate(sum))};
   if(remainder) *remainder = static_cast<double>(static_cast<calculation>(*remainder) - math::signed_word(result));
   return result;
 }

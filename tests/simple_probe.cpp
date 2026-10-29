@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -88,8 +89,7 @@ int main(int const argc, char const *const argv[]) try {
       }
     }
     if(check) {
-      uint64_t expected;
-      if(!(input >> expected) || digest != expected) throw std::runtime_error{"native Simple flight sequence differs"};
+      if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native Simple flight sequence differs"};
     }
     ++cases;
   }

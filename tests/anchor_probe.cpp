@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -15,8 +16,7 @@ int main(int const argc, char const *const argv[]) try {
   while(input >> x >> y >> z >> pitch >> heading >> roll >> ax >> ay >> az) {
     auto const position{tfx::math::place_anchor({x,y,z},{static_cast<uint16_t>(pitch),static_cast<uint16_t>(heading),static_cast<uint16_t>(roll)},{static_cast<int16_t>(ax),static_cast<int16_t>(ay),static_cast<int16_t>(az)})};
     if(argc == 2) {
-      int32_t expected_x{0},expected_y{0},expected_z{0};
-      if(!(input >> expected_x >> expected_y >> expected_z) || position != vec3<int32_t>{expected_x,expected_y,expected_z}) throw std::runtime_error{"native anchor transform differs in case " + std::to_string(cases)};
+      if(!tfx::test::fixture_matches(input,position.x) || !tfx::test::fixture_matches(input,position.y) || !tfx::test::fixture_matches(input,position.z)) throw std::runtime_error{"native anchor transform differs in case " + std::to_string(cases)};
     } else std::cout << position.x << ' ' << position.y << ' ' << position.z << '\n';
     ++cases;
   }

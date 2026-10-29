@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <array>
 #include <cstdlib>
 #include <fstream>
@@ -28,8 +29,8 @@ auto main(int const argc, char const *const argv[])->int try {
   if(!input) throw std::runtime_error{"cannot read surface reference fixture"};
   unsigned int ticks{0}, cases{0};
   std::string profile_hex, program_hex;
-  uint64_t expected{0};
-  while(input >> ticks >> profile_hex >> program_hex >> expected) {
+  while(input >> ticks >> profile_hex >> program_hex) {
+    tfx::test::fixture_expectation<uint64_t> const expected{input};
     auto const profiles{tfx::actors::profiles(bytes(profile_hex))};
     tfx::actors::program const program{bytes(program_hex)};
     std::array<tfx::actors::formation_offset,tfx::actors::aircraft_per_group> const formation{};
@@ -55,7 +56,7 @@ auto main(int const argc, char const *const argv[])->int try {
       word(state.cursor);
       word(state.pose.flags);
     }
-    if(digest != expected) throw std::runtime_error{"native surface trace differs in case " + std::to_string(cases)};
+    if(!expected.matches(digest)) throw std::runtime_error{"native surface trace differs in case " + std::to_string(cases)};
     ++cases;
   }
   if(!input.eof() || !cases) throw std::runtime_error{"invalid surface reference fixture"};

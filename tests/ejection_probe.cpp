@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <bit>
 #include <iostream>
 #include <fstream>
@@ -44,10 +45,9 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const value : pilot.angles) values.push_back(value);
     values.push_back(static_cast<int64_t>(update.model_entries.size()));for(auto const entry : update.model_entries) values.push_back(entry);
     if(argc == 2) {
-      uint64_t digest{14695981039346656037ull}, expected;
+      uint64_t digest{14695981039346656037ull};
       for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ static_cast<uint8_t>(static_cast<uint32_t>(value) >> shift)) * 1099511628211ull;
-      input >> expected;
-      if(!input || digest != expected) throw std::runtime_error{"native pilot fixture differs at case " + std::to_string(count)};
+      if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native pilot fixture differs at case " + std::to_string(count)};
     } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
     ++count;
   }

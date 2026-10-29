@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <bit>
 #include <cstdlib>
 #include <fstream>
@@ -66,8 +67,7 @@ auto main(int const argc, char const *const argv[])->int try {
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
     if(fixture.is_open()) {
-      uint64_t expected;
-      if(!(input >> expected) || digest != expected) throw std::runtime_error{"native jettison state differs"};
+      if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native jettison state differs"};
     } else {
       for(auto const value : values) std::cout << value << ' ';
       std::cout << '\n';

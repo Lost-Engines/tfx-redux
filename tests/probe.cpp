@@ -45,7 +45,7 @@ auto main(int const argc, char const *const argv[])->int try {
       std::cout << tfx::world::intersects(box,segment,diagonal != 0) << '\n';
     }
   } else if(mode == "sine") {
-    for(auto const value : tfx::math::sine_table()) std::cout << value << ' ';
+    for(unsigned angle=0;angle<tfx::math::angle_units_per_turn;++angle) std::cout << tfx::math::sine_q15(static_cast<int32_t>(angle)) << ' ';
     std::cout << std::endl;
   } else if(mode == "model_vertex") {
     unsigned int pitch{0}, yaw{0}, roll{0};int x{0}, y{0}, z{0};

@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -81,8 +82,8 @@ int main(int const argc, char const *const argv[]) try {
     if(pixels) std::cout.write(reinterpret_cast<char const*>(output.pixels.data()),output.pixels.size());
     else if(fixture.is_open()) {
       if(!defined) throw std::runtime_error{"native fixture enters projection overflow"};
-      for(auto const value : transform.matrix().data) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native model basis mismatch"}; }
-      uint64_t expected;if(!(input >> expected) || hash != expected) throw std::runtime_error{"native transformed model mismatch at " + std::to_string(cases)};
+      for(auto const value : transform.matrix().data) { if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native model basis mismatch"}; }
+      if(!tfx::test::fixture_matches(input,hash)) throw std::runtime_error{"native transformed model mismatch at " + std::to_string(cases)};
     } else { for(auto const value : transform.matrix().data) std::cout << value << ' ';std::cout << hash;if(!defined) std::cout << " overflow";std::cout << '\n'; }
     ++cases;
   }

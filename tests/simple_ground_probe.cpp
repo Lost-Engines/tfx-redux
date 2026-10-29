@@ -1,3 +1,4 @@
+#include "fixture_check.h"
 #include <array>
 #include <bit>
 #include <fstream>
@@ -58,8 +59,7 @@ int main(int const argc, char const *const argv[]) try {
     if(cursor != values.size()) throw std::runtime_error{"Simple ground output dimensions differ"};
     if(argc == 2) {
       for(auto const value : values) {
-        uint64_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native Simple ground fixture differs"};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native Simple ground fixture differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';
