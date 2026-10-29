@@ -60,7 +60,10 @@ capture_scene::capture_scene(std::filesystem::path const &path) {
         if(name=="cockpit") view=cockpit::view_mode::cockpit;
         else if(name=="virtual") view=cockpit::view_mode::virtual_cockpit;
         else if(name=="external") view=cockpit::view_mode::chase;
-        else throw std::runtime_error{"view expects cockpit, virtual or external"};
+        else if(name=="left") view=cockpit::view_mode::look_left;
+        else if(name=="right") view=cockpit::view_mode::look_right;
+        else if(name=="rear") view=cockpit::view_mode::rear;
+        else throw std::runtime_error{"view expects cockpit, virtual, external, left, right or rear"};
       } else if(key=="look") look={scalar(line,-180,180),scalar(line,-80,80)};
       else if(key=="camera") {
         auto const eye{point(line)}, target{point(line)};
@@ -85,7 +88,21 @@ capture_scene::capture_scene(std::filesystem::path const &path) {
       else if(key=="warmup") warmup_frames=integer(line,500);
       else if(key=="mission-actors") mission_actors=integer(line,1)!=0;
       else if(key=="hide-player") hide_player=integer(line,1)!=0;
-      else if(key=="player-event") player_events.push_back(integer(line,31));
+      else if(key=="player-event") player_events.push_back(integer(line,255));
+      else if(key=="at") {
+        capture_event event{};
+        event.frame=integer(line,500);
+        auto const target{word(line)};
+        if(target=="player-event") event.target=capture_event_target::player;
+        else if(target=="actor-event") {
+          event.target=capture_event_target::actor;event.actor=integer(line,63);
+        } else if(target=="terrain-event") {
+          event.target=capture_event_target::terrain;
+          event.x=integer(line,199);event.z=integer(line,199);
+        } else throw std::runtime_error{"at expects player-event, actor-event or terrain-event"};
+        event.entry=integer(line,255);
+        events.push_back(event);
+      }
       else if(key=="actor") {
         if(actors.size()==64) throw std::runtime_error{"at most 64 staged actors"};
         auto name{word(line)};
@@ -93,13 +110,17 @@ capture_scene::capture_scene(std::filesystem::path const &path) {
           throw std::runtime_error{"invalid SSD definition name"};
         auto const p{point(line)};
         auto const a{platform::angles(line)};
-        actors.push_back({name,vec3d{p},vec3<math::angle>{a},integer(line,31)});
+        actors.push_back({name,vec3d{p},vec3<math::angle>{a},integer(line,255)});
       } else throw std::runtime_error{"unknown key: "+key};
       std::string extra;
       if(line>>extra) throw std::runtime_error{"unexpected trailing value"};
     } catch(std::exception const &error) {
       throw std::runtime_error{path.string()+":"+std::to_string(row)+": "+error.what()};
     }
+  }
+  for(auto const &event : events) {
+    if(event.frame>warmup_frames) throw std::runtime_error{"capture event occurs after final frame"};
+    if(event.target==capture_event_target::actor && event.actor>=actors.size()) throw std::runtime_error{"capture event refers to missing actor"};
   }
   if(camera && view!=cockpit::view_mode::chase) throw std::runtime_error{"capture camera requires view external"};
 }

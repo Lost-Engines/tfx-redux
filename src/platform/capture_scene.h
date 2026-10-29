@@ -15,6 +15,12 @@ struct capture_actor {
   vec3<math::angle> angles;
   unsigned int entry{0};
 };
+enum class capture_event_target { player, actor, terrain };
+struct capture_event {
+  unsigned int frame, entry;
+  capture_event_target target;
+  unsigned int actor{0}, x{0}, z{0};
+};
 struct capture_scene {
   std::optional<vec3<int32_t>> position;
   std::optional<vec3<math::angle>> angles;
@@ -29,6 +35,7 @@ struct capture_scene {
   bool hide_player{false}, mission_actors{true};
   std::vector<capture_actor> actors;
   std::vector<unsigned int> player_events;
+  std::vector<capture_event> events;
   explicit capture_scene(std::filesystem::path const &path);
   void initialise(missions::setup &setup) const;
 };
