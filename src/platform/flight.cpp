@@ -16,6 +16,7 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include "render/continuous_pose.h"
 #include "actors/air.h"
 #include "actors/program.h"
 #include "actors/surface.h"
@@ -2254,7 +2255,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       if(entry) scene.actor_event(player_visual,*entry);
       bool const integer_model{view_motion.last_pose().model_source == tfx::cockpit::player_model_source::integer};
       auto const model_position{integer_model ? vec3d{context.position} : vec3d{context.position_q8} / tfx::actors::position_unit};
-      scene.set_player_rendering(player_visual,model_position,context.angles,integer_model ? tfx::world::animation_policy::when_visible : tfx::world::animation_policy::frozen);
+      scene.set_player_rendering(player_visual,model_position,context.angles,integer_model ? tfx::world::animation_policy::when_visible : tfx::world::animation_policy::frozen,tfx::render::continuous_basis(context.basis));
     } else {
       scene.show_actor(player_visual,false);
       scene.set_player_rendering(player_visual,vec3d{player.position},player.angles,tfx::world::animation_policy::frozen);
@@ -2282,7 +2283,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     if(!inspect) update_designator(paused);
     if(!inspect) options.ground_reference = vec3<int32_t>{view_motion.value().ground_reference};
     auto const projection_origin{cockpit_frame.projection_origin(view_index(),cockpit_position.value())};
-    auto view{inspect ? tfx::render::inspection_camera(position,heading,pitch) : designator_view ? tfx::cockpit::designator_pose(designator).camera(projection_origin) : view_motion.last_pose().camera(projection_origin)};
+    auto view{inspect ? tfx::render::inspection_camera(position,heading,pitch) : designator_view ? tfx::cockpit::designator_pose(designator).camera(projection_origin) : view_motion.display_camera(projection_origin)};
     if(!inspect && !designator_view) {
       external_orbit.select(views.value().current);
       view = external_orbit.apply(view,camera_context(),view_motion.value().last_missile);
@@ -2358,7 +2359,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       bool const glass_hud{!designator_view && tfx::cockpit::mouse_look::supports(views.value().current)};
       if(glass_hud) {
         auto const context{camera_context()};
-        auto const rotation{tfx::math::rotation(context.angles)};
+        auto const rotation{tfx::render::continuous_basis(context.basis)};
         auto const actual_view{tfx::render::scene_camera(view,video)};
         hud_vectors.attach_to_glass(actual_view,vec3d{context.position_q8}/tfx::actors::position_unit,rotation);
         auto optical{view};

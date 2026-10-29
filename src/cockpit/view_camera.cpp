@@ -1,4 +1,5 @@
 #include "view_camera.h"
+#include "render/continuous_pose.h"
 #include <algorithm>
 #include <bit>
 #include <utility>
@@ -32,14 +33,23 @@ render::camera view_pose::camera(vec2d const &projection_origin) const {
   for(unsigned int axis{0}; axis != 3; ++axis) result.position[axis] = anchor[axis] + subtract(position_q16[axis],wrap(static_cast<uint32_t>(anchor[axis]) << 16)) / 65536.0;
   return result;
 }
-view_camera::view_camera(view_motion_state initial) : state{std::move(initial)} {}
+view_camera::view_camera(view_motion_state initial) : state{std::move(initial)}, display_angles{render::angle_radians(state.smoothed_angles)}, display_basis{render::continuous_rotation(display_angles)} {}
 view_motion_state const &view_camera::value() const { return state; }
 view_pose const &view_camera::last_pose() const { return pose; }
+render::camera view_camera::display_camera(vec2d const &projection_origin) const {
+  auto result{pose.camera(projection_origin)};
+  result.right=display_basis*vec3d{1,0,0};
+  result.down=display_basis*vec3d{0,1,0};
+  result.forward=display_basis*vec3d{0,0,1};
+  return result;
+}
 void view_camera::set_angles(vec3<math::angle> const &angles) {
   pose.angles = vec3<math::angle>{angles};
   pose.horizon_angles.emplace(angles.x,angles.z);
   pose.horizon_camera_y = math::signed_word(static_cast<uint16_t>(pose.position_q16.y >> 16));
   pose.matrix = math::view_rotation_words(angles);
+  display_angles=-render::angle_radians(angles);
+  display_basis=render::continuous_rotation(display_angles);
 }
 void view_camera::player_origin(view_camera_context const &context) {
   pose.anchor = vec3<int32_t>{context.position};
@@ -85,6 +95,10 @@ void view_camera::select_head_height() {
 }
 bool view_camera::compose(view_control &views, view_camera_context const &context, bool const chase) {
   auto const &world{context.basis};
+  auto const precise_world{render::continuous_basis(world)};
+  double const roll{chase ? render::angle_radians(static_cast<math::angle>(state.orbit_roll)) : -render::continuous_angles(precise_world).z/16};
+  auto const target{precise_world*render::continuous_basis(views.state.orbit)*render::continuous_rotation(vec3d{0,0,roll})};
+  auto const following{render::follow_angles(display_angles,render::continuous_angles(target),chase ? .125 : .25,!chase && views.state.tracking_roll)};
   auto combined{product(world,views.state.orbit)};
   if(chase) combined.rotate(math::rotation_axis::roll,static_cast<math::angle>(state.orbit_roll));
   else combined.rotate(math::rotation_axis::roll,static_cast<math::angle>((-math::signed_word(context.angles.z)) >> 4));
@@ -122,6 +136,10 @@ bool view_camera::compose(view_control &views, view_camera_context const &contex
     }
   }
   set_angles({negative(state.smoothed_angles.x),negative(state.smoothed_angles.y),negative(state.smoothed_angles.z)});
+  // Preserve the native pose/state above for gameplay and reference checks;
+  // the visible camera keeps sub-phase angles through the same follow filter.
+  display_angles=vec3d{following};
+  display_basis=render::continuous_rotation(display_angles);
   // Native 0x9095c chooses the internal canopy/side model only while the
   // eye remains within 0xa000 Q16 units of the player anchor.
   bool near{!chase};
@@ -168,6 +186,8 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
   case view_mode::cockpit:
     player_origin(context);
     set_angles({negative(context.angles.x),negative(context.angles.y),negative(context.angles.z)});
+    display_basis=render::continuous_basis(context.basis);
+    display_angles=render::continuous_angles(display_basis);
     views.ready();
     break;
   case view_mode::full_forward: {
@@ -176,6 +196,8 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     // Native 0xb96dc uses the current basis directly, preserving its stored precision.
     auto const &basis{context.basis};
     pose.matrix.data = {basis.right.x,basis.right.y,basis.right.z,basis.down.x,basis.down.y,basis.down.z,basis.forward.x,basis.forward.y,basis.forward.z};
+    display_basis=render::continuous_basis(basis);
+    display_angles=render::continuous_angles(display_basis);
     views.ready();
     break;
   }

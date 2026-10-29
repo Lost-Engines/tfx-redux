@@ -61,6 +61,8 @@ class view_camera {
 private:
   view_motion_state state;
   view_pose pose;
+  vec3d display_angles{0,0,0};
+  mat3d display_basis{};
   void pan_head(view_control &views, uint16_t pan, bool limit_pitch);
   void limit_head(view_control &views);
   void select_head_height();
@@ -72,6 +74,7 @@ public:
   explicit view_camera(view_motion_state initial = {});
   view_motion_state const &value() const;
   view_pose const &last_pose() const;
+  render::camera display_camera(vec2d const &projection_origin) const;
   void initialise_ground_reference(vec3<int32_t> const &position);
   void advance_ground_reference(view_camera_context const &context, bool inhibited = false);
   bool advance(view_control &views, view_camera_context const &context);
