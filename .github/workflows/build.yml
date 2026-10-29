@@ -150,6 +150,7 @@ jobs:
           fi
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
             -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=OFF -DTFX_STATIC_RUNTIME=ON \
+            -DCMAKE_DISABLE_FIND_PACKAGE_glfw3=ON \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             "${extra[@]}"
       - name: Build

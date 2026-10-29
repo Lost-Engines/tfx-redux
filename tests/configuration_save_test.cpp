@@ -1,6 +1,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <source_location>
 #include "configuration/save.h"
 #include "resources/binary.h"
 
@@ -11,7 +12,7 @@ int main() try {
     std::filesystem::path const &directory;
     ~cleanup() { std::error_code error;std::filesystem::remove_all(directory,error); }
   } const cleanup{path};
-  auto const check{[](bool const value) { if(!value) throw std::runtime_error{"preference file integration mismatch"}; }};
+  auto const check{[](bool const value, std::source_location const where = std::source_location::current()) { if(!value) throw std::runtime_error{"preference file integration mismatch at line " + std::to_string(where.line())}; }};
   auto const fresh{tfx::configuration::load(path)};
   check(fresh.control == tfx::flight::control_source::keyboard && fresh.preferred_control == fresh.control);
   check(fresh.model == tfx::simulation::flight_model::military_spec);
@@ -30,7 +31,13 @@ int main() try {
   std::string const original{"CONTROL=2\r\nMODEL=3\r\nBLASTER=A220 I7 D1 T6\r\nEXTRA=keep this\r\nDETAIL=2\r\nJOYSCALE=512\r\nHUDCOL=120\r\nREALISM=2,1,1,1,0,1,0\r\n"};
   { std::ofstream output{config,std::ios::binary};output << original; }
   check(tfx::configuration::save_preferences(path,state));
-  check(!std::filesystem::exists(path / "TFX.CFG"));
+  // Check the actual directory entry, not an alias on case-insensitive hosts.
+  unsigned int files{0};
+  for(auto const &entry : std::filesystem::directory_iterator(path)) {
+    check(entry.path().filename().string() == "tfx.cfg");
+    ++files;
+  }
+  check(files == 1);
   auto const bytes{tfx::resources::read_file(config)};
   std::string const updated{bytes.begin(),bytes.end()};
   check(updated.starts_with("CONTROL=2\r\nMODEL=3\r\nBLASTER=A220 I7 D1 T6\r\nEXTRA=keep this\r\n"));
