@@ -46,7 +46,7 @@ arming_result arm_mission(window &window, resources::archive const &game, resour
   auto *const host{window.get()};
   arming_keys keys{host,screen};
   window.title("TFX Redux — Arming");
-  window.present(screen.image().colourise(screen.colours()),screen.image().size);
+  window.present_frame(screen.image(),screen.colours());
   double next_frame{glfwGetTime()};
   std::optional<vec2<int16_t>> previous_pointer;
   std::optional<vec2<int32_t>> previous_coordinates;
@@ -84,7 +84,7 @@ arming_result arm_mission(window &window, resources::archive const &game, resour
       if(glfwRawMouseMotionSupported()) glfwSetInputMode(host,GLFW_RAW_MOUSE_MOTION,screen.rotating() ? GLFW_TRUE : GLFW_FALSE);
       previous_coordinates.reset();
     }
-    window.present(screen.image().colourise(screen.colours()),screen.image().size);
+    window.present_frame(screen.image(),screen.colours());
     if(finished) {
       if(screen.cancelled()) return arming_result::cancelled;
       previous.restore = false;

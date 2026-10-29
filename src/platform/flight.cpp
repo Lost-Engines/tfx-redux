@@ -2483,7 +2483,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto &window{shared_window ? *shared_window : *owned_window};
   active_window = &window;
   // Wayland maps the window after its first buffer: present before waiting for focus.
-  window.present(display_frame.colourise(*frame_colours),display_frame.size);
+  window.present_frame(display_frame,*frame_colours);
   auto *const host{window.get()};
   std::optional<int> joystick;
   tfx::flight::joystick_buttons stick_buttons;
@@ -3223,7 +3223,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     }
     if(paused || result_evaluated) glfwWaitEventsTimeout(.01);
     draw();
-    window.present(display_frame.colourise(*frame_colours),display_frame.size);
+    window.present_frame(display_frame,*frame_colours);
     if(frame_ticks) {
       finish_world(*frame_ticks);
       projectiles.finish_frame();

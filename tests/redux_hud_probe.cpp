@@ -6,11 +6,58 @@
 #include "cockpit/mouse_orbit.h"
 
 void require(bool ok,char const *message){if(!ok)throw std::runtime_error{message};}
+namespace {
+using namespace tfx;
+void reference_stroke(render::framebuffer &target, vec2d const &from, vec2d const &to, vec2<int> const &low, vec2<int> const &high) {
+  render::interface_layout const layout{target.size};
+  auto const a{layout.project(from+vec2d{.5,.5})},b{layout.project(to+vec2d{.5,.5})},delta{b-a};
+  double const length2{delta.dot(delta)},radius{std::max(1.0,.65*layout.scale)/2};
+  vec2<int> clip_low,clip_high;
+  for(unsigned axis=0;axis<2;++axis) {
+    clip_low[axis]=std::max(0,static_cast<int>(std::ceil(layout.offset[axis]+low[axis]*layout.scale-.5)));
+    clip_high[axis]=std::min(target.size[axis]-1,static_cast<int>(std::ceil(layout.offset[axis]+(high[axis]+1)*layout.scale-.5))-1);
+  }
+  target.hud_coverage.assign(target.pixels.size(),0);
+  for(int y=clip_low.y;y<=clip_high.y;++y) for(int x=clip_low.x;x<=clip_high.x;++x) {
+    vec2d const point{x+.5,y+.5};
+    double const t{length2 ? std::clamp((point-a).dot(delta)/length2,0.0,1.0) : 0};
+    double const coverage{std::clamp(radius+.5-(point-a-delta*t).length(),0.0,1.0)};
+    target.hud_coverage[static_cast<size_t>(y*target.size.x+x)]=static_cast<uint8_t>(std::lround(coverage*255));
+  }
+}
+
+void check_stroke_reference(cockpit::instrument_assets const &assets) {
+  cockpit::vector_hud hud{assets};
+  std::array<std::pair<vec2d,vec2d>,9> const lines{{
+    {{0,0},{319,199}},{{319,199},{0,0}},{{12.25,188.1},{307.8,3.75}},
+    {{0,50.25},{319,50.25}},{{80.25,-20},{80.25,220}},{{0,80},{319,80.001}},
+    {{-40,-20},{350,230}},{{110.25,82.75},{110.25,82.75}},{{170,130},{-100,30}},
+  }};
+  for(auto const &size:{vec2<int>{320,200},{997,603},{3840,2160}}) for(auto const &[from,to]:lines) {
+    render::framebuffer actual;actual.resize(size);
+    hud.begin(size);hud.line(from,to,{7,4},{312,194});hud.compose(actual,{});
+    auto expected{actual};reference_stroke(expected,from,to,{7,4},{312,194});
+    require(actual.hud_coverage==expected.hud_coverage,"HUD stroke strip lost or changed antialiased pixels");
+    if(from.x==0 && from.y==0) {
+      std::vector<uint8_t> mask(320*200);
+      for(int y=0;y<200;++y) for(int x=0;x<320;++x) mask[static_cast<size_t>(y*320+x)]=static_cast<uint8_t>(((x/7+y/11)&1)*255);
+      hud.compose(actual,mask);
+      render::interface_layout const layout{size};
+      for(int y=0;y<size.y;++y) for(int x=0;x<size.x;++x) {
+        int const sx{static_cast<int>(std::floor((x-layout.offset.x)/layout.scale))},sy{static_cast<int>(std::floor((y-layout.offset.y)/layout.scale))};
+        if(sx>=0 && sx<320 && sy>=0 && sy<200 && mask[static_cast<size_t>(sy*320+sx)]) expected.hud_coverage[static_cast<size_t>(y*size.x+x)]=0;
+      }
+      require(actual.hud_coverage==expected.hud_coverage,"sparse cockpit occlusion changed HUD coverage");
+    }
+  }
+}
+}
 int main(int argc,char const *const argv[]) try {
   if(argc<2||argc>3)throw std::runtime_error{"usage: redux_hud_probe DATA_DIR [CAPTURE_DIR]"};
   tfx::resources::archive game{tfx::resources::find_game_archive(argv[1])};
   tfx::resources::executable_tables tables{std::filesystem::path{argv[1]}/"TFX.DAT"};
   tfx::cockpit::vector_hud hud{tables.instruments()};
+  check_stroke_reference(tables.instruments());
   tfx::render::palette palette;palette.fill({55,60,70});palette[6]={0,255,0};
   for(auto const &size : {vec2<int>{320,200},vec2<int>{1001,603},vec2<int>{1920,1080}}) {
     tfx::render::framebuffer frame;frame.resize(size);

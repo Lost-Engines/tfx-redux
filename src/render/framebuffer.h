@@ -43,6 +43,7 @@ struct framebuffer {
     if(!coverage.empty()) coverage[offset] = 255;
   }
   std::vector<rgba_pixel> colourise(palette const &colours) const;
+  void colourise(palette const &colours, std::vector<rgba_pixel> &result) const;
   void screenshot(std::filesystem::path const &path, palette const &colours) const;
 };
 

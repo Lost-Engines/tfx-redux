@@ -66,45 +66,66 @@ inline std::optional<scene_region> instrument_camera(camera const &source, view_
   };
 }
 
-inline std::vector<int> interface_columns(interface_layout const &layout, int const width) {
-  std::vector<int> columns(static_cast<size_t>(width));
-  for(int x{0}; x != width; ++x) columns[static_cast<size_t>(x)] = static_cast<int>(std::floor((x - layout.offset.x) / layout.scale));
-  return columns;
-}
+// Invert the original pixel-to-interface mapping once per axis. Keeping the
+// same floor expression preserves fractional scales and letterbox boundaries.
+struct interface_raster {
+  std::array<int,screen_width + 1> columns;
+  std::array<int,screen_height + 1> rows;
+  explicit interface_raster(vec2<int> const &size) {
+    interface_layout const layout{size};
+    auto const map{[&](auto &bounds, int extent, double offset) {
+      int pixel{0};
+      for(size_t source=0;source<bounds.size();++source) {
+        while(pixel<extent && std::floor((pixel-offset)/layout.scale)<static_cast<double>(source)) ++pixel;
+        bounds[source]=pixel;
+      }
+    }};
+    map(columns,size.x,layout.offset.x);map(rows,size.y,layout.offset.y);
+  }
+  template<class Paint> void covered_spans(std::span<uint8_t const> coverage, Paint const &paint) const {
+    for(int row=0;row<screen_height;++row) {
+      if(rows[row]==rows[row+1]) continue;
+      auto const *mask{coverage.data()+row*screen_width};
+      for(int column=0;column<screen_width;) {
+        while(column<screen_width && !mask[column]) ++column;
+        int const first{column};
+        while(column<screen_width && mask[column]) ++column;
+        if(columns[first]<columns[column]) paint(row,first,column);
+      }
+    }
+  }
+};
 
 inline framebuffer scale_image(framebuffer const &source, vec2<int> const &size) {
   framebuffer result;result.resize(size);
-  interface_layout const layout{size};
-  auto const columns{interface_columns(layout,size.x)};
-  for(int y{0}; y != size.y; ++y) {
-    int const row{static_cast<int>(std::floor((y - layout.offset.y) / layout.scale))};
-    if(row < 0 || row >= screen_height) continue;
-    for(int x{0}; x != size.x; ++x) {
-      int const column{columns[static_cast<size_t>(x)]};
-      if(column >= 0 && column < screen_width) result.pixels[static_cast<size_t>(y * size.x + x)] = source.pixels[static_cast<size_t>(row * screen_width + column)];
-    }
+  interface_raster const mapping{size};
+  for(int row=0;row<screen_height;++row) {
+    int const first{mapping.rows[row]}, last{mapping.rows[row+1]};
+    if(first==last) continue;
+    auto *line{result.pixels.data()+first*size.x};
+    for(int column=0;column<screen_width;++column)
+      std::fill(line+mapping.columns[column],line+mapping.columns[column+1],source.pixels[static_cast<size_t>(row*screen_width+column)]);
+    for(int y=first+1;y<last;++y) std::copy_n(line,size.x,result.pixels.data()+y*size.x);
   }
   return result;
 }
 
 inline void composite_interface(framebuffer &target, framebuffer const &source) {
   if(source.coverage.empty()) return;
-  interface_layout const layout{target.size};
-  auto const columns{interface_columns(layout,target.size.x)};
-  for(int y{0}; y != target.size.y; ++y) {
-    int const row{static_cast<int>(std::floor((y - layout.offset.y) / layout.scale))};
-    if(row < 0 || row >= screen_height) continue;
-    for(int x{0}; x != target.size.x; ++x) {
-      int const column{columns[static_cast<size_t>(x)]};
-      if(column < 0 || column >= screen_width) continue;
-      auto const at{static_cast<size_t>(row * screen_width + column)};
-      if(source.coverage[at]) {
-        auto const destination{static_cast<size_t>(y * target.size.x + x)};
-        target.pixels[destination] = source.pixels[at];
-        if(!target.hud_coverage.empty()) target.hud_coverage[destination]=0;
-      }
+  interface_raster const mapping{target.size};
+  // Expand each covered source row once, then copy its runs to repeated rows.
+  // Empty regions need no work proportional to the output resolution.
+  std::vector<uint8_t> line(static_cast<size_t>(target.size.x));
+  mapping.covered_spans(source.coverage,[&](int row,int first,int last) {
+    int const left{mapping.columns[first]}, right{mapping.columns[last]};
+    for(int column=first;column<last;++column)
+      std::fill(line.data()+mapping.columns[column],line.data()+mapping.columns[column+1],source.pixels[static_cast<size_t>(row*screen_width+column)]);
+    for(int y=mapping.rows[row];y<mapping.rows[row+1];++y) {
+      auto const at{static_cast<size_t>(y*target.size.x+left)};
+      std::copy_n(line.data()+left,right-left,target.pixels.data()+at);
+      if(!target.hud_coverage.empty()) std::fill_n(target.hud_coverage.data()+at,right-left,uint8_t{0});
     }
-  }
+  });
 }
 
 } // namespace tfx::render

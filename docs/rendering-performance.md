@@ -188,3 +188,71 @@ With the full panel and direct source sampling, the same isolated F-22 probe
 measured 13.33 ms static / 18.47 ms live at 1080p, and 52.54 ms / 72.99 ms at
 4K. These are canopy-only CPU timings, not whole-game frame rates; the more
 accurate sampling adds about 5 ms / 20 ms respectively on this machine.
+
+## 4K software-rendering pass (29 October 2026)
+
+Redux keeps the software renderer. A future WebGPU/Wasm version is a separate
+architecture project; this pass improves the current CPU pipeline.
+
+Profiling a warmed 3840×2160 scene found that UI composition alone accounted for
+38% of its executed instructions. Solid polygons still called the general pixel
+painter for every pixel. The optical HUD also tested every pixel in a diagonal
+stroke's bounding rectangle, making long banked lines especially expensive.
+
+The changes are confined to drawing and presentation:
+
+- Solid, unshaded polygon spans use contiguous fills after the existing clipping
+  and facing decisions. Optional write coverage is filled over the same span.
+- UI composition expands each covered native row once and copies its visible
+  runs. HUD occlusion uses the same mapping. Fractional scales and letterboxing
+  retain the original destination-to-source rounding.
+- HUD strokes visit a conservative strip around the line on each scanline.
+  Distance, antialiasing, end caps, glass clipping and overlap calculations are
+  unchanged for every pixel that can receive light.
+- Colour conversion expands the palette once, copies complete RGBA values and
+  precomputes the 256 HUD light levels. Flight, arming and video playback reuse
+  the window's colour buffer between frames.
+
+Measured locally with GCC 16.2, RelWithDebInfo (`-O2`), against revision
+`7a73d4b`. These are isolated component times, excluding simulation and window
+upload; the rows overlap and must not be added together as a full-frame budget.
+
+| 4K operation | Before | After |
+| --- | ---: | ---: |
+| World benchmark: horizon, geometry and UI | 34.8 ms | 16.5 ms |
+| Static F-22 canopy | 50.8 ms | 21–23 ms |
+| Live F-22 canopy | 69.7 ms | 41–44 ms |
+| Native UI composition | 10.3 ms | 0.3 ms |
+| Two long diagonal HUD strokes, including clear/copy | 186.9 ms | 3.4 ms |
+| HUD occlusion, including coverage copy | 35.5 ms | 1.3 ms |
+| Palette and additive HUD conversion | 24.8 ms | 9.8 ms |
+
+The diagonal-stroke benchmark deliberately stresses the old bounding-rectangle
+behaviour; ordinary short labels do not have that cost. Large textured cockpit
+surfaces and very long draw distances still take substantial CPU time. These
+numbers are not promised gameplay frame rates.
+
+Reproduce the component measurements with the same installation and build:
+
+```sh
+cmake --build build --target redux_render_benchmark redux_composition_tests virtual_cockpit_probe -j
+./build/redux_render_benchmark /path/to/TFX 16 30 3840 2160
+./build/redux_composition_tests --benchmark /path/to/TFX
+./build/virtual_cockpit_probe /path/to/TFX
+```
+
+`render.redux_composition` compares UI scaling and sparse masks against a simple
+per-destination-pixel reference at native, reduced, fractional, portrait and 4K
+sizes. It also checks all 256 palette indices against all 256 HUD coverage
+values, allocation reuse, resizing and invalid coverage lengths. The HUD asset
+probe compares horizontal, vertical, diagonal, reversed, clipped and zero-length
+strokes against a full-area distance reference, plus sparse cockpit masks.
+The existing texture probe covers all six ordinary/refuelling cockpit models.
+
+Twelve complete 4K captures covering all three aircraft, F1/F10, turned and
+banked cockpits, night scenery, weather, smoke and external views retain every
+RGB pixel from the pre-change executable. Captures remain local under the
+ignored build directory. Live private-window checks cover virtual MFDs, pause,
+graphics changes and resizing. Recording/playback verification additionally
+compares the indexed image, DAC palette, optical coverage and every displayed
+RGBA pixel at 3840×2160.

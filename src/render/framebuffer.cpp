@@ -22,23 +22,26 @@ void framebuffer::track_writes() {
 
 
 std::vector<rgba_pixel> framebuffer::colourise(palette const &colours) const {
-  // Keep scene palette indices until presentation; add optical HUD light afterwards.
   std::vector<rgba_pixel> result;
-  result.reserve(pixels.size());
-  for(auto const index : pixels) {
-    auto const &colour{colours[index]};
-    result.emplace_back(colour.r, colour.g, colour.b, 255);
-  }
-  if(!hud_coverage.empty()) {
-    if(hud_coverage.size()!=pixels.size()) throw std::logic_error{"HUD coverage dimensions do not match the framebuffer"};
-    auto const &emission{colours[6]};
-    for(size_t i=0;i<result.size();++i) if(hud_coverage[i]) for(unsigned channel=0;channel<3;++channel) {
-      // Add light without darkening or replacing the scenery behind it.
-      unsigned const light{(static_cast<unsigned>(emission[channel])*hud_coverage[i]*9+1275)/2550};
-      result[i][channel]=static_cast<uint8_t>(std::min(255u,static_cast<unsigned>(result[i][channel])+light));
-    }
-  }
+  colourise(colours,result);
   return result;
+}
+void framebuffer::colourise(palette const &colours, std::vector<rgba_pixel> &result) const {
+  if(!hud_coverage.empty() && hud_coverage.size()!=pixels.size()) throw std::logic_error{"HUD coverage dimensions do not match the framebuffer"};
+  // Expand the small palette once, then copy complete RGBA pixels. The live
+  // window retains its output allocation across frames and resolution changes.
+  std::array<rgba_pixel,256> lookup;
+  for(size_t i=0;i<lookup.size();++i) lookup[i]={colours[i].r,colours[i].g,colours[i].b,255};
+  result.resize(pixels.size());
+  for(size_t i=0;i<pixels.size();++i) result[i]=lookup[pixels[i]];
+  if(!hud_coverage.empty()) {
+    std::array<vec3<uint8_t>,256> light;
+    auto const &emission{colours[6]};
+    for(size_t coverage=0;coverage<light.size();++coverage) for(unsigned channel=0;channel<3;++channel)
+      light[coverage][channel]=static_cast<uint8_t>((static_cast<unsigned>(emission[channel])*coverage*9+1275)/2550);
+    for(size_t i=0;i<result.size();++i) if(auto const coverage=hud_coverage[i]) for(unsigned channel=0;channel<3;++channel)
+      result[i][channel]=static_cast<uint8_t>(std::min(255u,static_cast<unsigned>(result[i][channel])+light[coverage][channel]));
+  }
 }
 
 void framebuffer::screenshot(std::filesystem::path const &path, palette const &colours) const {

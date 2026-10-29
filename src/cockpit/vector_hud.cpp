@@ -1,4 +1,5 @@
 #include "vector_hud.h"
+#include "render/view_settings.h"
 #include <cmath>
 #include <numbers>
 #include <utility>
@@ -69,12 +70,25 @@ void vector_hud::stroke(vec2d const &from, vec2d const &to, vec2<int> const &low
   int const x1{std::min(clip_high.x,static_cast<int>(std::ceil(std::max(a.x,b.x)+radius)))};
   int const y0{std::max(clip_low.y,static_cast<int>(std::floor(std::min(a.y,b.y)-radius-1)))};
   int const y1{std::min(clip_high.y,static_cast<int>(std::ceil(std::max(a.y,b.y)+radius)))};
-  for(int y=y0;y<=y1;++y) for(int x=x0;x<=x1;++x) {
-    vec2d const point{x+.5,y+.5};double const t{length2 ? std::clamp((point-a).dot(delta)/length2,0.0,1.0) : 0};
-    double const coverage{std::clamp(radius+.5-(point-a-delta*t).length(),0.0,1.0)};
-    if(glass && coverage>0 && !on_glass(point)) continue;
-    auto &value{ink[static_cast<size_t>(y*size.x+x)]};
-    value=std::max(value,static_cast<uint8_t>(std::lround(coverage*255)));painted|=value!=0;
+  for(int y=y0;y<=y1;++y) {
+    int first{x0},last{x1};
+    if(delta.y!=0) {
+      // Only visit the strip around this row's part of the stroke. A banked
+      // horizon previously tested every pixel in its large bounding rectangle.
+      double const reach{radius+.5};
+      double const t0{std::clamp((y+.5-reach-a.y)/delta.y,0.0,1.0)};
+      double const t1{std::clamp((y+.5+reach-a.y)/delta.y,0.0,1.0)};
+      double const p0{a.x+delta.x*t0},p1{a.x+delta.x*t1};
+      first=std::max(first,static_cast<int>(std::floor(std::min(p0,p1)-reach))-1);
+      last=std::min(last,static_cast<int>(std::ceil(std::max(p0,p1)+reach))+1);
+    }
+    for(int x=first;x<=last;++x) {
+      vec2d const point{x+.5,y+.5};double const t{length2 ? std::clamp((point-a).dot(delta)/length2,0.0,1.0) : 0};
+      double const coverage{std::clamp(radius+.5-(point-a-delta*t).length(),0.0,1.0)};
+      if(glass && coverage>0 && !on_glass(point)) continue;
+      auto &value{ink[static_cast<size_t>(y*size.x+x)]};
+      value=std::max(value,static_cast<uint8_t>(std::lround(coverage*255)));painted|=value!=0;
+    }
   }
 }
 void vector_hud::line(vec2d const &from, vec2d const &to, vec2<int> const &low, vec2<int> const &high, uint8_t const pattern) {
@@ -141,13 +155,11 @@ void vector_hud::compose(render::framebuffer &target, std::span<uint8_t const> c
   // Later panel/menu writes must cover the optical layer. The HUD itself is
   // above precipitation and the world, which were drawn before capture.
   if(occlusion.empty()) return;
-  for(int y=0;y<size.y;++y) {
-    int const row{static_cast<int>(std::floor((y-offset.y)/scale))};
-    if(row<0||row>=200) continue;
-    for(int x=0;x<size.x;++x) {
-      int const column{static_cast<int>(std::floor((x-offset.x)/scale))};
-      if(column>=0&&column<320&&occlusion[static_cast<size_t>(row*320+column)]) target.hud_coverage[static_cast<size_t>(y*size.x+x)]=0;
-    }
-  }
+  render::interface_raster const mapping{size};
+  mapping.covered_spans(occlusion,[&](int row,int first,int last) {
+    int const left{mapping.columns[first]},right{mapping.columns[last]};
+    for(int y=mapping.rows[row];y<mapping.rows[row+1];++y)
+      std::fill_n(target.hud_coverage.data()+y*size.x+left,right-left,uint8_t{0});
+  });
 }
 } // namespace tfx::cockpit
