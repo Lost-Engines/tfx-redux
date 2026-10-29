@@ -8,6 +8,7 @@
 namespace tfx::cockpit {
 
 view_pose designator_pose(sensors::designator const &state);
+render::camera designator_display_camera(sensors::designator const &state,vec2d const &projection_origin);
 
 struct designator_animation {
   int16_t search{0};

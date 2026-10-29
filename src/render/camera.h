@@ -41,6 +41,8 @@ camera orbit_camera(vec3<math::angle> const &angles, int32_t distance, vec2d con
 
 camera original_camera(vec3<int32_t> const &position_q16, mat3<int32_t> const &matrix, vec2d const &projection_origin, aperture opening = aperture::normal);
 
+camera continuous_camera(camera const &source, mat3d const &basis);
+
 camera inspection_camera(vec3d const &position, double heading, double pitch);
 
 } // namespace tfx::render

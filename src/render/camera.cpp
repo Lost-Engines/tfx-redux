@@ -80,6 +80,12 @@ camera original_camera(vec3<int32_t> const &position_q16, mat3<int32_t> const &m
   };
 }
 
+camera continuous_camera(camera const &source, mat3d const &basis) {
+  auto result{source};
+  result.right=basis*vec3d{1,0,0};result.down=basis*vec3d{0,1,0};result.forward=basis*vec3d{0,0,1};
+  return result;
+}
+
 camera inspection_camera(vec3d const &position, double const heading, double const pitch) {
   /// A free research camera, deliberately separate from the player's fixed-point pose handoff
   double const sh{std::sin(heading)}, ch{std::cos(heading)}, sp{std::sin(pitch)}, cp{std::cos(pitch)};

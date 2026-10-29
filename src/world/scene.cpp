@@ -689,7 +689,7 @@ scene_events scene::draw(render::software_renderer &renderer, render::camera con
         auto const placement{shadow ? *shadow_placement : place_model_part(projection,assembly,word_position(draw.anchor),tile.rotation,draw.placement,instance.bounding_radius())};
         if(native && !placement.visible) continue;
         auto const origin{(shadow || (native && draw.placement != part_position::assembly_origin)) ? vec3d{effect_position(placement.position,vec3<int32_t>{centre})} : centre + math::rotate_tile(draw.anchor,tile.rotation)};
-        queue_part(shape,part,origin,math::rotation(part.rotation),tile.rotation,model_orientation({0,0,0},part,tile.rotation,draw.orientation),placement.camera_origin,shadow ? render::model_render_path::ground_shadow : render::model_render_path::scaled,draw.delivery);
+        queue_part(shape,part,origin,(native ? math::rotation(part.rotation) : render::continuous_rotation(part.rotation)),tile.rotation,model_orientation({0,0,0},part,tile.rotation,draw.orientation),placement.camera_origin,shadow ? render::model_render_path::ground_shadow : render::model_render_path::scaled,draw.delivery);
       }
     } catch(std::exception const &error) {
       warnings.insert(grid.variant(col,row) + ": " + error.what());

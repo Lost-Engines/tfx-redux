@@ -1,4 +1,5 @@
 #include "shape.h"
+#include "render/continuous_pose.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -373,7 +374,7 @@ shape_geometry interpret(shape const &program, shape_context const &context) {
         if(context.camera) {
           camera_origin = *camera_vertices[index];
           if(opcode == 73) camera_basis = math::compose_model_basis(camera_basis,math::rotation_words({a[0],a[1],a[2]}));
-        } else if(opcode == 73) matrix = matrix * math::rotation(vec3<math::angle>{a[0],a[1],a[2]});
+        } else if(opcode == 73) matrix = matrix * render::continuous_rotation(vec3<math::angle>{a[0],a[1],a[2]});
         self(self, active, target, depth + 1);
         origin = old_origin;
         matrix = old_matrix;

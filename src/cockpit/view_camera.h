@@ -63,6 +63,8 @@ private:
   view_pose pose;
   vec3d display_angles{0,0,0};
   mat3d display_basis{};
+  vec3d display_offset{0,0,0};
+  std::optional<vec3d> display_position;
   void pan_head(view_control &views, uint16_t pan, bool limit_pitch);
   void limit_head(view_control &views);
   void select_head_height();
