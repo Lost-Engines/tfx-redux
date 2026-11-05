@@ -235,10 +235,28 @@ jobs:
           fi
           gh release upload "$tag" "${packages[@]}" dist/SHA256SUMS --clobber
           gh release edit "$tag" --draft=false --latest
-          # Only prune after publishing the complete replacement. Leave drafts and Git tags alone.
+          # Only prune after publishing the complete replacement. Leave draft releases alone.
           keep=$(gh api "repos/$GH_REPO/releases/tags/$tag" --jq .id)
           gh api --paginate "repos/$GH_REPO/releases?per_page=100" \
             --jq ".[] | select(.draft == false and .id != $keep) | .id" > old-releases.txt
           while read -r release_id; do
             gh api --method DELETE "repos/$GH_REPO/releases/$release_id"
           done < old-releases.txt
+          # Remove obsolete generated tags, including those left by earlier releases.
+          # Preserve tags attached to retained releases/drafts and unrelated tag names.
+          gh api --paginate "repos/$GH_REPO/releases?per_page=100" \
+            --jq '.[].tag_name' > retained-release-tags.txt
+          gh api --paginate "repos/$GH_REPO/git/matching-refs/tags/release-?per_page=100" \
+            --jq '.[].ref' > release-tag-refs.txt
+          while read -r tag_ref; do
+            old_tag="${tag_ref#refs/tags/}"
+            [[ "$old_tag" =~ ^release-[0-9a-f]{40}$ ]] || continue
+            [[ "$old_tag" != "$tag" ]] || continue
+            if grep -Fxq -- "$old_tag" retained-release-tags.txt; then
+              continue
+            fi
+            # An unrelated branch or a newer commit is not an older release.
+            if git merge-base --is-ancestor "${old_tag#release-}" "$GITHUB_SHA"; then
+              gh api --method DELETE "repos/$GH_REPO/git/refs/tags/$old_tag"
+            fi
+          done < release-tag-refs.txt
