@@ -39,9 +39,12 @@ The body-lift comparison also allows four double epsilons times the sum of
 the magnitudes of its two input forces. It subtracts `sin(alpha) * forward`
 and `cos(alpha) * down`: one fixture subtracts two values near 19,600 to leave
 about -5.33. A one-step difference in a library trig result changes that
-residual by 3.64e-12 on Windows, beyond a bound based on the small result alone.
+residual by 3.64e-12 on Windows and Apple Silicon, beyond a bound based on the
+small result alone.
 The operand-based bound applies only to this force output; a dedicated test
-checks that it accepts this rounding and rejects a 1e-9 error.
+checks that it accepts this rounding and rejects a 1e-9 error. An expanded
+comparison executes the original flight-command routine for all 8,192 inputs
+in its generator; every result agrees within these bounds.
 
 On Linux x86-64 with GCC 16.2, the eleven fixtures had 258 changed floating
 fields. The largest scaled difference was 19.48 double epsilons; the largest
@@ -72,9 +75,11 @@ python3 tools/audit_numeric_fixtures.py --build build --report /tmp/numeric-audi
 ```
 
 The audit runs the ordinary tests with diagnostics enabled. It does not relax
-their comparisons or write fixtures. Debug and Release builds on Apple Silicon
-are included in the normal build-and-release workflow alongside the Intel,
-Linux and Windows builds.
+their comparisons or write fixtures. All eight Debug and Release builds pass
+the 226 tests on Linux x86-64, Windows x86-64, Intel Mac and Apple Silicon.
+Each platform also passes the installed executable check. The
+[portability verification run](https://github.com/Lost-Engines/tfx-redux/actions/runs/42291362550)
+records those results; these checks do not include interactive Mac playtesting.
 
 ## Capturing the original executable
 
