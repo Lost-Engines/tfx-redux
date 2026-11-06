@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
+#include <iomanip>
+#include <iostream>
 
 namespace tfx::test {
 
@@ -48,7 +50,16 @@ public:
     fixture_expectation<uint64_t> const expected{input};
     if(auto const path=std::getenv("TFX_NUMERIC_AUDIT"); path && actual.type != format::integer && actual.bits != expected.value)
       fixture_report(path) << expected.begin << ' ' << (actual.type == format::binary32 ? 32 : 64) << ' ' << expected.value << ' ' << actual.bits << '\n';
-    return actual.type == format::integer ? expected.matches(actual.bits) : actual.matches(expected.value);
+    bool const ok{actual.type == format::integer ? expected.matches(actual.bits) : actual.matches(expected.value)};
+    if(!ok) {
+      std::cerr << "Numeric fixture mismatch at byte " << expected.begin
+                << ": expected bits " << expected.value << ", actual bits " << actual.bits;
+      if(actual.type == format::binary64)
+        std::cerr << std::setprecision(17) << " (expected " << std::bit_cast<double>(expected.value)
+                  << ", actual " << std::bit_cast<double>(actual.bits) << ')';
+      std::cerr << '\n';
+    }
+    return ok;
   }
 };
 
