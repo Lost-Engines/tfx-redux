@@ -41,6 +41,10 @@ absolute difference was 2.99e-8 in a large-magnitude field. No fixture was
 regenerated to accept the new arithmetic. The comparator itself has tests for
 integer exactness, error bounds, nonfinite values and malformed input.
 
+The independent original-executable loadout check also still passes all 1,197
+cases bit for bit with ordinary doubles: all 27 stores, three aircraft, ten
+mounting slots and fractional mixed-load positions.
+
 A separate before/after run exercised 36 persistent flight scenarios: all three
 aircraft, military-spec and realistic flight, ground and airborne starts, and
 keyboard, mouse and joystick samples. Each ran 1,024 updates at 20 ms. Across
@@ -50,7 +54,9 @@ difference was 8.66e-14 m/s. These are bounded comparisons of this workload;
 they do not promise identical trajectories across every platform and mission.
 
 The suite now has 226 tests, including the numeric comparator and the source
-portability check. Run the suite and inspect the numerical differences with:
+portability check. All pass in Release and RelWithDebInfo, and under AddressSanitizer,
+UndefinedBehaviorSanitizer and float-cast-overflow checks, with leak detection
+enabled. Run the suite and inspect the numerical differences with:
 
 ```sh
 ctest --test-dir build --output-on-failure

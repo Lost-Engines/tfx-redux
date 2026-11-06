@@ -30,7 +30,9 @@ def main():
             environment = os.environ.copy()
             environment.pop('TFX_RECORD_TRIG_FIXTURE', None)
             environment['TFX_NUMERIC_AUDIT'] = str(output)
-            subprocess.run(test['command'], cwd=build, env=environment, check=True, capture_output=True, text=True)
+            result = subprocess.run(test['command'], cwd=build, env=environment, capture_output=True, text=True)
+            if result.returncode:
+                raise RuntimeError(f"{test['name']}: {result.stdout}{result.stderr}")
             lines = output.read_text().splitlines() if output.exists() else []
             largest_absolute = largest_scaled_eps = 0.0
             for line in lines:

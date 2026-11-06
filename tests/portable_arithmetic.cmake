@@ -5,7 +5,9 @@ foreach(directory IN ITEMS src tests tools)
     file(READ "${source}" content)
     if(content MATCHES "(^|[^A-Za-z0-9_])long[ \t\r\n]+double([^A-Za-z0-9_]|$)"
        OR content MATCHES "math/(floating_environment|x87)\\.h"
-       OR content MATCHES "[0-9]\\.[0-9]*[lL]([^A-Za-z0-9_]|$)")
+       OR content MATCHES "([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)?[lL]([^A-Za-z0-9_]|$)"
+       OR content MATCHES "[0-9]+[eE][+-]?[0-9]+[lL]([^A-Za-z0-9_]|$)"
+       OR content MATCHES "0[xX][0-9a-fA-F.]+[pP][+-]?[0-9]+[lL]([^A-Za-z0-9_]|$)")
       message(FATAL_ERROR "Nonportable arithmetic returned in ${source}")
     endif()
   endforeach()
