@@ -19,8 +19,9 @@ class numeric_fixture_value {
   enum class format { integer, binary32, binary64 };
   uint64_t bits;
   format type;
+  double absolute_roundoff{0};
 
-  template<std::floating_point T> static bool close(T const actual, T const expected) {
+  template<std::floating_point T> bool close(T const actual, T const expected) const {
     if(actual == expected) return true;
     if(std::isnan(actual) || std::isnan(expected)) return std::isnan(actual) && std::isnan(expected);
     if(!std::isfinite(actual) || !std::isfinite(expected)) return false;
@@ -29,13 +30,22 @@ class numeric_fixture_value {
     // scales it for forces/moments. Float stores have a separate, tighter bound.
     T constexpr units{std::same_as<T,double> ? 128 : 4};
     T const bound{units * std::numeric_limits<T>::epsilon() * std::max({T{1},std::abs(actual),std::abs(expected)})};
-    return std::abs(actual - expected) <= bound;
+    return std::abs(actual - expected) <= std::max(static_cast<double>(bound),absolute_roundoff);
   }
 
 public:
   template<std::integral T> numeric_fixture_value(T const value): bits{static_cast<uint64_t>(value)},type{format::integer} {}
   numeric_fixture_value(float const value): bits{std::bit_cast<uint32_t>(value)},type{format::binary32} {}
   numeric_fixture_value(double const value): bits{std::bit_cast<uint64_t>(value)},type{format::binary64} {}
+
+  // Cancellation can leave a small result from large operands. Such a field
+  // needs a bound derived from those operands, rather than the result alone.
+  static numeric_fixture_value with_absolute_roundoff(double const value, double const bound) {
+    if(!std::isfinite(bound) || bound < 0) throw std::invalid_argument{"invalid absolute rounding bound"};
+    numeric_fixture_value result{value};
+    result.absolute_roundoff = bound;
+    return result;
+  }
 
   bool matches(uint64_t const expected) const {
     if(type == format::integer) return bits == expected;

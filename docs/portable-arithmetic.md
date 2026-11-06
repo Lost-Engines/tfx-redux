@@ -35,6 +35,14 @@ epsilons for a float field. That allows rounding and cancellation near zero;
 finite values cannot match infinities or NaNs. Matching NaNs are compared by
 classification because their payload bits are implementation-dependent.
 
+The body-lift comparison also allows four double epsilons times the sum of
+the magnitudes of its two input forces. It subtracts `sin(alpha) * forward`
+and `cos(alpha) * down`: one fixture subtracts two values near 19,600 to leave
+about -5.33. A one-step difference in a library trig result changes that
+residual by 3.64e-12 on Windows, beyond a bound based on the small result alone.
+The operand-based bound applies only to this force output; a dedicated test
+checks that it accepts this rounding and rejects a 1e-9 error.
+
 On Linux x86-64 with GCC 16.2, the eleven fixtures had 258 changed floating
 fields. The largest scaled difference was 19.48 double epsilons; the largest
 absolute difference was 2.99e-8 in a large-magnitude field. No fixture was
