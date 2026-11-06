@@ -11,8 +11,12 @@ Linux and Windows packages target x86-64. macOS has separate Intel and Apple
 Silicon packages, built on the corresponding hardware for macOS 15 or newer.
 Redux uses portable float/double arithmetic throughout its own code; see
 [the numerical checks](portable-arithmetic.md).
-The Linux package is built on Ubuntu 24.04. No game installation, firmware,
-private research exports or screenshot gallery is needed for these CI tests.
+CI uses `ubuntu-latest`, `windows-latest` and `macos-latest` (Apple Silicon)
+so new runner images are tested as GitHub rolls them out. Intel Mac builds
+use `macos-26-intel`; GitHub does not provide a standard Intel `-latest` label.
+See the [available runner labels](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+No game installation, firmware, private research exports or screenshot gallery
+is needed for these CI tests.
 
 ## When a release is published
 
