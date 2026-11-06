@@ -1,13 +1,12 @@
 #include "aerodynamic_rotation_internal.h"
 #include <bit>
 #include <cmath>
-#include "math/floating_environment.h"
 #include <limits>
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr half_step{.5}, native_pi{3.141592654};
 double constexpr angle_units_per_half_turn{32768};
 unsigned int constexpr time_warp_multiplier{5};
@@ -15,7 +14,7 @@ double constexpr impact_down_metres{2};
 int32_t constexpr fallback_height_limit{-2}, fallback_world_y{-5};
 
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 math::angle rotation_amount(double const amount, double *const remainder) {
@@ -26,7 +25,7 @@ math::angle rotation_amount(double const amount, double *const remainder) {
   return result;
 }
 void rotate(aerodynamic_motion &state, calculation const roll, calculation const pitch, calculation const yaw) {
-  double const inverse_pi{static_cast<double>(1.0L / native_pi)};
+  double const inverse_pi{static_cast<double>(1.0 / native_pi)};
   rotate_aerodynamic_units(state,aerodynamic_rotation::roll,static_cast<double>(roll * angle_units_per_half_turn * inverse_pi));
   rotate_aerodynamic_units(state,aerodynamic_rotation::pitch,static_cast<double>(pitch * angle_units_per_half_turn * inverse_pi));
   rotate_aerodynamic_units(state,aerodynamic_rotation::yaw,static_cast<double>(yaw * angle_units_per_half_turn * inverse_pi));
@@ -35,7 +34,6 @@ void rotate(aerodynamic_motion &state, calculation const roll, calculation const
 } // anonymous namespace
 
 void rotate_aerodynamic_units(aerodynamic_motion &state, aerodynamic_rotation const axis, double const units) {
-  math::floating_environment const environment;
   // Physical F/R/D columns map to the generic first/second/third columns.
   math::attitude frame{
     .right{vec3<int32_t>{state.pose.frame.forward}},
@@ -51,7 +49,6 @@ void rotate_aerodynamic_units(aerodynamic_motion &state, aerodynamic_rotation co
 }
 
 void advance_aerodynamic_motion(aerodynamic_motion &state, aerodynamic_motion_context const &context) {
-  math::floating_environment const environment;
   calculation const seconds{context.seconds};
   unsigned int const multiplier{context.time_warp && !context.landed ? time_warp_multiplier : 1};
   calculation down{0};

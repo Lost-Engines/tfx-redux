@@ -201,9 +201,9 @@ refuel_transfer refuelling::transfer(double const fuel, double const capacity, b
     .fuel{fuel},
     .afterburner_warning{false},
   };
-  long double const updated{static_cast<long double>(fuel) + assets.fuel_per_update};
+  double const updated{static_cast<double>(fuel) + assets.fuel_per_update};
   return {
-    .fuel{updated > static_cast<long double>(capacity) ? capacity : static_cast<double>(updated)},
+    .fuel{updated > static_cast<double>(capacity) ? capacity : static_cast<double>(updated)},
     .afterburner_warning{afterburner},
   };
 }

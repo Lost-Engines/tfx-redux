@@ -22,8 +22,8 @@ void external_display::draw(render::software_renderer &renderer, external_view_s
     fonts.draw(renderer.output,fixed_font,{x + 1,label_row + 1},message,143,coverage);
     fonts.draw(renderer.output,fixed_font,{x,label_row},message,15,coverage);
   }};
-  text(5,detail::decimal(assets.external_number_formats[0],static_cast<double>(-static_cast<long double>(state.height) * assets.external_altitude_scale),0));
-  text(130,detail::decimal(assets.external_number_formats[1],static_cast<double>(static_cast<long double>(state.speed) * assets.speed_scale),0));
+  text(5,detail::decimal(assets.external_number_formats[0],static_cast<double>(-static_cast<double>(state.height) * assets.external_altitude_scale),0));
+  text(130,detail::decimal(assets.external_number_formats[1],static_cast<double>(static_cast<double>(state.speed) * assets.speed_scale),0));
   text(248,detail::formatted(assets.external_number_formats[2],static_cast<unsigned long>((static_cast<unsigned int>(state.heading) * 360) >> 16)));
 }
 

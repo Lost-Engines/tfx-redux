@@ -1,10 +1,9 @@
 #include "aerodynamic_speed.h"
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr speed_response{.01}, force_response{25}, idle_throttle{.6};
 double constexpr decrease_afterburner_delta{-10}, increase_afterburner_delta{20};
 double constexpr air_brake_overspeed{5}, recovery_speed_multiplier{2};
@@ -17,7 +16,6 @@ void adjust_throttle(aerodynamic_speed_state const &state, aerodynamic_powerplan
 } // anonymous namespace
 
 afterburner_change update_aerodynamic_speed(aerodynamic_speed_state &state, aerodynamic_powerplant &powerplant, aerodynamic_speed_context const &context) {
-  math::floating_environment const environment;
   afterburner_change change{afterburner_change::none};
   bool const running{powerplant.engine_factor.x != 0 || powerplant.engine_factor.y != 0};
   if(context.strategy == aerodynamic_speed_strategy::maintain) {

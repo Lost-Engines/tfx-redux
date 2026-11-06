@@ -1,11 +1,10 @@
 #include "aerodynamic_coefficients.h"
-#include "math/floating_environment.h"
-#include "math/x87.h"
+#include <cmath>
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr native_pi{3.14159}, half{.5}, one_third{.3333333333333333};
 double constexpr nighthawk_lift_slope{1.78};
 double constexpr raptor_lift_quadratic{.64}, raptor_lift_base{2.88};
@@ -20,7 +19,6 @@ double constexpr damping_mach_reference{3};
 } // anonymous namespace
 
 aerodynamic_coefficients update_aerodynamic_coefficients(player_aircraft const aircraft, double const mach, aerodynamic_coefficient_parameters const &p) {
-  math::floating_environment const environment;
   calculation const speed{mach};
   aerodynamic_coefficients result{
     .reference_drag{p.base_drag},
@@ -29,7 +27,7 @@ aerodynamic_coefficients update_aerodynamic_coefficients(player_aircraft const a
     result.wave_drag = p.wave_drag_increment;
     if(speed < p.full_wave_drag_mach) {
       calculation const phase{(speed - (static_cast<calculation>(p.critical_mach) + p.full_wave_drag_mach) * half) * (static_cast<calculation>(native_pi) / (static_cast<calculation>(p.full_wave_drag_mach) - p.critical_mach))};
-      result.wave_drag = static_cast<double>((static_cast<calculation>(p.wave_drag_increment) * half) * (1.0L + math::x87::sin(phase)));
+      result.wave_drag = static_cast<double>((static_cast<calculation>(p.wave_drag_increment) * half) * (1.0 + std::sin(phase)));
     }
   }
   result.zero_lift_drag = static_cast<double>(static_cast<calculation>(result.reference_drag) + result.wave_drag);
@@ -59,7 +57,7 @@ aerodynamic_coefficients update_aerodynamic_coefficients(player_aircraft const a
     double const cap{static_cast<double>(eurofighter_cap_base - static_cast<calculation>(cap_term))};
     if(result.lift_slope > cap) result.lift_slope = cap;
   }
-  if(aircraft != player_aircraft::nighthawk) result.lift_slope = static_cast<double>((static_cast<calculation>(p.additional_lifting_area) / p.wing_area + 1.0L) * result.lift_slope);
+  if(aircraft != player_aircraft::nighthawk) result.lift_slope = static_cast<double>((static_cast<calculation>(p.additional_lifting_area) / p.wing_area + 1.0) * result.lift_slope);
   calculation const combined{static_cast<calculation>(result.lift_slope) + result.zero_lift_drag};
   result.pitch_stability = static_cast<double>((static_cast<calculation>(p.pitch_stability_base) + p.pitch_stability_correction) * combined);
   result.pitch_damping = static_cast<double>(((static_cast<calculation>(damping_mach_reference) - speed) * p.pitch_damping_mach_gradient * one_third + p.pitch_damping_base) * combined);

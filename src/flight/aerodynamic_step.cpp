@@ -1,7 +1,6 @@
 #include "aerodynamic_step.h"
 #include "flight/aerodynamic_recovery_trigger.h"
 #include <utility>
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
@@ -11,7 +10,6 @@ double constexpr realistic_ground_pitch_gain{.2};
 } // anonymous namespace
 
 aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, damage_state &damage, math::random_state &random, aerodynamic_wind_parameters const &wind_parameters, aerodynamic_tick_context const &context) {
-  math::floating_environment const environment;
   aerodynamic_tick_events events;
   auto &motion{state.response.motion};
   auto &data{state.data};

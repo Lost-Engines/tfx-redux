@@ -114,8 +114,8 @@ landing_cue landing_system::advance(vec3<int32_t> const &player, bool const spee
     // Both float constants are multiplied in the original extended-precision
     // register before truncation; the word offsets overwrite authored values.
     state.port.offset = {
-      word(static_cast<int32_t>(static_cast<long double>(math::sine_q15(state.port.heading)) * approach_run * normalised_sine)),
-      word(static_cast<int32_t>(static_cast<long double>(math::cosine_q15(state.port.heading)) * approach_run * normalised_sine)),
+      word(static_cast<int32_t>(static_cast<double>(math::sine_q15(state.port.heading)) * approach_run * normalised_sine)),
+      word(static_cast<int32_t>(static_cast<double>(math::cosine_q15(state.port.heading)) * approach_run * normalised_sine)),
     };
   }
   auto const destination{runway(state)};

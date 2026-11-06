@@ -1,10 +1,9 @@
 #include "aerodynamic_controls.h"
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr maximum_rudder_speed{205}, rudder_retention{.8};
 double constexpr mouse_pitch_scale{.0022222222222222222}, mouse_roll_scale{.0025};
 double constexpr joystick_scale{.001953125};
@@ -33,7 +32,6 @@ int mouse_axis(int value, int const dead_zone) {
 } // anonymous namespace
 
 bool update_aerodynamic_controls(aerodynamic_control_state &state, aerodynamic_powerplant &powerplant, aerodynamic_control_context const &context) {
-  math::floating_environment const environment;
   if(context.source == control_source::keyboard) {
     if(context.keys.down) {
       state.keyboard_elevator = static_cast<double>(state.keyboard_elevator - (static_cast<calculation>(state.elevator) - state.minimum_elevator) * context.pitch_gain * context.seconds);

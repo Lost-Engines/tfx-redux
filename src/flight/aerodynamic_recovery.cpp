@@ -1,6 +1,5 @@
 #include "aerodynamic_recovery.h"
 #include <stdexcept>
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
@@ -10,7 +9,6 @@ uint16_t constexpr recovery_mode{4}, recovery_configuration{5};
 } // anonymous namespace
 
 aerodynamic_recovery_result toggle_aerodynamic_recovery(aerodynamic_recovery_state &state, aerodynamic_control_state &controls, aerodynamic_powerplant &powerplant, system_condition &air_brake, aerodynamic_recovery_context const &context) {
-  math::floating_environment const environment;
   aerodynamic_recovery_result result;
   if(context.inhibited || context.crashed || context.ejected || context.landed) return result;
   auto &autopilot{controls.autopilot};

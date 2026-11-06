@@ -61,7 +61,7 @@ int main(int const argc, char const *const argv[]) try {
   std::array<float,2048> samples;
   uint64_t frames{0};
   double peak{0};
-  long double energy{0};
+  double energy{0};
   auto const render{[&](uint64_t count) {
     while(count) {
       auto const size{static_cast<unsigned int>(std::min<uint64_t>(count,samples.size() / 2))};
@@ -70,7 +70,7 @@ int main(int const argc, char const *const argv[]) try {
       for(float const value : buffer) {
         if(!std::isfinite(value)) throw std::runtime_error{"synthesiser produced non-finite PCM"};
         peak = std::max(peak,static_cast<double>(std::abs(value)));
-        energy += static_cast<long double>(value) * value;
+        energy += static_cast<double>(value) * value;
       }
       output.write(reinterpret_cast<char const*>(buffer.data()),static_cast<std::streamsize>(buffer.size_bytes()));
       if(!output) throw std::runtime_error{"cannot write PCM output"};
@@ -90,6 +90,6 @@ int main(int const argc, char const *const argv[]) try {
   sequencer.stop(playing);
   render(sample_rate * 2u);
   output.close();
-  std::cout << std::format("TFX_RENDER {{\"frames\":{},\"boundary_frame\":{},\"ticks\":{},\"rendered_ticks\":{},\"state_trace_fnv64\":\"{:016x}\",\"raw_peak\":{:.12g},\"rms\":{:.12g},\"sample_rate\":{},\"song_volume\":75}}\n",frames,native_end,boundary,boundary - (policy == "exclude"),hash,peak,static_cast<double>(std::sqrt(energy / (frames * 2u))),sample_rate);
+  std::cout << std::format("TFX_RENDER {{\"frames\":{},\"boundary_frame\":{},\"ticks\":{},\"rendered_ticks\":{},\"state_trace_fnv64\":\"{:016x}\",\"raw_peak\":{:.12g},\"rms\":{:.12g},\"sample_rate\":{},\"song_volume\":75}}\n",frames,native_end,boundary,boundary - (policy == "exclude"),hash,peak,static_cast<double>(std::sqrt(energy / (static_cast<double>(frames) * 2))),sample_rate);
   return 0;
 } catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }

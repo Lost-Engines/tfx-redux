@@ -2,12 +2,10 @@
 #include <bit>
 #include <fstream>
 #include <iostream>
-#include <limits>
 #include <stdexcept>
 #include "flight/arcade.h"
 
 int main(int const argc, char const *const argv[]) try {
-  if(std::numeric_limits<long double>::digits != 64) return 77;
   if(argc > 2) throw std::runtime_error{"expected optional engine-indicator fixture"};
   std::ifstream fixture;
   if(argc == 2) fixture.open(argv[1]);

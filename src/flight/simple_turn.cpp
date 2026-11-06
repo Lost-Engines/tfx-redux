@@ -1,4 +1,3 @@
-#include "math/floating_environment.h"
 #include "simple_turn.h"
 #include <algorithm>
 #include <bit>
@@ -8,7 +7,7 @@
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 float constexpr native_pi{3.141590118408203f};
 float constexpr normalised_word{3.0518509447574615e-05f};
 float constexpr mach_response{250}, response_fraction{1.6666666269302368f};
@@ -25,7 +24,7 @@ calculation normalised(int32_t const component) {
   return static_cast<calculation>(math::signed_word(static_cast<uint16_t>(component))) * normalised_word;
 }
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 void rotate_heading(simple_turn_state &state, float const amount) {
@@ -40,7 +39,6 @@ void rotate_heading(simple_turn_state &state, float const amount) {
 } // anonymous namespace
 
 void update_simple_turn(simple_turn_state &state, simple_turn_context const &context) {
-  math::floating_environment const environment;
   float const right{static_cast<float>(normalised(state.orientation.right.y))};
   float const right_square{static_cast<float>(normalised(state.orientation.right.y) * right)};
   float const down{static_cast<float>(normalised(state.orientation.down.y))};

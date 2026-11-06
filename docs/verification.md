@@ -1,8 +1,8 @@
 # Native reference verification
 
-This records the TFX C++ baseline inherited by Redux. Rendering and trigonometric calculations now intentionally
+This records the TFX C++ baseline inherited by Redux. Rendering and numerical calculations now intentionally
 differ; see the [Redux improvements](../README.md#improvements) and
-[angular precision](rendering-precision.md). The original-code pixel and motion
+[angular precision](rendering-precision.md) and [portable arithmetic](portable-arithmetic.md). The original-code pixel and motion
 comparisons below apply to the baseline, not current Redux rendering or the
 flight/AI paths that now use standard trig.
 

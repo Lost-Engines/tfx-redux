@@ -1,6 +1,5 @@
 #include "music_control.h"
 #include <cmath>
-#include "math/floating_environment.h"
 
 namespace tfx::audio {
 namespace {
@@ -54,11 +53,11 @@ std::optional<music_selection> select_fm(music_control_state &state, music_contr
   }
   case 12: {
     if(context.mode == music_mode::lapc || context.mode == music_mode::sound_canvas || !sound_blaster(context.sound_device)) return {};
-    math::floating_environment const environment;
+
     double constexpr idle_throttle{.6}, orders_per_throttle{10};
     // The original truncates after an x87 double-precision calculation, then
     // retains only the low byte when selecting the engine bank's order.
-    selection.order = static_cast<uint8_t>(static_cast<int16_t>(std::trunc((static_cast<long double>(context.throttle) - idle_throttle) * orders_per_throttle)));
+    selection.order = static_cast<uint8_t>(static_cast<int16_t>(std::trunc((static_cast<double>(context.throttle) - idle_throttle) * orders_per_throttle)));
     selection.resource_index = 21;
     state.engine_playing = true;
     break;
@@ -89,8 +88,8 @@ music_control_update update_flight_music(music_control_state &state,
   bool const engine_mode{((context.mode == music_mode::soundblaster_cd || context.mode == music_mode::fm) && !context.enabled) ||
     (context.mode == music_mode::none && sound_blaster(context.sound_device))};
   if(engine_mode) {
-    math::floating_environment const environment;
-    auto const difference{static_cast<long double>(context.throttle) - state.previous_throttle};
+
+    auto const difference{static_cast<double>(context.throttle) - state.previous_throttle};
     double constexpr throttle_step{.1};
     float constexpr running_throttle{.59f};
     if((difference > throttle_step || difference < -throttle_step) && context.throttle > running_throttle) {

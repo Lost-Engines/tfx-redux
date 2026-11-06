@@ -3,11 +3,10 @@
 #include "flight/player_frame.h"
 #include "flight/player_shared.h"
 #include "flight/gear_controls.h"
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
-using calculation = long double;
+using calculation = double;
 float constexpr normalised_word{3.0518509447574615e-05f}, metres_per_foot{.30480000376701355f}, feet_per_world_unit{8};
 double constexpr minimum_descent{.1}, autopilot_recovery_seconds{8}, urgent_recovery_seconds{5}, warning_seconds{7};
 
@@ -78,7 +77,6 @@ math::attitude const &player_flight::body() const {
 
 player_flight_events player_flight::advance(damage_state &damage, math::random_state &random,
     aerodynamic_wind_parameters const &wind, player_flight_context const &context) {
-  math::floating_environment const environment;
   player_flight_events events;
   auto &view{basic.flight};
   bool const ejected{context.aircraft_disabled};

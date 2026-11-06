@@ -1,6 +1,5 @@
 #include "aerodynamic.h"
 #include <utility>
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
@@ -25,7 +24,6 @@ auto aerodynamic_flight::configure_controls(input_configuration const configurat
 }
 
 void aerodynamic_flight::reset_motion(int16_t const ground_elevation_steps, bool const terrain_present) {
-  math::floating_environment const environment;
   auto &motion{response.motion};
   auto &ground{this->ground.ground};
   aerodynamic_start_state start{
@@ -62,7 +60,6 @@ void aerodynamic_flight::reset_motion(int16_t const ground_elevation_steps, bool
 }
 
 aerodynamic_flight initialise_aerodynamic_flight(aerodynamic_airframe const &aircraft, loadout const &stores, aerodynamic_initial_context const &initial, aerodynamic_wind_parameters const &wind_parameters, damage_state &damage, math::random_state &random) {
-  math::floating_environment const environment;
   auto const &context{initial.placement};
   aerodynamic_flight state;
   state.aircraft = aircraft;
@@ -104,7 +101,7 @@ aerodynamic_flight initialise_aerodynamic_flight(aerodynamic_airframe const &air
   state.powerplant.fuel = start.fuel_kg;
   state.data.mass_kg = start.mass_kg;
   state.data.fixed_speed = context.fixed_speed;
-  state.data.atmosphere.sea_level_kelvin = initial.surface_celsius ? static_cast<double>(static_cast<long double>(*initial.surface_celsius) + 273) : 288.15;
+  state.data.atmosphere.sea_level_kelvin = initial.surface_celsius ? static_cast<double>(static_cast<double>(*initial.surface_celsius) + 273) : 288.15;
   state.data.track_heading = start.track_heading;
   state.ground.ground.ground_steering = start.ground_steering;
   state.ground.ground.landed = context.landed;

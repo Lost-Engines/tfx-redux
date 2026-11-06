@@ -6,7 +6,7 @@
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 float constexpr normalised_word{3.0518509447574615e-05f};
 float constexpr pilot_time_scale{.02f}, falling_drag{.005f}, parachute_drag{.02f};
 double constexpr world_units_per_metre{.4101049868766404};
@@ -19,7 +19,7 @@ calculation normalised(int32_t const value) {
 }
 int32_t truncate(calculation const value) {
   // x87 FISTP with truncation returns integer-indefinite on an invalid conversion.
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 void drift(pilot_motion &pilot, simulation::timer_ticks const elapsed) {
@@ -55,7 +55,7 @@ pilot_update advance_pilot(pilot_motion &pilot, pilot_context const &context) {
     pilot.elapsed = wrap_add(pilot.elapsed,elapsed);
     if(pilot.elapsed < seat_burn_ticks) {
       drift(pilot,elapsed);
-      float const seat_acceleration{static_cast<float>(-24.0L * world_units_per_metre)};
+      float const seat_acceleration{static_cast<float>(-24.0 * world_units_per_metre)};
       for(unsigned int axis{0}; axis != 3; ++axis) pilot.velocity[axis] = static_cast<float>(normalised(pilot.orientation.down[axis]) * seat_acceleration * elapsed * pilot_time_scale * pilot_time_scale + pilot.velocity[axis]);
       gravity(pilot,elapsed);
     } else {

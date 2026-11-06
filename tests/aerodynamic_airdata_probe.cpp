@@ -1,3 +1,4 @@
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -34,15 +35,14 @@ int main(int const argc, char const *const argv[]) try {
     input >> state.track_heading;
     for(auto *value : {&context.atmosphere.sea_level_density,&context.atmosphere.temperature_lapse_per_metre,&context.atmosphere.temperature_lapse_limit_metres}) *value = read_double(input);
     tfx::flight::update_aerodynamic_airdata(state,motion,context);
-    std::vector<uint64_t> values;
-    for(auto const *vector : {&state.basis.forward,&state.basis.right,&state.basis.down,&motion.ground_velocity_body,&motion.air_velocity_body}) for(auto const value : *vector) values.push_back(std::bit_cast<uint64_t>(value));
-    for(auto const value : {state.atmosphere.density,state.atmosphere.sea_level_kelvin,state.atmosphere.local_kelvin,state.atmosphere.sound_metres_per_second,state.flight_path_pitch_degrees,state.altitude_km,state.angle_of_attack,state.metres_per_second,state.mach,state.dynamic_pressure,state.mass_kg,state.simulation_seconds}) values.push_back(std::bit_cast<uint64_t>(value));
+    std::vector<tfx::test::numeric_fixture_value> values;
+    for(auto const *vector : {&state.basis.forward,&state.basis.right,&state.basis.down,&motion.ground_velocity_body,&motion.air_velocity_body}) for(auto const value : *vector) values.emplace_back(value);
+    for(auto const value : {state.atmosphere.density,state.atmosphere.sea_level_kelvin,state.atmosphere.local_kelvin,state.atmosphere.sound_metres_per_second,state.flight_path_pitch_degrees,state.altitude_km,state.angle_of_attack,state.metres_per_second,state.mach,state.dynamic_pressure,state.mass_kg,state.simulation_seconds}) values.emplace_back(value);
     values.push_back(static_cast<uint32_t>(state.fixed_speed));
     values.push_back(static_cast<uint32_t>(state.track_heading));
     if(argc == 2) {
       for(auto const value : values) {
-        uint64_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native aerodynamic air data differs"};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native aerodynamic air data differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';

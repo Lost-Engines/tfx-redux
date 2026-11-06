@@ -6,6 +6,12 @@ Current scope and evidence are summarized in the [verification matrix](verificat
 The sections below retain the implementation history; later results supersede
 earlier open-work statements.
 
+Redux now uses portable double-precision arithmetic and standard mathematical
+functions. Its own code no longer requires x87 instructions or precision-control
+scopes. [Portable arithmetic](portable-arithmetic.md) describes the change,
+reference tolerances and before/after flight checks. The faithful x87 work
+described below remains in TFX C++.
+
 ## Integrated reference check
 
 All **128 retail missions** match the original launch and their first sixteen
@@ -131,11 +137,11 @@ These claims cover the retail grammar and the declared original-call boundary. O
 python3 tools/check_stores.py --build build --data-dir /path/to/TFX
 ```
 
-The ten-slot loadout has explicit occupancy, mass, drag, tank classification and mount position. `flight::accumulate_stores` preserves the original slot order, double stores after each contribution, and extended intermediates within each contribution. The two moment groupings retain neutral A/B names until the complete flight-coordinate convention identifies their physical axes. Vectorstorm supplies the corresponding squared vector lengths.
+The ten-slot loadout has explicit occupancy, mass, drag, tank classification and mount position. `flight::accumulate_stores` preserves the original slot order and uses doubles for each contribution. The two moment groupings feed the roll and pitch inertias. Vectorstorm supplies the corresponding squared vector lengths.
 
 The original routine `0x95dc8` executes without intercepted dependencies. Tests use all 27 original store records, all three native aircraft presets' mount positions, each of the ten slots, empty loadouts and fractional mixed mounts: **1,197 exact stored-bit comparisons per build**. A tank sets the presence flag for any aircraft, but the capacity multiplier applies only to Eurofighter. The subsystem does not yet apply changing stores to an integrated flight trajectory.
 
-The current arithmetic backend requires `long double` with a 64-bit significand, matching the controlled x87 precision used in these captures. Other formats fail explicitly if this subsystem is called; its unit test reports a platform skip. Native scene inspection does not call it. A portable equivalent and the original startup FPU environment still need to be established before claiming flight fidelity on other architectures. Ordinary `double` is not substituted silently.
+The initial translation required an x87 host. Redux has since removed that restriction: the loadout uses ordinary doubles, and its tests run on every supported architecture.
 
 ## Local build validation
 
@@ -168,7 +174,7 @@ python3 tools/check_arcade.py --build build --data-dir /path/to/TFX
 
 The player's Q15 basis, local rotations, sequential cross-product normalisation and quantised angle extraction follow the native routines. Comparisons cover 4,132 directions, 6,144 rotations, 2,048 normalisations and 2,048 angle extractions. The original atan thresholds are irregular; regenerating a mathematical tangent table changes the resulting angles. World-axis turns transpose the basis before/after local rotation.
 
-The native Arcade path (`0x8dc50`) now supplies aircraft-specific thrust/speed envelopes, afterburner, fuel consumption, filtered control deltas, stall recovery, coordinated turns, motion, gear contact and ceiling limits. One world unit represents eight feet. The numerical translation retains float/double storage boundaries and extended intermediates; it currently requires a host `long double` with a 64-bit significand, as the stores calculation does.
+The native Arcade path (`0x8dc50`) now supplies aircraft-specific thrust/speed envelopes, afterburner, fuel consumption, filtered control deltas, stall recovery, coordinated turns, motion, gear contact and ceiling limits. One world unit represents eight feet. Redux retains the float/double storage boundaries and uses ordinary doubles for intermediate calculations.
 
 The verifier runs the complete original player initialiser (`0x8c184`, including the aircraft presets) and engine/start setup (`0x8c318`) before multi-step airborne flight. Across all three aircraft, 4,608 steps agree exactly in stored position, integer pose, matrix, control filters, angular remainders, speed limits/response, fuel and angles, including stall/ceiling recovery and afterburner transitions. Host mouse input and scenery/audio/HUD notifications are declared capture boundaries. The FPU control word is the harness's controlled `0x037f`; this is not yet an independent DOS startup capture. The verifier now executes the complete ordinary Arcade player callback (`0x8f56c`) rather than stopping at the inner flight routine. It supplies timer readings and mouse samples, disables automatic recovery explicitly and intercepts warning/audio/scenery output. The automatic recovery controller can select another numerical path even in Arcade mode; it remains separate work. Other flight models, complete collision queries and missions remain unfinished.
 

@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
@@ -43,12 +42,11 @@ std::array constexpr profiles{bindings(false),bindings(true)};
 } // anonymous namespace
 
 vec2<int16_t> joystick_axes(vec2f const &normalised, float const scale) {
-  math::floating_environment const environment;
   vec2<int16_t> result;
   for(unsigned int axis{0}; axis != 2; ++axis) {
     float const ratio{std::clamp(normalised[axis],-1.0f,1.0f)};
-    long double const scaled{std::abs(static_cast<long double>(ratio)) * ratio * scale};
-    int32_t const integer{std::isfinite(scaled) && scaled >= std::numeric_limits<int32_t>::min() && scaled < 2147483648.0L ? static_cast<int32_t>(scaled) : std::numeric_limits<int32_t>::min()};
+    double const scaled{std::abs(static_cast<double>(ratio)) * ratio * scale};
+    int32_t const integer{std::isfinite(scaled) && scaled >= std::numeric_limits<int32_t>::min() && scaled < 2147483648.0 ? static_cast<int32_t>(scaled) : std::numeric_limits<int32_t>::min()};
     result[axis] = std::clamp(math::signed_word(static_cast<uint16_t>(integer)),static_cast<int16_t>(-native_axis_limit),native_axis_limit);
   }
   return result;

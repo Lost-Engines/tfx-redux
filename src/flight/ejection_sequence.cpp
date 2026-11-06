@@ -5,8 +5,8 @@
 
 namespace tfx::flight {
 namespace {
-int32_t truncate(long double const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+int32_t truncate(double const value) {
+  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 } // anonymous namespace
@@ -66,7 +66,7 @@ bool ejection_sequence::advance_aircraft(vec3f const &position, math::attitude c
   bool activated{false};
   if(state.stage == ejection_stage::requested) {
     float constexpr position_scale{256};
-    for(unsigned int axis{0}; axis != 3; ++axis) state.aircraft_position_q8[axis] = truncate(static_cast<long double>(position[axis]) * position_scale);
+    for(unsigned int axis{0}; axis != 3; ++axis) state.aircraft_position_q8[axis] = truncate(static_cast<double>(position[axis]) * position_scale);
     state.aircraft_orientation = orientation;
     state.stage = ejection_stage::pilot;
     state.pilot.phase = pilot_phase::launch;
@@ -77,7 +77,7 @@ bool ejection_sequence::advance_aircraft(vec3f const &position, math::attitude c
   }
   if(state.stage == ejection_stage::pilot && state.pilot.phase != pilot_phase::launch) {
     float constexpr normalised_word{3.0518509447574615e-05f};
-    for(unsigned int axis{0}; axis != 3; ++axis) state.aircraft_position_q8[axis] = truncate(static_cast<long double>(math::signed_word(static_cast<uint16_t>(state.aircraft_orientation.forward[axis]))) * normalised_word * elapsed * speed + state.aircraft_position_q8[axis]);
+    for(unsigned int axis{0}; axis != 3; ++axis) state.aircraft_position_q8[axis] = truncate(static_cast<double>(math::signed_word(static_cast<uint16_t>(state.aircraft_orientation.forward[axis]))) * normalised_word * elapsed * speed + state.aircraft_position_q8[axis]);
   }
   return activated;
 }

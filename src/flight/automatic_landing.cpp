@@ -4,12 +4,10 @@
 #include <limits>
 #include <utility>
 #include "flight/aerodynamic_rotation_internal.h"
-#include "math/floating_environment.h"
-#include "math/x87.h"
 
 namespace tfx::flight {
 namespace {
-using calculation = long double;
+using calculation = double;
 double constexpr normalised_word{3.051850947599719e-05}, metres_per_world_unit{2.4384};
 double constexpr native_pi{3.14159}, inverse_degrees{.005555555555555555}, units_per_half_turn{32768};
 double constexpr feet_per_world_unit{8}, metres_per_foot{.3048}, approach_setback_metres{2500};
@@ -20,7 +18,7 @@ float constexpr metres_per_fixed_speed{.4762499928474426f};
 int32_t constexpr cell_width{2048}, cell_centre{1024}, landing_score_change{-10000};
 
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 int32_t subtract(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
@@ -70,7 +68,7 @@ void prepare(automatic_landing &landing, aerodynamic_flight &flight, damage_stat
   calculation const east{static_cast<calculation>(subtract(approach.destination_metres.x,approach.player_metres.x))};
   double const squared{static_cast<double>(north * north + east * east)};
   approach.distance_km = static_cast<double>(std::sqrt(static_cast<calculation>(squared)) * kilometres_per_metre);
-  auto const sine{math::x87::sin(glide_angle)};
+  auto const sine{std::sin(glide_angle)};
   calculation const deck{static_cast<calculation>(runway.carrier ? 20 : 0) * metres_per_foot * feet_per_world_unit};
   motion.pose.metres_ned.z = static_cast<double>(static_cast<calculation>(approach.distance_km) * -metres_per_kilometre * sine - deck);
   data.metres_per_second = flight.aircraft.low_speed_reference;
@@ -110,7 +108,6 @@ void finish(automatic_landing &landing, aerodynamic_flight &flight, automatic_la
 } // anonymous namespace
 
 automatic_landing_events advance_automatic_landing(automatic_landing &landing, aerodynamic_flight &flight, damage_state &damage, automatic_landing_context const &context) {
-  math::floating_environment const environment;
   automatic_landing_events events;
   if(landing.phase == automatic_landing_phase::inactive) return events;
   if(landing.phase == automatic_landing_phase::prepare) {

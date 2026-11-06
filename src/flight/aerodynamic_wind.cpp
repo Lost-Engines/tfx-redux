@@ -1,12 +1,11 @@
 #include "aerodynamic_wind.h"
 #include <bit>
-#include "math/floating_environment.h"
-#include "math/x87.h"
+#include <cmath>
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr native_pi{3.14159}, inverse_degrees{.005555555555555555};
 double constexpr inverse_random_max{1.5259021896696422e-05};
 double constexpr wind_smoothing{.05}, renewed_speed_scale{.515};
@@ -52,7 +51,6 @@ aerodynamic_surface_temperatures load_aerodynamic_surface_temperatures(std::span
 }
 
 void initialise_aerodynamic_wind(aerodynamic_wind &state, aerodynamic_wind_parameters const &parameters, math::random_state &random, aerodynamic_wind_context const &context, bool const strongest_weather) {
-  math::floating_environment const environment;
   state.simulation_seconds = 0;
   state.renewal_after = initial_renewal;
   state.direction_wobble_scale = parameters.direction_wobble_scale;
@@ -71,23 +69,22 @@ void initialise_aerodynamic_wind(aerodynamic_wind &state, aerodynamic_wind_param
   state.velocity_ned = vec3f{0,0,0};
   state.direction = static_cast<double>(wide(random.next()) * (native_pi * 2) * inverse_random_max);
   calculation const upper_angle{wide(native_pi) * parameters.upper_direction_degrees * inverse_degrees};
-  state.upper_wind.x = static_cast<double>(math::x87::cos(upper_angle) * parameters.upper_speed);
-  state.upper_wind.y = static_cast<double>(math::x87::sin(upper_angle) * parameters.upper_speed);
+  state.upper_wind.x = static_cast<double>(std::cos(upper_angle) * parameters.upper_speed);
+  state.upper_wind.y = static_cast<double>(std::sin(upper_angle) * parameters.upper_speed);
   state.vertical_angle = 0;
 }
 
 void update_aerodynamic_wind(aerodynamic_wind &state, aerodynamic_wind_parameters const &parameters, math::random_state &random, aerodynamic_wind_context const &context) {
-  math::floating_environment const environment;
   state.smooth_speed = static_cast<double>((wide(state.target_speed) - state.smooth_speed) * wind_smoothing + state.smooth_speed);
-  state.velocity_ned.x = static_cast<float>(math::x87::cos(state.direction) * state.smooth_speed);
-  state.velocity_ned.y = static_cast<float>(math::x87::sin(state.direction) * state.smooth_speed);
+  state.velocity_ned.x = static_cast<float>(std::cos(state.direction) * state.smooth_speed);
+  state.velocity_ned.y = static_cast<float>(std::sin(state.direction) * state.smooth_speed);
   calculation const time{state.simulation_seconds};
-  calculation const direction{math::x87::sin(wide(state.direction_phase_frequency) * time + state.direction_phase_offset) * state.direction_wobble_scale};
-  auto const envelope{math::x87::sin(wide(state.direction_envelope_frequency) * time)};
+  calculation const direction{std::sin(wide(state.direction_phase_frequency) * time + state.direction_phase_offset) * state.direction_wobble_scale};
+  auto const envelope{std::sin(wide(state.direction_envelope_frequency) * time)};
   state.direction = static_cast<double>(direction * envelope + state.direction);
-  calculation const vertical{math::x87::sin(wide(state.vertical_phase_frequency) * time + state.vertical_phase_offset) * state.vertical_scale * envelope};
+  calculation const vertical{std::sin(wide(state.vertical_phase_frequency) * time + state.vertical_phase_offset) * state.vertical_scale * envelope};
   state.vertical_angle = static_cast<double>(vertical);
-  state.velocity_ned.z = static_cast<float>(math::x87::sin(vertical) * state.smooth_speed);
+  state.velocity_ned.z = static_cast<float>(std::sin(vertical) * state.smooth_speed);
   if(time > state.renewal_after) {
     double const reference{static_cast<double>(wide(parameters.surface_speed) * renewed_speed_scale)};
     state.target_speed = static_cast<double>(wide(random.next()) * reference * inverse_random_max);

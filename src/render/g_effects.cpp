@@ -1,12 +1,10 @@
 #include "g_effects.h"
 #include <algorithm>
-#include "math/floating_environment.h"
 
 namespace tfx::render {
 
 void advance_g_effects(g_effects_state &state, float const load, configuration::g_effects const realism, simulation::timer_ticks const elapsed) {
-  math::floating_environment const environment;
-  using calculation = long double;
+  using calculation = double;
   float const negative_limit{realism == configuration::g_effects::reduced ? 5.f : 4.f};
   float const positive_limit{realism == configuration::g_effects::reduced ? 10.f : 9.f};
   float constexpr excess_gain{.2f}, native_hz{54};

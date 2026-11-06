@@ -1,4 +1,4 @@
-#include "fixture_check.h"
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -103,8 +103,8 @@ int main(int const argc, char const *const argv[]) try {
     tfx::flight::aerodynamic_guidance_events events;
     if(control_mode) tfx::flight::apply_aerodynamic_guidance(state,manual,powerplant,context);
     else events = tfx::flight::update_aerodynamic_guidance(state,manual,powerplant,motion,recovery,context);
-    std::vector<uint64_t> values;
-    auto const number{[&](double const value) { values.push_back(std::bit_cast<uint64_t>(value)); }};
+    std::vector<tfx::test::numeric_fixture_value> values;
+    auto const number{[&](double const value) { values.emplace_back(value); }};
     for(auto const *value : fields) number(*value);
     for(auto const value : {manual.pitch_rate_bias,manual.controls.autopilot.down_metres,manual.controls.autopilot.metres_per_second,manual.air_brake_fraction,powerplant.engine_factor.x,powerplant.engine_factor.y,powerplant.thrust,powerplant.throttle_target,powerplant.fuel}) number(value);
     for(auto const *vector : {&motion.velocity_ned,&motion.acceleration_ned,&motion.angular_rate,&motion.pose.metres_ned}) for(auto const value : *vector) number(value);

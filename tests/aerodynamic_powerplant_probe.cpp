@@ -1,3 +1,4 @@
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -54,15 +55,14 @@ int main(int const argc, char const *const argv[]) try {
     if(operation == 1 || operation == 3) stopped = tfx::flight::consume_aerodynamic_fuel(state,p,context);
     if(operation == 2 || operation == 3) tfx::flight::update_aerodynamic_engine_faults(state,random);
     if(operation == 0 || operation == 3) tfx::flight::update_aerodynamic_thrust(state,p,context);
-    std::vector<uint64_t> values;
-    for(auto const *vector : {&state.engine_factor,&state.nozzle_angles}) for(auto const value : *vector) values.push_back(std::bit_cast<uint64_t>(value));
-    for(auto const *vector : {&state.engine_force,&state.engine_moment}) for(auto const value : *vector) values.push_back(std::bit_cast<uint64_t>(value));
-    for(auto const value : {state.thrust,state.fuel,state.fuel_capacity,state.extra_fuel_capacity,state.fuel_flow}) values.push_back(std::bit_cast<uint64_t>(value));
+    std::vector<tfx::test::numeric_fixture_value> values;
+    for(auto const *vector : {&state.engine_factor,&state.nozzle_angles}) for(auto const value : *vector) values.emplace_back(value);
+    for(auto const *vector : {&state.engine_force,&state.engine_moment}) for(auto const value : *vector) values.emplace_back(value);
+    for(auto const value : {state.thrust,state.fuel,state.fuel_capacity,state.extra_fuel_capacity,state.fuel_flow}) values.emplace_back(value);
     for(auto const value : {static_cast<unsigned int>(state.engine_condition[0]),static_cast<unsigned int>(state.engine_condition[1]),static_cast<unsigned int>(state.afterburner),static_cast<unsigned int>(state.afterburner_control),static_cast<unsigned int>(state.afterburner_display),static_cast<unsigned int>(static_cast<uint16_t>(state.fuel_readout)),static_cast<unsigned int>(random.low),static_cast<unsigned int>(random.high),static_cast<unsigned int>(stopped)}) values.push_back(value);
     if(argc == 2) {
       for(auto const value : values) {
-        uint64_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native aerodynamic powerplant differs"};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native aerodynamic powerplant differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';

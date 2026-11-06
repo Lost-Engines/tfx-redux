@@ -1,10 +1,9 @@
 #include "aerodynamic_start.h"
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr normalised_word{3.051850947599719e-05}, metres_per_world_unit{2.4384};
 double constexpr gravity{9.81}, suspension_points{3}, metres_per_foot{.3048};
 double constexpr nighthawk_ground_offset{.03600000000000003}, initial_seconds{.01};
@@ -20,7 +19,6 @@ calculation normalised(int32_t const value) {
 } // anonymous namespace
 
 void initialise_aerodynamic_motion(aerodynamic_start_state &state, aerodynamic_airframe &airframe, loadout const &stores, aerodynamic_start_context const &context) {
-  math::floating_environment const environment;
   state.mass_kg = static_cast<double>(wide(airframe.empty_mass_kg) + state.fuel_kg + state.stores.mass_kg);
   auto &motion{state.motion};
   auto const &body{context.orientation};
@@ -46,7 +44,7 @@ void initialise_aerodynamic_motion(aerodynamic_start_state &state, aerodynamic_a
         state.ground_steering = true;
       }
     }
-    calculation const inverse_spring{1.0L / (wide(airframe.ground.contact.spring_stiffness) * suspension_points)};
+    calculation const inverse_spring{1.0 / (wide(airframe.ground.contact.spring_stiffness) * suspension_points)};
     calculation const down{wide(context.ground_elevation_steps) * metres_per_foot * feet_per_ground_step - airframe.ground.offsets[1].z};
     motion.pose.metres_ned.z = static_cast<double>(wide(state.mass_kg) * gravity * inverse_spring + down);
     if(airframe.stores_and_mounts.stores.aircraft == player_aircraft::nighthawk) motion.pose.metres_ned.z = static_cast<double>(wide(motion.pose.metres_ned.z) + nighthawk_ground_offset);

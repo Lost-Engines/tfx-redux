@@ -1,4 +1,4 @@
-#include "fixture_check.h"
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -37,8 +37,8 @@ int main(int const argc, char const *const argv[]) try {
     };
     tfx::flight::aerodynamic_basis basis;
     bool const stopped{tfx::flight::advance_automatic_approach(state,motion,basis,speed,context)};
-    std::vector<uint64_t> values;
-    auto const number{[&](double const value) { values.push_back(std::bit_cast<uint64_t>(value)); }};
+    std::vector<tfx::test::numeric_fixture_value> values;
+    auto const number{[&](double const value) { values.emplace_back(value); }};
     for(auto const *vector : {&state.destination_metres,&state.player_metres}) for(auto const value : *vector) values.push_back(static_cast<uint32_t>(value));
     number(state.distance_km); number(state.pitch_degrees); number(speed);
     for(auto const value : motion.pose.metres_ned) number(value);

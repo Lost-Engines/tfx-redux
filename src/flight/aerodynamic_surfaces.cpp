@@ -1,17 +1,15 @@
 #include "aerodynamic_surfaces.h"
-#include "math/floating_environment.h"
-#include "math/x87.h"
+#include <cmath>
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr half{.5}, chute_drag_coefficient{1.2};
 
 } // anonymous namespace
 
 void update_aerodynamic_surfaces(aerodynamic_surface_state &state, aerodynamic_surface_parameters const &p, aerodynamic_surface_context const &context) {
-  math::floating_environment const environment;
   auto const &c{context.coefficients};
   calculation const alpha{context.angle_of_attack}, speed{context.metres_per_second};
   state.flap_lift_offset = static_cast<double>(static_cast<calculation>(p.flap_lift_gradient) * context.flap_fraction * p.maximum_flap_angle + p.zero_lift);
@@ -51,7 +49,7 @@ void update_aerodynamic_surfaces(aerodynamic_surface_state &state, aerodynamic_s
     pitch += static_cast<calculation>(c.elevator_moment) * context.elevator * p.maximum_elevator_angle * speed;
     pitch += static_cast<calculation>(c.pitch_damping) * context.pitch_rate * p.mean_chord * half;
     state.pitch_rate_moment_term = static_cast<double>(pitch);
-    auto const sine{math::x87::sin(alpha)}, cosine{math::x87::cos(alpha)};
+    auto const sine{std::sin(alpha)}, cosine{std::cos(alpha)};
     calculation const chute{static_cast<calculation>(p.chute_pitch_arm) * sine * context.dynamic_pressure * chute_drag_coefficient * p.chute_area * static_cast<int>(context.chute_deployed)};
     calculation const main_moment{speed * (static_cast<calculation>(context.density) * half) * p.wing_area * p.mean_chord * state.pitch_rate_moment_term};
     calculation const brake_moment{static_cast<calculation>(context.dynamic_pressure) * (static_cast<calculation>(p.air_brake_moment_arm.x) * sine - static_cast<calculation>(p.air_brake_moment_arm.y) * cosine) * p.wing_area * p.air_brake_drag * context.air_brake_fraction};
@@ -60,8 +58,8 @@ void update_aerodynamic_surfaces(aerodynamic_surface_state &state, aerodynamic_s
     state.roll_rate_moment_term = static_cast<double>(control * speed + static_cast<calculation>(c.roll_damping) * context.roll_rate * p.wing_span * half);
     state.roll_moment = static_cast<double>(static_cast<calculation>(context.density) * half * speed * p.wing_area * p.wing_span * state.roll_rate_moment_term);
   }
-  auto const cosine{math::x87::cos(alpha)};
-  double const sine{static_cast<double>(math::x87::sin(alpha))};
+  auto const cosine{std::cos(alpha)};
+  double const sine{static_cast<double>(std::sin(alpha))};
   state.force.x = static_cast<double>(-(static_cast<calculation>(state.drag) * cosine - static_cast<calculation>(state.lift) * sine));
   state.force.z = static_cast<double>(-static_cast<calculation>(state.lift) * cosine - static_cast<calculation>(state.drag) * sine);
   state.moment.x = state.roll_moment;

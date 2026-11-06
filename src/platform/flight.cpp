@@ -550,7 +550,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     tfx::flight::refuel_player contact{
       .aircraft{player.aircraft},
       .position{vec3<int32_t>{player.integer_position}},
-      .position_q8{vec3<int32_t>{vec3<long double>{player.position} * tfx::actors::position_unit}},
+      .position_q8{vec3<int32_t>{vec3<double>{player.position} * tfx::actors::position_unit}},
       .angles{vec3<tfx::math::angle>{player.angles}},
       .speed{player.fixed_speed},
     };
@@ -914,7 +914,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   auto const camera_context{[&] {
     tfx::cockpit::view_camera_context context{
       .position{vec3<int32_t>{player.integer_position}},
-      .position_q8{vec3<int32_t>{vec3<long double>{player.position} * tfx::actors::position_unit}},
+      .position_q8{vec3<int32_t>{vec3<double>{player.position} * tfx::actors::position_unit}},
       .position_f32{vec3f{player.position}},
       .angles{vec3<tfx::math::angle>{player.angles}},
       .basis{player_render_basis},
@@ -1512,7 +1512,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     // before the actor ticks. Earlier input handlers see its previous value,
     // including the zeroed cold-start record and retention between missions.
     options.player_contact = tfx::actors::air_contact{
-      .position{vec3<int32_t>{vec3<long double>{player.position} * tfx::actors::position_unit}},
+      .position{vec3<int32_t>{vec3<double>{player.position} * tfx::actors::position_unit}},
       .angles{vec3<tfx::math::angle>{player.angles}},
       .speed{std::bit_cast<int32_t>(static_cast<uint32_t>(player.fixed_speed) << tfx::actors::speed_fraction_bits)},
     };
@@ -3150,7 +3150,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
             if(physical_player.aircraft.surfaces.air_brake_drag != 0 && condition != tfx::flight::system_condition::failed) {
               // Native 84F68 toggles the retained fraction, then only the
               // normal/active switch states. Fault conditions remain faults.
-              physical_player.manual.air_brake_fraction = static_cast<double>(1.0L - physical_player.manual.air_brake_fraction);
+              physical_player.manual.air_brake_fraction = static_cast<double>(1.0 - physical_player.manual.air_brake_fraction);
               if(condition == tfx::flight::system_condition::normal) condition = tfx::flight::system_condition::active;
               else if(condition == tfx::flight::system_condition::active) condition = tfx::flight::system_condition::normal;
               player.air_brake = condition == tfx::flight::system_condition::active;

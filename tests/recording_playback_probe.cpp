@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include "math/floating_environment.h"
 #include "missions/initialisation.h"
 #include "recording/playback.h"
 #include "render/horizon.h"
@@ -9,7 +8,7 @@
 
 int main(int const argc, char const *const argv[]) try {
   if(argc != 4) throw std::runtime_error{"recording_playback_probe DATA_DIRECTORY RECORDING OUTPUT_DIRECTORY < CONTEXT"};
-  tfx::math::floating_environment const floating;
+
   unsigned int mission{0},seed{0},animation{0},status{0};int16_t camera_y{0},phase{0};
   std::cin >> mission >> camera_y >> phase >> seed >> animation >> status;
   std::array<std::string,10> carried_names;

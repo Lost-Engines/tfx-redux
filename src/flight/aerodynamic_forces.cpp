@@ -1,25 +1,22 @@
 #include "aerodynamic_forces.h"
 #include <cmath>
-#include "math/floating_environment.h"
-#include "math/x87.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr gravity{9.81}, fuel_roll_inertia{.004166666666666667};
 double constexpr refuelling_level_moment{10000};
 
 calculation native_asin(double const value) {
   // Detected 387 path: original 0xd242c then 0xd24a7's direct FPATAN.
   calculation const x{value};
-  return math::x87::atan2(x,std::sqrt(1.0L - x * x));
+  return std::atan2(x,std::sqrt(1.0 - x * x));
 }
 
 } // anonymous namespace
 
 aerodynamic_force_result update_aerodynamic_forces(aerodynamic_motion &state, aerodynamic_force_context const &context) {
-  math::floating_environment const environment;
   auto const &basis{context.basis};
   auto const &loads{context.loads};
   auto const &inertia{context.inertia};
@@ -43,9 +40,9 @@ aerodynamic_force_result update_aerodynamic_forces(aerodynamic_motion &state, ae
     state.velocity_ned.x = state.velocity_ned.y = 0;
     state.air_velocity_body = vec3d{0,0,0};
     unsigned int axis{0};
-    for(auto const *direction : {&basis.forward,&basis.right,&basis.down}) state.ground_velocity_body[axis++] = static_cast<double>(0.0L * direction->y + 0.0L * direction->x);
+    for(auto const *direction : {&basis.forward,&basis.right,&basis.down}) state.ground_velocity_body[axis++] = static_cast<double>(0.0 * direction->y + 0.0 * direction->x);
   }
-  calculation const inverse_mass{1.0L / inertia.mass_kg};
+  calculation const inverse_mass{1.0 / inertia.mass_kg};
   for(unsigned int axis{0}; axis != 3; ++axis) state.acceleration_ned[axis] = static_cast<double>(static_cast<calculation>(result.ned_force[axis]) * inverse_mass);
   state.angular_acceleration.x = static_cast<double>(static_cast<calculation>(result.body_moment.x) / (static_cast<calculation>(inertia.fuel_kg) * inertia.fuel_kg * fuel_roll_inertia + inertia.roll_moment));
   state.angular_acceleration.y = static_cast<double>(static_cast<calculation>(result.body_moment.y) / inertia.pitch_moment);

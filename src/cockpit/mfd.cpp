@@ -95,16 +95,16 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
   }
   case display_page::gauges: {
     background(1);
-    int const throttle{std::min(29,static_cast<int>(static_cast<long double>(state.throttle) * assets.gauge_throttle_scale))};
-    int const fuel{static_cast<int>(static_cast<long double>(state.fuel) * assets.gauge_fuel_scale)};
+    int const throttle{std::min(29,static_cast<int>(static_cast<double>(state.throttle) * assets.gauge_throttle_scale))};
+    int const fuel{static_cast<int>(static_cast<double>(state.fuel) * assets.gauge_fuel_scale)};
     mask(instrument_mask::throttle,{47,30 - throttle},1);
     mask(instrument_mask::fuel,{5,30 - fuel},1);
     break;
   }
   case display_page::flight_data: {
     background(3);
-    text({24,2},detail::decimal(assets.flight_formats[0],static_cast<double>(static_cast<long double>(state.speed) * assets.speed_scale),0),3);
-    text({24,9},detail::decimal(assets.flight_formats[0],static_cast<double>(-static_cast<long double>(state.height) * assets.altitude_scale),0),1);
+    text({24,2},detail::decimal(assets.flight_formats[0],static_cast<double>(static_cast<double>(state.speed) * assets.speed_scale),0),3);
+    text({24,9},detail::decimal(assets.flight_formats[0],static_cast<double>(-static_cast<double>(state.height) * assets.altitude_scale),0),1);
     text({24,16},formatted(assets.flight_formats[1],static_cast<unsigned int>(state.heading / 182)),1);
     text({24,23},detail::decimal(assets.flight_formats[0],state.fuel,0),status(flight::aircraft_system::fuel));
     if(state.smoothed_fuel_burn) {
@@ -154,8 +154,8 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
     background(2);
     mask(instrument_mask::left_engine,{22,10},status(flight::aircraft_system::left_engine));
     mask(instrument_mask::right_engine,{30,10},status(flight::aircraft_system::right_engine));
-    text({2,30},detail::decimal(assets.engine_formats[0],static_cast<double>(static_cast<long double>(state.engine_load[0]) * assets.engine_percent),0),status(flight::aircraft_system::left_engine));
-    text({30,30},detail::decimal(assets.engine_formats[1],static_cast<double>(static_cast<long double>(state.engine_load[1]) * assets.engine_percent),0),status(flight::aircraft_system::right_engine));
+    text({2,30},detail::decimal(assets.engine_formats[0],static_cast<double>(static_cast<double>(state.engine_load[0]) * assets.engine_percent),0),status(flight::aircraft_system::left_engine));
+    text({30,30},detail::decimal(assets.engine_formats[1],static_cast<double>(static_cast<double>(state.engine_load[1]) * assets.engine_percent),0),status(flight::aircraft_system::right_engine));
     break;
   case display_page::schematic:
     background(2);
@@ -183,14 +183,14 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
         presentation::draw_line(renderer.output,vec2<int>{from},to,6);
         if(coverage) presentation::draw_line(*coverage,vec2<int>{from},to,255);
       }};
-      auto const deflection{[&](double const value) { return math::signed_word(static_cast<uint16_t>(static_cast<int>(static_cast<long double>(value) * assets.surface_scale))); }};
+      auto const deflection{[&](double const value) { return math::signed_word(static_cast<uint16_t>(static_cast<int>(static_cast<double>(value) * assets.surface_scale))); }};
       pointer(43,10,90 + deflection(state.controls.trailing_edge_flap));
       pointer(32,5,-90 - deflection(state.controls.leading_edge_flap));
       if(state.aircraft == flight::player_aircraft::raptor) {
         double const scale{assets.raptor_degrees / assets.raptor_radians};
         for(unsigned int index{0}; index != 2; ++index) {
           auto const base{point({index ? 12 : 6,6})};
-          int const row{static_cast<int>(static_cast<long double>(base.y) + static_cast<long double>(state.controls.thrust_vector[index]) * scale * assets.raptor_pointer_scale)};
+          int const row{static_cast<int>(static_cast<double>(base.y) + static_cast<double>(state.controls.thrust_vector[index]) * scale * assets.raptor_pointer_scale)};
           auto const shape{index ? instrument_mask::throttle : instrument_mask::fuel};
           render::draw_monochrome(renderer.output,assets.masks[std::to_underlying(shape)],{static_cast<uint16_t>(base.x),static_cast<uint16_t>(row)},1,coverage,renderer.clipping);
         }
@@ -206,9 +206,9 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
       if(autopilot.mode == autopilot_mode::waypoint) text({2,20},formatted(label,static_cast<int>(autopilot.waypoint),heading),2);
       else if(autopilot.mode == autopilot_mode::heading) text({2,20},formatted(label,heading),2);
       else text({2,20},label,2);
-      double const speed{static_cast<double>(static_cast<long double>(autopilot.speed) * assets.autopilot_speed_scale)};
+      double const speed{static_cast<double>(static_cast<double>(autopilot.speed) * assets.autopilot_speed_scale)};
       if(autopilot.mode == autopilot_mode::waypoint || autopilot.mode == autopilot_mode::heading) {
-        double const height{static_cast<double>(-static_cast<long double>(autopilot.height) * assets.autopilot_height_scale)};
+        double const height{static_cast<double>(-static_cast<double>(autopilot.height) * assets.autopilot_height_scale)};
         text({2,27},formatted(assets.autopilot_height_speed_format,detail::decimal_value(height,0),detail::decimal_value(speed,0)),2);
       } else if(autopilot.mode != autopilot_mode::recover) text({2,27},detail::decimal(assets.autopilot_speed_format,speed,0),2);
     } else {

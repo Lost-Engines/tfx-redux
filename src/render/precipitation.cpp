@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include "math/floating_environment.h"
 
 namespace tfx::render {
 namespace {
@@ -12,8 +11,8 @@ int16_t advect(int16_t const initial, float const wind) {
   // Original x87 operations load both constants from single precision, retain
   // 53-bit arithmetic, then truncate to a signed dword before the word store.
   float constexpr wind_scale{4}, per_frame{.1f};
-  long double const result{static_cast<long double>(wind) * wind_scale * per_frame + initial};
-  int32_t const truncated{!std::isfinite(result) || result < std::numeric_limits<int32_t>::min() || result >= 2147483648.L ? std::numeric_limits<int32_t>::min() : static_cast<int32_t>(result)};
+  double const result{static_cast<double>(wind) * wind_scale * per_frame + initial};
+  int32_t const truncated{!std::isfinite(result) || result < std::numeric_limits<int32_t>::min() || result >= 2147483648. ? std::numeric_limits<int32_t>::min() : static_cast<int32_t>(result)};
   return word(truncated);
 }
 }
@@ -36,7 +35,6 @@ void precipitation::initialise(math::random_state &random) {
 std::span<vec3<int16_t> const> precipitation::field() const { return particles; }
 vec3<int16_t> const &precipitation::drift() const { return offset; }
 void precipitation::paint(framebuffer &output, precipitation_view const &view, int16_t const requested_count, vec2f const &wind_xz) {
-  math::floating_environment const environment;
   int constexpr volume_half_size{512}, volume_mask{1023}, camera_scale{4};
   uint8_t constexpr colour{241};
   int const count{std::clamp<int>(requested_count,0,precipitation_particles)};

@@ -54,7 +54,7 @@ auto tactical_map::contact_card(tactical_map_aircraft const &aircraft, unsigned 
   auto const text{[&](int const row, std::string const &message) { renderer.text(x,y + row * 6,message,colour); }};
   text(0,name);
   int16_t const speed{math::signed_word(static_cast<uint16_t>(reading.speed_q16 >> 16))};
-  text(1,detail::decimal(assets.tactical_map_formats[0],static_cast<double>(static_cast<long double>(speed) * assets.speed_scale),0));
+  text(1,detail::decimal(assets.tactical_map_formats[0],static_cast<double>(static_cast<double>(speed) * assets.speed_scale),0));
   unsigned int constexpr angle_units_per_degree{182}, feet_per_world_unit{8}, units_per_range_step{660};
   text(2,detail::formatted(assets.tactical_map_formats[1],static_cast<unsigned int>(reading.heading) / angle_units_per_degree));
   uint32_t const altitude{(0u - static_cast<uint32_t>(reading.position_q8.y >> 8)) * feet_per_world_unit};

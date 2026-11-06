@@ -1,4 +1,3 @@
-#include "math/floating_environment.h"
 #include "arcade.h"
 #include "gear_controls.h"
 #include "world/environment.h"
@@ -13,7 +12,7 @@
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 float constexpr sound_speed{340}, speed_metres_per_native_tick{122};
 float constexpr normalised_word{3.0518509447574615e-05f};
 float constexpr throttle_step{0.002f}, idle_throttle{0.6f};
@@ -103,7 +102,7 @@ calculation interpolate(float const low_value, float const low_altitude, float c
   return (static_cast<calculation>(high_value) - low_value) * (static_cast<calculation>(altitude) / (static_cast<calculation>(high_altitude) - low_altitude)) + low_value;
 }
 int32_t integer(calculation const value) {
-  if(value >= 2147483648.0L || value < -2147483648.0L || !std::isfinite(value)) return std::numeric_limits<int32_t>::min();
+  if(value >= 2147483648.0 || value < -2147483648.0 || !std::isfinite(value)) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 void rotate(arcade_state &state, math::rotation_axis const axis, float const amount) {
@@ -221,19 +220,16 @@ void filter_control(float &target, float &current, int16_t const delta, uint16_t
 
 basic_aircraft_parameters const &basic_parameters(player_aircraft const aircraft) { return parameters(aircraft); }
 void update_basic_speed(arcade_state &state, flight_controls const &controls, vec2<system_condition> const &engine_conditions, simulation::timer_ticks const elapsed, bool const arcade, bool const gear_drag) {
-  math::floating_environment const environment;
   throttle(state,controls,engine_conditions,elapsed,false,arcade,gear_drag);
 }
 void consume_basic_fuel(arcade_state &state, simulation::timer_ticks const elapsed, bool const arcade) {
-  math::floating_environment const environment;
   fuel(state,elapsed,arcade);
 }
 
 
 void initialise_arcade(arcade_state &state, vec3<int32_t> const &position, vec3<math::angle> const &angles, float const speed, bool const landed, ground_contact const ground) {
-  math::floating_environment const environment;
   /// Native mission start centres X/Z on their cells; ground placement uses the aircraft's own gear height
-  if constexpr(std::numeric_limits<calculation>::digits != 64) throw std::runtime_error{"native flight currently requires an x87-precision arithmetic backend"};
+
   auto const &model{parameters(state.aircraft)};
   state.position = vec3f{vec3<int32_t>{(position.x / world::cell_units) * world::cell_units + world::cell_units / 2,position.y,(position.z / world::cell_units) * world::cell_units + world::cell_units / 2}};
   state.orientation = {};
@@ -267,7 +263,6 @@ void initialise_arcade(arcade_state &state, vec3<int32_t> const &position, vec3<
 }
 
 void update_basic_disabled(arcade_state &state, flight_controls const &controls, vec2<system_condition> const &engine_conditions, simulation::timer_ticks const elapsed, ground_contact const ground, bool const arcade, bool const gear_drag) {
-  math::floating_environment const environment;
   // Native 0x8e5a8, selected by the outer player callback after loss/ejection.
   if(!state.collision) {
     recover(state,elapsed);
@@ -294,12 +289,10 @@ void update_basic_disabled(arcade_state &state, flight_controls const &controls,
 }
 
 void advance_disabled(arcade_state &state, flight_controls const &controls, vec2<system_condition> const &engine_conditions, simulation::timer_ticks const elapsed, ground_contact const ground) {
-  math::floating_environment const environment;
   update_basic_disabled(state,controls,engine_conditions,elapsed,ground,true,state.gear_down);
 }
 
 arcade_update advance_arcade(arcade_state &state, flight_controls const &controls, vec2<system_condition> const &engine_conditions, simulation::timer_ticks const elapsed, ground_contact const ground, bool const time_warp) {
-  math::floating_environment const environment;
   /// Native Arcade 0x8dc50: throttle/fuel, gear contact, filtered controls, coordinated bank turn, then movement
   auto const &model{parameters(state.aircraft)};
   if(state.aircraft == player_aircraft::eurofighter && state.gear_down && state.fixed_speed > eurofighter_maximum_gear_speed) state.gear_down = false;

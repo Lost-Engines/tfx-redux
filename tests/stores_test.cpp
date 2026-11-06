@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <iostream>
-#include <limits>
 #include <stdexcept>
 #include "flight/stores.h"
 
@@ -13,11 +12,6 @@ void require(bool const value, char const *const message) {
 } // anonymous namespace
 
 auto main()->int try {
-  if constexpr(std::numeric_limits<long double>::digits != 64) {
-    int constexpr unavailable_arithmetic_backend{77};
-    std::cout << "SKIP: the native x87-precision flight backend is not implemented for this arithmetic format" << std::endl;
-    return unavailable_arithmetic_backend;
-  }
   tfx::flight::loadout stores;
   stores[0] = {
     .position{1,2,3},

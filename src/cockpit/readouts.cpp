@@ -96,7 +96,7 @@ fuel_warning readouts::draw(render::software_renderer &renderer, readout_state c
   }
   if(clear_panel(renderer,{14,184},{33,190},state.offset,false,coverage)) {
     // Native 0xc03cc rounds the extended product towards zero before FISTP.
-    int const percent{static_cast<int>(std::trunc(static_cast<long double>(state.throttle) * assets.throttle_percent))};
+    int const percent{static_cast<int>(std::trunc(static_cast<double>(state.throttle) * assets.throttle_percent))};
     unsigned int const format{percent >= 100 ? 2u : percent >= 10 ? 1u : 0u};
     number(renderer,shifted({17,184},state.offset),formatted(assets.throttle_formats[format],percent),coverage);
   }

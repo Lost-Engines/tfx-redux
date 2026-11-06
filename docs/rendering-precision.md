@@ -142,8 +142,8 @@ for the separate comparison of Vectorstorm's approximation modes.
 
 ## Verification
 
-The full-circle `trigonometry_tests` checks every stored angle against independent
-long-double functions, including symmetry, cardinal values, bearing quadrants,
+The full-circle `trigonometry_tests` checks every stored angle against direct double-precision
+functions, including symmetry, cardinal values, bearing quadrants,
 fixed-point matrix geometry, sub-phase movement, ground targeting, orbit alignment
 and fractional military-flight rotations.
 

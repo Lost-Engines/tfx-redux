@@ -62,7 +62,7 @@ void attitude::normalise() {
 bool attitude::align_down(vec3f const &direction) {
   // Native 0x8e86c and 0x91c48 build a down axis, then right/down cross
   // products. Their float stores differ from the integer normalise() path.
-  using calculation = long double;
+  using calculation = double;
   float constexpr normalised_word{3.0518509447574615e-05f}, word_scale{32767};
   double constexpr minimum_length{.001};
   auto const length{[](vec3f const &vector) {
@@ -71,7 +71,7 @@ bool attitude::align_down(vec3f const &direction) {
   }};
   auto const normalised{[](int32_t const value) { return static_cast<calculation>(signed_word(static_cast<uint16_t>(value))) * normalised_word; }};
   auto const words{[&](vec3f const &vector, float const magnitude) {
-    calculation const inverse{1.0L / magnitude};
+    calculation const inverse{1.0 / magnitude};
     auto const component{[&](float const value) { return static_cast<int32_t>(signed_word(static_cast<uint16_t>(static_cast<int32_t>(static_cast<calculation>(value) * inverse * word_scale)))); }};
     return vec3<int32_t>{component(vector.x),component(vector.y),component(vector.z)};
   }};

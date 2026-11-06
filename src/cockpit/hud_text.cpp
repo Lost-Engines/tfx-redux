@@ -13,11 +13,11 @@ hud_text::hud_text(instrument_assets const &source) : assets{source} {
 void hud_text::draw_aerodynamic(render::software_renderer &renderer, aerodynamic_hud_state const &state, vec2<int16_t> const &offset, render::framebuffer *const coverage) const {
   // Native 0x7f870/0x7e130/0x7e328: angle of attack at left, climb in ft/s at right.
   // These are the original double literals, including its approximate pi.
-  long double constexpr degrees_per_half_turn{180}, native_pi{3.14159}, zero_alpha_row{60};
+  double constexpr degrees_per_half_turn{180}, native_pi{3.14159}, zero_alpha_row{60};
   double constexpr feet_per_metre{3.281};
   auto const word{[](int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }};
-  auto const truncate{[](long double const value) {
-    if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  auto const truncate{[](double const value) {
+    if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
     return static_cast<int32_t>(value);
   }};
   auto const mask{[&](instrument_mask const shape, vec2<int> const &position) {
@@ -37,7 +37,7 @@ void hud_text::draw_aerodynamic(render::software_renderer &renderer, aerodynamic
   int const alpha{word(truncate(zero_alpha_row - (degrees_per_half_turn / static_cast<double>(native_pi)) * state.angle_of_attack))};
   line({93,60},{93,alpha});point({92,alpha});point({94,alpha});
   mask(instrument_mask::climb_rate_scale,{222,2});
-  int const climb{word(truncate(-static_cast<long double>(state.down_metres_per_second) * feet_per_metre))};
+  int const climb{word(truncate(-static_cast<double>(state.down_metres_per_second) * feet_per_metre))};
   int const climb_row{word(26 - climb)};
   // C4CB6 bypasses viewport clipping here. Its linear VGA writes can wrap
   // to the following scanline at the right edge, as the endpoint pixels do.
@@ -59,14 +59,14 @@ void hud_text::draw_values(render::software_renderer &renderer, hud_text_state c
     text({math::signed_word(static_cast<uint16_t>(edge.x - renderer.text_width(message))),edge.y},message);
   }};
   // Native 0x7f8e0: every formatted product crosses its original double store.
-  text({98,54},detail::decimal(assets.hud_number_formats[0],static_cast<double>(-static_cast<long double>(state.height) * assets.hud_altitude_scale),0));
-  text({204,54},detail::decimal(assets.hud_number_formats[0],static_cast<double>(static_cast<long double>(state.speed) * assets.speed_scale),0));
+  text({98,54},detail::decimal(assets.hud_number_formats[0],static_cast<double>(-static_cast<double>(state.height) * assets.hud_altitude_scale),0));
+  text({204,54},detail::decimal(assets.hud_number_formats[0],static_cast<double>(static_cast<double>(state.speed) * assets.speed_scale),0));
   text({204,63},detail::decimal(assets.hud_number_formats[1],state.mach,2));
   right({230,80},detail::decimal(assets.hud_number_formats[2],static_cast<double>(state.load),1));
   int constexpr world_units_per_cell{2048};
   right({217,86},detail::formatted(assets.hud_number_formats[3],static_cast<long>(state.position.x / world_units_per_cell)));
   right({230,86},detail::formatted(assets.hud_number_formats[3],static_cast<long>(state.position.z / world_units_per_cell)));
-  text({96,79},detail::decimal(assets.hud_number_formats[4],static_cast<double>(static_cast<long double>(state.throttle) * assets.hud_throttle_scale),0));
+  text({96,79},detail::decimal(assets.hud_number_formats[4],static_cast<double>(static_cast<double>(state.throttle) * assets.hud_throttle_scale),0));
 }
 void hud_text::draw_messages(render::software_renderer &renderer, hud_text_state const &state, render::framebuffer *const coverage) const {
   uint8_t constexpr colour{6};

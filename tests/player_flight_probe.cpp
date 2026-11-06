@@ -5,7 +5,6 @@
 #include "flight/player_flight.h"
 #include "flight/player_shared.h"
 #include "flight/aerodynamic_pilot_keys.h"
-#include "math/floating_environment.h"
 #include "cockpit/initialisation.h"
 #include "weapons/definition.h"
 #include "aerodynamic_autopilot_snapshot.h"

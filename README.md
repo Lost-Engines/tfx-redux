@@ -6,7 +6,7 @@
 
 ## Getting started
 
-1. Download the [latest release](https://github.com/Lost-Engines/tfx-redux/releases/latest) for Linux, Windows or Intel macOS and extract it.
+1. Download the [latest release](https://github.com/Lost-Engines/tfx-redux/releases/latest) for Linux, Windows or macOS and extract it. Mac downloads are available for Intel and Apple Silicon.
 2. Run `scripts\fetch-assets.bat` on Windows, or `./scripts/fetch-assets.sh` on Linux/macOS, to get the game and sound files.
 3. Launch `tfx.exe` on Windows or `./tfx` on Linux/macOS.
 
@@ -48,7 +48,7 @@ The setup helper supplies the necessary sound files. You can also use your own C
 
 ## Building from source
 
-Requires CMake 3.30+, a C++26 compiler and standard library, and OpenGL development libraries. On Debian/Ubuntu, install `libglfw3-dev` and `libgl1-mesa-dev`; CMake can also build GLFW automatically. The current flight backend requires an x86 processor.
+Requires CMake 3.30+, a C++26 compiler and standard library, and OpenGL development libraries. On Debian/Ubuntu, install `libglfw3-dev` and `libgl1-mesa-dev`; CMake can also build GLFW automatically.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
@@ -65,6 +65,7 @@ Redux builds on the [TFX C++ reconstruction](https://github.com/Lost-Engines/tfx
 - [Builds and releases](docs/build-release.md)
 - [Implementation notes](docs/implementation.md)
 - [Rendering performance](docs/rendering-performance.md)
+- [Portable arithmetic](docs/portable-arithmetic.md)
 - [TFX Traced](https://lost-engines.github.io/tfx-traced/)
 
 [Attribution](NOTICE.md).

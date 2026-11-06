@@ -1,4 +1,3 @@
-#include "math/floating_environment.h"
 #include "simple.h"
 #include "gear_controls.h"
 #include "world/environment.h"
@@ -9,7 +8,7 @@
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 float constexpr normalised_word{3.0518509447574615e-05f};
 float constexpr fixed_speed_fraction{1.0f / 256}, speed_metres_per_native_tick{122};
 float constexpr mach_per_metre_per_second{.0029411765281111f};
@@ -20,7 +19,7 @@ unsigned int constexpr normalisation_mask{31};
 float constexpr collision_reset_height{-2}, collision_reset_position{-5};
 
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 void rotate(arcade_state &state, math::rotation_axis const axis, float const amount) {
@@ -35,7 +34,6 @@ void rotate(arcade_state &state, math::rotation_axis const axis, float const amo
 } // anonymous namespace
 
 void initialise_simple(simple_state &state, vec3<int32_t> const &position, vec3<math::angle> const &angles, float const speed, bool const landed, ground_contact const ground) {
-  math::floating_environment const environment;
   auto const aircraft{state.flight.aircraft};
   state = {};
   state.flight.aircraft = aircraft;
@@ -52,7 +50,6 @@ void initialise_simple(simple_state &state, vec3<int32_t> const &position, vec3<
   state.gear.condition = landed ? system_condition::active : system_condition::normal;
 }
 void advance_simple_disabled(simple_state &state, flight_controls const &controls, vec2<system_condition> const &engine_conditions, simulation::timer_ticks const elapsed, ground_contact const ground) {
-  math::floating_environment const environment;
   state.flight.orientation = state.ground.body;
   update_basic_disabled(state.flight,controls,engine_conditions,elapsed,ground,false,state.gear.condition == system_condition::active);
   state.ground.body = state.flight.orientation;
@@ -61,7 +58,6 @@ void advance_simple_disabled(simple_state &state, flight_controls const &control
 }
 
 simple_update advance_simple(simple_state &state, simple_inputs const &inputs, vec2<system_condition> const &engine_conditions, simulation::timer_ticks const elapsed, ground_contact const ground) {
-  math::floating_environment const environment;
   auto &flight{state.flight};
   auto const &parameters{basic_parameters(flight.aircraft)};
   if(flight.aircraft == player_aircraft::eurofighter && flight.gear_down && flight.fixed_speed > eurofighter_maximum_gear_speed && !flight.collision && state.gear.condition != system_condition::failed) {

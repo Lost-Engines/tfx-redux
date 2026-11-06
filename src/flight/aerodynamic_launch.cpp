@@ -2,25 +2,23 @@
 #include <cmath>
 #include <limits>
 #include "flight/basic_parameters.h"
-#include "math/floating_environment.h"
 #include "world/environment.h"
 
 namespace tfx::flight {
 namespace {
-using calculation = long double;
+using calculation = double;
 float constexpr normalised_word{3.0518509447574615e-05f}, runway_start_setback{120}, airborne_throttle{.85f};
 vec2f constexpr carrier_start_offset{2,100};
 int16_t constexpr carrier_height_limit{-10};
 int32_t constexpr airborne_fixed_speed{250}, carrier_placeholder_height{5};
 int32_t truncate(calculation const value) {
-  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0L) return std::numeric_limits<int32_t>::min();
+  if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
 int32_t centre(int32_t const value) { return value / world::cell_units * world::cell_units + world::cell_units / 2; }
 } // anonymous namespace
 
 aerodynamic_flight launch_aerodynamic_flight(aerodynamic_airframe const &aircraft, loadout const &stores, aerodynamic_launch_context const &context, aerodynamic_wind_parameters const &wind_parameters, damage_state &damage, math::random_state &random) {
-  math::floating_environment const environment;
   vec3<int32_t> const centred{centre(context.position.x),context.position.y,centre(context.position.z)};
   math::attitude orientation;
   orientation.rotate(math::rotation_axis::pitch,context.angles.x);
@@ -56,7 +54,6 @@ aerodynamic_flight launch_aerodynamic_flight(aerodynamic_airframe const &aircraf
 }
 
 void place_aerodynamic_start(aerodynamic_flight &state, int16_t const ground_elevation_steps) {
-  math::floating_environment const environment;
   if(!state.cold_start) return;
   state.view.position.y = static_cast<float>(static_cast<calculation>(ground_elevation_steps) - basic_parameters(state.aircraft.stores_and_mounts.stores.aircraft).gear_height);
   bool const advanced_setting{state.model == aerodynamic_model::military_spec || state.model == aerodynamic_model::realistic};

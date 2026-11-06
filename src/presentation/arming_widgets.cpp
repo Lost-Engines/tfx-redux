@@ -109,7 +109,7 @@ flight::store_effects draw_arming_widgets(render::software_renderer &renderer, a
       .occupied{pylon.count != 0},
     };
   }
-  label(renderer,number(assets.mass_format,static_cast<double>(math::signed_word(mass) * static_cast<long double>(2.2))),{30,175},{29,174});
+  label(renderer,number(assets.mass_format,static_cast<double>(math::signed_word(mass) * static_cast<double>(2.2))),{30,175},{29,174});
   if(!state.selected) label(renderer,assets.internal,{150,13},{149,12});
   else {
     auto const id{std::to_underlying(*state.selected)};
@@ -117,8 +117,8 @@ flight::store_effects draw_arming_widgets(render::software_renderer &renderer, a
     if(std::to_underlying(weapon.role) < assets.roles.size()) label(renderer,assets.roles[std::to_underlying(weapon.role)],{157,13},{156,12});
     if(weapon.category < assets.categories.size()) label(renderer,assets.categories[weapon.category],{170,13},{169,12});
     label(renderer,weapon.label,{225,175},{224,174});
-    label(renderer,number(assets.store_mass_format,static_cast<double>(weapon.mass * static_cast<long double>(2.2))),{275,175},{274,174});
-    if(aircraft == 0) label(renderer,number(assets.store_drag_format,static_cast<double>(static_cast<long double>(weapon.drag) * 10000)),{225,192},{224,191});
+    label(renderer,number(assets.store_mass_format,static_cast<double>(weapon.mass * static_cast<double>(2.2))),{275,175},{274,174});
+    if(aircraft == 0) label(renderer,number(assets.store_drag_format,static_cast<double>(static_cast<double>(weapon.drag) * 10000)),{225,192},{224,191});
     if(id >= state.first_store && id < state.first_store + assets.rows.size()) {
       auto const &row{assets.rows[id - state.first_store]};
       vec2<int16_t> const low{row.minimum - vec2<int16_t>{1,1}}, high{row.maximum - vec2<int16_t>{1,1}};
@@ -126,7 +126,7 @@ flight::store_effects draw_arming_widgets(render::software_renderer &renderer, a
     }
   }
   auto const effects{flight::accumulate_stores(profile.stores,stores)};
-  auto const percent{static_cast<double>(static_cast<long double>(effects.moment_a) / effects.total_moment_a * 100)};
+  auto const percent{static_cast<double>(static_cast<double>(effects.moment_a) / effects.total_moment_a * 100)};
   label(renderer,number(assets.inertia_format,percent),{6,22},{7,23});
   return effects;
 }

@@ -1,11 +1,10 @@
 #include "aerodynamic_autopilot.h"
 #include <cmath>
 #include "flight/aerodynamic_control_law_internal.h"
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
-using calculation = long double;
+using calculation = double;
 double constexpr gravity{9.81};
 int32_t constexpr minimum_downward_axis{32}, maximum_right_axis{32760};
 void append(aerodynamic_guidance_events &events, afterburner_change const change) {
@@ -14,7 +13,6 @@ void append(aerodynamic_guidance_events &events, afterburner_change const change
 } // anonymous namespace
 
 aerodynamic_guidance_events update_aerodynamic_autopilot(aerodynamic_autopilot &state, aerodynamic_manual_state &manual, aerodynamic_powerplant &powerplant, aerodynamic_motion &motion, aerodynamic_autopilot_context const &context) {
-  math::floating_environment const environment;
   aerodynamic_guidance_events events;
   auto const &law{context.guidance.law};
   auto const &data{law.data};

@@ -1,3 +1,4 @@
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -46,8 +47,7 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const value : {state.roll_rate,state.angle_of_attack,state.body_lift_force}) {
       auto const actual{std::bit_cast<uint64_t>(value)};
       if(argc == 2) {
-        uint64_t expected;
-        if(!(input >> expected) || actual != expected) throw std::runtime_error{"native aerodynamic command differs"};
+        if(!tfx::test::fixture_matches(input,tfx::test::numeric_fixture_value{value})) throw std::runtime_error{"native aerodynamic command differs"};
       } else std::cout << actual << ' ';
     }
     if(argc == 1) std::cout << '\n';

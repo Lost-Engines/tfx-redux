@@ -1,3 +1,4 @@
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -48,16 +49,15 @@ int main(int const argc, char const *const argv[]) try {
     };
     if(op) tfx::flight::update_aerodynamic_wind(state,parameters,random,context);
     else tfx::flight::initialise_aerodynamic_wind(state,parameters,random,context,weather == tfx::flight::aerodynamic_weather_profiles - 1);
-    std::vector<uint64_t> values;
-    for(auto const *value : fields) values.push_back(std::bit_cast<uint64_t>(*value));
-    for(auto const value : state.velocity_ned) values.push_back(std::bit_cast<uint32_t>(value));
+    std::vector<tfx::test::numeric_fixture_value> values;
+    for(auto const *value : fields) values.emplace_back(*value);
+    for(auto const value : state.velocity_ned) values.emplace_back(value);
     values.push_back(random.low);
     values.push_back(random.high);
     if(argc == 2) {
       unsigned int field{0};
       for(auto const value : values) {
-        uint64_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native aerodynamic wind differs at case " + std::to_string(cases) + " field " + std::to_string(field)};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native aerodynamic wind differs at case " + std::to_string(cases) + " field " + std::to_string(field)};
         ++field;
       }
     } else {

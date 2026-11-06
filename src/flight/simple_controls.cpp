@@ -1,11 +1,10 @@
-#include "math/floating_environment.h"
 #include "simple_controls.h"
 #include <cmath>
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 float constexpr native_pi{3.141590118408203f};
 float constexpr radians_per_angle{50.0f / 32768.0f};
 float constexpr seconds_per_tick{.02f}, angles_per_radian{32768};
@@ -28,7 +27,6 @@ float approach(float const current, float const target, simulation::timer_ticks 
 } // anonymous namespace
 
 direction_keys update_simple_controls(simple_control_state &state, simple_control_context const &context) {
-  math::floating_environment const environment;
   auto keys{context.keys};
   if(context.fixed_speed <= 1) return keys;
   float pitch{static_cast<float>(static_cast<calculation>(state.angular_rate.x) * radians_per_angle * native_pi)};
@@ -75,7 +73,7 @@ direction_keys update_simple_controls(simple_control_state &state, simple_contro
     state.angular_rate.y = keys.left ? static_cast<float>(-rate) : keys.right ? rate : 0;
     roll = static_cast<float>(static_cast<calculation>(roll) * .5f);
   }
-  auto const inverse_pi{1.0L / native_pi};
+  auto const inverse_pi{1.0 / native_pi};
   state.angular_rate.x = static_cast<float>(static_cast<calculation>(pitch) * seconds_per_tick * angles_per_radian * inverse_pi);
   state.angular_rate.z = static_cast<float>(static_cast<calculation>(roll) * seconds_per_tick * angles_per_radian * inverse_pi);
   return keys;

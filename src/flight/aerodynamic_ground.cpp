@@ -1,12 +1,11 @@
 #include "aerodynamic_ground_internal.h"
 #include <cmath>
 #include <utility>
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr gear_failure_multiplier{1.2}, metres_per_foot{.3048};
 double constexpr contact_search_margin{-5}, launch_throttle{.6}, launch_force{700000};
 double constexpr maximum_cable_length{600}, stopping_cable_length{200};
@@ -50,7 +49,7 @@ void update_aerodynamic_arrestor(aerodynamic_ground_state &state, aerodynamic_mo
       auto const &displacement{state.hook_displacement};
       double const squared{static_cast<double>(wide(displacement.x) * displacement.x + wide(displacement.y) * displacement.y + wide(displacement.z) * displacement.z)};
       state.cable_length = static_cast<double>(std::sqrt(wide(squared)));
-      calculation const inverse_length{1.0L / state.cable_length};
+      calculation const inverse_length{1.0 / state.cable_length};
       for(unsigned int axis{0}; axis != 3; ++axis) {
         calculation const damping{wide(displacement[axis]) * inverse_length * motion.velocity_ned[axis] * parameters.arrestor_damping};
         state.hook_force_ned[axis] = static_cast<double>(-(damping + wide(parameters.arrestor_stiffness) * displacement[axis]));
@@ -58,7 +57,7 @@ void update_aerodynamic_arrestor(aerodynamic_ground_state &state, aerodynamic_mo
       auto const &velocity{motion.velocity_ned};
       state.cable_speed = static_cast<double>(std::sqrt(wide(velocity.x) * velocity.x + wide(velocity.y) * velocity.y + wide(velocity.z) * velocity.z));
       if(state.cable_length > stopping_cable_length || (state.cable_speed < maximum_stopping_speed && state.cable_speed > minimum_stopping_speed)) {
-        calculation const inverse_seconds{1.0L / context.seconds};
+        calculation const inverse_seconds{1.0 / context.seconds};
         for(unsigned int axis{0}; axis != 3; ++axis) {
           calculation const inertia{wide(velocity[axis]) * inverse_seconds * context.contact.total_mass_kg + context.previous_ned_force[axis]};
           state.hook_force_ned[axis] = static_cast<double>(wide(state.hook_force_ned[axis]) - wide(displacement[axis]) * inverse_length * inertia);
@@ -80,7 +79,6 @@ void update_aerodynamic_arrestor(aerodynamic_ground_state &state, aerodynamic_mo
 }
 
 aerodynamic_ground_events update_aerodynamic_ground(aerodynamic_ground_state &state, aerodynamic_motion &motion, damage_state &damage, math::random_state &random, aerodynamic_ground_parameters const &parameters, aerodynamic_ground_context const &context) {
-  math::floating_environment const environment;
   aerodynamic_ground_events events;
   auto &point{state.contact};
   auto const &basis{context.contact.basis};

@@ -2,8 +2,9 @@
 
 Download and extract the package for your operating system from
 [Releases](https://github.com/Lost-Engines/tfx-redux/releases/latest).
-Windows uses `tfx.exe`; Linux and macOS use `tfx`. The macOS download targets
-Intel Macs running macOS 15 or newer. Linux packages are built on Ubuntu 24.04.
+Windows uses `tfx.exe`; Linux and macOS use `tfx`. Choose the Intel or Apple
+Silicon macOS package for your Mac; both require macOS 15 or newer. Linux
+packages are built on Ubuntu 24.04.
 
 ## Fetch the game and sound files
 

@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <limits>
 #include <utility>
-#include "math/floating_environment.h"
 
 namespace tfx::presentation {
 
@@ -143,8 +142,8 @@ configuration_action configuration_menu::select(unsigned int const index) {
     case configuration_item::source: preferences.control = static_cast<flight::control_source>(value);break;
     case configuration_item::sensitivity:
       if(value != 2) {
-        math::floating_environment const environment;
-        preferences.joystick_scale = static_cast<float>(static_cast<long double>(preferences.joystick_scale) + (value ? 10. : -10.));
+
+        preferences.joystick_scale = static_cast<float>(static_cast<double>(preferences.joystick_scale) + (value ? 10. : -10.));
         // Native comparison ordering sends unordered input to the upper limit.
         if(!(preferences.joystick_scale <= 999)) preferences.joystick_scale = 999;
         if(preferences.joystick_scale < 0) preferences.joystick_scale = 0;

@@ -1,3 +1,4 @@
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -26,8 +27,7 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const value : {c.reference_drag,c.wave_drag,c.zero_lift_drag,c.lift_slope,c.pitch_stability,c.pitch_damping,c.elevator_moment,c.elevator_lift,c.roll_damping,c.roll_sideslip,c.aileron_effectiveness}) {
       auto const actual{std::bit_cast<uint64_t>(value)};
       if(argc == 2) {
-        uint64_t expected;
-        if(!(input >> expected) || actual != expected) throw std::runtime_error{"native aerodynamic coefficients differ"};
+        if(!tfx::test::fixture_matches(input,tfx::test::numeric_fixture_value{value})) throw std::runtime_error{"native aerodynamic coefficients differ"};
       } else std::cout << actual << ' ';
     }
     if(argc == 1) std::cout << '\n';

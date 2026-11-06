@@ -1,3 +1,4 @@
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -61,15 +62,14 @@ int main(int const argc, char const *const argv[]) try {
       .flaps_condition{static_cast<tfx::flight::system_condition>(flaps)},
     };
     auto const change{tfx::flight::update_aerodynamic_manual(state,powerplant,context)};
-    std::vector<uint64_t> values;
-    for(auto const *value : state_fields) values.push_back(std::bit_cast<uint64_t>(*value));
-    for(auto const value : {powerplant.engine_factor.x,powerplant.engine_factor.y,powerplant.nozzle_angles.x,powerplant.nozzle_angles.y,powerplant.thrust,powerplant.throttle_target,powerplant.fuel,controls.autopilot.metres_per_second}) values.push_back(std::bit_cast<uint64_t>(value));
-    values.push_back(std::bit_cast<uint32_t>(powerplant.throttle));
+    std::vector<tfx::test::numeric_fixture_value> values;
+    for(auto const *value : state_fields) values.emplace_back(*value);
+    for(auto const value : {powerplant.engine_factor.x,powerplant.engine_factor.y,powerplant.nozzle_angles.x,powerplant.nozzle_angles.y,powerplant.thrust,powerplant.throttle_target,powerplant.fuel,controls.autopilot.metres_per_second}) values.emplace_back(value);
+    values.emplace_back(powerplant.throttle);
     for(auto const value : {static_cast<unsigned int>(powerplant.afterburner),static_cast<unsigned int>(powerplant.afterburner_control),static_cast<unsigned int>(powerplant.afterburner_display),static_cast<unsigned int>(state.air_brake_condition),static_cast<unsigned int>(change)}) values.push_back(value);
     if(argc == 2) {
       for(auto const value : values) {
-        uint64_t expected;
-        if(!(input >> expected) || value != expected) throw std::runtime_error{"native manual aerodynamic control differs"};
+        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native manual aerodynamic control differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';

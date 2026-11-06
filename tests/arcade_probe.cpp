@@ -30,7 +30,6 @@ void output(tfx::flight::arcade_state const &state, std::ostream &stream, bool c
 } // anonymous namespace
 
 auto main(int const argc, char const *const argv[])->int try {
-  if(std::numeric_limits<long double>::digits != 64) return 77;
   bool const disabled{argc > 1 && (std::string_view{argv[1]} == "--disabled" || std::string_view{argv[1]} == "--check-disabled")};
   bool const ground_mode{argc > 1 && (std::string{argv[1]} == "--ground" || std::string{argv[1]} == "--check-ground")};
   bool const check{argc == 3 && (std::string{argv[1]} == "--check" || std::string{argv[1]} == "--check-ground" || disabled)};

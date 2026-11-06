@@ -505,8 +505,8 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     pose.anchor = vec3<int32_t>{context.position};
     float constexpr normalised_word{3.0518509447574615e-05f}, setback{12}, position_unit{256};
     for(unsigned int axis{0}; axis != 3; ++axis) {
-      long double const offset{static_cast<long double>(math::signed_word(static_cast<uint16_t>(basis.forward[axis]))) * normalised_word * setback * position_unit};
-      int32_t const coordinate{static_cast<int32_t>(static_cast<long double>(context.position_f32[axis]) * position_unit - offset)};
+      double const offset{static_cast<double>(math::signed_word(static_cast<uint16_t>(basis.forward[axis]))) * normalised_word * setback * position_unit};
+      int32_t const coordinate{static_cast<int32_t>(static_cast<double>(context.position_f32[axis]) * position_unit - offset)};
       pose.position_q16[axis] = wrap(static_cast<uint32_t>(coordinate) << 8);
     }
     set_angles({negative(state.smoothed_angles.x),negative(state.smoothed_angles.y),negative(state.smoothed_angles.z)});

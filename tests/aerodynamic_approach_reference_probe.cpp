@@ -1,3 +1,4 @@
+#include "numeric_fixture.h"
 #include <bit>
 #include <fstream>
 #include <iostream>
@@ -44,8 +45,7 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const *value : fields) {
       auto const bits{std::bit_cast<uint64_t>(*value)};
       if(argc == 2) {
-        uint64_t expected;
-        if(!(input >> expected) || bits != expected) throw std::runtime_error{"native aerodynamic approach differs at case " + std::to_string(cases) + " field " + std::to_string(field)};
+        if(!tfx::test::fixture_matches(input,tfx::test::numeric_fixture_value{*value})) throw std::runtime_error{"native aerodynamic approach differs at case " + std::to_string(cases) + " field " + std::to_string(field)};
       } else std::cout << bits << ' ';
       ++field;
     }

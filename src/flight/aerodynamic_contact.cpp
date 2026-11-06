@@ -3,12 +3,11 @@
 #include <bit>
 #include <utility>
 #include <cmath>
-#include "math/floating_environment.h"
 
 namespace tfx::flight {
 namespace {
 
-using calculation = long double;
+using calculation = double;
 double constexpr metres_per_foot{.3048}, retracted_wheel_down{.5};
 double constexpr body_contact_stiffness{1.5}, sink_warning_factor{1.4}, sink_failure_factor{1.8};
 double constexpr failed_gear_crash_speed{150}, failed_system_factor{.5};
@@ -35,7 +34,6 @@ vec3d to_ned(aerodynamic_basis const &basis, vec3d const &body) {
 } // anonymous namespace
 
 bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_motion &motion, damage_state &damage, math::random_state &random, aerodynamic_contact_parameters const &parameters, aerodynamic_contact_context const &context) {
-  math::floating_environment const environment;
   if(context.kind == aerodynamic_contact_kind::retracted_wheel) state.offset_body.z = retracted_wheel_down;
   auto const &offset{state.offset_body};
   auto const &basis{context.basis};
@@ -45,8 +43,8 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
   double const ground_up{state.ground_up_metres};
   auto const &rates{motion.angular_rate};
   // This routine deliberately excludes yaw from omega cross r, then clears it.
-  state.velocity_body.x = static_cast<double>(wide(rates.y) * offset.z - 0.0L * offset.y);
-  state.velocity_body.y = static_cast<double>(0.0L * offset.x - wide(rates.x) * offset.z);
+  state.velocity_body.x = static_cast<double>(wide(rates.y) * offset.z - 0.0 * offset.y);
+  state.velocity_body.y = static_cast<double>(0.0 * offset.x - wide(rates.x) * offset.z);
   state.velocity_body.z = static_cast<double>(wide(offset.y) * rates.x - wide(rates.y) * offset.x);
   for(unsigned int axis{0}; axis != 3; ++axis) state.velocity_body[axis] = static_cast<double>(wide(motion.ground_velocity_body[axis]) + state.velocity_body[axis]);
   state.velocity_ned = to_ned(basis,state.velocity_body);
@@ -99,7 +97,7 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
 
   double const forward_length{static_cast<double>(std::sqrt(static_cast<calculation>(static_cast<double>(wide(basis.forward.y) * basis.forward.y + wide(basis.forward.x) * basis.forward.x))))};
   if(forward_length > minimum_forward_projection) {
-    calculation const inverse_length{1.0L / forward_length};
+    calculation const inverse_length{1.0 / forward_length};
     calculation const sideways_force{(wide(basis.forward.x) * state.velocity_ned.y + -wide(basis.forward.y) * state.velocity_ned.x) * inverse_length * lateral_friction * normal};
     state.working_force.y = static_cast<double>((-wide(basis.forward.y) * basis.right.x + wide(basis.forward.x) * basis.right.y) * sideways_force * inverse_length);
     state.working_force.z = static_cast<double>((-wide(basis.forward.y) * basis.down.x + wide(basis.forward.x) * basis.down.y) * sideways_force * inverse_length);
@@ -140,7 +138,7 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
   }
   if(context.kind == aerodynamic_contact_kind::body) state.resistance_force = static_cast<double>(wide(normal) * body_friction);
   if(wide(state.velocity_body.x) * state.resistance_force > 0) state.resistance_force = negative(state.resistance_force);
-  calculation const inverse_right_length{1.0L / right_length};
+  calculation const inverse_right_length{1.0 / right_length};
   state.working_force.x = static_cast<double>((wide(basis.forward.x) * basis.right.y - wide(basis.forward.y) * basis.right.x) * state.resistance_force * inverse_right_length);
   state.working_force.z = static_cast<double>((wide(basis.down.x) * basis.right.y - wide(basis.down.y) * basis.right.x) * state.resistance_force * inverse_right_length);
   state.force.x = static_cast<double>(wide(state.working_force.x) + state.force.x);

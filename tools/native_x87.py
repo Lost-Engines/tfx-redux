@@ -6,13 +6,32 @@ is an explicit capture dependency; x87 register words/tags and TOP are updated
 without converting through a Python float. This adapter is verification-only.
 """
 import ctypes
+import os
 from pathlib import Path
 import struct
 from native_reference import r
 
 
+
+def reference_library(build):
+    """The original-executable oracle belongs to the faithful tfx-cpp build."""
+    configured = os.environ.get('TFX_NATIVE_X87_LIBRARY')
+    if configured:
+        return ctypes.CDLL(str(Path(configured).resolve()))
+    # Accept an existing capture setup as well as the usual sibling checkout.
+    candidates = (Path(build) / 'libnative_x87_backend.so',
+                  Path(__file__).resolve().parents[2] / 'tfx-cpp/build/libnative_x87_backend.so')
+    for path in candidates:
+        if path.is_file():
+            return ctypes.CDLL(str(path.resolve()))
+    raise RuntimeError(
+        "Original-executable capture needs tfx-cpp's native_x87_backend. "
+        'Build that target in ../tfx-cpp/build, or set TFX_NATIVE_X87_LIBRARY '
+        'to its shared library. Redux itself and its ordinary tests do not need it.')
+
+
 def hardware_fpatan(image,build):
-    library=ctypes.CDLL(str((Path(build)/'libnative_x87_backend.so').resolve()))
+    library=reference_library(build)
     operation=library.tfx_fpatan
     operation.argtypes=[ctypes.c_void_p,ctypes.c_void_p,ctypes.c_void_p,ctypes.c_ushort]
     operation.restype=None
@@ -36,7 +55,7 @@ def hardware_fpatan(image,build):
 
 
 def hardware_sine_cosine(image,build):
-    library=ctypes.CDLL(str((Path(build)/'libnative_x87_backend.so').resolve()))
+    library=reference_library(build)
     operation=library.tfx_sine_cosine
     operation.argtypes=[ctypes.c_void_p,ctypes.c_void_p,ctypes.c_ushort,ctypes.c_uint]
     operation.restype=None
@@ -57,7 +76,7 @@ def hardware_sine_cosine(image,build):
 
 
 def hardware_tangent(image,build):
-    library=ctypes.CDLL(str((Path(build)/'libnative_x87_backend.so').resolve()))
+    library=reference_library(build)
     operation=library.tfx_tangent
     operation.argtypes=[ctypes.c_void_p,ctypes.c_void_p,ctypes.c_ushort]
     operation.restype=None

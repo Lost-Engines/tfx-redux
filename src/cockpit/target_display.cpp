@@ -38,7 +38,7 @@ void target_display::information(render::software_renderer &renderer, air_target
   }};
   text(2,name);
   int16_t const speed{static_cast<int16_t>(target.speed_q16 >> 16)};
-  text(8,detail::decimal(assets.target_formats[0],static_cast<double>(static_cast<long double>(speed) * assets.speed_scale),0));
+  text(8,detail::decimal(assets.target_formats[0],static_cast<double>(static_cast<double>(speed) * assets.speed_scale),0));
   unsigned long const heading{static_cast<unsigned int>(target.heading) * 360u >> 16};
   text(14,detail::formatted(assets.target_formats[1],heading));
   unsigned int constexpr feet_per_world_unit{8};
