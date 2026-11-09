@@ -3,7 +3,7 @@
 The [Build and release workflow](https://github.com/Lost-Engines/tfx-redux/actions/workflows/build.yml)
 follows the Darker projects: Debug and Release builds on Linux, Windows and
 macOS, asset-independent CTest checks, Runtime-only archives, and a generated
-release after all eight jobs pass. Builds use C++26, GCC 16 on Linux/macOS, and
+release after the build matrix and asset-helper checks pass. Builds use C++26, GCC 16 on Linux/macOS, and
 MSYS2 UCRT64 GCC on Windows. The compiler cache is separate for each platform
 and configuration.
 
@@ -21,8 +21,8 @@ is needed for these CI tests.
 ## When a release is published
 
 Relevant pushes to `master` and pull requests run the build matrix. Changes to
-`src/`, `vectorstorm/`, `CMakeLists.txt` or `cmake/` (except the archive wrapper)
-also publish a release after the tests pass. Test, helper-script and workflow
+`src/`, `vectorstorm/`, `CMakeLists.txt`, packaged `scripts/`, or `cmake/` (except the archive wrapper)
+also publish a release after the tests pass. Test, development-tool and workflow
 changes run the checks without making another release. Documentation and
 gallery-only changes do not trigger the game workflow. A manual run has a
 **release** checkbox (off by default); publication is restricted to `master`.

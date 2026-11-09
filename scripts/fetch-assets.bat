@@ -1,6 +1,6 @@
 @echo off
 setlocal DisableDelayedExpansion
-rem Fetch reference CD images and audio firmware; verify every asset on each run.
+rem Fetch reference CD images and audio firmware; verify every download.
 if "%~1"=="--help" goto help
 if not "%~2"=="" goto usage_error
 set "script_dir=%~dp0"
@@ -23,6 +23,10 @@ for %%T in (curl.exe certutil.exe tar.exe) do (
 if not exist "%destination%" mkdir "%destination%"
 if not exist "%destination%" exit /b 1
 pushd "%destination%" || exit /b 1
+if not exist "cd\" mkdir "cd"
+if exist "cd\tfx.cue\" goto cue_failed
+copy /b /y "%script_dir%cd-cue.txt" "cd\tfx.cue" >nul
+if errorlevel 1 goto cue_failed
 set "temporary=%CD%\.fetch-assets-%RANDOM%-%RANDOM%"
 mkdir "%temporary%" || (popd & exit /b 1)
 set "archive_url="
@@ -47,6 +51,11 @@ echo Launch TFX normally; it will prepare the game files from cd\tfx.cue on firs
 popd
 exit /b 0
 
+:cue_failed
+echo ERROR: could not copy the bundled cue sheet to cd\tfx.cue. 1>&2
+popd
+exit /b 1
+
 :fetch
 set "file=%file:/=\%"
 set "check_file=%file%"
@@ -58,16 +67,11 @@ if defined matched (
 if exist "%file%\" goto fetch_failed
 echo Fetching %file%
 for %%P in ("%file%") do if not exist "%%~dpP" mkdir "%%~dpP"
-if "%url%"=="-" goto bundled
 if "%member%"=="-" goto direct
 rem Download an archive only once for all of its selected members, even if it fails.
 if not "%url%"=="%archive_url%" call :archive
 if not defined archive_ready goto fetch_failed
 tar.exe -xOf "%temporary%\archive.zip" "%member%" > "%temporary%\rom.tmp"
-if errorlevel 1 goto fetch_failed
-goto verify
-:bundled
-copy /b /y "%script_dir%%member%" "%temporary%\rom.tmp" >nul
 if errorlevel 1 goto fetch_failed
 goto verify
 :direct

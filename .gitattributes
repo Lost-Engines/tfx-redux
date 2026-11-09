@@ -2,7 +2,7 @@
 tests/scenarios/*.mis text eol=crlf
 *.bat text eol=crlf
 
-# The bundled CUE is hashed as an asset; preserve its canonical CRLF bytes.
+# Keep the supplied CUE's CRLF line endings.
 scripts/cd-cue.txt -text whitespace=cr-at-eol
 
 # Gallery artwork lives in LFS; Pages checks out the actual image content.

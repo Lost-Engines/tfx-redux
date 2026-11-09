@@ -56,11 +56,27 @@ jobs:
               base=$(git hash-object -t tree /dev/null)
             fi
             git cat-file -e "${base}^{tree}"
-            if ! git diff --quiet "$base" "$GITHUB_SHA" -- src vectorstorm CMakeLists.txt cmake ':!cmake/package.cmake'; then
+            if ! git diff --quiet "$base" "$GITHUB_SHA" -- src vectorstorm CMakeLists.txt cmake scripts ':!cmake/package.cmake'; then
               release=true
             fi
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
+
+  fetch_assets:
+    name: Asset helpers / ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          lfs: false
+      - name: Exercise fetch helpers with local HTTP fixtures
+        run: ${{ runner.os == 'Windows' && 'python' || 'python3' }} tools/check_fetch_assets.py
 
   build:
     needs: changes
@@ -193,7 +209,7 @@ jobs:
           retention-days: 7
 
   release:
-    needs: [changes, build]
+    needs: [changes, build, fetch_assets]
     if: github.ref == 'refs/heads/master' && (needs.changes.outputs.release == 'true' || (github.event_name == 'workflow_dispatch' && inputs.release))
     runs-on: ubuntu-latest
     permissions:

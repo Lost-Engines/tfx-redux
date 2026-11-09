@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fetch the reference CD images and external audio firmware; verify every asset on each run.
+# Fetch the reference CD images and external audio firmware; verify every download.
 set -u
 usage() { echo "Usage: $0 [destination]"; echo 'Fetch the TFX 2.05 CD and CM-32L, SC-55 and SCC-1A ROMs (default: $XDG_DATA_HOME/tfx or ~/.local/share/tfx).'; }
 if [[ "${1:-}" == --help ]]; then usage; exit 0; fi
@@ -20,6 +20,11 @@ elif command -v shasum >/dev/null; then hash_command=(shasum -a 256);
 else echo 'ERROR: install sha256sum or shasum to verify assets.' >&2; exit 1; fi
 mkdir -p -- "$destination" || exit 1
 cd -- "$destination" || exit 1
+mkdir -p -- cd || exit 1
+if [[ -d cd/tfx.cue ]] || ! cp -- "$script_dir/cd-cue.txt" cd/tfx.cue; then
+  echo 'ERROR: could not copy the bundled cue sheet to cd/tfx.cue.' >&2
+  exit 1
+fi
 temporary=$(mktemp -d .fetch-assets.XXXXXXXX) || exit 1
 trap 'rm -rf -- "$temporary"' EXIT
 trap 'exit 130' INT
@@ -43,9 +48,7 @@ fetch() {
   if [[ -d "$file" ]]; then echo "ERROR: $file is a directory." >&2; return 1; fi
   echo "Fetching $file"
   mkdir -p -- "$(dirname -- "$file")" || return 1
-  if [[ "$url" == - ]]; then
-    cp -- "$script_dir/$member" "$temporary/rom.tmp" || return 1
-  elif [[ "$member" == - ]]; then
+  if [[ "$member" == - ]]; then
     download "$url" "$temporary/rom.tmp" || return 1
   else
     # Cache this archive once for its selected members, including a failed

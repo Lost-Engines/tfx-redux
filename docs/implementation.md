@@ -6068,7 +6068,9 @@ The asset helpers download the Nova Rev 1 reference dump from Internet Archive
 as fifteen individual archive members, with pinned SHA-256 values in
 `scripts/game-files.txt`. They never download or unpack the enclosing 7z.
 The bundled CUE retains the source INDEX 00/01 positions under short local
-filenames. The existing hash checks, repair, retries and User-Agent apply to
+filenames. It is copied to `cd/tfx.cue` before any downloads, outside the
+manifest and checksum handling. Copy failures stop the fetch immediately.
+The existing hash checks, repair, retries and User-Agent apply to
 these images as well as the ROMs. No disc or ROM bytes are committed.
 
 On a normal first launch, `resources::cd_image` reads the Mode 1 ISO filesystem
