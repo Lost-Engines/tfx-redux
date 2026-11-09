@@ -74,7 +74,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-fetch-test-') as temporary:
             return result
         def verify():
             for name,data in payloads.items():assert (destination/name).read_bytes()==data,name
-            assert {str(path.relative_to(destination)) for path in destination.rglob('*') if path.is_file()}==set(payloads),'unrelated archive files were extracted'
+            assert {path.relative_to(destination).as_posix() for path in destination.rglob('*') if path.is_file()}==set(payloads),'unrelated archive files were extracted'
         run();verify()
         assert (destination/'keep.rom').stat().st_mtime_ns==original.st_mtime_ns,'valid existing ROM was replaced'
         assert requests=={'/cd/track01.bin':1,'/cd/track02.bin':1,'/repair.rom':2,'/new.rom':1,'/bundle.zip':1},requests
