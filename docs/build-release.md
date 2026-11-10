@@ -36,7 +36,7 @@ An older build cannot replace a newer release as the latest download.
 The archives contain `tfx` (or `tfx.exe`), the relevant fetch helper and its
 manifests, setup/control documentation, and licence notices (including the fetched libraries’ licences). Runtime packages
 exclude game data, CD images, ROMs, saves, capture images and build/test outputs.
-GLFW is built from the pinned source and linked statically, so an installed
+GLFW is built from upstream `master` and linked statically, so an installed
 GLFW shared library cannot accidentally become a package dependency. Compiler
 runtimes are linked statically; Windows checks the installed executable
 with only system directories in `PATH`. Original game data and ROMs are fetched
@@ -46,8 +46,7 @@ separately using the supplied helper.
 
 ```sh
 cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release \
-  -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=OFF -DTFX_STATIC_RUNTIME=ON \
-  -DCMAKE_DISABLE_FIND_PACKAGE_glfw3=ON
+  -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=OFF -DTFX_STATIC_RUNTIME=ON
 cmake --build build-release -j
 ctest --test-dir build-release --output-on-failure
 cmake --install build-release --prefix "$PWD/build-release/package/tfx-redux" --component Runtime

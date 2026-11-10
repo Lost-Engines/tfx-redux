@@ -48,7 +48,7 @@ The setup helper supplies the necessary sound files. You can also use your own C
 
 ## Building from source
 
-Requires CMake 3.30+, a C++26 compiler and standard library, and OpenGL development libraries. On Debian/Ubuntu, install `libglfw3-dev` and `libgl1-mesa-dev`; CMake can also build GLFW automatically.
+Requires CMake 3.30+, a C++26 compiler and standard library, and OpenGL development libraries. On Debian/Ubuntu, install `libglfw3-dev` and `libgl1-mesa-dev`; CMake builds GLFW from upstream `master`.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
