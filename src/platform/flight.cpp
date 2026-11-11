@@ -2483,7 +2483,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     return flight_result::finished;
   }
   std::unique_ptr<tfx::platform::window> owned_window;
-  if(!shared_window) owned_window = std::make_unique<tfx::platform::window>(scale,video.resolution,video.automatic_resolution);
+  if(!shared_window) owned_window = std::make_unique<tfx::platform::window>(scale,video.resolution,video.automatic_resolution,options.fullscreen);
   auto &window{shared_window ? *shared_window : *owned_window};
   active_window = &window;
   // Wayland maps the window after its first buffer: present before waiting for focus.
@@ -2519,7 +2519,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   bool captured{false}, mouse_started{false}, store_trigger{false}, designator_mouse_active{false}, orbiting{false}, looking{false};
   std::array<bool,GLFW_KEY_LAST + 1> held{false};
   // A key that closed the launch screen is not a new in-flight press.
-  for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = glfwGetKey(host,key) == GLFW_PRESS;
+  for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = window.key_down(key);
   pause_input pause_keys;pause_keys.synchronise(held,window.focused());
   tfx::simulation::timer_counter counter{0};
   tfx::simulation::flight_clock flight_clock{counter};
@@ -2569,7 +2569,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       designator_mouse.reset();
     }
     pause_input::snapshot keys{};
-    if(focused) for(int key=GLFW_KEY_SPACE;key<=GLFW_KEY_LAST;++key) keys[static_cast<size_t>(key)]=glfwGetKey(host,key)==GLFW_PRESS;
+    if(focused) for(int key=GLFW_KEY_SPACE;key<=GLFW_KEY_LAST;++key) keys[static_cast<size_t>(key)]=window.key_down(key);
     if(pause_keys.update(keys,paused && !inspect && !result_evaluated,focused)) paused=false;
     auto const down{[&](int const key){ return keys[static_cast<size_t>(key)] && !pause_keys.consumed(key); }};
     auto const pressed{[&](int const key){
@@ -2694,7 +2694,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       // The modal screen consumed its closing make-code. Do not turn a
       // still-held M/Escape into another map request or an ejection press.
       for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) {
-        keys[static_cast<size_t>(key)]=window.focused() && glfwGetKey(host,key)==GLFW_PRESS;
+        keys[static_cast<size_t>(key)]=window.focused() && window.key_down(key);
         held[static_cast<size_t>(key)]=keys[static_cast<size_t>(key)];
       }
       pause_keys.synchronise(keys,window.focused());

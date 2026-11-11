@@ -68,7 +68,9 @@ void replay_recording(window &window, resources::archive const &game,
   auto sample_keys{[&] {
     bool pressed{false};
     for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) {
-      bool const down{glfwGetKey(host,key) == GLFW_PRESS};
+      // Alt is reserved for host shortcuts, including Alt+Enter.
+      if(key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT) continue;
+      bool const down{window.key_down(key)};
       pressed |= down && !held[static_cast<unsigned int>(key)];
       held[static_cast<unsigned int>(key)] = down;
     }

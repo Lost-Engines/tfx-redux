@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check square-pixel window sizing and resized menu input on a private display."""
 import argparse
+import itertools
 import os
 from pathlib import Path
 import select
@@ -13,6 +14,7 @@ from window_input import move_game_pointer
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--build',type=Path,default=Path('build'))
 parser.add_argument('--data-dir',type=Path,default=Path('../tfx-reverse/installs/cd_1994_09/TFX'))
+parser.add_argument('--redux',action='store_true')
 args=parser.parse_args()
 with tempfile.TemporaryDirectory(prefix='tfx-square-pixels-') as temporary:
     root=Path(temporary)
@@ -39,8 +41,16 @@ with tempfile.TemporaryDirectory(prefix='tfx-square-pixels-') as temporary:
             assert len(small.getcolors(64000))>5,'empty capture'
             for box in ((0,0,width,top),(0,top+200*scale,width,height),(0,top,left,top+200*scale),(left+320*scale,top,width,top+200*scale)):
                 if box[2]>box[0] and box[3]>box[1]:assert image.crop(box).getextrema()==((0,0),(0,0),(0,0)),'non-black resize margin'
-        for requested in (1,2,6,0):
-            game=subprocess.Popen([str((args.build/'tfx').resolve()),'--data-dir',str(args.data_dir.resolve()),'--menu','mastopts','--scale',str(requested)],env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+        def toggle(window):
+            run('xdotool','keydown','Alt_L');time.sleep(.05)
+            run('xdotool','keydown','Return');time.sleep(.8)
+            run('xdotool','keyup','Alt_L');time.sleep(.2)
+            run('xdotool','keyup','Return');time.sleep(.2)
+        for requested,fullscreen in itertools.product((1,2,6,0),(False,True)):
+            command=[str((args.build/'tfx').resolve()),'--data-dir',str(args.data_dir.resolve()),'--menu','mastopts','--scale',str(requested)]
+            if args.redux:command+=['--resolution','320x200']
+            if fullscreen:command+=['--fullscreen']
+            game=subprocess.Popen(command,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
             deadline=time.monotonic()+10;window=None
             while time.monotonic()<deadline and game.poll() is None:
                 result=subprocess.run(['xdotool','search','--onlyvisible','--name','TFX (C|Redux)'],env=env,capture_output=True,text=True,timeout=5)
@@ -49,17 +59,28 @@ with tempfile.TemporaryDirectory(prefix='tfx-square-pixels-') as temporary:
             if window is None:raise RuntimeError('menu did not open')
             run('xdotool','windowfocus','--sync',window);run('xdotool','mousemove','2040','1530');time.sleep(.8)
             scale=requested or 6
+            if fullscreen:
+                assert geometry(window)==(2048,1536),('fullscreen startup',requested,geometry(window))
+                squares(window,6)
+                toggle(window)
             assert geometry(window)==(320*scale,200*scale),(requested,geometry(window))
+            toggle(window)
+            assert geometry(window)==(2048,1536),('held Alt+Enter toggled more than once',geometry(window))
+            squares(window,6)
+            toggle(window)
+            assert geometry(window)==(320*scale,200*scale),('window size was not restored',requested,geometry(window))
             squares(window,scale)
             if requested==6:
                 run('xdotool','windowsize',window,'997','743');time.sleep(.3)
                 assert geometry(window)==(997,743)
                 squares(window,3)
+                toggle(window);toggle(window)
+                assert geometry(window)==(997,743),'custom window size was not restored'
             move_game_pointer(env,window,120,76)
             run('xdotool','mousedown','1');time.sleep(.15);run('xdotool','mouseup','1')
             output=game.communicate(timeout=10)[0]
             assert game.returncode==0 and 'Menu choice: 1' in output,(requested,output)
-            print(f'Square pixels: --scale={requested}, uniform {scale}x{scale} pixel blocks, centred resize margins and real FWS click passed')
+            print(f'Fullscreen={fullscreen}, --scale={requested}: startup, held Alt+Enter, restored size, square pixels and real menu click passed')
     finally:
         if game and game.poll() is None:game.kill();game.wait()
         display.terminate();display.wait(timeout=5)

@@ -9,7 +9,7 @@ auto show_tactical_map(window &window, cockpit::tactical_map &map,
     cockpit::tactical_map_snapshot const &state, render::palette const &colours)->void {
   auto *const host{window.get()};
   std::array<bool,GLFW_KEY_LAST + 1> held{};
-  for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = glfwGetKey(host,key) == GLFW_PRESS;
+  for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) held[static_cast<unsigned int>(key)] = window.key_down(key);
   map.open(state);
   window.title("TFX Redux — Tactical map");
   double previous{glfwGetTime()}, accumulated{0};
@@ -21,7 +21,9 @@ auto show_tactical_map(window &window, cockpit::tactical_map &map,
     glfwSetInputMode(host,GLFW_CURSOR,GLFW_CURSOR_HIDDEN);
     bool dismiss{false};
     for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) {
-      bool const down{glfwGetKey(host,key) == GLFW_PRESS};
+      // Alt is reserved for host shortcuts, including Alt+Enter.
+      if(key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT) continue;
+      bool const down{window.key_down(key)};
       dismiss |= down && !held[static_cast<unsigned int>(key)];
       held[static_cast<unsigned int>(key)] = down;
     }

@@ -55,7 +55,7 @@ auto main(int const argc, char const *const argv[])->int try {
   unsigned int scene_radius{6}, frame_limit{0}, flight_steps{0}, flight_frames{0};
   tfx::simulation::flight_model model{tfx::simulation::flight_model::arcade};
   bool inspect{false}, direct_mission{false}, skip_intro{false}, model_selected{false}, language_selected{false};
-  bool career_rules{false};
+  bool career_rules{false}, fullscreen{false};
   std::optional<tfx::flight::control_source> control_override;
   std::optional<unsigned int> joystick;
   std::string presentation, presentation_function, language{"english"};
@@ -94,6 +94,7 @@ auto main(int const argc, char const *const argv[])->int try {
                    "  --draw-distance N     Terrain radius in cells (default: 16; original: 8); 0/infinite draws the whole map\n"
                    "  --lod-scale N         Visual LOD distance multiplier; default 0.1; 0 disables mesh cutoffs, 1 is original\n"
                    "  --scale N             Initial window scale (320x200 or --resolution); 0 fits desktop\n"
+                   "  --fullscreen          Start fullscreen; Alt+Enter toggles at any time\n"
                    "\nGraphics: Escape/backtick > Graphics; saved in REDUX.CFG beside the game data.\n"
                    "Command-line graphics options override saved choices at startup.\n"
                    "\nGame files: current directory, then " << tfx::resources::default_game_directory().string() << "\n"
@@ -167,6 +168,7 @@ auto main(int const argc, char const *const argv[])->int try {
     }
     else if(key == "--replay") replay = value();
     else if(key == "--skip-intro") skip_intro = true;
+    else if(key == "--fullscreen") fullscreen = true;
     else if(key == "--mission") {
       direct_mission = true;
       auto const selected{value()};
@@ -323,7 +325,7 @@ auto main(int const argc, char const *const argv[])->int try {
     }
   }
   if(!presentation.empty()) {
-    tfx::platform::play_presentation(game,tables,presentation,presentation_function,language,scale,frame_limit,screenshot,sound.get());
+    tfx::platform::play_presentation(game,tables,presentation,presentation_function,language,scale,frame_limit,screenshot,sound.get(),fullscreen);
     return EXIT_SUCCESS;
   }
   tfx::world::flak_state flak_state;
@@ -365,6 +367,7 @@ auto main(int const argc, char const *const argv[])->int try {
     .frame_limit{frame_limit},
     .flight_steps{flight_steps},
     .flight_frames{flight_frames},
+    .fullscreen{fullscreen},
     .preferences{preferences},
     .flak{flak_state},
     .sky{sky_state},
@@ -397,7 +400,7 @@ auto main(int const argc, char const *const argv[])->int try {
     tfx::world::mission const selected{game,mission_name};
     tfx::world::environment const environment{game,selected.grid_name(),selected.environment};
     tfx::world::assets assets{game};tfx::world::scene scene{environment,assets};
-    tfx::render::software_renderer renderer{tables};tfx::platform::window window{scale,video.resolution,video.automatic_resolution};
+    tfx::render::software_renderer renderer{tables};tfx::platform::window window{scale,video.resolution,video.automatic_resolution,fullscreen};
     tfx::render::dac_palette infrared{};
     auto const colours{game.read("colours/" + environment.lighting.infrared_palette_name + ".col")};
     std::ranges::copy(colours,infrared.begin());

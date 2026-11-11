@@ -12,7 +12,7 @@ bool configure_graphics(window &window, resources::executable_tables const &tabl
   presentation::graphics_menu menu{tables.interface_font(),settings};
   auto *const host{window.get()};auto *const previous_input{glfwGetWindowUserPointer(host)};
   glfwSetWindowUserPointer(host,&menu);
-  auto const previous_key{glfwSetKeyCallback(host,[](GLFWwindow *host,int key,int,int action,int mods) {
+  auto const previous_key{window.set_key_callback([](GLFWwindow *host,int key,int,int action,int mods) {
     if(action!=GLFW_PRESS && action!=GLFW_REPEAT) return;
     using presentation::graphics_key;
     std::optional<graphics_key> selected;
@@ -52,7 +52,7 @@ bool configure_graphics(window &window, resources::executable_tables const &tabl
     auto image{background};menu.draw(image);
     window.title("TFX Redux — Graphics");window.present(image.colourise(palette));glfwWaitEventsTimeout(.01);
   }
-  glfwSetCharCallback(host,previous_character);glfwSetKeyCallback(host,previous_key);glfwSetWindowUserPointer(host,previous_input);
+  glfwSetCharCallback(host,previous_character);window.set_key_callback(previous_key);glfwSetWindowUserPointer(host,previous_input);
   return applied;
 }
 } // namespace
@@ -76,7 +76,7 @@ presentation::configuration_action configure_flight(window &window, resources::e
   auto *const host{window.get()};
   auto *const previous_input{glfwGetWindowUserPointer(host)};
   glfwSetWindowUserPointer(host,&menu);
-  auto const previous_key{glfwSetKeyCallback(host,[](GLFWwindow *const window, int const key, int const, int const action, int const modifiers) {
+  auto const previous_key{window.set_key_callback([](GLFWwindow *const window, int const key, int const, int const action, int const modifiers) {
     if(action == GLFW_PRESS || action == GLFW_REPEAT)
       static_cast<presentation::configuration_menu*>(glfwGetWindowUserPointer(window))->press(make_code(key),(modifiers & GLFW_MOD_SHIFT) != 0);
   })};
@@ -115,7 +115,7 @@ presentation::configuration_action configure_flight(window &window, resources::e
     window.present(image.colourise(palette));
     glfwWaitEventsTimeout(.01);
   }
-  glfwSetKeyCallback(host,previous_key);
+  window.set_key_callback(previous_key);
   glfwSetWindowUserPointer(host,previous_input);
   if(!quit_prompt && !configuration::save_preferences(directory,preferences)) std::cerr << "Flight preferences could not be saved: TFX.CFG is missing, empty or too large.\n";
   return result;

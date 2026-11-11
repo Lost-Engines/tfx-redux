@@ -7,20 +7,21 @@ namespace {
 
 class arming_keys {
 private:
+  window &owner;
   GLFWwindow *host;
   presentation::arming_screen &screen;
 
 public:
-  arming_keys(GLFWwindow *const host, presentation::arming_screen &screen) : host{host}, screen{screen} {
+  arming_keys(window &owner, presentation::arming_screen &screen) : owner{owner}, host{owner.get()}, screen{screen} {
     glfwSetWindowUserPointer(host,this);
-    glfwSetKeyCallback(host,[](GLFWwindow *const host, int const key, int const, int const action, int const) {
+    owner.set_key_callback([](GLFWwindow *const host, int const key, int const, int const action, int const) {
       if(action != GLFW_PRESS) return;
       auto &controls{*static_cast<arming_keys*>(glfwGetWindowUserPointer(host))};
       controls.screen.press(key == GLFW_KEY_ESCAPE ? 1 : key == GLFW_KEY_Y ? 0x15 : key == GLFW_KEY_N ? 0x31 : key == GLFW_KEY_ENTER ? 0x1c : 0);
     });
   }
   ~arming_keys() {
-    glfwSetKeyCallback(host,nullptr);
+    owner.set_key_callback(nullptr);
     glfwSetWindowUserPointer(host,nullptr);
     if(glfwRawMouseMotionSupported()) glfwSetInputMode(host,GLFW_RAW_MOUSE_MOTION,GLFW_FALSE);
     glfwSetInputMode(host,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
@@ -44,7 +45,7 @@ arming_result arm_mission(window &window, resources::archive const &game, resour
   };
   presentation::arming_screen screen{game,tables,inventory,aircraft,default_fit,entry,window.resolution()};
   auto *const host{window.get()};
-  arming_keys keys{host,screen};
+  arming_keys keys{window,screen};
   window.title("TFX Redux — Arming");
   window.present_frame(screen.image(),screen.colours());
   double next_frame{glfwGetTime()};

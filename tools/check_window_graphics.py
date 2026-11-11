@@ -117,7 +117,10 @@ run
                 if session==0:
                     check_draw(800,500,70,8,.5)
                     saved=graphics.read_bytes();tap('Pause');frames(3);ticks=output().count('TICK\n')
-                    open_graphics();edit(2,'999');click(260,172)
+                    open_graphics()
+                    tap('Alt_L+Return');assert dimensions()==(1280,900) and 'Graphics' in title(),'fullscreen shortcut escaped the graphics dialog'
+                    tap('Alt_L+Return');assert dimensions()==(800,500) and 'Graphics' in title(),'fullscreen return lost the graphics dialog'
+                    edit(2,'999');click(260,172)
                     assert 'Graphics' in title() and graphics.read_bytes()==saved, 'invalid edit was applied or saved'
                     edit(2,'90');edit(0,'1001x603');edit(3,'4');edit(4,'0.25')
                     ImageGrab.grab(xdisplay=env['DISPLAY']).save(a.captures/'graphics.png')
@@ -128,6 +131,11 @@ run
                     ImageGrab.grab(xdisplay=env['DISPLAY']).save(a.captures/'applied.png')
                     open_graphics();edit(0,'AUTO');edit(3,'12');click(260,172);automatic=True
                     check_draw(800,500,90,12,.25)
+                    tap('Alt_L+Return');check_draw(1280,900,90,12,.25)
+                    open_graphics();edit(1,'2');click(260,172)
+                    assert dimensions()==(1280,900),'window-scale edit changed the fullscreen monitor size'
+                    check_draw(1280,900,90,12,.25)
+                    tap('Alt_L+Return');check_draw(800,500,90,12,.25)
                     run('xdotool','windowsize',window,'973','617');frames(5);check_draw(973,617,90,12,.25)
                     saved=graphics.read_bytes();open_graphics();edit(2,'40');click(160,172)
                     wait(lambda:'Configuration' in title(),'Cancel did not return to configuration');tap('Escape');frames(4)
@@ -147,7 +155,7 @@ run
                     game.wait(timeout=15)
                     assert game.returncode==0 and 'exited normally' in output(),output()[-2500:]
                     game=None
-        print('Private X11 graphics passed: live size/FOV/radius/LOD, invalid values, Apply/Cancel, pause, automatic resize, saved reload, per-option CLI overrides, Defaults/window fit and clean exit')
+        print('Private X11 graphics passed: live size/FOV/radius/LOD, fullscreen menus and automatic resolution, fixed monitor size, invalid values, Apply/Cancel, pause, automatic resize, saved reload, per-option CLI overrides, Defaults/window fit and clean exit')
     finally:
         if game is not None and game.poll() is None:
             os.killpg(game.pid,signal.SIGTERM)

@@ -4,6 +4,7 @@
 Requires Sway and a developer build; never connects to the desktop session.
 """
 import argparse
+import itertools
 import json
 import os
 from pathlib import Path
@@ -69,9 +70,9 @@ with tempfile.TemporaryDirectory(prefix='tfx-wayland-test-') as directory:
                         return found
                 return None
 
-            for scale in [0, 2]:
+            for scale, fullscreen in itertools.product([0, 2], [False, True]):
                 app = subprocess.Popen(
-                    [executable, '--data-dir', data_directory, '--scale', str(scale)],
+                    [executable, '--data-dir', data_directory, '--scale', str(scale)] + (['--fullscreen'] if fullscreen else []),
                     env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                 )
                 try:
@@ -86,7 +87,14 @@ with tempfile.TemporaryDirectory(prefix='tfx-wayland-test-') as directory:
                             break
                         time.sleep(.05)
                     if window is None or not window.get('visible'):
-                        raise RuntimeError(f'no visible Wayland window at scale={scale}')
+                        if app.poll() is None:
+                            app.terminate()
+                        stdout, stderr = app.communicate(timeout=3)
+                        log.seek(0)
+                        raise RuntimeError(f'no visible Wayland window at scale={scale}, fullscreen={fullscreen}:\n{stdout}{stderr}\nWindow: {window}\n{log.read()[-4000:]}')
+                    if fullscreen:
+                        assert window.get('fullscreen_mode') == 1, window
+                        assert (window['rect']['width'], window['rect']['height']) == (1280, 800), window
                     # Headless Sway has no keyboard: this must map even while
                     # the application is waiting for initial keyboard focus.
                     subprocess.run(
@@ -96,7 +104,7 @@ with tempfile.TemporaryDirectory(prefix='tfx-wayland-test-') as directory:
                     stdout, stderr = app.communicate(timeout=5)
                     if app.returncode:
                         raise RuntimeError(stdout + stderr)
-                    print(f'Wayland startup passed: scale={scale}, visible first frame without keyboard focus, clean window close')
+                    print(f'Wayland startup passed: scale={scale}, fullscreen={fullscreen}, visible first frame without keyboard focus, clean window close')
                 finally:
                     if app.poll() is None:
                         app.terminate()

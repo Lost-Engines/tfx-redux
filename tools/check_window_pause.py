@@ -141,6 +141,24 @@ run
 
             tap('Pause')
             paused()
+            def geometry():
+                return dict(line.split('=',1) for line in run('xdotool','getwindowgeometry','--shell',windows[0]).stdout.splitlines() if '=' in line)
+            original=geometry()
+            for modifier,enter in [('Alt_L','Return'),('Alt_R','KP_Enter')]:
+                run('xdotool','keydown',modifier)
+                frames(2)
+                run('xdotool','keydown',enter)
+                frames(20)
+                run('xdotool','keyup',modifier)
+                frames(5)
+                assert (geometry()['WIDTH'],geometry()['HEIGHT'])==('1000','800'),'held Alt+Enter toggled more than once'
+                paused()
+                run('xdotool','keyup',enter)
+                frames(2)
+                run('xdotool','key',f'{modifier}+{enter}')
+                frames(8)
+                assert geometry()==original,'fullscreen did not restore the window rectangle'
+                paused()
             tap('Shift_L')
             paused()
 
@@ -214,7 +232,7 @@ run
             paused()
             tap('Pause')
             running()
-            print('Paused F-key cameras, frozen scene, mouse orbit/zoom where supported and screenshot save passed. Live pause: Pause/P stop simulation; modifiers leave it paused; Enter, Space and G resume; held Space cannot fire until released and pressed again.')
+            print('Fullscreen Alt+Enter/Alt+keypad Enter preserve pause and window geometry. Paused F-key cameras, frozen scene, mouse orbit/zoom where supported and screenshot save passed. Live pause: Pause/P stop simulation; modifiers leave it paused; Enter, Space and G resume; held Space cannot fire until released and pressed again.')
     finally:
         if game and game.poll() is None:
             os.killpg(game.pid, signal.SIGTERM)

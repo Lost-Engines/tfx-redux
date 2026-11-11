@@ -14,6 +14,8 @@ namespace tfx::platform {
 namespace {
 // Modal menus borrow GLFW's user pointer, independently of wheel delivery.
 std::unordered_map<GLFWwindow*,vec2d> wheel_offsets;
+// Menus use GLFW's user pointer for their own input state.
+std::unordered_map<GLFWwindow*,window*> window_instances;
 struct display_area { vec2<int> position; vec2<int> size; };
 display_area viewport(int const width, int const height, vec2<int> const &size, bool const integer_scale = true) {
   double const available{std::min(width / static_cast<double>(size.x),height / static_cast<double>(size.y))};
@@ -35,19 +37,20 @@ glfw_runtime::~glfw_runtime() {
   glfwTerminate();
 }
 
-window::window(unsigned int const scale, vec2<int> const &size, bool const follow) : handle{nullptr, glfwDestroyWindow}, render_size{size}, follow_window{follow} {
+window::window(unsigned int const scale, vec2<int> const &size, bool const follow, bool const fullscreen) : handle{nullptr, glfwDestroyWindow}, render_size{size}, follow_window{follow} {
   /// Match Darker's floating-window sizing and nearest-neighbour presentation; only the final CPU image uses OpenGL
-  bool const automatic{scale == 0}, compositor_sizing{automatic && glfwGetPlatform() == GLFW_PLATFORM_WAYLAND};
+  bool const automatic{scale == 0}, compositor_sizing{automatic && !fullscreen && glfwGetPlatform() == GLFW_PLATFORM_WAYLAND};
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,2);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,1);
   glfwWindowHint(GLFW_VISIBLE,GLFW_FALSE);
+  glfwWindowHint(GLFW_AUTO_ICONIFY,GLFW_FALSE);
   glfwWindowHint(GLFW_MAXIMIZED,compositor_sizing ? GLFW_TRUE : GLFW_FALSE);
   auto const initial_scale{static_cast<int>(scale ? scale : 2)};
   // Query the work area using a small hidden window before requesting a
   // potentially much larger render size; the texture is independent of it.
   handle.reset(glfwCreateWindow((automatic || follow_window ? render::screen_width : size.x) * initial_scale,(automatic || follow_window ? render::screen_height : size.y) * initial_scale,"TFX Redux — scene inspection",nullptr,nullptr));
   if(!handle) throw std::runtime_error{"cannot create the TFX window"};
-  if(automatic && !compositor_sizing) {
+  if(automatic && glfwGetPlatform() != GLFW_PLATFORM_WAYLAND) {
     if(auto *monitor{glfwGetPrimaryMonitor()}) {
       int x{0}, y{0}, width{0}, height{0}, left{0}, top{0}, right{0}, bottom{0};
       glfwGetMonitorWorkarea(monitor,&x,&y,&width,&height);
@@ -57,7 +60,10 @@ window::window(unsigned int const scale, vec2<int> const &size, bool const follo
       glfwSetWindowPos(handle.get(),x + left + fitted.position.x,y + top + fitted.position.y);
     }
   }
+  // Wayland creates the shell role when shown; it needs that role before fullscreen.
+  if(fullscreen && glfwGetPlatform() != GLFW_PLATFORM_WAYLAND) set_fullscreen(true);
   glfwShowWindow(handle.get());
+  if(fullscreen && glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) set_fullscreen(true);
   if(compositor_sizing) {
     int width{0}, height{0};
     glfwGetWindowSize(handle.get(),&width,&height);
@@ -84,6 +90,8 @@ window::window(unsigned int const scale, vec2<int> const &size, bool const follo
   glfwSetScrollCallback(handle.get(),[](GLFWwindow *target, double x, double y) {
     if(auto entry{wheel_offsets.find(target)}; entry!=wheel_offsets.end()) entry->second += vec2d{x,y};
   });
+  window_instances.emplace(handle.get(),this);
+  glfwSetKeyCallback(handle.get(),dispatch_key);
   glfwSetWindowFocusCallback(handle.get(),[](GLFWwindow *const target, int const focused){
     if(!focused) glfwSetInputMode(target,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
   });
@@ -91,6 +99,7 @@ window::window(unsigned int const scale, vec2<int> const &size, bool const follo
 
 window::~window() {
   wheel_offsets.erase(handle.get());
+  window_instances.erase(handle.get());
   glDeleteTextures(1,&texture);
 }
 GLFWwindow *window::get() const {
@@ -100,6 +109,60 @@ bool window::focused() const {
   return glfwGetWindowAttrib(handle.get(),GLFW_FOCUSED) == GLFW_TRUE;
 }
 vec2d window::take_scroll() { return std::exchange(wheel_offsets.at(handle.get()),vec2d{0,0}); }
+GLFWkeyfun window::set_key_callback(GLFWkeyfun const callback) {
+  return std::exchange(key_callback,callback);
+}
+bool window::key_down(int const key) const {
+  if(key == GLFW_KEY_ENTER && fullscreen_keys[0]) return false;
+  if(key == GLFW_KEY_KP_ENTER && fullscreen_keys[1]) return false;
+  return glfwGetKey(handle.get(),key) == GLFW_PRESS;
+}
+void window::dispatch_key(GLFWwindow *const host, int const key, int const scan, int const action, int const modifiers) {
+  auto &self{*window_instances.at(host)};
+  if(key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) {
+    auto &consumed{self.fullscreen_keys[key == GLFW_KEY_ENTER ? 0u : 1u]};
+    if(action == GLFW_PRESS && (modifiers & GLFW_MOD_ALT)) {
+      consumed = true;
+      self.set_fullscreen(glfwGetWindowMonitor(host) == nullptr);
+      return;
+    }
+    if(consumed) {
+      if(action == GLFW_RELEASE) consumed = false;
+      return;
+    }
+  }
+  if(self.key_callback) self.key_callback(host,key,scan,action,modifiers);
+}
+void window::set_fullscreen(bool const enabled) {
+  auto *const host{handle.get()};
+  if(enabled == (glfwGetWindowMonitor(host) != nullptr)) return;
+  if(!enabled) {
+    glfwSetWindowMonitor(host,nullptr,windowed_position.x,windowed_position.y,windowed_size.x,windowed_size.y,GLFW_DONT_CARE);
+    if(windowed_maximized) glfwMaximizeWindow(host);
+    return;
+  }
+  auto *monitor{glfwGetPrimaryMonitor()};
+  glfwGetWindowSize(host,&windowed_size.x,&windowed_size.y);
+  windowed_maximized = glfwGetWindowAttrib(host,GLFW_MAXIMIZED) == GLFW_TRUE;
+  if(glfwGetPlatform() != GLFW_PLATFORM_WAYLAND) {
+    glfwGetWindowPos(host,&windowed_position.x,&windowed_position.y);
+    int count{0};
+    auto **monitors{glfwGetMonitors(&count)};
+    int64_t best_overlap{0};
+    for(int i{0}; i < count; ++i) {
+      auto const *mode{glfwGetVideoMode(monitors[i])};
+      if(!mode) continue;
+      int x{0}, y{0};
+      glfwGetMonitorPos(monitors[i],&x,&y);
+      auto const width{std::max(0,std::min(windowed_position.x + windowed_size.x,x + mode->width) - std::max(windowed_position.x,x))};
+      auto const height{std::max(0,std::min(windowed_position.y + windowed_size.y,y + mode->height) - std::max(windowed_position.y,y))};
+      int64_t const overlap{static_cast<int64_t>(width) * height};
+      if(overlap > best_overlap) { monitor = monitors[i];best_overlap = overlap; }
+    }
+  }
+  if(monitor) if(auto const *mode{glfwGetVideoMode(monitor)})
+    glfwSetWindowMonitor(host,monitor,0,0,mode->width,mode->height,mode->refreshRate);
+}
 bool window::poll() {
   glfwPollEvents();
   return !glfwWindowShouldClose(handle.get());
@@ -139,7 +202,7 @@ void window::configure(vec2<int> const &size, bool const automatic, std::optiona
   render::framebuffer::pixel_count(size);
   if(scale && *scale>16) throw std::invalid_argument{"window scale must be 0..16"};
   render_size=vec2<int>{size};follow_window=automatic;
-  if(!scale) return;
+  if(!scale || glfwGetWindowMonitor(handle.get())) return;
   if(*scale) {
     glfwRestoreWindow(handle.get());
     auto const base{automatic ? vec2<int>{render::screen_width,render::screen_height} : vec2<int>{size}};

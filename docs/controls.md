@@ -2,6 +2,8 @@
 
 These follow the original September 1994 TFX 2.05 controls. Start the game with `--data-dir /path/to/TFX`; use `--help` for command-line options.
 
+Press **Alt+Enter** to toggle fullscreen, or launch with `--fullscreen`. Returning to windowed play restores the previous window size and position. The shortcut also works in menus and while paused; it does not activate the selected menu item or resume flight.
+
 In the arming screen, click the aircraft to rotate it with the mouse; click again or right-click to stop. Rotation captures the mouse inside the window and releases it on focus loss. Select a weapon, then click an available pylon to mount it; right-click ends placement. Escape cancels the active operation first. From idle preflight arming it returns to the preceding choice screen; during in-flight rearming it asks before returning without applying changes.
 
 Press **backtick (`)** during flight to open configuration. Select **Simple**, **Realistic** or **Military-spec** to enable the **Keyboard** and **Joystick** buttons. Arcade only supports **Mouse**, so the original menu disables the other two choices there. This is a flight-model restriction, not missing input support. Arrows steer; Alt+left/right operates the rudder. Joystick input is opt-in: connecting a stick does not enable it. After selecting Joystick, the first available device is used, with keyboard fallback if none is connected.
@@ -50,6 +52,7 @@ By default, 3D rendering uses the **window’s actual pixel dimensions**, includ
 ./tfx --resolution=1280x800 --draw-distance=infinite
 ```
 
+- `--fullscreen` starts on the monitor at its current desktop resolution. Alt+Enter switches back to the previous window. Automatic rendering follows the fullscreen framebuffer; `--resolution` keeps a fixed render size.
 - `--resolution WIDTHxHEIGHT` fixes the 3D render resolution, including aircraft and weapons in the arming screen. Without it, both follow the window’s framebuffer size. Widescreen and other aspect ratios use square pixels.
 - `--fov DEGREES` sets the horizontal field of view, from 10° to 170°. The main camera uses this angle. The missile-nose camera retains its wider view; the HUD pitch ladder and target markers follow the selected projection.
 - `--draw-distance CELLS` controls the terrain radius; `0` or `infinite` removes the far plane and includes the whole finite map. The original radius is 8 cells. Whole-map rendering can be expensive in the software renderer.
@@ -57,7 +60,7 @@ By default, 3D rendering uses the **window’s actual pixel dimensions**, includ
 
 Open **Escape/backtick → Graphics** during flight to change render resolution, window scale, FOV, draw distance and LOD scale. Click a value to type it, or use the arrows for adjustments and common sizes. `AUTO` renders at the window’s actual pixel size; `INFINITE` (or `0`) selects the whole map. **Apply** saves the choices and returns to flight immediately, keeping the game paused if it was already paused. **Cancel** discards the edits; **Defaults**, then **Apply**, restores the graphics defaults.
 
-Graphics choices are saved separately in `REDUX.CFG` beside the selected installation’s `TFX.CFG`. They carry over to later missions and launches. Command-line graphics options override the corresponding saved choices at startup. Removing or renaming `REDUX.CFG` also resets graphics defaults. Changing render resolution leaves the window size alone; changing **Window scale** resizes it (`FIT` fits the desktop).
+Graphics choices are saved separately in `REDUX.CFG` beside the selected installation’s `TFX.CFG`. They carry over to later missions and launches. Command-line graphics options override the corresponding saved choices at startup. Removing or renaming `REDUX.CFG` also resets graphics defaults. Changing render resolution leaves the window size alone; changing **Window scale** resizes it in windowed mode (`FIT` fits the desktop). Fullscreen keeps the monitor’s current desktop resolution.
 
 ## Sound
 

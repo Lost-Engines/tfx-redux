@@ -36,6 +36,8 @@ Redux prepares the game files on first launch, then opens pilot enrolment. You c
 
 Press **Escape → Graphics** to adjust the view, or open the controls and realism menus to set up your aircraft and input device. **F1** selects the classic 2D cockpit; **F10** selects the virtual cockpit. **F2/F3/F4** look left, right and behind; **F5** gives an external view. Use **1**, **2** and **3** to cycle the cockpit displays, and **P** or **Pause** to pause.
 
+Press **Alt+Enter** to switch between fullscreen and windowed play, or start with `--fullscreen`.
+
 **Alt+V** starts or stops a flight recording. See [recordings](docs/recording.md) for playback options.
 
 The [controls guide](docs/controls.md) covers weapons, autopilot, cameras, joystick setup and graphics options. The original game manual remains the best guide to the missions and flying the aircraft.
