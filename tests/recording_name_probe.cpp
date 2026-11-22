@@ -22,18 +22,20 @@ int main(int const argc, char const *const argv[]) try {
       .recovery{0},
     };
     auto name{assets.recording_name};
-    tfx::presentation::configuration_menu menu{preferences,assets,font,name};
-    menu.click({160,140});
+    tfx::presentation::configuration_menu menu{preferences, assets, font, name};
+    menu.click({160, 140});
     for(unsigned int index{0}; index != count; ++index) {
-      unsigned int scan{0},shift{0};
+      unsigned int scan{0};
+      unsigned int shift{0};
       if(!(std::cin >> scan >> shift)) throw std::runtime_error{"truncated recording-name input"};
-      menu.press(static_cast<uint8_t>(scan),shift != 0);
+      menu.press(static_cast<uint8_t>(scan), shift != 0);
       std::cout << std::quoted(name) << '\n';
       tfx::render::framebuffer image;
       menu.draw(image);
-      std::cout.write(reinterpret_cast<char const*>(image.pixels.data()),image.pixels.size());
+      std::cout.write(reinterpret_cast<char const *>(image.pixels.data()), image.pixels.size());
     }
   }
 } catch(std::exception const &error) {
-  std::cerr << "ERROR: " << error.what() << '\n';return EXIT_FAILURE;
+  std::cerr << "ERROR: " << error.what() << '\n';
+  return EXIT_FAILURE;
 }

@@ -15,7 +15,8 @@ private:
   dac_palette palette;
   arming_controller controls;
   arming_preview preview;
-  render::software_renderer renderer, detail_renderer;
+  render::software_renderer renderer;
+  render::software_renderer detail_renderer;
   render::framebuffer composed;
   vec2<int> resolution;
   double previous_drag{0};
@@ -27,7 +28,7 @@ private:
 
 public:
   arming_screen(resources::archive const &game, resources::executable_tables const &tables, weapons::armament &inventory,
-    flight::player_aircraft aircraft, unsigned int default_fit, arming_entry entry = arming_entry::normal, vec2<int> const &resolution = {render::screen_width,render::screen_height});
+    flight::player_aircraft aircraft, unsigned int default_fit, arming_entry entry = arming_entry::normal, vec2<int> const &resolution = {render::screen_width, render::screen_height});
   void press(uint8_t scan);
   bool rotating() const;
   bool cancelled() const;

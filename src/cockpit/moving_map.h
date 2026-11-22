@@ -15,14 +15,14 @@ struct map_contacts {
   std::span<vec3<int32_t> const> allied_surface;
 };
 struct map_state {
-  vec3<int32_t> player{0,0,0};
+  vec3<int32_t> player{0, 0, 0};
   math::angle heading{0};
   simulation::timer_ticks elapsed{0};
   bool stealth{false};
   map_contacts contacts{};
   std::span<vec3<int32_t> const> targets;
   std::optional<vec2<int16_t>> landing_cell;
-  vec2<int16_t> offset{0,0};
+  vec2<int16_t> offset{0, 0};
 };
 struct map_animation {
   uint32_t ticks{0};

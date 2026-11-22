@@ -1,18 +1,21 @@
 #pragma once
 
 #include <vector>
-
 #include "flight/aerodynamic.h"
 
 namespace tfx::flight {
 
-enum class aerodynamic_callback { configured, military, realistic };
+enum class aerodynamic_callback {
+  configured,
+  military,
+  realistic
+};
 
 struct aerodynamic_tick_input {
   control_source source{control_source::keyboard};
   direction_keys keys{};
-  vec2<int16_t> joystick{0,0};
-  vec2<int16_t> mouse{0,0};
+  vec2<int16_t> joystick{0, 0};
+  vec2<int16_t> mouse{0, 0};
   bool alt{false};
   bool accelerate{false};
   bool decelerate{false};

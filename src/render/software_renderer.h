@@ -27,9 +27,17 @@ private:
   resources::executable_tables const &tables;
   uint16_t procedural_seed{0x4321};
   // Reused within each synchronous draw; no allocation per polygon/scanline.
-  std::array<std::vector<models::model_vertex>,2> clip_vertices;
-  std::vector<screen_vertex> projected_vertices, scanline_hits;
-  struct point_sprite { vec2<int> position; vec2d ray; double depth, diameter; uint8_t colour; int mode; };
+  std::array<std::vector<models::model_vertex>, 2> clip_vertices;
+  std::vector<screen_vertex> projected_vertices;
+  std::vector<screen_vertex> scanline_hits;
+  struct point_sprite {
+    vec2<int> position;
+    vec2d ray;
+    double depth;
+    double diameter;
+    uint8_t colour;
+    int mode;
+  };
   point_visibility point_depth;
   std::vector<point_sprite> points;
   bool collect_points{false};

@@ -12,14 +12,14 @@ class recorder {
 private:
   std::ofstream output;
   file dictionary;
-  std::map<std::string,uint16_t> handles;
+  std::map<std::string, uint16_t> handles;
   uint16_t frames{0};
 
 public:
   recorder();
   ~recorder();
-  recorder(recorder const&) = delete;
-  auto operator=(recorder const&)->recorder& = delete;
+  recorder(recorder const &) = delete;
+  auto operator=(recorder const &)->recorder & = delete;
   void begin(std::filesystem::path const &path);
   bool active() const;
   uint16_t frame_count() const;

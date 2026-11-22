@@ -2,9 +2,9 @@
 
 #include <array>
 #include <cstdint>
-#include "flight/aircraft.h"
 #include "vectorstorm/vector/vector2.h"
 #include "vectorstorm/vector/vector3.h"
+#include "flight/aircraft.h"
 
 namespace tfx::flight {
 
@@ -15,7 +15,7 @@ struct store_properties {
   bool fuel_tank{false};
 };
 struct mounted_store {
-  vec3d position{0,0,0};
+  vec3d position{0, 0, 0};
   store_properties properties{};
   bool occupied{false};
 };

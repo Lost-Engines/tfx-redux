@@ -5,17 +5,17 @@
 namespace tfx::flight {
 
 struct aerodynamic_basis {
-  vec3d forward{1,0,0};
-  vec3d right{0,1,0};
-  vec3d down{0,0,1};
+  vec3d forward{1, 0, 0};
+  vec3d right{0, 1, 0};
+  vec3d down{0, 0, 1};
 };
 struct aerodynamic_loads {
-  vec3d aerodynamic_force{0,0,0};
-  vec3d engine_force{0,0,0};
-  vec3d ground_force{0,0,0};
-  vec3d aerodynamic_moment{0,0,0};
-  vec3d engine_moment{0,0,0};
-  vec3d ground_moment{0,0,0};
+  vec3d aerodynamic_force{0, 0, 0};
+  vec3d engine_force{0, 0, 0};
+  vec3d ground_force{0, 0, 0};
+  vec3d aerodynamic_moment{0, 0, 0};
+  vec3d engine_moment{0, 0, 0};
+  vec3d ground_moment{0, 0, 0};
 };
 struct aerodynamic_inertia {
   double mass_kg{0};
@@ -32,9 +32,9 @@ struct aerodynamic_force_context {
   bool fully_arrested{false};
 };
 struct aerodynamic_force_result {
-  vec3d body_force{0,0,0};
-  vec3d ned_force{0,0,0};
-  vec3d body_moment{0,0,0};
+  vec3d body_force{0, 0, 0};
+  vec3d ned_force{0, 0, 0};
+  vec3d body_moment{0, 0, 0};
   float g_load{0};
 };
 

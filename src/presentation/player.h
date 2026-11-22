@@ -10,7 +10,12 @@ struct scene_counters {
   bios_counter bios;
   text_counter text;
 };
-enum class playback_phase : uint8_t { fade_in, content, fade_out, complete };
+enum class playback_phase : uint8_t {
+  fade_in,
+  content,
+  fade_out,
+  complete
+};
 
 class scene_player {
 private:

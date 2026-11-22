@@ -18,13 +18,19 @@ private:
   dac_palette native_colours;
   dac_palette displayed_colours{};
   unsigned int fade_level{0};
-  enum class phase : uint8_t { entering, choosing, releasing, leaving, complete } stage{phase::entering};
+  enum class phase : uint8_t {
+    entering,
+    choosing,
+    releasing,
+    leaving,
+    complete
+  } stage{phase::entering};
   std::optional<unsigned int> selected;
   void compose(vec2<int16_t> const &position, bool pointer_visible);
 
 public:
   menu_player(menu_program source, std::span<uint8_t const> media, variables &state,
-    std::array<pointer_style,2> const &pointers, bios_counter counter);
+    std::array<pointer_style, 2> const &pointers, bios_counter counter);
   bool advance(bios_counter counter, vec2<int16_t> const &position, bool left_down, bool pointer_visible = true);
   render::framebuffer const &image() const;
   render::palette colours() const;

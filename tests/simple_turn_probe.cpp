@@ -1,8 +1,9 @@
-#include "fixture_check.h"
 #include <array>
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include "fixture_check.h"
 #include "flight/simple_turn.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -11,9 +12,11 @@ int main(int const argc, char const *const argv[]) try {
   if(argc > 2 || (argc == 2 && !fixture)) throw std::runtime_error{"cannot open Simple turn fixtures"};
   auto &input{argc == 2 ? fixture : std::cin};
   unsigned int cases{0};
-  uint32_t mach,pitch;
+  uint32_t mach;
+  uint32_t pitch;
   while(input >> mach >> pitch) {
-    unsigned int elapsed;input >> elapsed;
+    unsigned int elapsed;
+    input >> elapsed;
     tfx::flight::simple_turn_context const context{
       .mach{std::bit_cast<float>(mach)},
       .pitch_rate{std::bit_cast<float>(pitch)},
@@ -21,10 +24,11 @@ int main(int const argc, char const *const argv[]) try {
     };
     tfx::flight::simple_turn_state state;
     for(unsigned int row{0}; row != 3; ++row) input >> state.orientation.right[row] >> state.orientation.down[row] >> state.orientation.forward[row];
-    uint32_t remainder;input >> remainder >> state.bank_correction;
+    uint32_t remainder;
+    input >> remainder >> state.bank_correction;
     state.heading_remainder = std::bit_cast<float>(remainder);
-    tfx::flight::update_simple_turn(state,context);
-    std::array<uint32_t,17> values;
+    tfx::flight::update_simple_turn(state, context);
+    std::array<uint32_t, 17> values;
     for(unsigned int row{0}; row != 3; ++row) {
       values[row * 3] = static_cast<uint32_t>(state.orientation.right[row]);
       values[row * 3 + 1] = static_cast<uint32_t>(state.orientation.down[row]);
@@ -39,7 +43,7 @@ int main(int const argc, char const *const argv[]) try {
     values[15] = values[16] = std::bit_cast<uint32_t>(state.g_load);
     if(argc == 2) {
       for(auto const value : values) {
-        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native Simple turn fixture differs"};
+        if(!tfx::test::fixture_matches(input, value)) throw std::runtime_error{"native Simple turn fixture differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';
@@ -49,5 +53,8 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no Simple turn cases"};
   if(argc == 2) std::cout << cases << " native Simple turn fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) {
+  std::cerr << error.what() << '\n';
+  return EXIT_FAILURE;
+}

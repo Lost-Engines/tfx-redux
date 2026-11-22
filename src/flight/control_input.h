@@ -4,7 +4,11 @@
 
 namespace tfx::flight {
 
-enum class control_source : uint8_t { keyboard, joystick, mouse };
+enum class control_source : uint8_t {
+  keyboard,
+  joystick,
+  mouse
+};
 struct direction_keys {
   bool up{false};
   bool left{false};

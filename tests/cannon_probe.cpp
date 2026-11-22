@@ -1,10 +1,10 @@
-#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string_view>
+#include "fixture_check.h"
 #include "resources/executable_tables.h"
 #include "weapons/cannon.h"
 
@@ -14,14 +14,22 @@ int main(int const argc, char const *const argv[]) try {
   bool const synthetic{check || std::string_view{argv[1]} == "--synthetic"};
   std::unique_ptr<tfx::resources::executable_tables> tables;
   if(!synthetic) tables = std::make_unique<tfx::resources::executable_tables>(std::filesystem::path{argv[1]} / "TFX.DAT");
-  std::array<vec3<int16_t>,2> const mounts{{{192,640,-2048},{-192,640,-2048}}};
+  std::array<vec3<int16_t>, 2> const mounts{{{192, 640, -2048}, {-192, 640, -2048}}};
   std::ifstream fixture;
   if(check) fixture.open(argv[2]);
   std::istream &input{check ? fixture : std::cin};
   if(!input) throw std::runtime_error{"cannot open cannon fixture"};
-  unsigned int plane{0},flags{0},barrel{0},pitch{0},heading{0},roll{0};
+  unsigned int plane{0};
+  unsigned int flags{0};
+  unsigned int barrel{0};
+  unsigned int pitch{0};
+  unsigned int heading{0};
+  unsigned int roll{0};
   int ammunition{0};
-  int32_t x{0},y{0},z{0},speed{0};
+  int32_t x{0};
+  int32_t y{0};
+  int32_t z{0};
+  int32_t speed{0};
   while(input >> plane >> flags >> ammunition >> barrel >> x >> y >> z >> pitch >> heading >> roll >> speed) {
     tfx::weapons::cannon_state state{
       .ammunition{static_cast<int16_t>(ammunition)},
@@ -29,8 +37,8 @@ int main(int const argc, char const *const argv[]) try {
     };
     tfx::weapons::cannon_context const context{
       .aircraft{static_cast<tfx::flight::player_aircraft>(plane + 1)},
-      .position{x,y,z},
-      .angles{static_cast<uint16_t>(pitch),static_cast<uint16_t>(heading),static_cast<uint16_t>(roll)},
+      .position{x, y, z},
+      .angles{static_cast<uint16_t>(pitch), static_cast<uint16_t>(heading), static_cast<uint16_t>(roll)},
       .speed{speed},
       .trigger{(flags & 1) != 0},
       .gun_mode{(flags & 2) != 0},
@@ -43,13 +51,15 @@ int main(int const argc, char const *const argv[]) try {
       .landed{(flags & 256) != 0},
     };
     tfx::math::random_state random;
-    auto const shot{tfx::weapons::fire_cannon(state,context,synthetic ? std::span<vec3<int16_t> const>{mounts} : std::span<vec3<int16_t> const>{tables->cannon_mounts},random)};
-    std::vector<int64_t> values{state.ammunition,state.barrel,random.low,random.high,shot.has_value()};
-    if(shot) values.insert(values.end(),{shot->position.x,shot->position.y,shot->position.z,shot->angles.x,shot->angles.y,shot->angles.z,shot->speed,shot->weapon});
+    auto const shot{tfx::weapons::fire_cannon(state, context, synthetic ? std::span<vec3<int16_t> const>{mounts} : std::span<vec3<int16_t> const>{tables->cannon_mounts}, random)};
+    std::vector<int64_t> values{state.ammunition, state.barrel, random.low, random.high, shot.has_value()};
+    if(shot) values.insert(values.end(), {shot->position.x, shot->position.y, shot->position.z, shot->angles.x, shot->angles.y, shot->angles.z, shot->speed, shot->weapon});
     uint64_t digest{14695981039346656037ULL};
-    for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
+    for(auto const value : values) {
+      for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
+    }
     if(check) {
-      if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native cannon input differs"};
+      if(!tfx::test::fixture_matches(input, digest)) throw std::runtime_error{"native cannon input differs"};
     } else {
       for(auto const value : values) std::cout << value << ' ';
       std::cout << '\n';

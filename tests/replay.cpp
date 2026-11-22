@@ -13,10 +13,13 @@ auto main()->int try {
   if(!(std::cin >> initial)) throw std::runtime_error{"replay requires an initial timer counter"};
   tfx::simulation::flight_clock clock{initial};
   tfx::world::animation_clock scenery;
-  tfx::simulation::timer_ticks previous{5};                         // original 0x72018 seeds the first animation interval
-  unsigned int model{0}, warp{0}, allowed{0}, polls{0};
+  tfx::simulation::timer_ticks previous{5};                                    // original 0x72018 seeds the first animation interval
+  unsigned int model{0};
+  unsigned int warp{0};
+  unsigned int allowed{0};
+  unsigned int polls{0};
   while(std::cin >> model >> warp >> allowed >> polls) {
-    bool const animate{scenery.advance(previous)};                   // original scenery gate precedes the current player update
+    bool const animate{scenery.advance(previous)};                             // original scenery gate precedes the current player update
     clock.begin({
       .model{tfx::simulation::configured_flight_model(model)},
       .time_warp{warp != 0},

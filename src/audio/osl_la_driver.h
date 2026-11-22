@@ -30,7 +30,7 @@ public:
   void volume(osl_channel &state, unsigned int channel, uint8_t value) override;
   void pitch(osl_channel const &state, unsigned int channel) override;
   void modulation(unsigned int channel, uint8_t value) override;
-  void reverb(std::array<uint8_t,3> const &values) override;
+  void reverb(std::array<uint8_t, 3> const &values) override;
 };
 
 } // namespace tfx::audio

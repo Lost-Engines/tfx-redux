@@ -1,15 +1,16 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-#include "qsound/spatial_model.h"
 #include "audio/qsound_effect.h"
 #include "audio/sample_voice.h"
+#include "qsound/spatial_model.h"
 #include "simulation/timing.h"
 
 namespace {
@@ -21,22 +22,22 @@ void require(bool const condition, char const *message) {
 }
 
 void integer(bytes &output, uint32_t const value, unsigned int const count = 2) {
-  for(unsigned int byte{}; byte != count; ++byte) output.push_back(static_cast<uint8_t>(value >> (byte * 8)));
+  for(unsigned int byte{0}; byte != count; ++byte) output.push_back(static_cast<uint8_t>(value >> (byte * 8)));
 }
 
 tfx::resources::archive fixture_samples() {
   bytes data(4);
   std::array<unsigned int, 4> constexpr sizes{2000, 2500, 1300, 1500};
   std::array<unsigned int, 4> offsets{};
-  for(unsigned int index{}; index != sizes.size(); ++index) {
+  for(unsigned int index{0}; index != sizes.size(); ++index) {
     offsets[index] = static_cast<unsigned int>(data.size());
-    for(unsigned int sample{}; sample != sizes[index]; ++sample) data.push_back(static_cast<uint8_t>(sample * 37 + index * 73));
+    for(unsigned int sample{0}; sample != sizes[index]; ++sample) data.push_back(static_cast<uint8_t>(sample * 37 + index * 73));
   }
   auto const table{static_cast<uint32_t>(data.size())};
-  for(unsigned int byte{}; byte != 4; ++byte) data[byte] = static_cast<uint8_t>(table >> (byte * 8));
+  for(unsigned int byte{0}; byte != 4; ++byte) data[byte] = static_cast<uint8_t>(table >> (byte * 8));
   integer(data, static_cast<uint32_t>(sizes.size()));
-  for(unsigned int count{}; count != 3; ++count) integer(data, 0);
-  for(unsigned int index{}; index != sizes.size(); ++index) {
+  for(unsigned int count{0}; count != 3; ++count) integer(data, 0);
+  for(unsigned int index{0}; index != sizes.size(); ++index) {
     integer(data, tfx::resources::hash_short_name("samples\\" + std::to_string(index) + "sam"), 4);
     integer(data, offsets[index], 4);
     integer(data, sizes[index], 4);
@@ -58,10 +59,10 @@ void verify_timer() {
     .movement_enable{1},
   };
   actual.select(parameters);
-  uint64_t previous_callbacks{};
+  uint64_t previous_callbacks{0};
   uint16_t phase{parameters.position};
   uint8_t cached{255};
-  for(unsigned int frame{}; frame != rate; ++frame) {
+  for(unsigned int frame{0}; frame != rate; ++frame) {
     if(frame == 16000) {
       parameters = {
         .position{33 * 256},
@@ -166,10 +167,10 @@ void verify_playback() {
     unsigned int const frames{rate / 100};
     std::vector<float> held(frames * 2);
     held_voice.render(held);
-    unsigned int next{};
+    unsigned int next{0};
     qsound::stereo_sample expected{};
     unsigned int constexpr sample_period_us{119};
-    for(unsigned int frame{}; frame != frames; ++frame) {
+    for(unsigned int frame{0}; frame != frames; ++frame) {
       auto const index{static_cast<uint64_t>(frame) * 1'000'000 / (sample_period_us * static_cast<uint64_t>(rate))};
       while(next <= index) {
         expected = native.process({
@@ -185,36 +186,40 @@ void verify_playback() {
     std::array<unsigned int, 4> constexpr sequence{0, 1, 2, 3};
     contiguous.submit(tfx::audio::sample_priority::normal, sequence);
     fragmented.submit(tfx::audio::sample_priority::normal, sequence);
-    std::vector<float> whole(rate * 2), split(rate * 2);
+    std::vector<float> whole(rate * 2);
+    std::vector<float> split(rate * 2);
     contiguous.render(whole);
-    for(unsigned int frame{}; frame != rate;) {
+    for(unsigned int frame{0}; frame != rate;) {
       auto const count{std::min(rate - frame, (frame * 7 + 13) % 337 + 1)};
       fragmented.render(std::span{split}.subspan(frame * 2, count * 2));
       frame += count;
     }
     require(whole == split, "QSound playback depends on callback segmentation");
     require(!contiguous.state().active && !fragmented.state().active, "QSound stream did not complete");
-    require(std::ranges::all_of(std::span{whole}.last(48), [](float value) { return value == 0; }), "QSound tail did not drain");
-    require(std::ranges::any_of(whole, [](float value) { return value != 0; }), "QSound stream was silent");
+    require(std::ranges::all_of(std::span{whole}.last(48), [](float value){return value == 0;}), "QSound tail did not drain");
+    require(std::ranges::any_of(whole, [](float value){return value != 0;}), "QSound stream was silent");
     for(auto const value : whole) require(std::isfinite(value), "QSound produced a non-finite sample");
   }
   unsigned int constexpr rate{48000};
   tfx::audio::sample_voice first{bank, rate, std::make_unique<tfx::audio::qsound_effect>(rate)};
   tfx::audio::sample_voice second{bank, rate, std::make_unique<tfx::audio::qsound_effect>(rate)};
-  std::array<unsigned int, 1> constexpr start{0}, interrupt{2}, rejected{1};
+  std::array<unsigned int, 1> constexpr start{0};
+  std::array<unsigned int, 1> constexpr interrupt{2};
+  std::array<unsigned int, 1> constexpr rejected{1};
   first.submit(tfx::audio::sample_priority::normal, start);
   second.submit(tfx::audio::sample_priority::normal, start);
-  std::vector<float> a(8000), b(8000);
+  std::vector<float> a(8000);
+  std::vector<float> b(8000);
   first.render(a);
   second.render(b);
   first.submit(tfx::audio::sample_priority::urgent, interrupt);
   second.submit(tfx::audio::sample_priority::urgent, interrupt);
   first.submit(tfx::audio::sample_priority::normal, rejected);
   std::ranges::fill(a, 0);
-  for(unsigned int index{}; index != b.size(); ++index) b[index] = index % 2 ? -0.25f : 0.125f;
+  for(unsigned int index{0}; index != b.size(); ++index) b[index] = index % 2 ? -0.25f : 0.125f;
   first.render(a);
   second.render(b);
-  for(unsigned int index{}; index != a.size(); ++index) {
+  for(unsigned int index{0}; index != a.size(); ++index) {
     require(b[index] == a[index] + (index % 2 ? -0.25f : 0.125f), "Rejected request changed panning or QSound processed other audio");
   }
 }
@@ -225,8 +230,8 @@ auto main()->int try {
   verify_timer();
   verify_playback();
   std::cout << "QSound: original timer cadence, endpoint clamping, DAC-rate filtering, callback boundaries, rate changes, preemption, additive mixing and tail drainage passed\n";
-  return 0;
+  return EXIT_SUCCESS;
 } catch(std::exception const &error) {
   std::cerr << error.what() << '\n';
-  return 1;
+  return EXIT_FAILURE;
 }

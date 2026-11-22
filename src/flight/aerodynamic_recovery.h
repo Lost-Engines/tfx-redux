@@ -6,7 +6,7 @@
 namespace tfx::flight {
 
 struct aerodynamic_recovery_state {
-  uint16_t configuration{1}; // Native control configuration (landing also owns codes).
+  uint16_t configuration{1};                                                   // Native control configuration (landing also owns codes).
   uint16_t saved_configuration{0};
   uint16_t saved_mode{0};
   bool saved_enabled{false};
@@ -23,7 +23,11 @@ struct aerodynamic_recovery_context {
   bool ejected{false};
   bool landed{false};
 };
-enum class aerodynamic_recovery_change { none, engaged, restored };
+enum class aerodynamic_recovery_change {
+  none,
+  engaged,
+  restored
+};
 struct aerodynamic_recovery_result {
   aerodynamic_recovery_change change{aerodynamic_recovery_change::none};
   std::vector<afterburner_change> afterburner{};

@@ -11,13 +11,13 @@ std::vector<scenery_placement> initialise_scenery(program const &source, std::sp
     if(record.kind != record_kind::scenery) continue;
     resources::binary_view const body{record.body};
     uint16_t const id{body.le16(13)};
-    auto const found{std::ranges::find(profiles,id,&profile::id)};
+    auto const found{std::ranges::find(profiles, id, &profile::id)};
     if(found == profiles.end()) throw std::runtime_error{"fixed scenery references an unknown profile"};
     result.push_back({
       .record{index},
       .profile_id{id},
       .definition{found->definition},
-      .position{std::bit_cast<int32_t>(body.le32(1)),std::bit_cast<int32_t>(body.le32(5)),std::bit_cast<int32_t>(body.le32(9))},
+      .position{std::bit_cast<int32_t>(body.le32(1)), std::bit_cast<int32_t>(body.le32(5)), std::bit_cast<int32_t>(body.le32(9))},
       .event{body.le16(19)},
     });
   }

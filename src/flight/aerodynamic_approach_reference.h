@@ -11,7 +11,7 @@ struct aerodynamic_approach_reference {
   double lift_coefficient{0};
   double angle_of_attack{0};
   double flight_path_degrees{0};
-  double ground_speed{0}; // Shared native ground/pitch-rate scratch.
+  double ground_speed{0};                                                      // Shared native ground/pitch-rate scratch.
 };
 struct aerodynamic_approach_reference_context {
   aerodynamic_airdata const &data;

@@ -6,14 +6,14 @@
 
 namespace tfx::render {
 
-inline constexpr uint8_t display_page_count{3};
+inline uint8_t constexpr display_page_count{3};
 
 // The original display rotates through three retained 320x200 VGA pages.
 // Pixels outside a painter's coverage survive until that page is reused.
 class display_pages {
 private:
   static unsigned int constexpr first_page{1};
-  std::unique_ptr<std::array<framebuffer,display_page_count>> pages{std::make_unique<std::array<framebuffer,display_page_count>>()};
+  std::unique_ptr<std::array<framebuffer, display_page_count>> pages{std::make_unique<std::array<framebuffer, display_page_count>>()};
   unsigned int current{first_page};
   int16_t previous_offset_y{-1};
 

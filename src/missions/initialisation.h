@@ -13,7 +13,7 @@ script_time constexpr script_ticks_per_second{54};
 unsigned int constexpr maximum_targets{9}, maximum_flak_regions{5}, maximum_messages{10}, maximum_scenery_events{16};
 
 struct inherited_setup {
-  vec3<int32_t> position{0,0,0};
+  vec3<int32_t> position{0, 0, 0};
   float speed_factor{1};
   uint8_t weapons{0};
 };
@@ -22,7 +22,14 @@ struct target {
   script_time time_limit{-1};
   std::optional<std::string> text{};
 };
-enum class completion_kind : uint8_t { enemy, allied, all_targets, timer, enemy_mobile, protect };
+enum class completion_kind : uint8_t {
+  enemy,
+  allied,
+  all_targets,
+  timer,
+  enemy_mobile,
+  protect
+};
 struct completion_rule {
   completion_kind kind;
   int32_t value;
@@ -47,7 +54,7 @@ struct setup {
   std::string waypoints{};
   world::mission_start start;
   world::player_aircraft aircraft{world::player_aircraft::eurofighter};
-  vec3<math::angle> angles{0,0,0};
+  vec3<math::angle> angles{0, 0, 0};
   float speed_factor;
   uint8_t weapons;
   bool default_weapons{false};

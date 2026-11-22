@@ -13,7 +13,7 @@ namespace tfx::audio {
 class runtime {
 private:
   sample_bank bank;
-  std::variant<sample_voice,gus_samples> effects;
+  std::variant<sample_voice, gus_samples> effects;
   bool const available;
   bool const sampled;
   bool enabled;

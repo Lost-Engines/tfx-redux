@@ -17,7 +17,7 @@ timer_ticks constexpr maximum_projectile_step{10};
 } // anonymous namespace
 
 flight_model configured_flight_model(unsigned int const index) {
-  std::array constexpr models{flight_model::arcade,flight_model::simple,flight_model::realistic,flight_model::military_spec};
+  std::array constexpr models{flight_model::arcade, flight_model::simple, flight_model::realistic, flight_model::military_spec};
   return models[index % models.size()];
 }
 
@@ -60,8 +60,8 @@ std::optional<frame_timing> flight_clock::poll(timer_counter const counter) {
       return std::nullopt;
     }
   } else if(accumulated < realistic_minimum_ticks) return std::nullopt;
-  if(pending->model == flight_model::military_spec) accumulated = std::min(accumulated,military_maximum_ticks);
-  accumulated = std::min(accumulated,maximum_frame_ticks);
+  if(pending->model == flight_model::military_spec) accumulated = std::min(accumulated, military_maximum_ticks);
+  accumulated = std::min(accumulated, maximum_frame_ticks);
   // Evaluate with enough precision, then round once at the original float store.
   filtered = static_cast<float>((static_cast<double>(filtered) * previous_frame_weight + accumulated) * filter_scale);
   double const seconds{accumulated * static_cast<double>(physics_seconds_per_tick)};

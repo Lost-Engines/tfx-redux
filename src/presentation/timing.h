@@ -5,7 +5,12 @@
 
 namespace tfx::presentation {
 
-enum class scene_key : uint8_t { none, escape = 1, quit = 0x10, space = 0x39 };
+enum class scene_key : uint8_t {
+  none,
+  escape = 1,
+  quit = 0x10,
+  space = 0x39
+};
 struct scene_input {
   scene_key key{scene_key::none};
   bool shift{false};

@@ -2,12 +2,15 @@
 
 #include <variant>
 #include <vector>
-#include "flight/aircraft.h"
 #include "math/native.h"
+#include "flight/aircraft.h"
 
 namespace tfx::missions {
 
-enum class engagement_warning { tracking, firing };
+enum class engagement_warning {
+  tracking,
+  firing
+};
 struct engagement_context {
   flight::player_aircraft aircraft;
   bool arcade{false};
@@ -19,7 +22,7 @@ struct engagement_sample {
   unsigned int sample;
   bool urgent;
 };
-using engagement_event = std::variant<permission_notice,engagement_sample>;
+using engagement_event = std::variant<permission_notice, engagement_sample>;
 
 struct engagement_state {
   bool permitted{false};

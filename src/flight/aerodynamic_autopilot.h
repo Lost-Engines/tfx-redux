@@ -8,7 +8,7 @@ struct aerodynamic_autopilot {
   aerodynamic_navigation navigation{};
   aerodynamic_guidance guidance{};
   aerodynamic_recovery_state recovery{};
-  system_condition saved_air_brake{system_condition::normal}; // Normal autopilot toggle, separate from recovery.
+  system_condition saved_air_brake{system_condition::normal};                  // Normal autopilot toggle, separate from recovery.
 };
 struct aerodynamic_autopilot_context {
   aerodynamic_guidance_context const &guidance;

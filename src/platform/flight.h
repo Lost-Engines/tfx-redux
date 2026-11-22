@@ -1,36 +1,41 @@
 #pragma once
 
+#include "platform/window.h"
 #include "actors/air.h"
 #include "audio/runtime.h"
 #include "cockpit/tactical_map.h"
-#include "flight/cheat.h"
-#include "missions/rules.h"
-#include "missions/initialisation.h"
+#include "configuration/graphics.h"
 #include "configuration/settings.h"
-#include "platform/window.h"
-#include "resources/archive.h"
-#include "resources/executable_tables.h"
-#include "simulation/timing.h"
-#include "world/flak.h"
-#include "world/animation.h"
-#include "sensors/air.h"
-#include "world/sky.h"
+#include "flight/cheat.h"
+#include "missions/initialisation.h"
+#include "missions/rules.h"
 #include "render/horizon.h"
 #include "render/precipitation.h"
 #include "render/view_settings.h"
-#include "configuration/graphics.h"
+#include "resources/archive.h"
+#include "resources/executable_tables.h"
+#include "sensors/air.h"
+#include "simulation/timing.h"
 #include "weapons/loadout.h"
+#include "world/animation.h"
+#include "world/flak.h"
+#include "world/sky.h"
 
 namespace tfx::platform {
 
 struct flight_options {
   std::string mission{"miss501"};
   std::filesystem::path data_directory{};
-  std::string environment{}, grid{};
+  std::string environment{};
+  std::string grid{};
   std::optional<vec2<unsigned int>> cell{};
   std::optional<std::filesystem::path> screenshot{};
   std::optional<unsigned int> joystick{};
-  unsigned int scale{0}, scene_radius{6}, frame_limit{0}, flight_steps{0}, flight_frames{0};
+  unsigned int scale{0};
+  unsigned int scene_radius{6};
+  unsigned int frame_limit{0};
+  unsigned int flight_steps{0};
+  unsigned int flight_frames{0};
   bool fullscreen{false};
   configuration::settings &preferences;
   world::flak_state &flak;
@@ -55,12 +60,17 @@ struct flight_options {
   audio::runtime *sound{nullptr};
   bool inspect{false};
   render::view_settings video{};
-  configuration::graphics_settings *graphics{nullptr};                          // Shared across campaign missions.
+  configuration::graphics_settings *graphics{nullptr};                         // Shared across campaign missions.
 #ifndef NDEBUG
   std::optional<std::filesystem::path> capture_recipe{};
-#endif
+#endif // NDEBUG
 };
-enum class flight_result { finished, quit, enrol, cancelled };
+enum class flight_result {
+  finished,
+  quit,
+  enrol,
+  cancelled
+};
 // FINISH resumes the authored campaign; the settings dialog can return to enrolment.
 flight_result fly_mission(resources::archive const &game, resources::executable_tables const &tables,
   flight_options const &options, missions::variables &campaign, window *shared_window = nullptr);

@@ -1,14 +1,16 @@
-#include "fixture_check.h"
 #include <array>
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include "fixture_check.h"
 #include "flight/simple_ground.h"
 
 namespace {
 
 float read_float(std::istream &input) {
-  uint32_t bits;input >> bits;
+  uint32_t bits;
+  input >> bits;
   return std::bit_cast<float>(bits);
 }
 
@@ -19,12 +21,15 @@ int main(int const argc, char const *const argv[]) try {
   if(argc == 2) fixture.open(argv[1]);
   if(argc > 2 || (argc == 2 && !fixture)) throw std::runtime_error{"cannot open Simple ground fixtures"};
   auto &input{argc == 2 ? fixture : std::cin};
-  unsigned int cases{0}, action;
+  unsigned int cases{0};
+  unsigned int action;
   while(input >> action) {
     tfx::flight::simple_ground_state state;
     state.position_y = read_float(input);
     input >> state.stall_pitch >> state.landing_angles.x >> state.landing_angles.y >> state.landed >> state.previous_landed >> state.low_speed_ground_contact >> state.collision >> state.arrested;
-    for(auto *basis : {&state.body,&state.visible}) for(unsigned int row{0}; row != 3; ++row) input >> basis->right[row] >> basis->down[row] >> basis->forward[row];
+    for(auto *basis : {&state.body, &state.visible}) {
+      for(unsigned int row{0}; row != 3; ++row) input >> basis->right[row] >> basis->down[row] >> basis->forward[row];
+    }
     for(auto &value : state.rotation_remainder) value = read_float(input);
     tfx::flight::simple_ground_context context;
     unsigned int elapsed;
@@ -35,14 +40,16 @@ int main(int const argc, char const *const argv[]) try {
     context.turn_metres_per_second = read_float(input);
     context.reported_speed = read_float(input);
     input >> context.stall_metres_per_second >> context.low_speed_reference >> context.rollout_speed_threshold >> context.fixed_speed >> context.gear_down >> context.pitch_inhibited >> context.pitch_down >> context.surface_type >> context.arrestor_hook;
-    if(action & 1) tfx::flight::update_simple_stall_attitude(state,context);
-    if(action & 2) tfx::flight::update_simple_ground(state,context);
-    std::array<uint64_t,32> values;
+    if(action & 1) tfx::flight::update_simple_stall_attitude(state, context);
+    if(action & 2) tfx::flight::update_simple_ground(state, context);
+    std::array<uint64_t, 32> values;
     unsigned int cursor{0};
-    for(auto const *basis : {&state.body,&state.visible}) for(unsigned int row{0}; row != 3; ++row) {
-      values[cursor++] = static_cast<uint32_t>(basis->right[row]);
-      values[cursor++] = static_cast<uint32_t>(basis->down[row]);
-      values[cursor++] = static_cast<uint32_t>(basis->forward[row]);
+    for(auto const *basis : {&state.body, &state.visible}) {
+      for(unsigned int row{0}; row != 3; ++row) {
+        values[cursor++] = static_cast<uint32_t>(basis->right[row]);
+        values[cursor++] = static_cast<uint32_t>(basis->down[row]);
+        values[cursor++] = static_cast<uint32_t>(basis->forward[row]);
+      }
     }
     for(auto const value : state.rotation_remainder) values[cursor++] = std::bit_cast<uint32_t>(value);
     values[cursor++] = std::bit_cast<uint32_t>(state.position_y);
@@ -59,7 +66,7 @@ int main(int const argc, char const *const argv[]) try {
     if(cursor != values.size()) throw std::runtime_error{"Simple ground output dimensions differ"};
     if(argc == 2) {
       for(auto const value : values) {
-        if(!tfx::test::fixture_matches(input,value)) throw std::runtime_error{"native Simple ground fixture differs"};
+        if(!tfx::test::fixture_matches(input, value)) throw std::runtime_error{"native Simple ground fixture differs"};
       }
     } else {
       for(auto const value : values) std::cout << value << ' ';
@@ -69,5 +76,8 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no Simple ground cases"};
   if(argc == 2) std::cout << cases << " native Simple ground fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) {
+  std::cerr << error.what() << '\n';
+  return EXIT_FAILURE;
+}

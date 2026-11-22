@@ -7,24 +7,26 @@
 namespace tfx::flight {
 namespace {
 using calculation = double;
-float constexpr normalised_word{3.0518509447574615e-05f}, runway_start_setback{120}, airborne_throttle{.85f};
-vec2f constexpr carrier_start_offset{2,100};
+float constexpr normalised_word{3.0518509447574615e-05f}, runway_start_setback{120}, airborne_throttle{0.85f};
+vec2f constexpr carrier_start_offset{2, 100};
 int16_t constexpr carrier_height_limit{-10};
 int32_t constexpr airborne_fixed_speed{250}, carrier_placeholder_height{5};
 int32_t truncate(calculation const value) {
   if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
-int32_t centre(int32_t const value) { return value / world::cell_units * world::cell_units + world::cell_units / 2; }
+int32_t centre(int32_t const value) {
+  return value / world::cell_units * world::cell_units + world::cell_units / 2;
+}
 } // anonymous namespace
 
 aerodynamic_flight launch_aerodynamic_flight(aerodynamic_airframe const &aircraft, loadout const &stores, aerodynamic_launch_context const &context, aerodynamic_wind_parameters const &wind_parameters, damage_state &damage, math::random_state &random) {
-  vec3<int32_t> const centred{centre(context.position.x),context.position.y,centre(context.position.z)};
+  vec3<int32_t> const centred{centre(context.position.x), context.position.y, centre(context.position.z)};
   math::attitude orientation;
-  orientation.rotate(math::rotation_axis::pitch,context.angles.x);
-  orientation.rotate(math::rotation_axis::heading,context.angles.y);
-  orientation.rotate(math::rotation_axis::roll,context.angles.z);
-  auto state{initialise_aerodynamic_flight(aircraft,stores,{
+  orientation.rotate(math::rotation_axis::pitch, context.angles.x);
+  orientation.rotate(math::rotation_axis::heading, context.angles.y);
+  orientation.rotate(math::rotation_axis::roll, context.angles.z);
+  auto state{initialise_aerodynamic_flight(aircraft, stores, {
     .placement{
       .orientation{orientation},
       .position{vec3f{centred}},
@@ -35,7 +37,7 @@ aerodynamic_flight launch_aerodynamic_flight(aerodynamic_airframe const &aircraf
     .model{context.model},
     .wind{context.wind},
     .surface_celsius{context.surface_celsius},
-  },wind_parameters,damage,random)};
+  }, wind_parameters, damage, random)};
   // Setup retains authored input angles and integer coordinates separately
   // from its quantized matrix and float stores until the first view export.
   state.view.angles = vec3<math::angle>{context.angles};
@@ -47,7 +49,7 @@ aerodynamic_flight launch_aerodynamic_flight(aerodynamic_airframe const &aircraf
   state.autopilot.recovery.saved_air_brake = system_condition::unavailable;
   state.autopilot.saved_air_brake = system_condition::unavailable;
   state.data.fixed_speed = context.landed ? 0 : airborne_fixed_speed;
-  state.powerplant.engine_factor = context.landed ? vec2d{0,0} : vec2d{1,1};
+  state.powerplant.engine_factor = context.landed ? vec2d{0, 0} : vec2d{1, 1};
   state.powerplant.throttle = context.landed ? 0 : airborne_throttle;
   state.autopilot.recovery.model_reset_requested = true;
   return state;
@@ -65,13 +67,13 @@ void place_aerodynamic_start(aerodynamic_flight &state, int16_t const ground_ele
       state.view.integer_position.z += static_cast<int32_t>(carrier_start_offset.y);
     }
   } else {
-    for(unsigned int axis : {0u,2u}) {
+    for(unsigned int axis : {0u, 2u}) {
       calculation const setback{static_cast<calculation>(math::signed_word(static_cast<uint16_t>(state.view.orientation.forward[axis]))) * normalised_word * runway_start_setback};
       state.view.integer_position[axis] = truncate(static_cast<calculation>(state.view.integer_position[axis]) - setback);
       state.view.position[axis] = static_cast<float>(static_cast<calculation>(state.view.position[axis]) - setback);
     }
   }
-  if(ground_elevation_steps >= carrier_height_limit || advanced_setting) state.reset_motion(ground_elevation_steps,true);
+  if(ground_elevation_steps >= carrier_height_limit || advanced_setting) state.reset_motion(ground_elevation_steps, true);
   state.cold_start = false;
 }
 

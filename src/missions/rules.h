@@ -10,7 +10,10 @@
 namespace tfx::missions {
 
 using variables = std::map<std::string, int32_t, std::less<>>;
-enum class target_life { dead, alive };
+enum class target_life {
+  dead,
+  alive
+};
 struct result_state {
   int32_t personal_air_score{0};
   int32_t enemy_air_score{0};
@@ -29,7 +32,11 @@ struct result_state {
 struct operand {
   std::variant<int32_t, std::string> value;
 };
-enum class comparison { less, greater, equal };
+enum class comparison {
+  less,
+  greater,
+  equal
+};
 struct numeric_test {
   operand first;
   comparison operation;
@@ -42,12 +49,19 @@ struct target_test {
 struct predicate {
   std::variant<numeric_test, target_test> value;
 };
-enum class logical_operation { conjunction, disjunction };
+enum class logical_operation {
+  conjunction,
+  disjunction
+};
 struct condition {
   std::vector<predicate> tests;
   std::vector<logical_operation> operations;
 };
-enum class assignment_operation { set, add, subtract };
+enum class assignment_operation {
+  set,
+  add,
+  subtract
+};
 struct assignment {
   std::string variable;
   assignment_operation operation;
@@ -59,7 +73,7 @@ struct return_value {
 struct statement;
 struct conditional {
   condition test;
-  bool braced;                                                                // native skip cleanup depends on the authored opening brace
+  bool braced;                                                                 // native skip cleanup depends on the authored opening brace
   std::vector<statement> when_true;
   std::vector<statement> when_false;
 };

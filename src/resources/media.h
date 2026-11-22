@@ -28,11 +28,14 @@ bytes decode_animation_block(std::span<uint8_t const> source);
 class animation {
 private:
   bytes source;
-  struct block { unsigned int offset; unsigned int size; };
+  struct block {
+    unsigned int offset;
+    unsigned int size;
+  };
   std::vector<block> blocks;
   unsigned int cursor{0};
-  std::array<uint8_t,render::screen_width * render::screen_height> planes{};
-  std::array<uint8_t,render::screen_width * render::screen_height> coverage{};
+  std::array<uint8_t, render::screen_width * render::screen_height> planes{};
+  std::array<uint8_t, render::screen_width * render::screen_height> coverage{};
 
 public:
   render::palette colours;

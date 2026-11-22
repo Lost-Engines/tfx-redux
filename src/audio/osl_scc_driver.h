@@ -12,7 +12,7 @@ private:
     uint8_t program;
     uint8_t rhythm;
   };
-  std::array<patch,100> patches;
+  std::array<patch, 100> patches;
   resources::bytes parameters;
   midi_byte_sink output;
   void byte(uint8_t value);
@@ -38,7 +38,7 @@ public:
   void volume(osl_channel &state, unsigned int channel, uint8_t value) override;
   void pitch(osl_channel const &state, unsigned int channel) override;
   void modulation(unsigned int channel, uint8_t value) override;
-  void reverb(std::array<uint8_t,3> const &values) override;
+  void reverb(std::array<uint8_t, 3> const &values) override;
   void extension(osl_channel const &state, unsigned int channel) override;
 };
 

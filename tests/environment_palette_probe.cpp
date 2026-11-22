@@ -7,7 +7,7 @@ int main(int const argc, char const *const argv[]) {
   tfx::resources::archive const game{tfx::resources::find_game_archive(argv[1])};
   std::string name;
   while(std::cin >> name) {
-    tfx::world::lighting_configuration const environment{game,name};
+    tfx::world::lighting_configuration const environment{game, name};
     std::cout << environment.palette_name;
     for(auto const &palette : environment.upper_palette_names) std::cout << ' ' << palette;
     for(auto const altitude : environment.palette_altitudes) std::cout << ' ' << altitude;

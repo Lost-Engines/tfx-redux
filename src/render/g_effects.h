@@ -6,7 +6,7 @@
 namespace tfx::render {
 
 struct g_effects_state {
-  float strain{0}; // Native signed visual strain, clamped to -50..50.
+  float strain{0};                                                             // Native signed visual strain, clamped to -50..50.
   blackout_mode mode{blackout_mode::none};
   int16_t blackout_level{0};
   int16_t redout_level{0};

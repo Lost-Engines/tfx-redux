@@ -2,20 +2,25 @@
 
 #include <optional>
 #include "cockpit/attitude_display.h"
-#include "cockpit/hud_text.h"
 #include "cockpit/hud_alerts.h"
+#include "cockpit/hud_text.h"
 #include "cockpit/target_display.h"
 #include "flight/aircraft.h"
 #include "flight/landing.h"
 
 namespace tfx::cockpit {
 
-enum class aiming_mode { navigation, air, ground, stores };
+enum class aiming_mode {
+  navigation,
+  air,
+  ground,
+  stores
+};
 struct air_target_cue {
   air_target_reading reading;
   math::attitude orientation;
-  vec2<int16_t> projected{0,0};
-  vec2<int32_t> tracking_q8{0,0};
+  vec2<int16_t> projected{0, 0};
+  vec2<int32_t> tracking_q8{0, 0};
   bool acquiring{false};
 };
 struct ground_target_cue {
@@ -46,14 +51,14 @@ struct weapon_display_state {
   bool cannon{true};
   int16_t ammunition{0};
   bool suppressed{false};
-  bool air_lock{false}; // Native guidance pointer: also set by the AGM-109H ground controller.
+  bool air_lock{false};                                                        // Native guidance pointer: also set by the AGM-109H ground controller.
   bool ground_lock{false};
   bool limited{true};
   simulation::timer_ticks elapsed{0};
   attitude_display_state attitude;
   hud_text_state flight;
   std::optional<aerodynamic_hud_state> aerodynamic{};
-  std::array<vec2<int16_t>,5> cannon_path{};
+  std::array<vec2<int16_t>, 5> cannon_path{};
 };
 
 // Native navigation/air/ground HUD painters. Target-acquisition and navigation
@@ -77,7 +82,7 @@ public:
   void show_launch();
   hud_alert_state alert_state() const;
   weapon_effects draw_forward(render::software_renderer &renderer, weapon_display_state const &state, render::framebuffer *coverage = nullptr);
-  void draw(render::software_renderer &renderer, weapon_display_state const &state, render::framebuffer *coverage = nullptr, vec2<int> const &line_limit = {319,199});
+  void draw(render::software_renderer &renderer, weapon_display_state const &state, render::framebuffer *coverage = nullptr, vec2<int> const &line_limit = {319, 199});
 };
 
 } // namespace tfx::cockpit

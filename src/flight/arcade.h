@@ -1,9 +1,9 @@
 #pragma once
 
-#include "flight/stores.h"
-#include "flight/damage.h"
-#include "flight/basic_parameters.h"
 #include "math/attitude.h"
+#include "flight/basic_parameters.h"
+#include "flight/damage.h"
+#include "flight/stores.h"
 #include "simulation/timing.h"
 
 namespace tfx::flight {
@@ -23,14 +23,14 @@ struct ground_contact {
 };
 struct arcade_state {
   player_aircraft aircraft{player_aircraft::eurofighter};
-  vec3f position{0,0,0};
-  vec3<int32_t> integer_position{0,0,0};
+  vec3f position{0, 0, 0};
+  vec3<int32_t> integer_position{0, 0, 0};
   math::attitude orientation{};
-  vec3f rotation_remainder{0,0,0};
-  vec2f control_target{0,0};
-  vec2f filtered_control{0,0};
+  vec3f rotation_remainder{0, 0, 0};
+  vec2f control_target{0, 0};
+  vec2f filtered_control{0, 0};
   uint16_t normalisation_counter{0};
-  vec3<math::angle> angles{0,0,0};
+  vec3<math::angle> angles{0, 0, 0};
   float speed_mach{1};
   float throttle{0};
   float minimum_speed{0};

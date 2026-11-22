@@ -18,12 +18,14 @@ void apply_damage(damage_state &state, int32_t const severity, math::random_stat
 
   if(notify) notify();
   int16_t const percentage{math::signed_word(static_cast<uint16_t>(severity))};
-  std::array<aircraft_system,11> constexpr sequence{
-    aircraft_system::communications,aircraft_system::flaps,aircraft_system::hud,aircraft_system::wheel_brakes,
-    aircraft_system::left_engine,aircraft_system::right_engine,aircraft_system::radar,aircraft_system::air_brake,
-    aircraft_system::fuel,aircraft_system::weapons,aircraft_system::landing_gear,
+  std::array<aircraft_system, 11> constexpr sequence{
+    aircraft_system::communications, aircraft_system::flaps, aircraft_system::hud, aircraft_system::wheel_brakes,
+    aircraft_system::left_engine, aircraft_system::right_engine, aircraft_system::radar, aircraft_system::air_brake,
+    aircraft_system::fuel, aircraft_system::weapons, aircraft_system::landing_gear,
   };
-  double constexpr percentage_scale{100}, random_reciprocal{1.0 / 65535.0}, severity_scale{0.005};
+  double constexpr percentage_scale{100};
+  double constexpr random_reciprocal{1.0 / 65535.0};
+  double constexpr severity_scale{0.005};
   for(auto const system : sequence) {
     auto &condition{state.systems[std::to_underlying(system)]};
     double const threshold{static_cast<double>(static_cast<double>(random.next()) * percentage_scale * random_reciprocal)};
@@ -41,8 +43,13 @@ void repair_systems(damage_state &state, simulation::timer_ticks const elapsed) 
     auto &ticks{state.repair_ticks[index]};
     if(state.systems[index] == system_condition::intermittent) {
       ticks = static_cast<uint16_t>(ticks + elapsed);
-      if(math::signed_word(ticks) > intermittent_repair_ticks) { ticks = 0; state.systems[index] = system_condition::normal; }
-    } else ticks = 0;
+      if(math::signed_word(ticks) > intermittent_repair_ticks) {
+        ticks = 0;
+        state.systems[index] = system_condition::normal;
+      }
+    } else {
+      ticks = 0;
+    }
   }
 }
 

@@ -2,8 +2,8 @@
 
 #include <string>
 #include <string_view>
-#include "resources/binary.h"
 #include "render/framebuffer.h"
+#include "resources/binary.h"
 
 namespace tfx::resources {
 
@@ -19,14 +19,14 @@ screen_overlay decode_planner_panel(std::span<uint8_t const> executable);
 class planner_artwork {
 private:
   screen_overlay panel;
-  std::array<uint8_t,80 * 3> interface_colours;
-  std::array<uint8_t,16 * 3> marker_colours;
-  std::array<std::string,5> region_names;
+  std::array<uint8_t, 80 * 3> interface_colours;
+  std::array<uint8_t, 16 * 3> marker_colours;
+  std::array<std::string, 5> region_names;
 
 public:
   explicit planner_artwork(std::span<uint8_t const> executable);
   screen_overlay const &backdrop() const;
-  std::array<uint8_t,256 * 3> colours(std::span<uint8_t const> map_colours) const;
+  std::array<uint8_t, 256 * 3> colours(std::span<uint8_t const> map_colours) const;
   std::string const &region(std::string_view world) const;
 };
 

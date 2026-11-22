@@ -21,11 +21,11 @@ struct instance_context {
   uint16_t impact_damage{0};
   uint16_t status{0};
   int16_t distance{0};
-  std::function<int16_t(vec3d const&)> anchor_distance{};
+  std::function<int16_t(vec3d const &)> anchor_distance{};
   std::function<void(uint16_t)> collision_response{};
   std::function<void(int)> damage_response{};
   // Borrowed only during this synchronous execute/animate call.
-  std::optional<std::function_ref<void(scene_request const&)>> request_output{};
+  std::optional<std::function_ref<void(scene_request const &)>> request_output{};
 };
 struct scene_request {
   unsigned int opcode;
@@ -53,7 +53,7 @@ struct part_stream {
 class instance {
 private:
   definition const &source;
-  std::vector<std::array<std::optional<part_stream>,part_parameters>> streams;
+  std::vector<std::array<std::optional<part_stream>, part_parameters>> streams;
   void interpret(unsigned int address, instance_context &context, instance_result &result, unsigned int &budget, unsigned int depth, bool &install_streams);
 
 public:

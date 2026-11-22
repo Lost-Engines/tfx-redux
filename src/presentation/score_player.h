@@ -14,7 +14,8 @@ private:
   std::optional<unsigned int> selected;
   resources::screen_image background;
   render::framebuffer display;
-  unsigned int reveal{0}, pulse{0};
+  unsigned int reveal{0};
+  unsigned int pulse{0};
   bool finished{false};
   void draw();
 

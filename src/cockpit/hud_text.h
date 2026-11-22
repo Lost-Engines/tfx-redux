@@ -6,7 +6,7 @@
 namespace tfx::cockpit {
 
 struct aerodynamic_hud_state {
-  double angle_of_attack{0}; // Radians.
+  double angle_of_attack{0};                                                   // Radians.
   double down_metres_per_second{0};
 };
 struct hud_text_state {
@@ -15,11 +15,11 @@ struct hud_text_state {
   double mach{0};
   float load{0};
   float throttle{0};
-  vec3<int32_t> position{0,0,0};
+  vec3<int32_t> position{0, 0, 0};
   bool air_brake{false};
   bool brake_chute{false};
   bool arrester_cable{false};
-  vec2<int16_t> offset{0,0};
+  vec2<int16_t> offset{0, 0};
 };
 class hud_text {
 private:

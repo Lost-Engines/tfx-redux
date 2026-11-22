@@ -37,7 +37,7 @@ void aerodynamic_flight::reset_motion(int16_t const ground_elevation_steps, bool
     .track_heading{data.track_heading},
     .ground_steering{ground.ground_steering},
   };
-  initialise_aerodynamic_motion(start,aircraft,mounted_stores,{
+  initialise_aerodynamic_motion(start, aircraft, mounted_stores, {
     .orientation{view.orientation},
     .position{vec3f{view.position}},
     .fixed_speed{data.fixed_speed},
@@ -66,32 +66,34 @@ aerodynamic_flight initialise_aerodynamic_flight(aerodynamic_airframe const &air
   state.model = initial.model;
   state.mounted_stores = stores;
   state.cold_start = context.cold_start;
-  if(initial.model == aerodynamic_model::realistic) state.input_gains = {
-    .pitch{.4},
-    .roll{.152},
-    .rudder{.024},
-    .joystick{1},
-  };
+  if(initial.model == aerodynamic_model::realistic) {
+    state.input_gains = {
+      .pitch{.4},
+      .roll{.152},
+      .rudder{.024},
+      .joystick{1},
+    };
+  }
   state.coefficients = aircraft.starting_coefficients;
   state.gear_fraction = damage.condition(aircraft_system::landing_gear) == system_condition::active ? 1 : 0;
   state.manual.controls.autopilot.metres_per_second = initial_autopilot_speed;
   state.data.basis = {
-    .forward{0,0,0},
-    .right{0,0,0},
-    .down{0,0,0},
+    .forward{0, 0, 0},
+    .right{0, 0, 0},
+    .down{0, 0, 0},
   };
   damage.accumulated = 0;
-  initialise_aerodynamic_wind(state.wind,wind_parameters,random,initial.wind,false);
-  state.stores = accumulate_stores(state.aircraft.stores_and_mounts.stores,stores);
+  initialise_aerodynamic_wind(state.wind, wind_parameters, random, initial.wind, false);
+  state.stores = accumulate_stores(state.aircraft.stores_and_mounts.stores, stores);
   state.powerplant.fuel_capacity = state.aircraft.stores_and_mounts.stores.fuel_capacity;
   state.powerplant.extra_fuel_capacity = state.aircraft.stores_and_mounts.stores.aircraft == player_aircraft::eurofighter ? state.powerplant.fuel_capacity : 0;
   state.powerplant.fuel = state.stores.fuel_capacity;
   aerodynamic_start_state start{
     .stores{state.stores},
-    .engine_factor{1,1},
+    .engine_factor{1, 1},
     .fuel_kg{state.powerplant.fuel},
   };
-  initialise_aerodynamic_motion(start,state.aircraft,stores,context);
+  initialise_aerodynamic_motion(start, state.aircraft, stores, context);
   state.stores = start.stores;
   state.seconds = start.seconds;
   state.response.motion = start.motion;
@@ -108,7 +110,7 @@ aerodynamic_flight initialise_aerodynamic_flight(aerodynamic_airframe const &air
   state.coefficient_parameters = state.aircraft.initial_coefficients();
   // Native applies this setup again after physical initialization/calibration.
   if(context.cold_start) {
-    state.powerplant.engine_factor = vec2d{0,0};
+    state.powerplant.engine_factor = vec2d{0, 0};
     damage.systems[std::to_underlying(aircraft_system::left_engine)] = system_condition::normal;
     damage.systems[std::to_underlying(aircraft_system::right_engine)] = system_condition::normal;
     if(aircraft.stores_and_mounts.stores.aircraft == player_aircraft::raptor && context.terrain_present && context.ground_elevation_steps < carrier_height_limit) {

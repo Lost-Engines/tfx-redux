@@ -1,25 +1,28 @@
 #pragma once
 
-#include "cockpit/instrument_assets.h"
 #include "math/attitude.h"
+#include "cockpit/instrument_assets.h"
 #include "render/software_renderer.h"
 
 namespace tfx::cockpit {
 
-enum class target_sight { normal, compact };
+enum class target_sight {
+  normal,
+  compact
+};
 struct air_target_reading {
   std::string_view name;
-  vec3<int32_t> position_q8{0,0,0};
+  vec3<int32_t> position_q8{0, 0, 0};
   math::angle heading{0};
   int32_t speed_q16{0};
 };
 struct target_display_state {
-  vec3<int32_t> player{0,0,0};
+  vec3<int32_t> player{0, 0, 0};
   math::attitude orientation;
-  vec2<int16_t> projected{0,0};
-  vec2<int32_t> tracking_q8{0,0};
+  vec2<int16_t> projected{0, 0};
+  vec2<int32_t> tracking_q8{0, 0};
   target_sight sight{target_sight::normal};
-  vec2<int16_t> offset{0,0};
+  vec2<int16_t> offset{0, 0};
 };
 class target_display {
 private:

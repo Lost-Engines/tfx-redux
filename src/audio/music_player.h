@@ -1,11 +1,11 @@
 #pragma once
 
-#include <mutex>
 #include <filesystem>
-#include "audio/music_device.h"
+#include <mutex>
 #include "audio/music_catalogue.h"
 #include "audio/music_clock.h"
 #include "audio/music_control.h"
+#include "audio/music_device.h"
 #include "audio/osl_sequencer.h"
 #include "audio/requests.h"
 #include "resources/archive.h"

@@ -13,18 +13,20 @@ int main(int const argc, char const *const argv[]) try {
   if(argc == 3) {
     tfx::cockpit::aerodynamic_hud_state flight;
     while(std::cin >> flight.angle_of_attack >> flight.down_metres_per_second >> state.offset.x >> state.offset.y) {
-      renderer.output.pixels.fill(99);tfx::render::framebuffer coverage;
-      text.draw_aerodynamic(renderer,flight,state.offset,&coverage);
-      std::cout.write(reinterpret_cast<char const*>(renderer.output.pixels.data()),renderer.output.pixels.size());
-      std::cout.write(reinterpret_cast<char const*>(coverage.pixels.data()),coverage.pixels.size());
+      renderer.output.pixels.fill(99);
+      tfx::render::framebuffer coverage;
+      text.draw_aerodynamic(renderer, flight, state.offset, &coverage);
+      std::cout.write(reinterpret_cast<char const *>(renderer.output.pixels.data()), renderer.output.pixels.size());
+      std::cout.write(reinterpret_cast<char const *>(coverage.pixels.data()), coverage.pixels.size());
     }
     return EXIT_SUCCESS;
   }
   while(std::cin >> state.height >> state.speed >> state.mach >> state.load >> state.throttle >> state.position.x >> state.position.y >> state.position.z >> state.air_brake >> state.brake_chute >> state.arrester_cable >> state.offset.x >> state.offset.y) {
-    renderer.output.pixels.fill(99);tfx::render::framebuffer coverage;
-    text.draw(renderer,state,&coverage);
-    std::cout.write(reinterpret_cast<char const*>(renderer.output.pixels.data()),renderer.output.pixels.size());
-    std::cout.write(reinterpret_cast<char const*>(coverage.pixels.data()),coverage.pixels.size());
+    renderer.output.pixels.fill(99);
+    tfx::render::framebuffer coverage;
+    text.draw(renderer, state, &coverage);
+    std::cout.write(reinterpret_cast<char const *>(renderer.output.pixels.data()), renderer.output.pixels.size());
+    std::cout.write(reinterpret_cast<char const *>(coverage.pixels.data()), coverage.pixels.size());
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

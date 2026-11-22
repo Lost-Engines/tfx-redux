@@ -14,13 +14,42 @@ unsigned int constexpr aircraft_per_group{10}, aircraft_per_side{50}, surface_ca
 int constexpr position_fraction_bits{8}, speed_fraction_bits{16};
 int constexpr position_unit{1 << position_fraction_bits};
 int constexpr minimum_world_y{-16384}, maximum_world_y{0};
-enum class record_kind : uint8_t { aircraft = 14, reserved, surface, scenery, player_route };
-enum class profile_kind : uint8_t { aircraft = 14, type15, surface, type17 };
-enum class allegiance : uint8_t { enemy, allied, neutral };
+enum class record_kind : uint8_t {
+  aircraft = 14,
+  reserved,
+  surface,
+  scenery,
+  player_route
+};
+enum class profile_kind : uint8_t {
+  aircraft = 14,
+  type15,
+  surface,
+  type17
+};
+enum class allegiance : uint8_t {
+  enemy,
+  allied,
+  neutral
+};
 enum class command : uint8_t {
-  end, waypoint_branch, move_until_near, wait, takeoff, conditional_action,
-  radio_message, reserved_7, reserved_8, pursue_waypoint, attack_ground,
-  altitude, conditional_action_12, speed, aircraft_initial_state, reserved_15, surface_initial_state,
+  end,
+  waypoint_branch,
+  move_until_near,
+  wait,
+  takeoff,
+  conditional_action,
+  radio_message,
+  reserved_7,
+  reserved_8,
+  pursue_waypoint,
+  attack_ground,
+  altitude,
+  conditional_action_12,
+  speed,
+  aircraft_initial_state,
+  reserved_15,
+  surface_initial_state,
 };
 struct instruction {
   unsigned int address;
@@ -63,7 +92,7 @@ struct initial_actor {
   vec3<int32_t> position;
   vec3<math::angle> angles;
   int32_t speed;
-  uint16_t flags; // Native air word or surface byte; use the corresponding actor-kind enum.
+  uint16_t flags;                                                              // Native air word or surface byte; use the corresponding actor-kind enum.
   uint8_t leader{255};
   uint8_t formation{0};
 };

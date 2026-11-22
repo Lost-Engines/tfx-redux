@@ -1,5 +1,4 @@
 #include "sample_voice.h"
-
 #include <utility>
 
 namespace tfx::audio {
@@ -43,7 +42,7 @@ void sample_voice::submit(sample_priority const priority, std::span<unsigned int
 void sample_voice::render(std::span<float> const stereo) {
   if(stereo.size() % 2) throw std::invalid_argument{"PCM output needs complete stereo frames"};
   std::lock_guard lock{mutex};
-  for(unsigned int frame{}; frame != stereo.size() / 2; ++frame) {
+  for(unsigned int frame{0}; frame != stereo.size() / 2; ++frame) {
     // Keep the original shared timer running through idle and disabled streams.
     if(spatial) spatial->advance_frame();
     if(item == queue.size() && !tail_remaining) {
@@ -80,8 +79,9 @@ void sample_voice::render(std::span<float> const stereo) {
       if(spatial) {
         // Process every DAC transition, including samples skipped by a slower
         // host output rate. The filter never runs once per repeated host frame.
-        if(item != queue.size()) held = spatial->process(bank.pcm(queue[item])[offset]);
-        else if(tail_remaining) {
+        if(item != queue.size()) {
+          held = spatial->process(bank.pcm(queue[item])[offset]);
+        } else if(tail_remaining) {
           held = spatial->process(128);
           if(!--tail_remaining) held = {};
         }

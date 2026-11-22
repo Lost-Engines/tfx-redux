@@ -5,7 +5,11 @@
 
 namespace tfx::flight {
 
-enum class aerodynamic_contact_kind { body, wheel, retracted_wheel };
+enum class aerodynamic_contact_kind {
+  body,
+  wheel,
+  retracted_wheel
+};
 
 struct aerodynamic_contact_parameters {
   double spring_stiffness{0};
@@ -23,13 +27,13 @@ struct aerodynamic_contact_parameters {
   double unloaded_clearance{0};
 };
 struct aerodynamic_contact_state {
-  vec3d offset_body{0,0,0};
-  vec3d point_ned{0,0,0};
-  vec3d velocity_body{0,0,0};
-  vec3d velocity_ned{0,0,0};
-  vec3d working_force{0,0,0};
-  vec3d force{0,0,0};
-  vec3d moment{0,0,0};
+  vec3d offset_body{0, 0, 0};
+  vec3d point_ned{0, 0, 0};
+  vec3d velocity_body{0, 0, 0};
+  vec3d velocity_ned{0, 0, 0};
+  vec3d working_force{0, 0, 0};
+  vec3d force{0, 0, 0};
+  vec3d moment{0, 0, 0};
   double stiffness{0};
   double damping{0};
   double penetration{0};
@@ -43,14 +47,14 @@ struct aerodynamic_contact_state {
 struct aerodynamic_contact_context {
   aerodynamic_basis basis{};
   aerodynamic_contact_kind kind{aerodynamic_contact_kind::body};
-  int16_t ground_elevation_steps{0}; // Original signed terrain height, in eight-foot steps.
+  int16_t ground_elevation_steps{0};                                           // Original signed terrain height, in eight-foot steps.
   int16_t body_downward_q15{0};
   double total_mass_kg{0};
   bool terrain_present{false};
   bool gear_damage_enabled{true};
   bool low_speed_ground_contact{false};
   bool precipitation{false};
-  bool rough_surface{false}; // Original ground-zone classification 2.
+  bool rough_surface{false};                                                   // Original ground-zone classification 2.
   bool wheel_brakes{false};
 };
 

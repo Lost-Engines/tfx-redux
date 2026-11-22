@@ -20,14 +20,14 @@ class video_recorder {
 private:
   std::ofstream output;
   render::pixel_buffer previous;
-  vec2<int> previous_size{0,0};
+  vec2<int> previous_size{0, 0};
   uint64_t frames{0};
 
 public:
   video_recorder();
   ~video_recorder();
-  video_recorder(video_recorder const&) = delete;
-  auto operator=(video_recorder const&)->video_recorder& = delete;
+  video_recorder(video_recorder const &) = delete;
+  auto operator=(video_recorder const &)->video_recorder & = delete;
   void begin(std::filesystem::path const &path);
   bool active() const;
   uint64_t frame_count() const;
@@ -38,7 +38,9 @@ public:
 class video_playback {
 private:
   std::ifstream input;
-  uint64_t frames{0}, remaining{0}, bytes_remaining{0};
+  uint64_t frames{0};
+  uint64_t remaining{0};
+  uint64_t bytes_remaining{0};
   uint32_t version{0};
   render::framebuffer previous;
 

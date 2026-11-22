@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cockpit/tactical_map.h"
 #include "platform/window.h"
+#include "cockpit/tactical_map.h"
 
 namespace tfx::platform {
 

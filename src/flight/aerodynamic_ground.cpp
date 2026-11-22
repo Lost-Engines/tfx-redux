@@ -1,6 +1,6 @@
-#include "aerodynamic_ground_internal.h"
 #include <cmath>
 #include <utility>
+#include "aerodynamic_ground_internal.h"
 
 namespace tfx::flight {
 namespace {
@@ -13,18 +13,22 @@ double constexpr maximum_stopping_speed{4}, minimum_stopping_speed{-4};
 double constexpr gravity{9.81}, cockpit_bump_multiplier{1.2};
 int constexpr feet_per_ground_step{8};
 
-calculation wide(double const value) { return value; }
+calculation wide(double const value) {
+  return value;
+}
 vec3d to_ned(aerodynamic_basis const &basis, vec3d const &body) {
   vec3d result;
-  for(unsigned int axis{0}; axis != 3; ++axis)
+  for(unsigned int axis{0}; axis != 3; ++axis) {
     result[axis] = static_cast<double>(wide(basis.right[axis]) * body.y + wide(basis.forward[axis]) * body.x + wide(basis.down[axis]) * body.z);
+  }
   return result;
 }
 vec3d to_body(aerodynamic_basis const &basis, vec3d const &ned) {
   vec3d result;
   unsigned int axis{0};
-  for(auto const *direction : {&basis.forward,&basis.right,&basis.down})
+  for(auto const *direction : {&basis.forward, &basis.right, &basis.down}) {
     result[axis++] = static_cast<double>(wide(direction->y) * ned.y + wide(direction->x) * ned.x + wide(direction->z) * ned.z);
+  }
   return result;
 }
 
@@ -34,7 +38,7 @@ void update_aerodynamic_arrestor(aerodynamic_ground_state &state, aerodynamic_mo
   auto &point{state.contact};
   auto const &basis{context.contact.basis};
   if(context.carrier_surface && state.arrestor == aerodynamic_arrestor_phase::free && context.arrestor_hook_down) {
-    state.hook_offset_ned = to_ned(basis,parameters.hook_offset);
+    state.hook_offset_ned = to_ned(basis, parameters.hook_offset);
     for(unsigned int axis{0}; axis != 3; ++axis) state.hook_anchor_ned[axis] = static_cast<double>(wide(motion.pose.metres_ned[axis]) + state.hook_offset_ned[axis]);
     // The native height comparison has no branch: engagement is unconditional
     // here. The anchor then uses the carrier's terrain height exactly.
@@ -43,8 +47,9 @@ void update_aerodynamic_arrestor(aerodynamic_ground_state &state, aerodynamic_mo
     state.arrestor = aerodynamic_arrestor_phase::engaged;
   } else if(state.arrestor != aerodynamic_arrestor_phase::free) {
     if(context.gear_fraction == 0) state.arrestor = aerodynamic_arrestor_phase::free;
-    if(state.cable_length > maximum_cable_length) state.arrestor = aerodynamic_arrestor_phase::free;
-    else {
+    if(state.cable_length > maximum_cable_length) {
+      state.arrestor = aerodynamic_arrestor_phase::free;
+    } else {
       for(unsigned int axis{0}; axis != 3; ++axis) state.hook_displacement[axis] = static_cast<double>(wide(motion.pose.metres_ned[axis]) + state.hook_offset_ned[axis] - state.hook_anchor_ned[axis]);
       auto const &displacement{state.hook_displacement};
       double const squared{static_cast<double>(wide(displacement.x) * displacement.x + wide(displacement.y) * displacement.y + wide(displacement.z) * displacement.z)};
@@ -64,7 +69,7 @@ void update_aerodynamic_arrestor(aerodynamic_ground_state &state, aerodynamic_mo
         }
         state.arrestor = aerodynamic_arrestor_phase::stopped;
       }
-      state.hook_force_body = to_body(basis,state.hook_force_ned);
+      state.hook_force_body = to_body(basis, state.hook_force_ned);
       for(unsigned int axis{0}; axis != 3; ++axis) point.force[axis] = static_cast<double>(wide(state.hook_force_body[axis]) + point.force[axis]);
       if(apply_moments) {
         auto const &offset{parameters.hook_offset};
@@ -84,7 +89,7 @@ aerodynamic_ground_events update_aerodynamic_ground(aerodynamic_ground_state &st
   auto const &basis{context.contact.basis};
   // Native entry resets roll/pitch moments but retains the previous yaw moment.
   point.moment.x = point.moment.y = 0;
-  point.force = vec3d{0,0,0};
+  point.force = vec3d{0, 0, 0};
   state.last_contact_kind = aerodynamic_contact_kind::retracted_wheel;
   auto &gear{damage.systems[std::to_underlying(aircraft_system::landing_gear)]};
   if(context.gear_fraction != 0) {
@@ -101,14 +106,14 @@ aerodynamic_ground_events update_aerodynamic_ground(aerodynamic_ground_state &st
     for(unsigned int index{0}; index != parameters.offsets.size(); ++index) {
       if(index == 3) point_context.kind = aerodynamic_contact_kind::body;
       point.offset_body = parameters.offsets[index];
-      events.gear_impacts += update_aerodynamic_contact(point,motion,damage,random,parameters.contact,point_context);
+      events.gear_impacts += update_aerodynamic_contact(point, motion, damage, random, parameters.contact, point_context);
     }
     state.last_contact_kind = aerodynamic_contact_kind::body;
     if(state.ground_steering && context.engine_factor.x != 0 && context.engine_factor.y != 0 && context.throttle >= launch_throttle) {
       point.force.x = static_cast<double>(wide(basis.forward.x) * launch_force + point.force.x);
       point.force.z = static_cast<double>(wide(basis.down.x) * launch_force + point.force.z);
     }
-    update_aerodynamic_arrestor(state,motion,parameters,context,true);
+    update_aerodynamic_arrestor(state, motion, parameters, context, true);
     events.cockpit_bump = -wide(point.force.z) > wide(context.contact.total_mass_kg) * gravity * cockpit_bump_multiplier;
   }
   if(point.force.z < 0) {
@@ -119,8 +124,8 @@ aerodynamic_ground_events update_aerodynamic_ground(aerodynamic_ground_state &st
     state.rollout_distance = 0;
   }
   if(motion.collision) {
-    point.force = vec3d{0,0,0};
-    point.moment = vec3d{0,0,0};
+    point.force = vec3d{0, 0, 0};
+    point.moment = vec3d{0, 0, 0};
   }
   return events;
 }

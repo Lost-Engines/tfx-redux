@@ -29,7 +29,7 @@ public:
   void clear();
   void show(std::string_view message, bool repeat = false);
   void replay();
-  void stop(); // Native T cancellation marks idle without clearing history or the cursor.
+  void stop();                                                                 // Native T cancellation marks idle without clearing history or the cursor.
   radio_status status() const;
   std::optional<std::string> advance(simulation::timer_ticks elapsed, bool time_warp = false);
 };

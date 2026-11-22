@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -8,7 +9,8 @@ int main(int const argc, char const *const argv[]) try {
   if(argc == 2) fixture.open(argv[1]);
   if(argc > 2 || (argc == 2 && !fixture)) throw std::runtime_error{"expected [FILE]"};
   auto &input{argc == 2 ? fixture : std::cin};
-  unsigned int cases{0},view;
+  unsigned int cases{0};
+  unsigned int view;
   tfx::render::glare_context context;
   tfx::render::point_projection projection;
   while(input >> context.flak_flash >> context.cloud_layer >> context.layer_y >> view) {
@@ -17,12 +19,17 @@ int main(int const argc, char const *const argv[]) try {
     input >> projection.position_q16.x >> projection.position_q16.y >> projection.position_q16.z >> projection.origin.x >> projection.origin.y;
     if(!input) throw std::runtime_error{"incomplete sunlight-glare input"};
     context.view = static_cast<tfx::cockpit::view_mode>(view);
-    unsigned int const level{tfx::render::glare_level(projection,context)};
+    unsigned int const level{tfx::render::glare_level(projection, context)};
     if(argc == 2) {
       unsigned int expected;
       if(!(input >> expected) || level != expected) throw std::runtime_error{"native glare mismatch at case " + std::to_string(cases)};
-    } else std::cout << level << '\n';
+    } else {
+      std::cout << level << '\n';
+    }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) {
+  std::cerr << error.what() << '\n';
+  return EXIT_FAILURE;
+}

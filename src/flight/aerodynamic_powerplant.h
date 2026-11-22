@@ -16,13 +16,19 @@ struct aerodynamic_powerplant_parameters {
   double roll_thrust_arm{0};
   double pitch_thrust_arm{0};
 };
-enum class afterburner_change { none, started, increased, decreased, stopped };
+enum class afterburner_change {
+  none,
+  started,
+  increased,
+  decreased,
+  stopped
+};
 struct aerodynamic_powerplant {
-  vec2d engine_factor{1,1};
-  std::array<system_condition,2> engine_condition{system_condition::normal,system_condition::normal};
-  vec2d nozzle_angles{0,0};
-  vec3d engine_force{0,0,0};
-  vec3d engine_moment{0,0,0};
+  vec2d engine_factor{1, 1};
+  std::array<system_condition, 2> engine_condition{system_condition::normal, system_condition::normal};
+  vec2d nozzle_angles{0, 0};
+  vec3d engine_force{0, 0, 0};
+  vec3d engine_moment{0, 0, 0};
   float throttle{0};
   double thrust{0};
   double throttle_target{0};

@@ -60,7 +60,9 @@ void update_aerodynamic_thrust(aerodynamic_powerplant &state, aerodynamic_powerp
     state.engine_force.z = static_cast<double>(vertical * half);
     state.engine_moment.x = static_cast<double>((static_cast<calculation>(left_sine) - right_sine) * state.thrust * p.roll_thrust_arm * half);
     state.engine_moment.y = static_cast<double>(vertical * p.pitch_thrust_arm * half);
-  } else state.engine_force.x = state.thrust;
+  } else {
+    state.engine_force.x = state.thrust;
+  }
 }
 
 bool consume_aerodynamic_fuel(aerodynamic_powerplant &state, aerodynamic_powerplant_parameters const &p, aerodynamic_powerplant_context const &context) {
@@ -80,7 +82,7 @@ bool consume_aerodynamic_fuel(aerodynamic_powerplant &state, aerodynamic_powerpl
   bool stopped{false};
   if(state.fuel == 0) {
     stopped = state.stop_afterburner();
-    state.engine_factor = vec2d{0,0};
+    state.engine_factor = vec2d{0, 0};
   }
   return stopped;
 }

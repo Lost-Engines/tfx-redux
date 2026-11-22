@@ -32,7 +32,7 @@ aerodynamic_guidance_events update_aerodynamic_autopilot(aerodynamic_autopilot &
       .air_brake_fraction{manual.air_brake_fraction},
       .air_brake_condition{manual.air_brake_condition},
     };
-    append(events,update_aerodynamic_speed(speed,powerplant,{
+    append(events, update_aerodynamic_speed(speed, powerplant, {
       .metres_per_second{data.metres_per_second},
       .mass_kg{data.mass_kg},
       .forward_force{law.body_forward_force},
@@ -44,15 +44,15 @@ aerodynamic_guidance_events update_aerodynamic_autopilot(aerodynamic_autopilot &
     manual.air_brake_condition = speed.air_brake_condition;
   }
   if(!targets.enabled || right_down >= maximum_right_axis || right_down <= -maximum_right_axis || !(available_lift > weight) || !(available_g_lift > weight)) {
-    append(events,update_aerodynamic_manual(manual,powerplant,law));
+    append(events, update_aerodynamic_manual(manual, powerplant, law));
     return events;
   }
-  update_aerodynamic_navigation(state.navigation,state.guidance,manual.controls.autopilot,motion,context.navigation);
-  auto const guided{update_aerodynamic_guidance(state.guidance,manual,powerplant,motion,state.recovery,context.guidance)};
-  events.afterburner.insert(events.afterburner.end(),guided.afterburner.begin(),guided.afterburner.end());
+  update_aerodynamic_navigation(state.navigation, state.guidance, manual.controls.autopilot, motion, context.navigation);
+  auto const guided{update_aerodynamic_guidance(state.guidance, manual, powerplant, motion, state.recovery, context.guidance)};
+  events.afterburner.insert(events.afterburner.end(), guided.afterburner.begin(), guided.afterburner.end());
   events.recovery = guided.recovery;
-  apply_aerodynamic_guidance(state.guidance,manual,powerplant,context.guidance);
-  append(events,finish_aerodynamic_controls(manual,powerplant,law));
+  apply_aerodynamic_guidance(state.guidance, manual, powerplant, context.guidance);
+  append(events, finish_aerodynamic_controls(manual, powerplant, law));
   return events;
 }
 

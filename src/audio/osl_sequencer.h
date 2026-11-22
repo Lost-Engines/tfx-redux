@@ -1,7 +1,7 @@
 #pragma once
 
-#include <optional>
 #include <memory>
+#include <optional>
 #include "audio/osl_device.h"
 
 namespace tfx::audio {
@@ -42,9 +42,9 @@ struct osl_playing_state {
   uint8_t volume{0};
   uint16_t row{0};
   uint8_t order_count{0};
-  std::array<uint8_t,3> reverb{};
+  std::array<uint8_t, 3> reverb{};
   uint16_t mask{65535};
-  std::array<unsigned int,osl_channels> channel_slots{};
+  std::array<unsigned int, osl_channels> channel_slots{};
 };
 class osl_sequencer {
 private:
@@ -56,10 +56,10 @@ private:
     std::optional<osl_pattern_reader> pattern;
     unsigned int pattern_rows{0};
   };
-  std::array<std::shared_ptr<osl_resource const>,osl_resource_slots> resources;
-  std::array<playing,osl_playing_slots> songs;
-  std::array<osl_channel,osl_voice_channels> channels;
-  std::vector<osl_device_driver*> devices;
+  std::array<std::shared_ptr<osl_resource const>, osl_resource_slots> resources;
+  std::array<playing, osl_playing_slots> songs;
+  std::array<osl_channel, osl_voice_channels> channels;
+  std::vector<osl_device_driver *> devices;
   uint16_t clock{0};
   osl_device_driver *device(osl_device type) const;
   osl_song song(playing const &state) const;

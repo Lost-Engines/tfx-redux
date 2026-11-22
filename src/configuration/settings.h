@@ -9,7 +9,11 @@ namespace tfx::configuration {
 
 unsigned int constexpr configuration_buffer_size{1024};
 
-enum class g_effects : uint8_t { none, reduced, realistic };
+enum class g_effects : uint8_t {
+  none,
+  reduced,
+  realistic
+};
 struct realism {
   g_effects g_force{g_effects::none};
   uint8_t precipitation{1};
@@ -21,7 +25,7 @@ struct realism {
 };
 struct settings {
   flight::control_source control{flight::control_source::keyboard};
-  flight::control_source preferred_control{flight::control_source::keyboard}; // Startup CONTROL, restored when leaving Arcade.
+  flight::control_source preferred_control{flight::control_source::keyboard};  // Startup CONTROL, restored when leaving Arcade.
   simulation::flight_model model{simulation::flight_model::arcade};
   realism effects{};
   float joystick_scale{512};

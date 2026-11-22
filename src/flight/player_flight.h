@@ -1,7 +1,7 @@
 #pragma once
 
-#include "flight/aerodynamic_step.h"
 #include "flight/aerodynamic_launch.h"
+#include "flight/aerodynamic_step.h"
 #include "flight/automatic_landing.h"
 #include "flight/ejection_sequence.h"
 #include "flight/fuel_gauge.h"

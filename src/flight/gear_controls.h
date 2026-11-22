@@ -6,7 +6,7 @@
 
 namespace tfx::flight {
 
-inline constexpr int32_t eurofighter_maximum_gear_speed{350};
+inline int32_t constexpr eurofighter_maximum_gear_speed{350};
 struct gear_key_context {
   player_aircraft aircraft;
   int32_t speed;

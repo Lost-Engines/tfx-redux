@@ -1,5 +1,5 @@
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -37,60 +37,81 @@ auto main(int const argc, char const *const argv[])->int try {
     while(std::cin >> diagonal) {
       tfx::world::collision_box box;
       tfx::world::collision_segment segment;
-      for(auto *point : {&box.minimum,&box.maximum,&segment.previous,&segment.current}) {
-        int x{0}, y{0}, z{0};
+      for(auto *point : {&box.minimum, &box.maximum, &segment.previous, &segment.current}) {
+        int x{0};
+        int y{0};
+        int z{0};
         std::cin >> x >> y >> z;
-        *point = vec3<int16_t>{static_cast<int16_t>(x),static_cast<int16_t>(y),static_cast<int16_t>(z)};
+        *point = vec3<int16_t>{static_cast<int16_t>(x), static_cast<int16_t>(y), static_cast<int16_t>(z)};
       }
-      std::cout << tfx::world::intersects(box,segment,diagonal != 0) << '\n';
+      std::cout << tfx::world::intersects(box, segment, diagonal != 0) << '\n';
     }
   } else if(mode == "sine") {
-    for(unsigned angle=0;angle<tfx::math::angle_units_per_turn;++angle) std::cout << tfx::math::sine_q15(static_cast<int32_t>(angle)) << ' ';
+    for(unsigned angle{0}; angle < tfx::math::angle_units_per_turn; ++angle) std::cout << tfx::math::sine_q15(static_cast<int32_t>(angle)) << ' ';
     std::cout << std::endl;
   } else if(mode == "model_vertex") {
-    unsigned int pitch{0}, yaw{0}, roll{0};int x{0}, y{0}, z{0};
+    unsigned int pitch{0};
+    unsigned int yaw{0};
+    unsigned int roll{0};
+    int x{0};
+    int y{0};
+    int z{0};
     while(std::cin >> pitch >> yaw >> roll >> x >> y >> z) {
-      auto const camera{tfx::render::orbit_camera(vec3<tfx::math::angle>{static_cast<uint16_t>(pitch),static_cast<uint16_t>(yaw),static_cast<uint16_t>(roll)},0,{105,75})};
-      auto const point{camera.transform(vec3d{vec3<int>{x,y,z}} * .5)};
+      auto const camera{tfx::render::orbit_camera(vec3<tfx::math::angle>{static_cast<uint16_t>(pitch), static_cast<uint16_t>(yaw), static_cast<uint16_t>(roll)}, 0, {105, 75})};
+      auto const point{camera.transform(vec3d{vec3<int>{x, y, z}} * .5)};
       for(unsigned int axis{0}; axis != 3; ++axis) std::cout << static_cast<int32_t>(point[axis] * 65536) << ' ';
       std::cout << '\n';
     }
   } else if(mode == "model_projection" || mode == "model_projection_scaled") {
-    int32_t x{0}, y{0}, z{0};
+    int32_t x{0};
+    int32_t y{0};
+    int32_t z{0};
     tfx::render::camera const camera{
-      .position{0,0,0},
-      .right{1,0,0},
-      .down{0,1,0},
-      .forward{0,0,1},
-      .projection_origin{105,75},
+      .position{0, 0, 0},
+      .right{1, 0, 0},
+      .down{0, 1, 0},
+      .forward{0, 0, 1},
+      .projection_origin{105, 75},
       .focal_distance{256},
       .projection{tfx::render::projection_mode::original_model},
     };
     while(std::cin >> x >> y >> z) {
       double scale{1};
       if(mode == "model_projection_scaled") std::cin >> scale;
-      auto const point{camera.project(vec3d{vec3<int32_t>{x,y,z}} / 65536 * scale,scale)};
+      auto const point{camera.project(vec3d{vec3<int32_t>{x, y, z}} / 65536 * scale, scale)};
       std::cout << static_cast<int>(point.x) << ' ' << static_cast<int>(point.y) << '\n';
     }
   } else if(mode == "orbit") {
-    unsigned int pitch{0}, yaw{0}, roll{0};int32_t distance{0};
+    unsigned int pitch{0};
+    unsigned int yaw{0};
+    unsigned int roll{0};
+    int32_t distance{0};
     while(std::cin >> pitch >> yaw >> roll >> distance) {
-      auto const camera{tfx::render::orbit_camera(vec3<tfx::math::angle>{static_cast<uint16_t>(pitch),static_cast<uint16_t>(yaw),static_cast<uint16_t>(roll)},distance,{105,75})};
-      for(auto const *axis : {&camera.right,&camera.down,&camera.forward}) for(unsigned int i{0}; i != 3; ++i) std::cout << static_cast<int>(std::lround((*axis)[i] * tfx::math::matrix_unit)) << ' ';
+      auto const camera{tfx::render::orbit_camera(vec3<tfx::math::angle>{static_cast<uint16_t>(pitch), static_cast<uint16_t>(yaw), static_cast<uint16_t>(roll)}, distance, {105, 75})};
+      for(auto const *axis : {&camera.right, &camera.down, &camera.forward}) {
+        for(unsigned int i{0}; i != 3; ++i) std::cout << static_cast<int>(std::lround((*axis)[i] * tfx::math::matrix_unit)) << ' ';
+      }
       for(unsigned int i{0}; i != 3; ++i) std::cout << static_cast<int32_t>(camera.position[i] * 65536) << ' ';
       std::cout << '\n';
     }
   } else if(mode == "rotation") {
-    unsigned int x{0}, y{0}, z{0};
+    unsigned int x{0};
+    unsigned int y{0};
+    unsigned int z{0};
     while(std::cin >> x >> y >> z) {
       auto const matrix{tfx::math::rotation_words(vec3<tfx::math::angle>{static_cast<uint16_t>(x), static_cast<uint16_t>(y), static_cast<uint16_t>(z)})};
       for(auto const value : matrix.data) std::cout << value << ' ';
       std::cout << '\n';
     }
   } else if(mode == "rounded") {
-    int32_t ax{0}, ay{0}, bx{0}, by{0}, cx{0}, cy{0};
+    int32_t ax{0};
+    int32_t ay{0};
+    int32_t bx{0};
+    int32_t by{0};
+    int32_t cx{0};
+    int32_t cy{0};
     while(std::cin >> ax >> ay >> bx >> by >> cx >> cy) {
-      for(auto const &v : tfx::render::rounded_corner(vec2<int32_t>{ax,ay},vec2<int32_t>{bx,by},vec2<int32_t>{cx,cy})) std::cout << v.x << ' ' << v.y << ' ';
+      for(auto const &v : tfx::render::rounded_corner(vec2<int32_t>{ax, ay}, vec2<int32_t>{bx, by}, vec2<int32_t>{cx, cy})) std::cout << v.x << ' ' << v.y << ' ';
       std::cout << '\n';
     }
   } else if(mode == "clock") {
@@ -106,7 +127,8 @@ auto main(int const argc, char const *const argv[])->int try {
       std::cout << '\n';
     }
   } else if(mode == "stream") {
-    unsigned int count{0}, ticks{0};
+    unsigned int count{0};
+    unsigned int ticks{0};
     while(std::cin >> count >> ticks) {
       std::vector<uint16_t> words;
       for(unsigned int i{0}; i != count; ++i) {
@@ -124,9 +146,10 @@ auto main(int const argc, char const *const argv[])->int try {
       std::cout << '\n';
     }
   } else if(mode == "jitter") {
-    unsigned int x{0}, y{0};
+    unsigned int x{0};
+    unsigned int y{0};
     while(std::cin >> x >> y) {
-      std::array<unsigned int,3> shifts;
+      std::array<unsigned int, 3> shifts;
       for(auto &shift : shifts) std::cin >> shift;
       tfx::math::jitter_state state{
         .x{static_cast<uint16_t>(x)},
@@ -136,13 +159,15 @@ auto main(int const argc, char const *const argv[])->int try {
         for(unsigned int axis{0}; axis != 3; ++axis) {
           int coordinate{0};
           std::cin >> coordinate;
-          std::cout << state.perturb(static_cast<int16_t>(coordinate),shifts[axis]) << ' ';
+          std::cout << state.perturb(static_cast<int16_t>(coordinate), shifts[axis]) << ' ';
         }
       }
       std::cout << state.x << ' ' << state.y << '\n';
     }
   } else if(mode == "conditions") {
-    unsigned int opcode{0}, operand{0}, state{0};
+    unsigned int opcode{0};
+    unsigned int operand{0};
+    unsigned int state{0};
     while(std::cin >> opcode >> operand >> state) std::cout << tfx::models::condition(static_cast<uint16_t>(opcode), static_cast<uint16_t>(operand), static_cast<uint8_t>(state), tfx::math::signed_word(static_cast<uint16_t>(state)), static_cast<uint16_t>(state)) << '\n';
   } else if(mode == "random") {
     tfx::math::random_state state;
@@ -164,7 +189,7 @@ auto main(int const argc, char const *const argv[])->int try {
         auto const decoded{game.read(entry.id)};
         word(entry.id);
         word(static_cast<uint32_t>(decoded.size()));
-        std::cout.write(reinterpret_cast<char const*>(decoded.data()), static_cast<std::streamsize>(decoded.size()));
+        std::cout.write(reinterpret_cast<char const *>(decoded.data()), static_cast<std::streamsize>(decoded.size()));
       }
     } else if(mode == "raster") {
 #ifdef _WIN32
@@ -175,67 +200,69 @@ auto main(int const argc, char const *const argv[])->int try {
       unsigned int seed{0};
       std::string kind;
       while(std::cin >> drawing_mode >> kind >> seed) {
-        tfx::render::software_renderer renderer{tables,static_cast<uint16_t>(seed)};
+        tfx::render::software_renderer renderer{tables, static_cast<uint16_t>(seed)};
         renderer.output.pixels.fill(77);
         if(kind == "gradient") {
-          std::array<tfx::render::screen_vertex,4> vertices{{
+          std::array<tfx::render::screen_vertex, 4> vertices{{
             {
-              .position{20,20},
-              .uv{0,0},
+              .position{20, 20},
+              .uv{0, 0},
               .shade{-1},
             },
             {
-              .position{100,20},
-              .uv{0,0},
+              .position{100, 20},
+              .uv{0, 0},
               .shade{-1},
             },
             {
-              .position{100,100},
-              .uv{0,0},
+              .position{100, 100},
+              .uv{0, 0},
               .shade{-1},
             },
             {
-              .position{20,100},
-              .uv{0,0},
+              .position{20, 100},
+              .uv{0, 0},
               .shade{-1},
             },
           }};
           for(auto &v : vertices) std::cin >> v.shade;
-          renderer.polygon(vertices,200);
-        } else if(kind == "circle") renderer.circle(80,80,40,200,drawing_mode);
-        else {
-          double const left{kind == "quad" ? 32.0 : 35.0}, top{kind == "quad" ? 32.0 : 37.0};
+          renderer.polygon(vertices, 200);
+        } else if(kind == "circle") {
+          renderer.circle(80, 80, 40, 200, drawing_mode);
+        } else {
+          double const left{kind == "quad" ? 32.0 : 35.0};
+          double const top{kind == "quad" ? 32.0 : 37.0};
           std::array<tfx::render::screen_vertex, 4> const vertices{{
             {
-              .position{left,top},
-              .uv{0,0},
+              .position{left, top},
+              .uv{0, 0},
               .shade{-1},
             },
             {
-              .position{left + 96,top},
-              .uv{0,0},
+              .position{left + 96, top},
+              .uv{0, 0},
               .shade{-1},
             },
             {
-              .position{left + 96,top + 96},
-              .uv{0,0},
+              .position{left + 96, top + 96},
+              .uv{0, 0},
               .shade{-1},
             },
             {
-              .position{left,top + 96},
-              .uv{0,0},
+              .position{left, top + 96},
+              .uv{0, 0},
               .shade{-1},
             },
           }};
-          renderer.polygon(vertices,200,drawing_mode);
+          renderer.polygon(vertices, 200, drawing_mode);
         }
         word(renderer.procedural_state());
-        std::cout.write(reinterpret_cast<char const*>(renderer.output.pixels.data()),renderer.output.pixels.size());
+        std::cout.write(reinterpret_cast<char const *>(renderer.output.pixels.data()), renderer.output.pixels.size());
       }
     } else if(mode == "missions") {
       std::string name;
       while(std::cin >> name) {
-        tfx::world::mission const mission{game,name};
+        tfx::world::mission const mission{game, name};
         auto const &p{mission.start.position};
         std::cout << '[' << std::quoted(mission.world_name) << ',' << std::quoted(mission.grid_name()) << ',' << std::quoted(mission.environment) << ',' << std::quoted(mission.waypoints) << ',' << (mission.aircraft ? std::to_string(std::to_underlying(*mission.aircraft)) : "null") << ",[" << p.x << ',' << p.y << ',' << p.z << "]," << mission.start.landed << "]\n";
       }
@@ -274,20 +301,24 @@ auto main(int const argc, char const *const argv[])->int try {
       }
     } else if(mode == "environment" || mode == "environment_bindings" || mode == "environment_variants") {
       std::string specification;
-      while(std::getline(std::cin,specification)) {
+      while(std::getline(std::cin, specification)) {
         std::istringstream fields{specification};
-        std::string name, lighting;
+        std::string name;
+        std::string lighting;
         fields >> name >> lighting;
         if(name.empty()) continue;
-        tfx::world::environment const environment{game,name,lighting};
+        tfx::world::environment const environment{game, name, lighting};
         if(mode == "environment_variants") {
           uint64_t hash{14695981039346656037ull};
-          auto const append{[&](uint8_t const byte) { hash = (hash ^ byte) * 1099511628211ull; }};
-          for(unsigned int z{0}; z != tfx::world::map_height; ++z) for(unsigned int x{0}; x != tfx::world::map_width; ++x) {
-            for(unsigned char const byte : environment.variant(x,z)) append(byte);
-            append(0);
-            auto const rotation{environment.tile(x,z).rotation};
-            append(static_cast<uint8_t>(rotation));append(static_cast<uint8_t>(rotation >> 8));
+          auto const append{[&](uint8_t const byte){hash = (hash ^ byte) * 1099511628211ull;}};
+          for(unsigned int z{0}; z != tfx::world::map_height; ++z) {
+            for(unsigned int x{0}; x != tfx::world::map_width; ++x) {
+              for(unsigned char const byte : environment.variant(x, z)) append(byte);
+              append(0);
+              auto const rotation{environment.tile(x, z).rotation};
+              append(static_cast<uint8_t>(rotation));
+              append(static_cast<uint8_t>(rotation >> 8));
+            }
           }
           auto const random{environment.variant_random_state()};
           std::cout << '[' << hash << ',' << random.low << ',' << random.high << "]\n";
@@ -302,14 +333,16 @@ auto main(int const argc, char const *const argv[])->int try {
         for(unsigned int z{0}; z != tfx::world::map_height; ++z) {
           for(unsigned int x{0}; x != tfx::world::map_width; ++x) {
             if(!std::exchange(first, false)) std::cout << ',';
-            std::cout << '[' << environment.tile_id(x,z) << ',' << std::quoted(environment.variant(x,z)) << ']';
+            std::cout << '[' << environment.tile_id(x, z) << ',' << std::quoted(environment.variant(x, z)) << ']';
           }
         }
         std::cout << "]]\n";
       }
     } else if(mode == "shape" || mode == "attachments") {
       uint32_t id{0};
-      unsigned int status{0}, state{0}, level{0};
+      unsigned int status{0};
+      unsigned int state{0};
+      unsigned int level{0};
       while(std::cin >> id >> status >> state >> level) {
         tfx::models::shape const program{game.read(id)};
         tfx::models::shape_context context;
@@ -318,14 +351,17 @@ auto main(int const argc, char const *const argv[])->int try {
         context.level = level;
         context.facing = false;
         std::optional<tfx::models::shape> child;
-        std::array<tfx::models::shape const*,10> attachments{};
+        std::array<tfx::models::shape const *, 10> attachments{};
         if(mode == "attachments") {
           uint32_t child_id{0};
           unsigned int slot{0};
           std::cin >> child_id >> slot;
           if(child_id) child.emplace(game.read(child_id));
-          if(slot == attachments.size()) attachments.fill(child ? &*child : nullptr);
-          else attachments.at(slot) = child ? &*child : nullptr;
+          if(slot == attachments.size()) {
+            attachments.fill(child ? &*child : nullptr);
+          } else {
+            attachments.at(slot) = child ? &*child : nullptr;
+          }
           context.attachments = attachments;
         }
         auto const geometry{tfx::models::interpret(program, context)};
@@ -343,7 +379,9 @@ auto main(int const argc, char const *const argv[])->int try {
         }
         std::cout << "]]\n";
       }
-    } else throw std::runtime_error{"unknown probe mode"};
+    } else {
+      throw std::runtime_error{"unknown probe mode"};
+    }
   }
   if(!std::cout) throw std::runtime_error{"probe output failed"};
   return EXIT_SUCCESS;

@@ -14,7 +14,7 @@ struct cruise_target {
   vec2<int16_t> projected;
 };
 cruise_target acquire_cruise_target(vec3<int32_t> const &player, vec2<int32_t> const &destination_q8,
-  std::function<vec2<int16_t>(vec3<int32_t> const&)> const &project);
+  std::function<vec2<int16_t>(vec3<int32_t> const &)> const &project);
 
 struct surface_contact {
   unsigned int slot;
@@ -35,8 +35,8 @@ struct designator {
   math::angle pitch{0x500};
   math::angle heading{0};
   uint8_t zoom{0};
-  vec3<int32_t> camera{0,0,0};
-  vec3<int32_t> point{0,0,0};
+  vec3<int32_t> camera{0, 0, 0};
+  vec3<int32_t> point{0, 0, 0};
 };
 vec3<int32_t> ground_intersection(vec3<int32_t> const &player, math::angle pitch, math::angle heading);
 void aim_designator(designator &state, vec3<int32_t> const &player, vec3<math::angle> const &angles, flight::player_aircraft aircraft, designator_controls const &controls);

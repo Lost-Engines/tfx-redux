@@ -4,7 +4,16 @@
 
 namespace tfx::flight {
 
-enum class player_callback { none, arcade, simple, military_spec, realistic, automatic_landing, disabled_aircraft, pilot };
+enum class player_callback {
+  none,
+  arcade,
+  simple,
+  military_spec,
+  realistic,
+  automatic_landing,
+  disabled_aircraft,
+  pilot
+};
 struct player_dispatch_context {
   // Native 0x86ce disables the aircraft; nonzero pilot phase 0xe784 selects
   // the separately reconstructed 0x8f198 ejected-pilot controller.

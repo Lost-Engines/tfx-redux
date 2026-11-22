@@ -1,6 +1,6 @@
 #include "audio/sc55_synth.h"
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <mutex>
 #include <stdexcept>
@@ -15,10 +15,14 @@ namespace tfx::audio {
 struct sc55_synth::implementation {
   RomsetInfo roms;
   Emulator synth;
-  unsigned int rate{0}, native_rate{0};
+  unsigned int rate{0};
+  unsigned int native_rate{0};
   uint64_t phase{0};
-  AudioFrame<float> previous{}, current{}, received{};
-  bool ready{false}, primed{false};
+  AudioFrame<float> previous{};
+  AudioFrame<float> current{};
+  AudioFrame<float> received{};
+  bool ready{false};
+  bool primed{false};
 
   auto sample() noexcept->AudioFrame<float> {
     ready = false;
@@ -59,7 +63,7 @@ sc55_synth::sc55_synth(std::filesystem::path const &rom_directory, unsigned int 
   state->synth.GetPCM().enable_oversampling = true;
   state->native_rate = PCM_GetOutputFrequency(state->synth.GetPCM());
   state->synth.SetSampleCallback([](void *context, AudioFrame<int32_t> const &frame){
-    auto &target{*static_cast<implementation*>(context)};
+    auto &target{*static_cast<implementation *>(context)};
     Normalize(frame, target.received);
     target.ready = true;
   }, state.get());
@@ -70,12 +74,15 @@ sc55_synth::sc55_synth(std::filesystem::path const &rom_directory, unsigned int 
 sc55_synth::~sc55_synth() = default;
 
 void sc55_synth::short_message(uint32_t const packed) {
-  std::array<uint8_t,3> const bytes{static_cast<uint8_t>(packed),static_cast<uint8_t>(packed >> 8),static_cast<uint8_t>(packed >> 16)};
-  auto const status{bytes[0]}, kind{static_cast<uint8_t>(status & 0xf0)};
+  std::array<uint8_t, 3> const bytes{static_cast<uint8_t>(packed), static_cast<uint8_t>(packed >> 8), static_cast<uint8_t>(packed >> 16)};
+  auto const status{bytes[0]};
+  auto const kind{static_cast<uint8_t>(status & 0xf0)};
   unsigned int const length{status >= 0xf8 || status == 0xf6 || status == 0xf7 ? 1u : kind == 0xc0 || kind == 0xd0 || status == 0xf1 || status == 0xf3 ? 2u : 3u};
   state->synth.PostMIDI(std::span{bytes}.first(length));
 }
-void sc55_synth::sysex(std::span<uint8_t const> const message) { state->synth.PostMIDI(message); }
+void sc55_synth::sysex(std::span<uint8_t const> const message) {
+  state->synth.PostMIDI(message);
+}
 
 void sc55_synth::render(std::span<float> const stereo) {
   if(stereo.size() % 2) throw std::invalid_argument{"Sound Canvas output requires complete stereo frames"};

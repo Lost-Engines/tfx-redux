@@ -10,7 +10,8 @@ store_effects accumulate_stores(airframe_load const &airframe, loadout const &st
     if(!store.occupied) continue;
     auto const &definition{store.properties};
     vec3d const offset{store.position};
-    vec2d const plane_a{offset.x,offset.y}, plane_b{offset.x,offset.z};
+    vec2d const plane_a{offset.x, offset.y};
+    vec2d const plane_b{offset.x, offset.z};
     result.drag += definition.drag;
     result.moment_a += plane_a.length_sq() * definition.mass_kg;
     result.moment_b += plane_b.length_sq() * definition.mass_kg;

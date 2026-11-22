@@ -17,17 +17,19 @@ int32_t truncate(calculation const value) {
   if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
-int32_t subtract(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
+int32_t subtract(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
 } // anonymous namespace
 
 bool advance_automatic_approach(automatic_approach &state, aerodynamic_motion &motion, aerodynamic_basis &basis, double &metres_per_second, automatic_approach_context const &context) {
-  state.player_metres = {truncate(motion.pose.metres_ned.y),truncate(motion.pose.metres_ned.z),truncate(motion.pose.metres_ned.x)};
-  calculation const north{static_cast<calculation>(subtract(state.destination_metres.z,state.player_metres.z))};
-  calculation const east{static_cast<calculation>(subtract(state.destination_metres.x,state.player_metres.x))};
+  state.player_metres = {truncate(motion.pose.metres_ned.y), truncate(motion.pose.metres_ned.z), truncate(motion.pose.metres_ned.x)};
+  calculation const north{static_cast<calculation>(subtract(state.destination_metres.z, state.player_metres.z))};
+  calculation const east{static_cast<calculation>(subtract(state.destination_metres.x, state.player_metres.x))};
   state.distance_km = static_cast<double>(std::sqrt(north * north + east * east) * kilometres_per_metre);
   motion.pose.frame = {};
-  rotate_aerodynamic_units(motion,aerodynamic_rotation::yaw,static_cast<double>(math::signed_word(context.runway_heading) + units_per_half_turn));
-  rotate_aerodynamic_units(motion,aerodynamic_rotation::pitch,static_cast<double>(static_cast<calculation>(state.pitch_degrees) * units_per_half_turn * inverse_degrees));
+  rotate_aerodynamic_units(motion, aerodynamic_rotation::yaw, static_cast<double>(math::signed_word(context.runway_heading) + units_per_half_turn));
+  rotate_aerodynamic_units(motion, aerodynamic_rotation::pitch, static_cast<double>(static_cast<calculation>(state.pitch_degrees) * units_per_half_turn * inverse_degrees));
   for(unsigned int axis{0}; axis != 3; ++axis) {
     basis.forward[axis] = static_cast<double>(static_cast<calculation>(math::signed_word(static_cast<uint16_t>(motion.pose.frame.forward[axis]))) * normalised_word);
     basis.right[axis] = static_cast<double>(static_cast<calculation>(math::signed_word(static_cast<uint16_t>(motion.pose.frame.right[axis]))) * normalised_word);

@@ -28,12 +28,16 @@ executable_tables::executable_tables(std::filesystem::path const &path) {
   planner_art_data = std::make_unique<planner_artwork>(source);
   font_data = std::make_unique<presentation::fonts>(source);
   binary_view const view{source};
-  unsigned int constexpr circle_base{0x70aa4 + 0x65a84}, circle_limit_field{0x70aa4 + 0x66ea0};
+  unsigned int constexpr circle_base{0x70aa4 + 0x65a84};
+  unsigned int constexpr circle_limit_field{0x70aa4 + 0x66ea0};
   auto const limit{view.le16(circle_limit_field)};
   circles.resize(limit);
-  unsigned int constexpr data_file{973476}, mapping{data_file + 0x7a44}, advances{data_file + 0x7a84}, glyph_file{0xf5350};
-  for(unsigned int profile{0}; profile != music_orders.size(); ++profile) std::ranges::copy(view.slice(data_file + 0xa38c + profile * 12,12),music_orders[profile].begin());
-  std::ranges::copy(view.slice(data_file + 0xd55c,text_palette.size()),text_palette.begin());
+  unsigned int constexpr data_file{973476};
+  unsigned int constexpr mapping{data_file + 0x7a44};
+  unsigned int constexpr advances{data_file + 0x7a84};
+  unsigned int constexpr glyph_file{0xf5350};
+  for(unsigned int profile{0}; profile != music_orders.size(); ++profile) std::ranges::copy(view.slice(data_file + 0xa38c + profile * 12, 12), music_orders[profile].begin());
+  std::ranges::copy(view.slice(data_file + 0xd55c, text_palette.size()), text_palette.begin());
   // Native 0x73f5c/0x73964: magenta means leave that palette entry untouched.
   for(unsigned int colour{0}; colour != 256; ++colour) {
     fixed_flight_palette[colour * 3] = 63;
@@ -46,7 +50,7 @@ executable_tables::executable_tables(std::filesystem::path const &path) {
     for(unsigned int channel{0}; channel != 3; ++channel) fixed_flight_palette[colour * 3 + channel] = view.byte(entry + 1 + channel);
   }
   hud_green = view.byte(data_file + 0xa4ec);
-  auto const native_message{[&](unsigned int const offset) {
+  auto const native_message{[&](unsigned int const offset){
     unsigned int constexpr maximum_message_length{512};
     std::string result;
     for(unsigned int index{0}; index != maximum_message_length; ++index) {
@@ -57,7 +61,7 @@ executable_tables::executable_tables(std::filesystem::path const &path) {
     throw std::runtime_error{"unterminated native gameplay message"};
   }};
   timer_expired_message = native_message(0xa8);
-  fire_permission_message = native_message(0x1850); // Both native permission-notice strings have identical text.
+  fire_permission_message = native_message(0x1850);                            // Both native permission-notice strings have identical text.
   orders_violation_message = native_message(0x678);
   ground_training_warning = native_message(0x370c);
   ground_orders_violation = native_message(0x3764);
@@ -68,22 +72,31 @@ executable_tables::executable_tables(std::filesystem::path const &path) {
     ship_target_types.push_back(type);
     if(index == 63) throw std::runtime_error{"unterminated native ship target list"};
   }
-  auto const anchor{[&](unsigned int const address) { return vec3<int16_t>{view.signed_le16(data_file + address),view.signed_le16(data_file + address + 2),view.signed_le16(data_file + address + 4)}; }};
+  auto const anchor{[&](unsigned int const address){
+    return vec3<int16_t>{view.signed_le16(data_file + address), view.signed_le16(data_file + address + 2), view.signed_le16(data_file + address + 4)};
+  }};
   unsigned int constexpr empty_record{data_file + 0x809c + weapons::empty_pylon * 48};
   arming.empty_role = static_cast<weapons::weapon_role>(view.byte(empty_record + 20));
   arming.empty_category = view.byte(empty_record + 29);
-  std::array<unsigned int,3> constexpr default_bases{0x7dd0,0x7ec0,0x7e48}, default_counts{12,6,12};
+  std::array<unsigned int, 3> constexpr default_bases{0x7dd0, 0x7ec0, 0x7e48};
+  std::array<unsigned int, 3> constexpr default_counts{12, 6, 12};
   for(unsigned int aircraft{0}; aircraft != arming.defaults.size(); ++aircraft) {
     arming.defaults[aircraft].resize(default_counts[aircraft]);
-    for(unsigned int fit{0}; fit != default_counts[aircraft]; ++fit) for(unsigned int pair{0}; pair != weapons::pylon_pairs; ++pair) arming.defaults[aircraft][fit][pair] = view.signed_le16(data_file + default_bases[aircraft] + (fit * weapons::pylon_pairs + pair) * 2);
+    for(unsigned int fit{0}; fit != default_counts[aircraft]; ++fit) {
+      for(unsigned int pair{0}; pair != weapons::pylon_pairs; ++pair) arming.defaults[aircraft][fit][pair] = view.signed_le16(data_file + default_bases[aircraft] + (fit * weapons::pylon_pairs + pair) * 2);
+    }
   }
   for(unsigned int index{0}; index != arming.next.size(); ++index) arming.next[index] = view.le16(data_file + 0x869c + index * 2);
   for(unsigned int index{0}; index != cannon_mounts.size(); ++index) cannon_mounts[index] = anchor(0x8690 + index * 6);
-  std::array<unsigned int,3> constexpr aircraft_mounts{0x8654,0x8618,0x85dc};
-  for(unsigned int aircraft{0}; aircraft != store_mounts.size(); ++aircraft) for(unsigned int slot{0}; slot != store_mounts[aircraft].size(); ++slot) store_mounts[aircraft][slot] = anchor(aircraft_mounts[aircraft] + slot * 6);
+  std::array<unsigned int, 3> constexpr aircraft_mounts{0x8654, 0x8618, 0x85dc};
+  for(unsigned int aircraft{0}; aircraft != store_mounts.size(); ++aircraft) {
+    for(unsigned int slot{0}; slot != store_mounts[aircraft].size(); ++slot) store_mounts[aircraft][slot] = anchor(aircraft_mounts[aircraft] + slot * 6);
+  }
   // Native 0x8b984 also accepts the empty/cannon sentinels. Their addresses
   // intentionally overlap adjoining stored records; retain those read bytes.
-  for(unsigned int aircraft{0}; aircraft != sight_mount_data.size(); ++aircraft) for(unsigned int index{0}; index != sight_pylon_count; ++index) sight_mount_data[aircraft][index] = anchor(static_cast<unsigned int>(static_cast<int>(aircraft_mounts[aircraft]) + (static_cast<int>(index) + first_sight_pylon) * 6));
+  for(unsigned int aircraft{0}; aircraft != sight_mount_data.size(); ++aircraft) {
+    for(unsigned int index{0}; index != sight_pylon_count; ++index) sight_mount_data[aircraft][index] = anchor(static_cast<unsigned int>(static_cast<int>(aircraft_mounts[aircraft]) + (static_cast<int>(index) + first_sight_pylon) * 6));
+  }
   for(unsigned int i{0}; i != aircraft_envelopes.size(); ++i) aircraft_envelopes[i] = view.byte(data_file + 0x93b4 + i);
   for(unsigned int i{0}; i != formations.size(); ++i) {
     auto const at{data_file + 0x5984 + i * 14};
@@ -118,8 +131,12 @@ vec3<int16_t> const &executable_tables::sight_mount(flight::player_aircraft cons
   return sight_mount_data.at(std::to_underlying(aircraft) - 1).at(static_cast<unsigned int>(pylon - first_sight_pylon));
 }
 
-flight::refuel_assets const &executable_tables::refuel_parameters() const { return *refuel_data; }
-presentation::fonts const &executable_tables::presentation_fonts() const { return *font_data; }
+flight::refuel_assets const &executable_tables::refuel_parameters() const {
+  return *refuel_data;
+}
+presentation::fonts const &executable_tables::presentation_fonts() const {
+  return *font_data;
+}
 
 presentation::widget_font const &executable_tables::interface_font() const {
   return *widget_font_data;
@@ -150,7 +167,9 @@ unsigned int executable_tables::glyph_measure(unsigned char const character) con
   return character == ' ' ? 3u : measured_advances[character];
 }
 
-presentation::configuration_menu_assets const &executable_tables::configuration_widgets() const { return *configuration_data; }
+presentation::configuration_menu_assets const &executable_tables::configuration_widgets() const {
+  return *configuration_data;
+}
 
 hud_glyph const *executable_tables::glyph(unsigned char const character) const {
   auto const index{character_map[character & 63]};

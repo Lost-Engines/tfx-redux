@@ -8,13 +8,16 @@
 namespace tfx::presentation {
 
 unsigned int constexpr pilot_slots{10}, edited_name_limit{11};
-struct enrolment_line { std::string text; uint8_t colour; };
+struct enrolment_line {
+  std::string text;
+  uint8_t colour;
+};
 struct pilot_assets {
-  std::array<uint8_t,128> characters;
-  std::array<std::string,3> defaults;
+  std::array<uint8_t, 128> characters;
+  std::array<std::string, 3> defaults;
   std::vector<enrolment_line> introduction;
-  std::array<std::string,7> ranks;
-  std::array<std::string,5> statuses;
+  std::array<std::string, 7> ranks;
+  std::array<std::string, 5> statuses;
   pointer_shape pointer;
   explicit pilot_assets(std::span<uint8_t const> executable);
 };
@@ -39,7 +42,7 @@ private:
 
 public:
   explicit pilot_store(std::filesystem::path directory);
-  std::array<std::optional<saved_state>,pilot_slots> list(program const &schema) const;
+  std::array<std::optional<saved_state>, pilot_slots> list(program const &schema) const;
   void write(unsigned int slot, bool log, program const &schema, saved_state const &saved) const;
   saved_state read(unsigned int slot, bool log, program const &schema) const;
   score_table load_scores(score_table const &defaults) const;

@@ -6,7 +6,12 @@
 
 namespace tfx::flight {
 
-enum class defensive_key { ecm, stealth, chaff, flare };
+enum class defensive_key {
+  ecm,
+  stealth,
+  chaff,
+  flare
+};
 struct defensive_systems {
   uint8_t chaff{0};
   uint8_t flares{0};

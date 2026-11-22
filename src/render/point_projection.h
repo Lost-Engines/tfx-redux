@@ -2,8 +2,8 @@
 
 #include <optional>
 #include "math/native.h"
-#include "render/framebuffer.h"
 #include "render/aperture.h"
+#include "render/framebuffer.h"
 
 namespace tfx::render {
 
@@ -12,7 +12,7 @@ struct point_projection {
   mat3<int32_t> matrix;
   vec3<int32_t> position_q16;
   vec2<int16_t> origin;
-  vec2<int16_t> maximum{screen_width - 1,screen_height - 1};
+  vec2<int16_t> maximum{screen_width - 1, screen_height - 1};
   aperture opening{aperture::normal};
   std::optional<double> focal_distance{};
   vec3<int32_t> camera_integer(vec3<int32_t> const &point) const;

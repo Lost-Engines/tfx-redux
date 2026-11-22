@@ -5,13 +5,14 @@ namespace tfx::weapons {
 
 void begin_warning_step(warning_state &state, simulation::timer_ticks const elapsed) {
   // Native 0xa31cc resets the count on every projectile substep, including a zero-tick update.
-  state.cooldown = std::max<int16_t>(0,math::signed_word(static_cast<uint16_t>(state.cooldown - elapsed)));
+  state.cooldown = std::max<int16_t>(0, math::signed_word(static_cast<uint16_t>(state.cooldown - elapsed)));
   state.incoming = 0;
 }
 
 std::optional<projectile_warning> observe_player_threat(warning_state &state, int32_t const distance, bool const targeted, bool const inhibited, math::random_state &random) {
-  int32_t constexpr count_distance{8000}, spoken_distance{2000}; // Integer world coordinates, before Q8 actor scaling.
-  int16_t constexpr warning_interval{500}; // Shared game timer ticks, not rendered frames.
+  int32_t constexpr count_distance{8000};
+  int32_t constexpr spoken_distance{2000};                                     // Integer world coordinates, before Q8 actor scaling.
+  int16_t constexpr warning_interval{500};                                     // Shared game timer ticks, not rendered frames.
   if(!targeted) return std::nullopt;
   if(distance < count_distance) ++state.incoming;
   if(distance >= spoken_distance || state.cooldown || inhibited) return std::nullopt;

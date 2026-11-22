@@ -1,7 +1,7 @@
-#include "aerodynamic_rotation_internal.h"
 #include <bit>
 #include <cmath>
 #include <limits>
+#include "aerodynamic_rotation_internal.h"
 
 namespace tfx::flight {
 namespace {
@@ -26,9 +26,9 @@ math::angle rotation_amount(double const amount, double *const remainder) {
 }
 void rotate(aerodynamic_motion &state, calculation const roll, calculation const pitch, calculation const yaw) {
   double const inverse_pi{static_cast<double>(1.0 / native_pi)};
-  rotate_aerodynamic_units(state,aerodynamic_rotation::roll,static_cast<double>(roll * angle_units_per_half_turn * inverse_pi));
-  rotate_aerodynamic_units(state,aerodynamic_rotation::pitch,static_cast<double>(pitch * angle_units_per_half_turn * inverse_pi));
-  rotate_aerodynamic_units(state,aerodynamic_rotation::yaw,static_cast<double>(yaw * angle_units_per_half_turn * inverse_pi));
+  rotate_aerodynamic_units(state, aerodynamic_rotation::roll, static_cast<double>(roll * angle_units_per_half_turn * inverse_pi));
+  rotate_aerodynamic_units(state, aerodynamic_rotation::pitch, static_cast<double>(pitch * angle_units_per_half_turn * inverse_pi));
+  rotate_aerodynamic_units(state, aerodynamic_rotation::yaw, static_cast<double>(yaw * angle_units_per_half_turn * inverse_pi));
 }
 
 } // anonymous namespace
@@ -42,7 +42,7 @@ void rotate_aerodynamic_units(aerodynamic_motion &state, aerodynamic_rotation co
   };
   double *const remainder{axis == aerodynamic_rotation::roll ? &state.rotation_remainder.x : axis == aerodynamic_rotation::pitch ? &state.rotation_remainder.y : nullptr};
   auto const rotation{axis == aerodynamic_rotation::roll ? math::rotation_axis::pitch : axis == aerodynamic_rotation::pitch ? math::rotation_axis::heading : math::rotation_axis::roll};
-  frame.rotate(rotation,rotation_amount(units,remainder));
+  frame.rotate(rotation, rotation_amount(units, remainder));
   state.pose.frame.forward = frame.right;
   state.pose.frame.right = frame.down;
   state.pose.frame.down = frame.forward;
@@ -68,10 +68,10 @@ void advance_aerodynamic_motion(aerodynamic_motion &state, aerodynamic_motion_co
     state.angular_rate.x = context.roll_rate_inhibited ? 0 : context.commanded_roll_rate;
     state.angular_rate.y = static_cast<double>((static_cast<calculation>(context.commanded_angle_of_attack) - context.angle_of_attack) / seconds);
     // The original still rotates by the command when the stored roll rate is inhibited.
-    rotate(state,-seconds * context.commanded_roll_rate,static_cast<calculation>(context.commanded_angle_of_attack) - context.angle_of_attack,-static_cast<calculation>(state.yaw_step_radians));
+    rotate(state, -seconds * context.commanded_roll_rate, static_cast<calculation>(context.commanded_angle_of_attack) - context.angle_of_attack, -static_cast<calculation>(state.yaw_step_radians));
   } else {
     state.angular_rate.z = static_cast<double>(static_cast<calculation>(state.yaw_step_radians) / seconds);
-    rotate(state,-seconds * (state.angular_rate.x - seconds * half_step * state.angular_acceleration.x),seconds * (state.angular_rate.y - seconds * half_step * state.angular_acceleration.y),-static_cast<calculation>(state.yaw_step_radians));
+    rotate(state, -seconds * (state.angular_rate.x - seconds * half_step * state.angular_acceleration.x), seconds * (state.angular_rate.y - seconds * half_step * state.angular_acceleration.y), -static_cast<calculation>(state.yaw_step_radians));
   }
 }
 

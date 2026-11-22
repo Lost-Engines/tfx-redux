@@ -1,7 +1,7 @@
 #pragma once
 
-#include "render/framebuffer.h"
 #include "render/colour_remap.h"
+#include "render/framebuffer.h"
 
 namespace tfx::render {
 
@@ -10,7 +10,10 @@ struct indexed_vertex {
   uint16_t shade_q8;
 };
 
-enum class polygon_facing { cull, unchecked };
+enum class polygon_facing {
+  cull,
+  unchecked
+};
 
 struct polygon_span {
   int16_t row;

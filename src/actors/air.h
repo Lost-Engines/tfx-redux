@@ -10,12 +10,26 @@
 
 namespace tfx::actors {
 
-enum class air_action : uint8_t { route, retire_ejected, retire_crashed, falling, normal, finish_takeoff, manoeuvre, engagement, withdraw, evasive, align_manoeuvre, waiting, clear };
+enum class air_action : uint8_t {
+  route,
+  retire_ejected,
+  retire_crashed,
+  falling,
+  normal,
+  finish_takeoff,
+  manoeuvre,
+  engagement,
+  withdraw,
+  evasive,
+  align_manoeuvre,
+  waiting,
+  clear
+};
 
 struct air_location {
   unsigned int record;
   unsigned int address;
-  bool operator==(air_location const&) const = default;
+  bool operator==(air_location const &) const = default;
 };
 unsigned int constexpr player_air_target{aircraft_per_side * 2};
 struct air_contact {
@@ -48,8 +62,12 @@ struct air_actor {
   uint8_t player_shots{0};
 };
 struct air_target_scan {};
-struct air_scenery_event { unsigned int entry; };
-struct air_radio { std::string text; };
+struct air_scenery_event {
+  unsigned int entry;
+};
+struct air_radio {
+  std::string text;
+};
 struct air_weapon {
   vec3<int32_t> position;
   vec3<math::angle> angles;
@@ -62,27 +80,42 @@ struct air_impact {
   vec3<int32_t> position;
   unsigned int kind;
 };
-enum class air_loss_cause { combat, collision };
-enum class air_warning_kind { tracking, firing };
-struct air_warning { unsigned int target; air_warning_kind kind; };
-enum class air_countermeasure_kind { infrared, radar };
-struct air_countermeasure { air_countermeasure_kind kind; int16_t strength; };
-using air_request_data = std::variant<air_target_scan,air_scenery_event,air_radio,air_weapon,air_impact,air_warning,air_countermeasure>;
+enum class air_loss_cause {
+  combat,
+  collision
+};
+enum class air_warning_kind {
+  tracking,
+  firing
+};
+struct air_warning {
+  unsigned int target;
+  air_warning_kind kind;
+};
+enum class air_countermeasure_kind {
+  infrared,
+  radar
+};
+struct air_countermeasure {
+  air_countermeasure_kind kind;
+  int16_t strength;
+};
+using air_request_data = std::variant<air_target_scan, air_scenery_event, air_radio, air_weapon, air_impact, air_warning, air_countermeasure>;
 struct air_request {
   unsigned int actor;
   air_request_data data;
 };
 struct air_context {
   simulation::flight_model model{simulation::flight_model::arcade};
-  std::function<bool(vec2<int16_t> const&)> intact_ground_target{};
-  std::function<unsigned int(vec3<int32_t> const&)> impact_effect{};
+  std::function<bool(vec2<int16_t> const &)> intact_ground_target{};
+  std::function<unsigned int(vec3<int32_t> const &)> impact_effect{};
   bool combat{false};
   bool weapons_enabled{true};
   std::optional<air_contact> player{};
   flight::player_aircraft player_aircraft{flight::player_aircraft::eurofighter};
   std::span<std::optional<air_threat> const> threats{};
   uint16_t combat_flags{0};
-  std::function<void(air_request const&)> emitted{};
+  std::function<void(air_request const &)> emitted{};
 };
 
 unsigned int air_registry_index(initial_actor const &actor);
@@ -91,12 +124,12 @@ class air_runtime {
 private:
   class request_queue;
   std::vector<resources::bytes> commands;
-  std::array<std::optional<air_actor>,aircraft_per_side * 2> actors;
+  std::array<std::optional<air_actor>, aircraft_per_side * 2> actors;
   std::span<formation_offset const> formation;
   std::span<uint8_t const> envelope;
   math::random_state random;
   std::span<manoeuvre const> manoeuvres;
-  std::array<std::vector<unsigned int>,3> manoeuvre_banks;
+  std::array<std::vector<unsigned int>, 3> manoeuvre_banks;
   air_contact contact(unsigned int target, air_context const &context) const;
   bool acquire(unsigned int index, std::optional<unsigned int> excluded, air_context const &context);
   void select_manoeuvre(air_actor &actor, unsigned int category);

@@ -13,7 +13,7 @@ aerodynamic_recovery_trigger_result check_aerodynamic_recovery(aerodynamic_recov
   double const crossing_seconds{static_cast<double>(static_cast<double>(context.down_metres) / -static_cast<double>(context.down_velocity))};
   if(!(crossing_seconds > 0)) return result;
   if((crossing_seconds < autopilot_recovery_seconds && targets.enabled) || (crossing_seconds < urgent_recovery_seconds && (context.gear_condition == system_condition::normal || context.metres_per_second > damaged_gear_recovery_speed))) {
-    result.recovery = toggle_aerodynamic_recovery(state,controls,powerplant,air_brake,context.eligibility);
+    result.recovery = toggle_aerodynamic_recovery(state, controls, powerplant, air_brake, context.eligibility);
     return result;
   }
   result.descent_warning = crossing_seconds < warning_seconds && crossing_seconds >= urgent_recovery_seconds;

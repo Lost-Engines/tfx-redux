@@ -3,13 +3,16 @@
 
 namespace tfx::missions {
 
-timeline::timeline(setup const &source) : initialisation{source}, delivered_messages(source.messages.size()), dispatched_events(source.scenery_events.size()) {
+timeline::timeline(setup const &source)
+  : initialisation{source},
+    delivered_messages(source.messages.size()),
+    dispatched_events(source.scenery_events.size()) {
 }
 
 void timeline::reset(mission_tick const elapsed) {
   elapsed_ticks = elapsed;
-  std::ranges::fill(delivered_messages,0);
-  std::ranges::fill(dispatched_events,0);
+  std::ranges::fill(delivered_messages, 0);
+  std::ranges::fill(dispatched_events, 0);
 }
 
 std::vector<unsigned int> timeline::begin_frame() {

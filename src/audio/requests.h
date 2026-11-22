@@ -6,7 +6,13 @@
 
 namespace tfx::audio {
 
-enum class sound_device : uint8_t { none, sound_blaster, lapc, sound_blaster16, gravis };
+enum class sound_device : uint8_t {
+  none,
+  sound_blaster,
+  lapc,
+  sound_blaster16,
+  gravis
+};
 
 enum class music_cue_id : uint8_t {
   mission_start,
@@ -54,7 +60,7 @@ enum class sample_id : unsigned int {
   engine_ignition = 77,
 };
 
-inline constexpr std::array<unsigned int,2> engine_start_sequence{
+inline std::array<unsigned int, 2> constexpr engine_start_sequence{
   std::to_underlying(sample_id::engine_ignition),
   std::to_underlying(sample_id::engine_running),
 };
@@ -73,9 +79,9 @@ enum class lapc_effect_cue : uint8_t {
 
 // Native 0x8bd8c/0xa4f10: the shared release sound followed by the
 // weapon-class sample. Categories outside this authored bomb set use missile.
-constexpr std::array<unsigned int,2> store_release_sequence(uint8_t const category) {
+constexpr std::array<unsigned int, 2> store_release_sequence(uint8_t const category) {
   bool const bomb{category == 3 || category == 5 || category == 7 || category == 9};
-  return {std::to_underlying(sample_id::weapon_release),std::to_underlying(bomb ? sample_id::bomb_release : sample_id::missile_release)};
+  return {std::to_underlying(sample_id::weapon_release), std::to_underlying(bomb ? sample_id::bomb_release : sample_id::missile_release)};
 }
 
 } // namespace tfx::audio

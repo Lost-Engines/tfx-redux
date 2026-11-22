@@ -1,7 +1,7 @@
 #include "recovery.h"
+#include <utility>
 #include "resources/media.h"
 #include "world/environment.h"
-#include <utility>
 
 namespace tfx::missions {
 
@@ -14,7 +14,7 @@ recovery_region pilot_recovery_region(std::string_view const world) {
   return recovery_region::unknown;
 }
 recovery_maps::recovery_maps(resources::archive const &game) {
-  std::array<char const*,6> constexpr names{"capsom","capcol","caplib","capyug","capsea","noncap"};
+  std::array<char const *, 6> constexpr names{"capsom", "capcol", "caplib", "capyug", "capsea", "noncap"};
   for(unsigned int index{0}; index != names.size(); ++index) {
     auto const name{std::string{"iff/raw/"} + names[index] + ".lbm"};
     // The original names a fallback noncap.lbm that is absent from retail 2.05.
@@ -35,11 +35,12 @@ recovery_state recovery_maps::resolve(recovery_state result, recovery_context co
   result.status = context.damaged ? session_status::normal : session_status::violated_orders;
   auto const &map{maps.at(std::to_underlying(context.region))};
   if(!map) throw std::runtime_error{"pilot recovery map unavailable for this region"};
-  auto const point{[](vec2<int32_t> const &coordinates) {
+  auto const point{[](vec2<int32_t> const &coordinates){
     // Native uses truncating division, then stores both pixel coordinates in words.
-    return vec2<int16_t>{math::signed_word(static_cast<uint16_t>(coordinates.x / world::cell_units)),math::signed_word(static_cast<uint16_t>(world::map_height - 1 - coordinates.y / world::cell_units))};
+    return vec2<int16_t>{math::signed_word(static_cast<uint16_t>(coordinates.x / world::cell_units)), math::signed_word(static_cast<uint16_t>(world::map_height - 1 - coordinates.y / world::cell_units))};
   }};
-  auto const start{point(context.start)}, position{point(context.position)};
+  auto const start{point(context.start)};
+  auto const position{point(context.position)};
   bool missing{true};
   if(position.x >= 0 && position.x < render::screen_width && position.y >= 0 && position.y < render::screen_height) {
     // Original 0x72424 first marks the starting cell with palette index 1.

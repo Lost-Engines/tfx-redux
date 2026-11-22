@@ -1,10 +1,9 @@
 #include "qsound_effect.h"
-
 #include <algorithm>
 #include <utility>
+#include "audio/music_clock.h"
 #include "qsound/position_sweep.h"
 #include "qsound/spatial_model.h"
-#include "audio/music_clock.h"
 
 namespace tfx::audio {
 
@@ -17,14 +16,14 @@ unsigned int constexpr original_coefficient_bank_rate{8000};
 struct qsound_effect::implementation {
   qsound::position_sweep sweep;
   music_clock clock;
-  int chain_phase{};
+  int chain_phase{0};
   unsigned int const tail;
   qsound::spatial_model processor;
 
   implementation(qsound::spatial_tables tables, unsigned int const output_rate) :
     clock{output_rate},
     tail{static_cast<unsigned int>(std::max({tables.left_filter.taps.size(), tables.right_filter.taps.size(),
-      static_cast<std::size_t>(tables.direct_delay_samples + 1)}))},
+      static_cast<size_t>(tables.direct_delay_samples + 1)}))},
     processor{std::move(tables), {
       .rounding{qsound::rounding_model::floor},
       .accumulation{qsound::accumulation_model::saturate_each_mac},

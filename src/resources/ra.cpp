@@ -47,7 +47,9 @@ public:
       if(bit()) {
         result.branches[i] = 0;
         result.leaves[i] = value(right_bits);
-      } else result.branches[i] = value(left_bits);
+      } else {
+        result.branches[i] = value(left_bits);
+      }
     }
   }
   unsigned int symbol(tree const &table) {

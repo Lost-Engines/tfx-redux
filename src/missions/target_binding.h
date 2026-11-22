@@ -7,10 +7,16 @@
 
 namespace tfx::missions {
 
-struct fixed_target { unsigned int index; };
-struct surface_target { unsigned int slot; };
-struct terrain_target { vec2<int32_t> cell; };
-using target_binding = std::variant<fixed_target,surface_target,terrain_target>;
+struct fixed_target {
+  unsigned int index;
+};
+struct surface_target {
+  unsigned int slot;
+};
+struct terrain_target {
+  vec2<int32_t> cell;
+};
+using target_binding = std::variant<fixed_target, surface_target, terrain_target>;
 
 struct surface_target_candidate {
   unsigned int slot;

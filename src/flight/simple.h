@@ -16,14 +16,14 @@ struct simple_state {
   landing_gear_state gear{};
   float geometric_altitude_km{0};
   float displayed_g_load{0};
-  float reported_speed{.5f};
+  float reported_speed{0.5f};
   bool first_update{true};
 };
 struct simple_inputs {
   flight_controls controls{};
   control_source source{control_source::keyboard};
   direction_keys keys{};
-  vec2<int16_t> joystick{0,0};
+  vec2<int16_t> joystick{0, 0};
   bool alt{false};
   int16_t surface_type{0};
 };

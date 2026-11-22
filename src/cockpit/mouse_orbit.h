@@ -8,7 +8,9 @@ namespace tfx::cockpit {
 // separate preserves the authored tracking, fly-past and keyboard camera laws.
 class mouse_orbit {
   view_mode selected{view_mode::cockpit};
-  double heading{0}, pitch{0}, zoom{0};
+  double heading{0};
+  double pitch{0};
+  double zoom{0};
 public:
   static bool supports(view_mode mode);
   bool select(view_mode mode);
@@ -21,7 +23,8 @@ public:
 
 // Head rotation leaves the pilot's eye in place. It never modifies flight input.
 class mouse_look {
-  double heading{0}, pitch{0};
+  double heading{0};
+  double pitch{0};
 public:
   static bool supports(view_mode mode);
   void reset();

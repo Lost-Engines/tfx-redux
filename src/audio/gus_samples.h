@@ -14,8 +14,8 @@ struct gus_sample_data {
 };
 struct gus_playback_state {
   gus_scheduler_state scheduling;
-  std::array<unsigned int,gus_scheduler::voice_count> pending;
-  std::array<unsigned int,gus_scheduler::voice_count> started;
+  std::array<unsigned int, gus_scheduler::voice_count> pending;
+  std::array<unsigned int, gus_scheduler::voice_count> started;
   std::vector<int16_t> cooldowns;
 };
 

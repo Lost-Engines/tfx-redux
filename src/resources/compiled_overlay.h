@@ -22,7 +22,7 @@ private:
     unsigned int column;
   };
   std::vector<pixel_write> pixels;
-  std::array<column_entry,159> entries{}; // Native pans -79..79 VGA byte columns.
+  std::array<column_entry, 159> entries{};                                     // Native pans -79..79 VGA byte columns.
   bool movable;
 
 public:

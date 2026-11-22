@@ -20,11 +20,13 @@ void update_aerodynamic_response(aerodynamic_response_state &state, aerodynamic_
   auto const &basis{context.basis};
   auto const &p{context.parameters};
   auto const &inertia{context.inertia};
-  calculation const seconds{context.seconds}, speed{context.metres_per_second};
-  if(motion.air_velocity_body.x > sideslip_speed || motion.air_velocity_body.x < -sideslip_speed) state.sideslip_radians = static_cast<double>(std::atan2(motion.air_velocity_body.y,motion.air_velocity_body.x));
+  calculation const seconds{context.seconds};
+  calculation const speed{context.metres_per_second};
+  if(motion.air_velocity_body.x > sideslip_speed || motion.air_velocity_body.x < -sideslip_speed) state.sideslip_radians = static_cast<double>(std::atan2(motion.air_velocity_body.y, motion.air_velocity_body.x));
   bool low_speed_ground{false};
-  if(!context.landed) motion.yaw_step_radians = state.sideslip_radians;
-  else {
+  if(!context.landed) {
+    motion.yaw_step_radians = state.sideslip_radians;
+  } else {
     low_speed_ground = motion.ground_velocity_body.x < rolling_speed;
     state.sideslip_radians = 0;
     motion.yaw_step_radians = 0;
@@ -35,7 +37,7 @@ void update_aerodynamic_response(aerodynamic_response_state &state, aerodynamic_
   double const velocity_seconds{context.time_warp && !context.landed && !context.autopilot && motion.pose.metres_ned.z < warp_acceleration_altitude ? static_cast<double>(seconds * warp_multiplier) : context.seconds};
   for(unsigned int axis{0}; axis != 3; ++axis) motion.velocity_ned[axis] = static_cast<double>(static_cast<calculation>(motion.acceleration_ned[axis]) * velocity_seconds + motion.velocity_ned[axis]);
   if(context.rudder != 0 && !context.rudder_inhibited) {
-    auto const projection{[&](vec3d const &direction) {
+    auto const projection{[&](vec3d const &direction){
       return static_cast<double>(static_cast<calculation>(direction.y) * motion.velocity_ned.y + static_cast<calculation>(direction.x) * motion.velocity_ned.x + static_cast<calculation>(direction.z) * motion.velocity_ned.z);
     }};
     motion.ground_velocity_body.x = projection(basis.forward);

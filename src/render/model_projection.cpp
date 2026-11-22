@@ -1,7 +1,7 @@
 #include "model_projection.h"
-#include "near_clip.h"
 #include <cmath>
 #include <limits>
+#include "near_clip.h"
 
 namespace tfx::render {
 
@@ -20,9 +20,9 @@ std::optional<vec2<int16_t>> project_model_point(vec3<int32_t> const &point, cam
   int32_t const depth{point.z >> 16};
   if(depth <= model_near_depth) return std::nullopt;
   unsigned int const shift{projection_shift(view.opening)};
-  vec2<int32_t> const quotient{(point.x >> shift) / depth,(point.y >> shift) / depth};
+  vec2<int32_t> const quotient{(point.x >> shift) / depth, (point.y >> shift) / depth};
   if(quotient.x < std::numeric_limits<int16_t>::min() || quotient.x > std::numeric_limits<int16_t>::max() || quotient.y < std::numeric_limits<int16_t>::min() || quotient.y > std::numeric_limits<int16_t>::max()) return std::nullopt;
-  return vec2<int16_t>{math::signed_word(static_cast<uint16_t>(quotient.x + static_cast<int32_t>(view.projection_origin.x))),math::signed_word(static_cast<uint16_t>(quotient.y + static_cast<int32_t>(view.projection_origin.y)))};
+  return vec2<int16_t>{math::signed_word(static_cast<uint16_t>(quotient.x + static_cast<int32_t>(view.projection_origin.x))), math::signed_word(static_cast<uint16_t>(quotient.y + static_cast<int32_t>(view.projection_origin.y)))};
 }
 
 } // namespace tfx::render

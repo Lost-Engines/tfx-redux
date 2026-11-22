@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include "math/attitude.h"
-#include "resources/binary.h"
 #include "render/model_queue.h"
+#include "resources/binary.h"
 
 namespace tfx::recording {
 
@@ -15,7 +15,11 @@ unsigned int constexpr compression_buffer_bytes{2048};
 unsigned int constexpr maximum_frame_bytes{16 + render::model_queue_capacity * 20 + 6 * (2 + compression_buffer_bytes)};
 // Original queued constructors CC0BF/CC164/CC238 store these dispatch offsets.
 // Shadow path 56 includes parameter and scale setup; 48 skips both steps.
-enum class model_kind : uint8_t { unrotated = 40, rotated = 44, ground_shadow = 56 };
+enum class model_kind : uint8_t {
+  unrotated = 40,
+  rotated = 44,
+  ground_shadow = 56
+};
 
 using order_entry = render::model_queue_entry;
 struct model {
@@ -24,15 +28,15 @@ struct model {
   uint8_t colour_row{0};
   uint8_t scale{1};
   uint16_t resource{0};
-  vec3<math::angle> angles{0,0,0};
-  vec3<int32_t> camera_origin{0,0,0};
-  std::array<uint8_t,8> parameters{};
+  vec3<math::angle> angles{0, 0, 0};
+  vec3<int32_t> camera_origin{0, 0, 0};
+  std::array<uint8_t, 8> parameters{};
 };
 struct frame {
   // C5BEC/C5FF0 copy these eight retained bytes verbatim. No producer has
   // been found in retail 2.05; retain the field without inventing semantics.
-  std::array<uint8_t,8> reserved{};
-  vec3<math::angle> camera_angles{0,0,0};
+  std::array<uint8_t, 8> reserved{};
+  vec3<math::angle> camera_angles{0, 0, 0};
   std::vector<order_entry> order;
   std::vector<model> models;
 };

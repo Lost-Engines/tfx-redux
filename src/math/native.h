@@ -3,10 +3,10 @@
 #include <array>
 #include <bit>
 #include <cstdint>
-#include "math/trigonometry.h"
+#include "vectorstorm/matrix/matrix3.h"
 #include "vectorstorm/vector/vector2.h"
 #include "vectorstorm/vector/vector3.h"
-#include "vectorstorm/matrix/matrix3.h"
+#include "math/trigonometry.h"
 
 namespace tfx::math {
 

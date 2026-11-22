@@ -4,7 +4,7 @@
 namespace tfx::recording {
 namespace {
 void write(std::ofstream &output, std::span<uint8_t const> const bytes) {
-  output.write(reinterpret_cast<char const*>(bytes.data()),static_cast<std::streamsize>(bytes.size()));
+  output.write(reinterpret_cast<char const *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 uint32_t position(std::ofstream &output) {
   auto const at{static_cast<std::streamoff>(output.tellp())};
@@ -13,15 +13,29 @@ uint32_t position(std::ofstream &output) {
 }
 }
 
-recorder::recorder() { output.exceptions(std::ios::badbit | std::ios::failbit); }
-recorder::~recorder() { try { finish(); } catch(...) {} }
-bool recorder::active() const { return output.is_open(); }
-uint16_t recorder::frame_count() const { return frames; }
+recorder::recorder() {
+  output.exceptions(std::ios::badbit | std::ios::failbit);
+}
+recorder::~recorder() {
+  try {
+    finish();
+  } catch(...) {}
+}
+bool recorder::active() const {
+  return output.is_open();
+}
+uint16_t recorder::frame_count() const {
+  return frames;
+}
 void recorder::begin(std::filesystem::path const &path) {
-  finish();output.clear();
-  dictionary = {};handles.clear();frames = 0;
-  output.open(path,std::ios::binary | std::ios::trunc);
-  std::array<uint8_t,header_bytes> const header{};write(output,header);
+  finish();
+  output.clear();
+  dictionary = {};
+  handles.clear();
+  frames = 0;
+  output.open(path, std::ios::binary | std::ios::trunc);
+  std::array<uint8_t, header_bytes> const header{};
+  write(output, header);
 }
 void recorder::append(scene_frame &source) {
   if(!active()) throw std::runtime_error{"flight recorder is not open"};
@@ -36,11 +50,12 @@ void recorder::append(scene_frame &source) {
         .handle{id},
         .name{name},
       });
-      found = handles.emplace(name,id).first;
+      found = handles.emplace(name, id).first;
     }
     source.data.models[index].resource = found->second;
   }
-  auto const encoded{encode_frame(source.data)};write(output,encoded);
+  auto const encoded{encode_frame(source.data)};
+  write(output, encoded);
   // Native C5BEC wraps this word and makes an overlong recording unplayable.
   // Close the complete file at its last representable frame instead.
   if(++frames == std::numeric_limits<uint16_t>::max()) finish();
@@ -49,15 +64,18 @@ void recorder::finish() {
   if(!active()) return;
   auto const trailer{position(output)};
   auto const encoded{encode(dictionary)};
-  write(output,std::span{encoded}.subspan(header_bytes));
+  write(output, std::span{encoded}.subspan(header_bytes));
   auto const size{position(output)};
-  std::array<uint8_t,header_bytes> header{};
-  header[0] = static_cast<uint8_t>(frames);header[1] = static_cast<uint8_t>(frames >> 8);
+  std::array<uint8_t, header_bytes> header{};
+  header[0] = static_cast<uint8_t>(frames);
+  header[1] = static_cast<uint8_t>(frames >> 8);
   for(unsigned int index{0}; index != 4; ++index) {
     header[2 + index] = static_cast<uint8_t>(size >> (index * 8));
     header[6 + index] = static_cast<uint8_t>(trailer >> (index * 8));
   }
-  output.seekp(0);write(output,header);output.close();
+  output.seekp(0);
+  write(output, header);
+  output.close();
 }
 
 } // namespace tfx::recording

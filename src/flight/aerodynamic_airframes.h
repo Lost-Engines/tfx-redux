@@ -1,11 +1,11 @@
 #pragma once
 
-#include "flight/airframes.h"
 #include "flight/aerodynamic_coefficients.h"
+#include "flight/aerodynamic_ground.h"
+#include "flight/aerodynamic_pose.h"
 #include "flight/aerodynamic_powerplant.h"
 #include "flight/aerodynamic_surfaces.h"
-#include "flight/aerodynamic_pose.h"
-#include "flight/aerodynamic_ground.h"
+#include "flight/airframes.h"
 #include "flight/atmosphere.h"
 
 namespace tfx::flight {
@@ -37,6 +37,6 @@ struct aerodynamic_airframe {
   void use_carrier_setup();
   aerodynamic_coefficient_parameters initial_coefficients(double previous_flap_lift_offset = 0) const;
 };
-std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t const> executable);
+std::array<aerodynamic_airframe, 3> load_aerodynamic_airframes(std::span<uint8_t const> executable);
 
 } // namespace tfx::flight

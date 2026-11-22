@@ -11,10 +11,10 @@ namespace tfx::cockpit::detail {
 template<typename... Values>
 std::string formatted(std::string const &format, Values const... values) {
   // Formats come only from the verified reference executable.
-  std::array<char,128> buffer{};
-  int const length{std::snprintf(buffer.data(),buffer.size(),format.c_str(),values...)};
+  std::array<char, 128> buffer{};
+  int const length{std::snprintf(buffer.data(), buffer.size(), format.c_str(), values...)};
   if(length < 0 || static_cast<unsigned int>(length) >= buffer.size()) throw std::runtime_error{"HUD readout exceeds its display buffer"};
-  return {buffer.data(),static_cast<unsigned int>(length)};
+  return {buffer.data(), static_cast<unsigned int>(length)};
 }
 inline double decimal_value(double const value, unsigned int const precision) {
   // Watcom rounds the stored double after multiplying by 10^precision.
@@ -25,7 +25,7 @@ inline double decimal_value(double const value, unsigned int const precision) {
   return rounded == 0 ? 0.0 : rounded / scale;
 }
 inline std::string decimal(std::string const &format, double const value, unsigned int const precision) {
-  return formatted(format,decimal_value(value,precision));
+  return formatted(format, decimal_value(value, precision));
 }
 
 } // namespace tfx::cockpit::detail

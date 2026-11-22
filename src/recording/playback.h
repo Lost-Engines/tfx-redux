@@ -13,8 +13,8 @@ private:
   file_header header;
   uint16_t remaining;
   uint32_t position{header_bytes};
-  std::map<uint16_t,std::string> names;
-  std::array<uint8_t,maximum_frame_bytes> buffer{};
+  std::map<uint16_t, std::string> names;
+  std::array<uint8_t, maximum_frame_bytes> buffer{};
 
 public:
   explicit playback(std::filesystem::path const &path);

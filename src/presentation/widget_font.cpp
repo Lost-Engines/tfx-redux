@@ -6,7 +6,11 @@ namespace tfx::presentation {
 
 widget_font::widget_font(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
-  unsigned int constexpr code{0x70aa4}, advances{code + 0x60f49}, mapping{code + 0x6103d}, rows{code + 0x61132}, glyphs_per_row{115};
+  unsigned int constexpr code{0x70aa4};
+  unsigned int constexpr advances{code + 0x60f49};
+  unsigned int constexpr mapping{code + 0x6103d};
+  unsigned int constexpr rows{code + 0x61132};
+  unsigned int constexpr glyphs_per_row{115};
   for(unsigned int letter{0}; letter != characters.size(); ++letter) {
     auto &glyph{characters[letter]};
     glyph.advance = static_cast<uint8_t>(source.byte(advances + letter) + 1);
@@ -31,12 +35,15 @@ void widget_font::draw(render::framebuffer &target, vec2<int> const &position, s
   for(uint8_t const letter : text) {
     if(!letter) break;
     auto const &glyph{characters[letter]};
-    for(unsigned int row{0}; row != glyph.rows.size(); ++row) for(unsigned int column{0}; column != 8; ++column) {
-      int64_t const px{x + column}, py{top + row};
-      if((glyph.rows[row] & (1u << column)) && px >= 0 && px < render::screen_width && py >= 0 && py < render::screen_height) {
-        unsigned int const offset{static_cast<unsigned int>(py * render::screen_width + px)};
-        target.write(offset,colour);
-        if(coverage) coverage->pixels[offset] = 255;
+    for(unsigned int row{0}; row != glyph.rows.size(); ++row) {
+      for(unsigned int column{0}; column != 8; ++column) {
+        int64_t const px{x + column};
+        int64_t const py{top + row};
+        if((glyph.rows[row] & (1u << column)) && px >= 0 && px < render::screen_width && py >= 0 && py < render::screen_height) {
+          unsigned int const offset{static_cast<unsigned int>(py * render::screen_width + px)};
+          target.write(offset, colour);
+          if(coverage) coverage->pixels[offset] = 255;
+        }
       }
     }
     x += glyph.advance;

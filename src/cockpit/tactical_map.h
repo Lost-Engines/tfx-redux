@@ -15,7 +15,7 @@ struct tactical_map_aircraft {
   bool selected{false};
 };
 struct tactical_map_snapshot {
-  vec3<int32_t> player{0,0,0};
+  vec3<int32_t> player{0, 0, 0};
   math::angle heading{0};
   std::span<vec2<uint8_t> const> route{};
   std::span<vec3<int32_t> const> targets{};
@@ -50,7 +50,7 @@ public:
     std::string const &schematic_name, tactical_map_animation &animation);
   auto open(tactical_map_snapshot const &state)->void;
   auto advance(simulation::timer_ticks elapsed)->void;
-  auto image() const->render::framebuffer const&;
+  auto image() const->render::framebuffer const &;
 };
 
 } // namespace tfx::cockpit

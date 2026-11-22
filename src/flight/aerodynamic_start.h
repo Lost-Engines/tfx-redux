@@ -7,7 +7,7 @@ namespace tfx::flight {
 struct aerodynamic_start_state {
   aerodynamic_motion motion{};
   store_effects stores{};
-  vec2d engine_factor{0,0};
+  vec2d engine_factor{0, 0};
   double fuel_kg{0};
   double mass_kg{0};
   double seconds{0};
@@ -17,7 +17,7 @@ struct aerodynamic_start_state {
 };
 struct aerodynamic_start_context {
   math::attitude orientation{};
-  vec3f position{0,0,0};
+  vec3f position{0, 0, 0};
   int32_t fixed_speed{0};
   math::angle heading{0};
   int16_t ground_elevation_steps{0};

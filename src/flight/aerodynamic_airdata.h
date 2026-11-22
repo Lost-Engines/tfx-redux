@@ -20,7 +20,7 @@ struct aerodynamic_airdata {
   int32_t track_heading{0};
 };
 struct aerodynamic_airdata_context {
-  vec3f wind_ned{0,0,0};
+  vec3f wind_ned{0, 0, 0};
   double empty_mass_kg{0};
   double fuel_kg{0};
   double stores_kg{0};

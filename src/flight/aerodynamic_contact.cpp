@@ -1,8 +1,8 @@
 #include "aerodynamic_contact.h"
 #include <algorithm>
 #include <bit>
-#include <utility>
 #include <cmath>
+#include <utility>
 
 namespace tfx::flight {
 namespace {
@@ -20,14 +20,17 @@ double constexpr low_speed_brake_gradient{.1}, body_friction{.1};
 int16_t constexpr minimum_downward_basis{2000};
 int constexpr feet_per_ground_step{8};
 
-calculation wide(double const value) { return value; }
+calculation wide(double const value) {
+  return value;
+}
 double negative(double const value) {
   return std::bit_cast<double>(std::bit_cast<uint64_t>(value) ^ (uint64_t{1} << 63));
 }
 vec3d to_ned(aerodynamic_basis const &basis, vec3d const &body) {
   vec3d result;
-  for(unsigned int axis{0}; axis != 3; ++axis)
+  for(unsigned int axis{0}; axis != 3; ++axis) {
     result[axis] = static_cast<double>(wide(basis.right[axis]) * body.y + wide(basis.forward[axis]) * body.x + wide(basis.down[axis]) * body.z);
+  }
   return result;
 }
 
@@ -37,7 +40,7 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
   if(context.kind == aerodynamic_contact_kind::retracted_wheel) state.offset_body.z = retracted_wheel_down;
   auto const &offset{state.offset_body};
   auto const &basis{context.basis};
-  state.point_ned = to_ned(basis,offset);
+  state.point_ned = to_ned(basis, offset);
   for(unsigned int axis{0}; axis != 3; ++axis) state.point_ned[axis] = static_cast<double>(wide(motion.pose.metres_ned[axis]) + state.point_ned[axis]);
   state.ground_up_metres = context.terrain_present ? static_cast<double>(-context.ground_elevation_steps * feet_per_ground_step * wide(metres_per_foot)) : -8;
   double const ground_up{state.ground_up_metres};
@@ -47,7 +50,7 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
   state.velocity_body.y = static_cast<double>(0.0 * offset.x - wide(rates.x) * offset.z);
   state.velocity_body.z = static_cast<double>(wide(offset.y) * rates.x - wide(rates.y) * offset.x);
   for(unsigned int axis{0}; axis != 3; ++axis) state.velocity_body[axis] = static_cast<double>(wide(motion.ground_velocity_body[axis]) + state.velocity_body[axis]);
-  state.velocity_ned = to_ned(basis,state.velocity_body);
+  state.velocity_ned = to_ned(basis, state.velocity_body);
   motion.angular_rate.z = 0;
   if(state.point_ned.z <= -ground_up || context.body_downward_q15 <= minimum_downward_basis) {
     state.unloaded_clearance = parameters.unloaded_clearance;
@@ -126,7 +129,7 @@ bool update_aerodynamic_contact(aerodynamic_contact_state &state, aerodynamic_mo
     if(speed > brake_fade_speed && brakes != system_condition::failed) state.braking_coefficient = static_cast<double>(brake_fade_offset - wide(speed) * brake_fade_gradient + state.braking_coefficient);
     if(state.braking_coefficient < 0) state.braking_coefficient = 0;
     if(speed < crash_sink_speed) state.braking_coefficient = static_cast<double>(wide(parameters.braking_coefficient) * speed * low_speed_brake_gradient);
-    state.braking_coefficient = std::max(state.braking_coefficient,state.rolling_coefficient);
+    state.braking_coefficient = std::max(state.braking_coefficient, state.rolling_coefficient);
     if(context.precipitation) state.braking_coefficient = static_cast<double>(wide(parameters.wet_braking_factor) * state.braking_coefficient);
     if(brakes == system_condition::failed) state.braking_coefficient = 0;
     calculation const braking{wide(parameters.empty_mass_kg) / context.total_mass_kg * state.braking_coefficient};

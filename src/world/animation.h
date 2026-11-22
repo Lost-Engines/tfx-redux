@@ -11,12 +11,20 @@ using simulation::timer_ticks;
 using simulation::timer_hz;
 timer_ticks constexpr animation_interval{7}, maximum_animation_backlog{100};
 
-enum class animation_policy { unconditional, when_visible, frozen };
+enum class animation_policy {
+  unconditional,
+  when_visible,
+  frozen
+};
 constexpr bool animation_eligible(animation_policy const policy, bool const enabled, bool const visible) {
   return enabled && policy != animation_policy::frozen && (policy == animation_policy::unconditional || visible);
 }
 
-enum class stream_action { value_written, finished, event_requested };
+enum class stream_action {
+  value_written,
+  finished,
+  event_requested
+};
 struct stream_step {
   stream_action action;
   int16_t event{0};
