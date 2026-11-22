@@ -8,27 +8,30 @@
 
 namespace tfx::render {
 
-enum class projection_mode { continuous, original_model };
+enum class projection_mode {
+  continuous,
+  original_model
+};
 
 struct camera {
   vec3d position;
   vec3d right;
   vec3d down;
   vec3d forward;
-  vec2d projection_origin{centre_x,centre_y};
+  vec2d projection_origin{centre_x, centre_y};
   double focal_distance{focal_length};
   projection_mode projection{projection_mode::continuous};
   aperture opening{aperture::normal};
   std::optional<double> point_focal_distance{};
   double near_distance{16};
   double far_distance{20000};
-  vec2<int16_t> viewport_minimum{0,0};
-  vec2<int16_t> viewport_maximum{screen_width - 1,screen_height - 1};
+  vec2<int16_t> viewport_minimum{0, 0};
+  vec2<int16_t> viewport_maximum{screen_width - 1, screen_height - 1};
   // Retain the original setter inputs as well as its derived basis. Other
   // native world callbacks can reuse the last installed camera verbatim.
-  vec3<math::angle> view_angles{0,0,0};
+  vec3<math::angle> view_angles{0, 0, 0};
   // Integer world/terrain anchor; chase smoothing can offset position from it.
-  vec3<int32_t> world_anchor{0,0,0};
+  vec3<int32_t> world_anchor{0, 0, 0};
   point_projection projector() const;
   bool sphere_visible(vec3d const &world, double radius) const;
   vec3d transform(vec3d const &world) const;

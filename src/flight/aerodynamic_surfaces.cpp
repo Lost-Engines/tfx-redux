@@ -11,15 +11,17 @@ double constexpr half{.5}, chute_drag_coefficient{1.2};
 
 void update_aerodynamic_surfaces(aerodynamic_surface_state &state, aerodynamic_surface_parameters const &p, aerodynamic_surface_context const &context) {
   auto const &c{context.coefficients};
-  calculation const alpha{context.angle_of_attack}, speed{context.metres_per_second};
+  calculation const alpha{context.angle_of_attack};
+  calculation const speed{context.metres_per_second};
   state.flap_lift_offset = static_cast<double>(static_cast<calculation>(p.flap_lift_gradient) * context.flap_fraction * p.maximum_flap_angle + p.zero_lift);
   state.positive_lift_limit = static_cast<double>(static_cast<calculation>(p.flap_limit_gradient) * context.flap_fraction * p.maximum_flap_angle + p.maximum_lift);
   state.negative_lift_limit = -state.positive_lift_limit;
   state.wing_lift_coefficient = static_cast<double>(static_cast<calculation>(c.lift_slope) * alpha + state.flap_lift_offset);
   state.stalled = context.aircraft == player_aircraft::nighthawk && alpha > p.critical_angle;
   if(state.wing_lift_coefficient > state.positive_lift_limit) {
-    if(context.aircraft == player_aircraft::nighthawk) state.wing_lift_coefficient = state.positive_lift_limit;
-    else {
+    if(context.aircraft == player_aircraft::nighthawk) {
+      state.wing_lift_coefficient = state.positive_lift_limit;
+    } else {
       double const span{static_cast<double>(static_cast<calculation>(p.automatic_flap_gradient) * p.maximum_automatic_flap_angle)};
       state.automatic_flap_fraction = static_cast<double>((static_cast<calculation>(state.wing_lift_coefficient) - state.positive_lift_limit) / span);
       if(state.automatic_flap_fraction > 1) {
@@ -49,7 +51,8 @@ void update_aerodynamic_surfaces(aerodynamic_surface_state &state, aerodynamic_s
     pitch += static_cast<calculation>(c.elevator_moment) * context.elevator * p.maximum_elevator_angle * speed;
     pitch += static_cast<calculation>(c.pitch_damping) * context.pitch_rate * p.mean_chord * half;
     state.pitch_rate_moment_term = static_cast<double>(pitch);
-    auto const sine{std::sin(alpha)}, cosine{std::cos(alpha)};
+    auto const sine{std::sin(alpha)};
+    auto const cosine{std::cos(alpha)};
     calculation const chute{static_cast<calculation>(p.chute_pitch_arm) * sine * context.dynamic_pressure * chute_drag_coefficient * p.chute_area * static_cast<int>(context.chute_deployed)};
     calculation const main_moment{speed * (static_cast<calculation>(context.density) * half) * p.wing_area * p.mean_chord * state.pitch_rate_moment_term};
     calculation const brake_moment{static_cast<calculation>(context.dynamic_pressure) * (static_cast<calculation>(p.air_brake_moment_arm.x) * sine - static_cast<calculation>(p.air_brake_moment_arm.y) * cosine) * p.wing_area * p.air_brake_drag * context.air_brake_fraction};

@@ -10,20 +10,24 @@ namespace tfx::render {
 
 unsigned int constexpr model_queue_capacity{348};
 using model_slot = uint16_t;
-enum class model_render_path { unrotated, scaled, ground_shadow };
+enum class model_render_path {
+  unrotated,
+  scaled,
+  ground_shadow
+};
 struct model_slot_state {
   model_render_path path{model_render_path::unrotated};
   uint8_t scale{255};
-  vec3<math::angle> angles{0,0,0};
+  vec3<math::angle> angles{0, 0, 0};
 };
 // Native constructors partially overwrite persistent slot metadata. CC0BF
 // retains size; CBFEC retains the queued type. Queue resets clear neither.
 class model_slot_metadata {
 private:
-  std::array<model_slot_state,model_queue_capacity> slots{};
+  std::array<model_slot_state, model_queue_capacity> slots{};
 public:
-  model_slot_state queued(model_slot slot, model_render_path path, uint8_t scale, vec3<math::angle> const &angles = {0,0,0});
-  model_slot_state immediate(model_slot slot, uint8_t scale, vec3<math::angle> const &angles = {0,0,0});
+  model_slot_state queued(model_slot slot, model_render_path path, uint8_t scale, vec3<math::angle> const &angles = {0, 0, 0});
+  model_slot_state immediate(model_slot slot, uint8_t scale, vec3<math::angle> const &angles = {0, 0, 0});
   void restore(model_slot slot, model_slot_state const &state);
 };
 
@@ -37,7 +41,7 @@ struct model_queue_entry {
 class model_queue {
 private:
   using entry = model_queue_entry;
-  std::array<entry,model_queue_capacity> entries{};
+  std::array<entry, model_queue_capacity> entries{};
   unsigned int count{0};
   model_slot current{0};
   bool sorted{false};

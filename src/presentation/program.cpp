@@ -7,9 +7,9 @@ namespace tfx::presentation {
 namespace {
 
 std::string string(std::span<uint8_t const> const bytes) {
-  auto const end{std::ranges::find(bytes,uint8_t{0})};
+  auto const end{std::ranges::find(bytes, uint8_t{0})};
   if(end == bytes.end()) throw std::runtime_error{"unterminated parser string"};
-  return {bytes.begin(),end};
+  return {bytes.begin(), end};
 }
 uint32_t value(variables const &state, std::string const &name) {
   auto const found{state.find(name)};
@@ -24,35 +24,42 @@ program::program(std::span<uint8_t const> const source) {
   // Native saved-graph layout: linked-list pointers are saved editor bookkeeping, not executable addresses.
   resources::binary_view const view{source};
   unsigned int at{0};
-  auto const take{[&](unsigned int const length){ auto const data{view.slice(at,length)};at += length;return data; }};
-  auto const word{[&]{ auto const data{take(2)};return resources::binary_view{data}.le16(0); }};
+  auto const take{[&](unsigned int const length){
+    auto const data{view.slice(at, length)};
+    at += length;
+    return data;
+  }};
+  auto const word{[&]{
+    auto const data{take(2)};
+    return resources::binary_view{data}.le16(0);
+  }};
   auto const text{[&]{
     resources::binary_view const header{take(16)};
     auto const content{take(header.le16(10))};
     return text_block{
-      .position{header.signed_le16(2),header.signed_le16(0)},
+      .position{header.signed_le16(2), header.signed_le16(0)},
       .alignment{static_cast<text_alignment>(header.byte(4))},
       .shadow{header.byte(6) != 0},
       .reveal{header.byte(7) != 0},
       .font{header.byte(8)},
       .colour{header.byte(9)},
-      .text{content.begin(),std::ranges::find(content,uint8_t{0})},
+      .text{content.begin(), std::ranges::find(content, uint8_t{0})},
     };
   }};
   unsigned int const variable_count{word()};
   for(unsigned int index{0}; index != variable_count; ++index) {
     resources::binary_view const entry{take(30)};
     variables.push_back({
-      .name{string(entry.slice(9,21))},
+      .name{string(entry.slice(9, 21))},
       .text{entry.byte(8) != 0},
     });
   }
   unsigned int const function_count{word()};
-  std::array<unsigned int,15> constexpr payload_sizes{22,18,9,17,0,82,91,0,82,11,9,4,0,82,42};
+  std::array<unsigned int, 15> constexpr payload_sizes{22, 18, 9, 17, 0, 82, 91, 0, 82, 11, 9, 4, 0, 82, 42};
   for(unsigned int index{0}; index != function_count; ++index) {
     resources::binary_view const header{take(25)};
     function current{
-      .name{string(header.slice(14,11))},
+      .name{string(header.slice(14, 11))},
       .statements{},
     };
     unsigned int const count{header.le16(12)};
@@ -65,12 +72,15 @@ program::program(std::span<uint8_t const> const source) {
       resources::binary_view const payload{raw};
       action decoded;
       switch(kind) {
-      case node_kind::animation: case node_kind::image: case node_kind::text: {
+      case node_kind::animation:
+      case node_kind::image:
+      case node_kind::text:
+        {
         bool const animation{kind == node_kind::animation};
         bool const standalone{kind == node_kind::text};
         clip entry;
         if(!standalone) {
-          entry.resource = string(payload.slice(0,9));
+          entry.resource = string(payload.slice(0, 9));
           entry.fade_in = payload.byte(9);
           entry.fade_out = payload.byte(10);
         }
@@ -104,9 +114,12 @@ program::program(std::span<uint8_t const> const source) {
           .value{payload.le32(5)},
         });
         break;
-      case node_kind::launch: case node_kind::options: case node_kind::load_parser: case node_kind::planner:
+      case node_kind::launch:
+      case node_kind::options:
+      case node_kind::load_parser:
+      case node_kind::planner:
         decoded.emplace<host_action>(host_action{
-          .resource{string(kind == node_kind::planner ? payload.slice(0,9) : raw)},
+          .resource{string(kind == node_kind::planner ? payload.slice(0, 9) : raw)},
           .mode{kind == node_kind::planner ? payload.le16(9) : uint16_t{0}},
         });
         break;
@@ -117,18 +130,25 @@ program::program(std::span<uint8_t const> const source) {
           .index{payload.signed_le16(2)},
         });
         break;
-      case node_kind::condition: case node_kind::ultra_choice: {
+      case node_kind::condition:
+      case node_kind::ultra_choice:
+        {
         opaque_action entry{
-          .payload{raw.begin(),raw.end()},
+          .payload{raw.begin(), raw.end()},
         };
-        if(kind == node_kind::ultra_choice) for(bool const active : {true,payload.le32(34) != 0,payload.le32(38) != 0}) if(active) {
-          auto const buffer{take(17)};
-          entry.buffers.emplace_back(buffer.begin(),buffer.end());
+        if(kind == node_kind::ultra_choice) {
+          for(bool const active : {true, payload.le32(34) != 0, payload.le32(38) != 0}) {
+            if(active) {
+              auto const buffer{take(17)};
+              entry.buffers.emplace_back(buffer.begin(), buffer.end());
+            }
+          }
         }
         decoded.emplace<opaque_action>(std::move(entry));
         break;
       }
-      default: break;
+      default:
+        break;
       }
       current.statements.push_back({
         .source_offset{offset},
@@ -139,12 +159,14 @@ program::program(std::span<uint8_t const> const source) {
     functions.push_back(std::move(current));
   }
   if(at != source.size()) throw std::runtime_error{"unused saved parser bytes"};
-  for(auto const &function : functions) for(auto const &node : function.statements) {
-    if(auto const test{std::get_if<branch>(&node.data)}) {
-      if(test->target.function >= functions.size() || test->target.statement >= functions[test->target.function].statements.size()) throw std::runtime_error{"parser branch leaves its program"};
-      if(test->conditional && test->variable >= variables.size()) throw std::runtime_error{"parser branch variable is absent"};
-    } else if(auto const assignment{std::get_if<presentation::assignment>(&node.data)}) {
-      if(assignment->variable >= variables.size()) throw std::runtime_error{"parser assignment variable is absent"};
+  for(auto const &function : functions) {
+    for(auto const &node : function.statements) {
+      if(auto const test{std::get_if<branch>(&node.data)}) {
+        if(test->target.function >= functions.size() || test->target.statement >= functions[test->target.function].statements.size()) throw std::runtime_error{"parser branch leaves its program"};
+        if(test->conditional && test->variable >= variables.size()) throw std::runtime_error{"parser branch variable is absent"};
+      } else if(auto const assignment{std::get_if<presentation::assignment>(&node.data)}) {
+        if(assignment->variable >= variables.size()) throw std::runtime_error{"parser assignment variable is absent"};
+      }
     }
   }
 }
@@ -152,17 +174,24 @@ program::program(std::span<uint8_t const> const source) {
 bool branch_taken(branch const &test, program const &source, presentation::variables const &state) {
   if(!test.conditional) return true;
   if(test.comparison != 0) throw std::runtime_error{"unimplemented parser comparison"};
-  return value(state,source.variables.at(test.variable).name) == test.value;
+  return value(state, source.variables.at(test.variable).name) == test.value;
 }
 
 void assign(assignment const &assignment, program const &source, presentation::variables &state) {
   auto const &name{source.variables.at(assignment.variable).name};
-  auto const before{value(state,name)};
+  auto const before{value(state, name)};
   switch(assignment.operation) {
-  case assignment_operation::set: state[name] = assignment.value; break;
-  case assignment_operation::add: state[name] = before + assignment.value; break;
-  case assignment_operation::subtract: state[name] = before - assignment.value; break;
-  default: break;                                                              // Native 0xb28b8 ignores unknown operation bytes.
+  case assignment_operation::set:
+    state[name] = assignment.value;
+    break;
+  case assignment_operation::add:
+    state[name] = before + assignment.value;
+    break;
+  case assignment_operation::subtract:
+    state[name] = before - assignment.value;
+    break;
+  default:
+    break;                                                                     // Native 0xb28b8 ignores unknown operation bytes.
   }
 }
 

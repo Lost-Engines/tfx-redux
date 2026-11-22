@@ -6,15 +6,19 @@
 namespace tfx::audio {
 
 unsigned int constexpr osl_channels{16};
-enum class osl_device : uint8_t { fm = 2, lapc = 4, sound_canvas = 8 };
+enum class osl_device : uint8_t {
+  fm = 2,
+  lapc = 4,
+  sound_canvas = 8
+};
 struct osl_cell {
-  std::array<uint8_t,4> notes{};
+  std::array<uint8_t, 4> notes{};
   uint8_t instrument{0};
   uint8_t effect{0};
   uint8_t argument{0};
   uint8_t auxiliary{0};
 };
-using osl_row = std::array<osl_cell,osl_channels>;
+using osl_row = std::array<osl_cell, osl_channels>;
 struct osl_pattern {
   std::span<uint8_t const> bytes;
   uint16_t flags;
@@ -24,7 +28,8 @@ struct osl_pattern {
 class osl_pattern_reader {
 private:
   osl_pattern pattern;
-  unsigned int position{0}, row{0};
+  unsigned int position{0};
+  unsigned int row{0};
 
 public:
   explicit osl_pattern_reader(osl_pattern pattern);

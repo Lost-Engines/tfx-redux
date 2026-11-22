@@ -6,10 +6,14 @@ namespace tfx::world {
 
 std::optional<effect_kind> select_impact_effect(impact_surface const surface, bool const cannon) {
   switch(surface) {
-    case impact_surface::terrain: return cannon ? effect_kind::cannon_hit : effect_kind::hit;
-    case impact_surface::structure: return cannon ? effect_kind::cannon_miss : effect_kind::miss;
-    case impact_surface::water: return cannon ? effect_kind::cannon_splash : effect_kind::splash;
-    case impact_surface::unknown: return std::nullopt;
+  case impact_surface::terrain:
+    return cannon ? effect_kind::cannon_hit : effect_kind::hit;
+  case impact_surface::structure:
+    return cannon ? effect_kind::cannon_miss : effect_kind::miss;
+  case impact_surface::water:
+    return cannon ? effect_kind::cannon_splash : effect_kind::splash;
+  case impact_surface::unknown:
+    return std::nullopt;
   }
   return std::nullopt;
 }
@@ -33,13 +37,15 @@ player_contact_effects resolve_player_contact(player_contact_context const &cont
   // No new hit restores its fatal state; another fatal hit switches to kapow.
   player_contact_effects effects;
   if(context.previously_destroyed) {
-    if(!context.destroyed) effects.action = player_contact_action::restore_destroyed;
-    else if(!context.contact_explosion) {
+    if(!context.destroyed) {
+      effects.action = player_contact_action::restore_destroyed;
+    } else if(!context.contact_explosion) {
       effects.collision = true;
       if(!context.pilot_active) effects.action = player_contact_action::explode;
     }
-  } else if(!context.destroyed) effects.release_motion_hold = true;
-  else if(!context.contact_explosion && !context.pilot_active) {
+  } else if(!context.destroyed) {
+    effects.release_motion_hold = true;
+  } else if(!context.contact_explosion && !context.pilot_active) {
     effects.collision = true;
     effects.action = player_contact_action::explode;
   }
@@ -60,7 +66,8 @@ impact_surface classify_impact(render::framebuffer const &frame, std::optional<v
 
 crash_appearance select_crash_appearance(int16_t const collision, std::optional<int16_t> const terrain_type, impact_surface const sampled_surface, bool const water_world) {
   // Native 0x7d48a..0x7d4e9: collision 2 bypasses even the forced-water choice.
-  int16_t constexpr land_collision{2}, sea_definition_type{1};
+  int16_t constexpr land_collision{2};
+  int16_t constexpr sea_definition_type{1};
   if(collision != land_collision && ((terrain_type && *terrain_type == sea_definition_type) || sampled_surface == impact_surface::water || water_world)) return crash_appearance::water;
   return crash_appearance::land;
 }

@@ -7,12 +7,31 @@
 namespace tfx::flight {
 
 // Slot names follow the original HUD labels and manual; consumers retain their actual native indices.
-enum class aircraft_system : unsigned int { communications, flaps, left_engine, hud, wheel_brakes, right_engine, radar, air_brake, fuel, weapons, landing_gear, gun };
-enum class system_condition : uint8_t { unavailable, active, normal, failed = 11, intermittent = 14 };
+enum class aircraft_system : unsigned int {
+  communications,
+  flaps,
+  left_engine,
+  hud,
+  wheel_brakes,
+  right_engine,
+  radar,
+  air_brake,
+  fuel,
+  weapons,
+  landing_gear,
+  gun
+};
+enum class system_condition : uint8_t {
+  unavailable,
+  active,
+  normal,
+  failed = 11,
+  intermittent = 14
+};
 unsigned int constexpr aircraft_system_count{12};
 struct damage_state {
-  std::array<system_condition,aircraft_system_count> systems;
-  std::array<uint16_t,aircraft_system_count> repair_ticks{};
+  std::array<system_condition, aircraft_system_count> systems;
+  std::array<uint16_t, aircraft_system_count> repair_ticks{};
   double accumulated{0};
   int16_t right_display_selection{0};
   damage_state();

@@ -4,7 +4,10 @@
 
 namespace tfx::flight {
 
-enum class aerodynamic_speed_strategy { maintain, recover };
+enum class aerodynamic_speed_strategy {
+  maintain,
+  recover
+};
 struct aerodynamic_speed_state {
   double target_metres_per_second{0};
   double air_brake_fraction{0};

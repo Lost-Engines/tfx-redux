@@ -5,8 +5,8 @@
 namespace tfx::flight {
 
 struct aerodynamic_launch_context {
-  vec3<int32_t> position{0,0,0};
-  vec3<math::angle> angles{0,0,0};
+  vec3<int32_t> position{0, 0, 0};
+  vec3<math::angle> angles{0, 0, 0};
   aerodynamic_model model{aerodynamic_model::military_spec};
   unsigned int player_route_points{0};
   int16_t ground_elevation_steps{0};

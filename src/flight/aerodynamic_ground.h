@@ -4,24 +4,28 @@
 
 namespace tfx::flight {
 
-enum class aerodynamic_arrestor_phase : uint16_t { free, engaged, stopped };
+enum class aerodynamic_arrestor_phase : uint16_t {
+  free,
+  engaged,
+  stopped
+};
 
 struct aerodynamic_ground_parameters {
   aerodynamic_contact_parameters contact{};
-  std::array<vec3d,6> offsets{};                                               // Nose, left/right main gear, then three body points.
-  vec3d hook_offset{0,0,0};
+  std::array<vec3d, 6> offsets{};                                              // Nose, left/right main gear, then three body points.
+  vec3d hook_offset{0, 0, 0};
   double maximum_gear_speed{0};
   double arrestor_stiffness{0};
   double arrestor_damping{0};
 };
 struct aerodynamic_ground_state {
   aerodynamic_contact_state contact{};
-  vec3d hook_offset_ned{0,0,0};
-  vec3d hook_anchor_ned{0,0,0};
-  vec3d hook_displacement{0,0,0};
-  vec3d hook_force_ned{0,0,0};
-  vec3d hook_force_body{0,0,0};
-  vec3d hook_moment{0,0,0};
+  vec3d hook_offset_ned{0, 0, 0};
+  vec3d hook_anchor_ned{0, 0, 0};
+  vec3d hook_displacement{0, 0, 0};
+  vec3d hook_force_ned{0, 0, 0};
+  vec3d hook_force_body{0, 0, 0};
+  vec3d hook_moment{0, 0, 0};
   double cable_length{0};
   double cable_speed{0};
   double rollout_distance{0};
@@ -32,8 +36,8 @@ struct aerodynamic_ground_state {
 };
 struct aerodynamic_ground_context {
   aerodynamic_contact_context contact{};
-  vec3d previous_ned_force{0,0,0};
-  vec2d engine_factor{1,1};
+  vec3d previous_ned_force{0, 0, 0};
+  vec2d engine_factor{1, 1};
   double gear_fraction{0};
   double metres_per_second{0};
   double seconds{.02};

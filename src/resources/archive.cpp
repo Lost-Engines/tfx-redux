@@ -64,8 +64,11 @@ resource_id archive::hash_name(std::string_view const name) const {
   auto const dot{short_name.find('.')};
   if(dot != std::string::npos) {
     auto const extension{std::ranges::find(extensions, short_name.substr(dot))};
-    if(extension == extensions.end()) short_name.erase(dot, 1);
-    else short_name = short_name.substr(0, dot) + static_cast<char>('A' + std::distance(extensions.begin(), extension));
+    if(extension == extensions.end()) {
+      short_name.erase(dot, 1);
+    } else {
+      short_name = short_name.substr(0, dot) + static_cast<char>('A' + std::distance(extensions.begin(), extension));
+    }
   }
   return hash_short_name(short_name);
 }
@@ -77,7 +80,7 @@ std::optional<std::filesystem::path> archive::loose_file(std::string_view const 
     return value;
   }};
   std::string relative{name};
-  std::ranges::replace(relative,'\\','/');
+  std::ranges::replace(relative, '\\', '/');
   std::filesystem::path const path{relative};
   if(path.is_absolute()) return {};
   auto selected{*directory};
@@ -93,8 +96,12 @@ std::optional<std::filesystem::path> archive::loose_file(std::string_view const 
     if(!std::filesystem::exists(candidate)) {
       if(!std::filesystem::is_directory(selected)) return {};
       bool found{false};
-      for(auto const &entry : std::filesystem::directory_iterator{selected}) if(lower(entry.path().filename().string()) == lower(component)) {
-        candidate = entry.path();found = true;break;
+      for(auto const &entry : std::filesystem::directory_iterator{selected}) {
+        if(lower(entry.path().filename().string()) == lower(component)) {
+          candidate = entry.path();
+          found = true;
+          break;
+        }
       }
       if(!found) return {};
     }
@@ -138,13 +145,18 @@ bytes archive::read(std::string_view const name) const {
 
 resource_id hash_short_name(std::string_view const name) {
   /// Preserve byte wrapping and generated uppercase directory/extension codes (2.05 file 0xd6484)
-  uint8_t total{0}, accumulated{0}, shifted{0}, rising{0}, previous{0};
+  uint8_t total{0};
+  uint8_t accumulated{0};
+  uint8_t shifted{0};
+  uint8_t rising{0};
+  uint8_t previous{0};
   for(size_t i{0}; i != name.size(); ++i) {
     auto const c{static_cast<uint8_t>(name[i])};
     if(i && previous != '_') rising = static_cast<uint8_t>((rising << 1) | (previous < c));
     previous = c;
-    if(c == '_') shifted = static_cast<uint8_t>(shifted - i);
-    else {
+    if(c == '_') {
+      shifted = static_cast<uint8_t>(shifted - i);
+    } else {
       total = static_cast<uint8_t>(total + c);
       shifted = static_cast<uint8_t>((shifted << 1) ^ c);
       accumulated = static_cast<uint8_t>(accumulated + total);

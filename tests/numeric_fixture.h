@@ -16,7 +16,11 @@ namespace tfx::test {
 // Keep original fixture bits and integer decisions. Only floating results may
 // differ by rounding between the original x87 instructions and host libm.
 class numeric_fixture_value {
-  enum class format { integer, binary32, binary64 };
+  enum class format {
+    integer,
+    binary32,
+    binary64
+  };
   uint64_t bits;
   format type;
   double absolute_roundoff{0};
@@ -28,15 +32,21 @@ class numeric_fixture_value {
     // The fixtures include chained trig, products and cancellation near zero.
     // Absolute tolerance is in the field's own units; relative tolerance
     // scales it for forces/moments. Float stores have a separate, tighter bound.
-    T constexpr units{std::same_as<T,double> ? 128 : 4};
-    T const bound{units * std::numeric_limits<T>::epsilon() * std::max({T{1},std::abs(actual),std::abs(expected)})};
-    return std::abs(actual - expected) <= std::max(static_cast<double>(bound),absolute_roundoff);
+    T constexpr units{std::same_as<T, double> ? 128 : 4};
+    T const bound{units * std::numeric_limits<T>::epsilon() * std::max({T{1}, std::abs(actual), std::abs(expected)})};
+    return std::abs(actual - expected) <= std::max(static_cast<double>(bound), absolute_roundoff);
   }
 
 public:
-  template<std::integral T> numeric_fixture_value(T const value): bits{static_cast<uint64_t>(value)},type{format::integer} {}
-  numeric_fixture_value(float const value): bits{std::bit_cast<uint32_t>(value)},type{format::binary32} {}
-  numeric_fixture_value(double const value): bits{std::bit_cast<uint64_t>(value)},type{format::binary64} {}
+  template<std::integral T> numeric_fixture_value(T const value)
+    : bits{static_cast<uint64_t>(value)},
+      type{format::integer} {}
+  numeric_fixture_value(float const value)
+    : bits{std::bit_cast<uint32_t>(value)},
+      type{format::binary32} {}
+  numeric_fixture_value(double const value)
+    : bits{std::bit_cast<uint64_t>(value)},
+      type{format::binary64} {}
 
   // Cancellation can leave a small result from large operands. Such a field
   // needs a bound derived from those operands, rather than the result alone.
@@ -51,16 +61,16 @@ public:
     if(type == format::integer) return bits == expected;
     if(type == format::binary32) {
       if(expected > std::numeric_limits<uint32_t>::max()) return false;
-      return close(std::bit_cast<float>(static_cast<uint32_t>(bits)),std::bit_cast<float>(static_cast<uint32_t>(expected)));
+      return close(std::bit_cast<float>(static_cast<uint32_t>(bits)), std::bit_cast<float>(static_cast<uint32_t>(expected)));
     }
-    return close(std::bit_cast<double>(bits),std::bit_cast<double>(expected));
+    return close(std::bit_cast<double>(bits), std::bit_cast<double>(expected));
   }
   friend std::ostream &operator<<(std::ostream &out, numeric_fixture_value const value) {
     return out << value.bits;
   }
   friend bool fixture_matches(std::istream &input, numeric_fixture_value const actual) {
     fixture_expectation<uint64_t> const expected{input};
-    if(auto const path=std::getenv("TFX_NUMERIC_AUDIT"); path && actual.type != format::integer && actual.bits != expected.value) {
+    if(auto const path = std::getenv("TFX_NUMERIC_AUDIT"); path && actual.type != format::integer && actual.bits != expected.value) {
       fixture_report(path) << expected.begin << ' ' << (actual.type == format::binary32 ? 32 : 64) << ' ' << expected.value << ' ' << actual.bits << '\n';
     }
     bool const ok{actual.type == format::integer ? expected.matches(actual.bits) : actual.matches(expected.value)};

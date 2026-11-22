@@ -16,7 +16,7 @@ unsigned int constexpr original_coefficient_bank_rate{8000};
 struct qsound_effect::implementation {
   qsound::position_sweep sweep;
   music_clock clock;
-  int chain_phase{};
+  int chain_phase{0};
   unsigned int const tail;
   qsound::spatial_model processor;
 

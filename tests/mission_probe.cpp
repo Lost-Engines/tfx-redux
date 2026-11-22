@@ -12,8 +12,9 @@ namespace {
 void text(std::string const &value) {
   std::cout << '"';
   for(unsigned char const c : value) {
-    if(c < 32 || c >= 127) std::cout << "\\u00" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(c) << std::dec;
-    else {
+    if(c < 32 || c >= 127) {
+      std::cout << "\\u00" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(c) << std::dec;
+    } else {
       if(c == '"' || c == '\\') std::cout << '\\';
       std::cout << c;
     }
@@ -21,8 +22,11 @@ void text(std::string const &value) {
   std::cout << '"';
 }
 void text(std::optional<std::string> const &value) {
-  if(value) text(*value);
-  else std::cout << "null";
+  if(value) {
+    text(*value);
+  } else {
+    std::cout << "null";
+  }
 }
 void state(tfx::missions::setup const &value) {
   std::cout << '[';
@@ -48,7 +52,9 @@ void state(tfx::missions::setup const &value) {
     std::cout << '[' << static_cast<unsigned int>(std::to_underlying(rule.kind)) << ',' << rule.value << ',';
     text(rule.text);
     std::cout << ']';
-  } else std::cout << "null";
+  } else {
+    std::cout << "null";
+  }
   std::cout << ",[";
   for(unsigned int i{0}; i != value.flak.size(); ++i) {
     if(i) std::cout << ',';
@@ -84,7 +90,7 @@ auto main(int const argc, char const *const argv[])->int try {
     context.speed_factor = std::bit_cast<float>(speed);
     context.weapons = static_cast<uint8_t>(weapons);
     auto const source{game.read("missions/" + name + ".mis")};
-    state(tfx::missions::initialise({reinterpret_cast<char const*>(source.data()),source.size()},context));
+    state(tfx::missions::initialise({reinterpret_cast<char const *>(source.data()), source.size()}, context));
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

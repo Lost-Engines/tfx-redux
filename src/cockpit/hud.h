@@ -12,7 +12,11 @@
 
 namespace tfx::cockpit {
 
-enum class centre_display : uint16_t { horizontal_radar, bvr_radar, moving_map };
+enum class centre_display : uint16_t {
+  horizontal_radar,
+  bvr_radar,
+  moving_map
+};
 struct hud_selection {
   uint16_t left{0};
   centre_display centre{centre_display::horizontal_radar};
@@ -34,7 +38,7 @@ struct hud_contacts {
 };
 struct hud_state {
   mfd_state instruments;
-  vec3<int32_t> position{0,0,0};
+  vec3<int32_t> position{0, 0, 0};
   uint32_t ticks{0};
   uint32_t clock_offset{0};
   simulation::timer_ticks elapsed{0};
@@ -74,7 +78,7 @@ struct hud_animation {
 
 // The scene renderer supplies the FLIR/DLIR and ground-database views. Their
 // cameras have a separate lifetime and must not be hidden inside a sprite painter.
-using scene_display = std::function<void(display_side,display_page,mfd_state const&)>;
+using scene_display = std::function<void(display_side, display_page, mfd_state const &)>;
 
 class hud {
 private:
@@ -86,7 +90,7 @@ private:
   radar radar_display;
   warning_lamps warnings;
   auxiliary_lamps auxiliary;
-  std::array<uint8_t,2> last_outer_pages{0,0};
+  std::array<uint8_t, 2> last_outer_pages{0, 0};
   uint8_t redraw_phase{0};
 
 public:

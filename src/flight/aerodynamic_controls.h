@@ -27,8 +27,8 @@ struct aerodynamic_control_state {
 struct aerodynamic_control_context {
   control_source source{control_source::keyboard};
   direction_keys keys{};
-  vec2<int16_t> joystick{0,0};
-  vec2<int16_t> mouse{0,0};                                                    // Original centered absolute samples, not deltas.
+  vec2<int16_t> joystick{0, 0};
+  vec2<int16_t> mouse{0, 0};                                                   // Original centered absolute samples, not deltas.
   double seconds{.02};
   double metres_per_second{0};
   double pitch_gain{0};

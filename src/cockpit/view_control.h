@@ -39,7 +39,18 @@ enum class view_mode : int16_t {
 };
 unsigned int constexpr view_queue_capacity{10};
 
-enum class view_key { front, left, right, rear, chase, fly_past, tactical, missile, target, virtual_cockpit };
+enum class view_key {
+  front,
+  left,
+  right,
+  rear,
+  chase,
+  fly_past,
+  tactical,
+  missile,
+  target,
+  virtual_cockpit
+};
 struct view_key_events {
   bool fly_past_sound{false};
 };
@@ -51,9 +62,9 @@ struct view_key_context {
   bool shift{false};
   bool low_memory{false};
   int32_t speed{0};
-  vec3<int32_t> position{0,0,0};
-  vec3<math::angle> angles{0,0,0};
-  vec2<int32_t> height_bounds{-8192,-32};
+  vec3<int32_t> position{0, 0, 0};
+  vec3<math::angle> angles{0, 0, 0};
+  vec2<int32_t> height_bounds{-8192, -32};
   bool missile_available{false};
   bool target_available{false};
   bool target_is_ground{false};
@@ -62,12 +73,12 @@ struct view_key_context {
 struct view_control_state {
   view_mode current{view_mode::cockpit};
   view_mode previous{view_mode::cockpit};
-  std::array<view_mode,view_queue_capacity> queue{};
+  std::array<view_mode, view_queue_capacity> queue{};
   unsigned int written{0};
   unsigned int read{0};
-  vec2<int16_t> offset{0,28};
-  vec2<int16_t> pending_offset{-1,-1};
-  vec2<int16_t> saved_offset{0,-1};
+  vec2<int16_t> offset{0, 28};
+  vec2<int16_t> pending_offset{-1, -1};
+  vec2<int16_t> saved_offset{0, -1};
   int16_t distance{0};
   int16_t pending_distance{0};
   int16_t target_distance{0};
@@ -77,7 +88,7 @@ struct view_control_state {
   int16_t tracking_complete{0};
   math::attitude orbit{};
   math::attitude missile_orbit{};
-  vec3<int32_t> fixed_position{0,0,0};
+  vec3<int32_t> fixed_position{0, 0, 0};
   uint8_t redraw{0};
   bool ready{false};
 };

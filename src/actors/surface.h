@@ -7,12 +7,28 @@
 
 namespace tfx::actors {
 
-enum class surface_action : uint8_t { route, retired, dead, normal, waiting };
-enum class surface_flag : uint8_t { suppress_steering = 1, hostile = 2, new_wait = 4, destroyed = 8, retired = 16 };
-enum class surface_request_kind { nearby_targets, ground_target, radio };
+enum class surface_action : uint8_t {
+  route,
+  retired,
+  dead,
+  normal,
+  waiting
+};
+enum class surface_flag : uint8_t {
+  suppress_steering = 1,
+  hostile = 2,
+  new_wait = 4,
+  destroyed = 8,
+  retired = 16
+};
+enum class surface_request_kind {
+  nearby_targets,
+  ground_target,
+  radio
+};
 struct surface_request {
   surface_request_kind kind;
-  vec2<int16_t> cell{0,0};
+  vec2<int16_t> cell{0, 0};
   uint16_t weapon{0};
   std::string text{};
 };
@@ -29,6 +45,6 @@ struct surface_state {
 };
 
 surface_state create_surface(initial_actor const &actor, program const &source);
-std::vector<surface_request> advance_surface(surface_state &state, profile const &profile, std::function<void(surface_request const&)> emitted = {});
+std::vector<surface_request> advance_surface(surface_state &state, profile const &profile, std::function<void(surface_request const &)> emitted = {});
 
 } // namespace tfx::actors

@@ -17,7 +17,7 @@ private:
   resources::archive const &game;
   resources::executable_tables const &tables;
   std::string language;
-  std::function<void(audio_request const&)> play_audio;
+  std::function<void(audio_request const &)> play_audio;
   program schema;
   variables state;
   pilot_store store;
@@ -35,7 +35,7 @@ private:
 
 public:
   frontend(resources::archive const &game, resources::executable_tables const &tables,
-    std::filesystem::path const &save_directory, std::string const &language, bool skip_intro = false, std::function<void(audio_request const&)> play_audio = {});
+    std::filesystem::path const &save_directory, std::string const &language, bool skip_intro = false, std::function<void(audio_request const &)> play_audio = {});
   statement const *advance(scene_counters counters, scene_input &input,
     std::optional<vec2<int16_t>> const &position = {});
   void press(uint8_t scan, bool control);

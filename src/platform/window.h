@@ -23,18 +23,19 @@ private:
   std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)> handle;
   unsigned int texture{0};
   GLFWkeyfun key_callback{nullptr};
-  std::array<bool,2> fullscreen_keys{};
-  vec2<int> windowed_position{0,0}, windowed_size{render::display_width,render::display_height};
+  std::array<bool, 2> fullscreen_keys{};
+  vec2<int> windowed_position{0, 0};
+  vec2<int> windowed_size{render::display_width, render::display_height};
   bool windowed_maximized{false};
   void set_fullscreen(bool enabled);
   static void dispatch_key(GLFWwindow *host, int key, int scan, int action, int modifiers);
   std::vector<render::rgba_pixel> display_pixels;
   mutable vec2<int> render_size;
   bool follow_window;
-  vec2<int> source_size{render::screen_width,render::screen_height};
+  vec2<int> source_size{render::screen_width, render::screen_height};
 
 public:
-  window(unsigned int scale, vec2<int> const &resolution = {render::screen_width,render::screen_height}, bool follow_window = false, bool fullscreen = false);
+  window(unsigned int scale, vec2<int> const &resolution = {render::screen_width, render::screen_height}, bool follow_window = false, bool fullscreen = false);
   ~window();
   window(window const&) = delete;
   window &operator=(window const&) = delete;
@@ -51,7 +52,7 @@ public:
   std::optional<vec2d> cursor_coordinates() const;
   std::optional<vec2<int16_t>> cursor_position() const;
   void title(std::string const &text);
-  void present(std::span<render::rgba_pixel const> pixels, vec2<int> const &size = {render::screen_width,render::screen_height});
+  void present(std::span<render::rgba_pixel const> pixels, vec2<int> const &size = {render::screen_width, render::screen_height});
   void present_frame(render::framebuffer const &image, render::palette const &colours);
 };
 

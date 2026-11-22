@@ -5,7 +5,10 @@ namespace tfx::audio {
 
 std::vector<sample_definition> load_sample_definitions(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
-  unsigned int constexpr data_file{0xedaa4}, table{0x9860}, record_bytes{26}, maximum_slots{256};
+  unsigned int constexpr data_file{0xedaa4};
+  unsigned int constexpr table{0x9860};
+  unsigned int constexpr record_bytes{26};
+  unsigned int constexpr maximum_slots{256};
   uint16_t constexpr centred_qsound_phase{16u << 8};
   std::vector<sample_definition> result;
   for(unsigned int index{0}; index != maximum_slots; ++index) {

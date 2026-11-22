@@ -23,7 +23,11 @@ struct aerodynamic_recovery_context {
   bool ejected{false};
   bool landed{false};
 };
-enum class aerodynamic_recovery_change { none, engaged, restored };
+enum class aerodynamic_recovery_change {
+  none,
+  engaged,
+  restored
+};
 struct aerodynamic_recovery_result {
   aerodynamic_recovery_change change{aerodynamic_recovery_change::none};
   std::vector<afterburner_change> afterburner{};

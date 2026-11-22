@@ -24,7 +24,7 @@ uint8_t glare_level(point_projection const &projection, glare_context const &con
   // before its max-plus-half-min distance and final arithmetic word shift.
   int16_t const x{math::signed_word(static_cast<uint16_t>(std::abs(difference.x)))};
   int16_t const y{math::signed_word(static_cast<uint16_t>(std::abs(difference.y)))};
-  int16_t const distance{math::signed_word(static_cast<uint16_t>(std::max(x,y) + (std::min(x,y) >> 1)))};
+  int16_t const distance{math::signed_word(static_cast<uint16_t>(std::max(x, y) + (std::min(x, y) >> 1)))};
   int const level{distance >> 1};
   return level < static_cast<int>(lighting_stages) ? static_cast<uint8_t>(level + 1) : lighting_stages;
 }

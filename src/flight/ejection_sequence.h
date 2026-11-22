@@ -5,8 +5,17 @@
 
 namespace tfx::flight {
 
-enum class ejection_stage : uint8_t { cockpit, requested, pilot };
-enum class ejection_event_kind { player_model, camera, music_cue, sample };
+enum class ejection_stage : uint8_t {
+  cockpit,
+  requested,
+  pilot
+};
+enum class ejection_event_kind {
+  player_model,
+  camera,
+  music_cue,
+  sample
+};
 struct ejection_event {
   ejection_event_kind kind;
   unsigned int argument;
@@ -21,7 +30,7 @@ struct ejection_state {
   uint8_t escape_presses{0};
   ejection_stage stage{ejection_stage::cockpit};
   pilot_motion pilot{};
-  vec3<int32_t> aircraft_position_q8{0,0,0};
+  vec3<int32_t> aircraft_position_q8{0, 0, 0};
   math::attitude aircraft_orientation{};
 };
 class ejection_sequence {

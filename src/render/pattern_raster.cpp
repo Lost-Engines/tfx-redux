@@ -11,28 +11,38 @@ void pattern_pixel(framebuffer &output, int const x, int const y, uint8_t const 
   if(mode == 1 && (x & 3) != (y & 1 ? 3 : 1)) return;
   if(mode == 7 && (y & 1)) return;
   auto &destination{output.pixels[static_cast<unsigned int>(y * output.size.x + x)]};
-  if(mode == 10) destination ^= colour;
-  else if(mode == 11) destination &= colour;
-  else if(mode == 12) destination |= colour;
-  else destination = colour;
+  if(mode == 10) {
+    destination ^= colour;
+  } else if(mode == 11) {
+    destination &= colour;
+  } else if(mode == 12) {
+    destination |= colour;
+  } else {
+    destination = colour;
+  }
   if(!output.coverage.empty()) output.coverage[static_cast<size_t>(y * output.size.x + x)] = 255;
 }
 
 
 void pattern_span(framebuffer &output, uint16_t &procedural_seed, int const y, double const left, double const right, uint8_t const colour, int const mode, int const bottom, bool const inclusive, bool const paint) {
   /// Preserve native VGA byte-group masks, including sparse dots beyond the nominal right edge
-  int const first{std::max(0,static_cast<int>(std::ceil(left - .5)))}, last{std::min(output.size.x,inclusive ? static_cast<int>(std::floor(right)) + 1 : static_cast<int>(std::ceil(right - .5)))};
-  int const first_byte{static_cast<int>(std::floor(left / 4))}, last_byte{static_cast<int>(std::floor(right / 4))};
+  int const first{std::max(0, static_cast<int>(std::ceil(left - .5)))};
+  int const last{std::min(output.size.x, inclusive ? static_cast<int>(std::floor(right)) + 1 : static_cast<int>(std::ceil(right - .5)))};
+  int const first_byte{static_cast<int>(std::floor(left / 4))};
+  int const last_byte{static_cast<int>(std::floor(right / 4))};
   if(mode == 4) {
     for(int byte{first_byte}; byte <= last_byte; ++byte) {
-      unsigned int const low{static_cast<unsigned int>(procedural_seed & 255)}, high{static_cast<unsigned int>(procedural_seed >> 8)};
-      auto const sum{high + low}, next_high{sum & 255}, next_low{(low + next_high + (sum > 255)) & 255};
+      unsigned int const low{static_cast<unsigned int>(procedural_seed & 255)};
+      unsigned int const high{static_cast<unsigned int>(procedural_seed >> 8)};
+      auto const sum{high + low};
+      auto const next_high{sum & 255};
+      auto const next_low{(low + next_high + (sum > 255)) & 255};
       procedural_seed = static_cast<uint16_t>((next_high << 8) | next_low);
       auto const mask{next_low & (((bottom - y) & 1) ? 5u : 10u)};
       if(!paint) continue;
       for(unsigned int bit{0}; bit != 4; ++bit) {
         int const x{byte * 4 + static_cast<int>(bit)};
-        if(x >= first && x < last && (mask & (1u << bit))) pattern_pixel(output,x,y,colour,-1);
+        if(x >= first && x < last && (mask & (1u << bit))) pattern_pixel(output, x, y, colour, -1);
       }
     }
     return;
@@ -41,7 +51,9 @@ void pattern_span(framebuffer &output, uint16_t &procedural_seed, int const y, d
     if(y & 1) return;
     int const phase{(first_byte + (((bottom & ~1) - y) / 2) + (bottom & 1)) & 1};
     int const end{(first_byte + ((last_byte - first_byte) & ~1)) * 4 + 3};
-    for(int x{first_byte * 4}; x <= end; ++x) if((x & 7) == phase * 4 + 3) pattern_pixel(output,x,y,colour,-1);
+    for(int x{first_byte * 4}; x <= end; ++x) {
+      if((x & 7) == phase * 4 + 3) pattern_pixel(output, x, y, colour, -1);
+    }
     return;
   }
   if(mode == 3) {
@@ -50,10 +62,10 @@ void pattern_span(framebuffer &output, uint16_t &procedural_seed, int const y, d
     int const offset{(bottom & 1 ? 0 : 2) + ((row / 3) & 1) * 2};
     int const start{(first_byte + (offset & 3)) * 4 + 3};
     int const end{start + static_cast<int>(std::floor((last_byte - first_byte - 1) / 4.0)) * 16};
-    for(int x{start}; x <= end; x += 16) pattern_pixel(output,x,y,colour,-1);
+    for(int x{start}; x <= end; x += 16) pattern_pixel(output, x, y, colour, -1);
     return;
   }
-  for(int x{first}; x < last; ++x) pattern_pixel(output,x,y,colour,mode);
+  for(int x{first}; x < last; ++x) pattern_pixel(output, x, y, colour, mode);
 }
 
 
@@ -69,12 +81,15 @@ void pattern_polygon(framebuffer &output, uint16_t &seed, std::span<polygon_span
       // Original E4CCF shifts the next left endpoint by one after a single-
       // byte span, rather than its usual two. Retain this authored-era quirk:
       // it can terminate the rest of a tapered line-stippled face.
-      int const first{span.left >> (narrow ? 1 : 2)},last{span.right >> 2};
+      int const first{span.left >> (narrow ? 1 : 2)};
+      int const last{span.right >> 2};
       if(first > last) return;
-      for(int byte{first}; byte <= last; ++byte) for(int plane{0}; plane != 4; ++plane) {
-        if((byte == first && plane < (span.left & 3)) || (byte == last && plane > (span.right & 3))) continue;
-        int const at{span.row * screen_width + byte * 4 + plane};
-        if(at >= 0 && at < screen_width * screen_height) output.write(static_cast<unsigned int>(at),colour);
+      for(int byte{first}; byte <= last; ++byte) {
+        for(int plane{0}; plane != 4; ++plane) {
+          if((byte == first && plane < (span.left & 3)) || (byte == last && plane > (span.right & 3))) continue;
+          int const at{span.row * screen_width + byte * 4 + plane};
+          if(at >= 0 && at < screen_width * screen_height) output.write(static_cast<unsigned int>(at), colour);
+        }
       }
       narrow = first == last;
     }
@@ -99,20 +114,33 @@ void pattern_polygon(framebuffer &output, uint16_t &seed, std::span<polygon_span
       auto const &span{spans[static_cast<unsigned int>(index)]};
       return span.left / 4 <= span.right / 4;
     }};
-    auto const width{[&]{ auto const &span{spans[static_cast<unsigned int>(index)]};return span.right / 4 - span.left / 4; }};
+    auto const width{[&]{
+      auto const &span{spans[static_cast<unsigned int>(index)]};
+      return span.right / 4 - span.left / 4;
+    }};
     auto const advance{[&]{
       // Skipped physical rows test pixel width; selected rows test byte width.
       for(int row{1}; row <= stride; ++row) {
         if(--index < 0) return;
         auto const &span{spans[static_cast<unsigned int>(index)]};
-        if(row < stride && span.left > span.right) { index = -1;return; }
+        if(row < stride && span.left > span.right) {
+          index = -1;
+          return;
+        }
       }
     }};
     while(valid()) {
       if(width() == 0) {
-        if(mode == 3) { offset = !offset;advance();continue; }
+        if(mode == 3) {
+          offset = !offset;
+          advance();
+          continue;
+        }
         advance();
-        while(valid() && width() == 0) { offset = !offset;advance(); }
+        while(valid() && width() == 0) {
+          offset = !offset;
+          advance();
+        }
         if(!valid()) return;
       }
       auto const &span{spans[static_cast<unsigned int>(index)]};
@@ -123,9 +151,10 @@ void pattern_polygon(framebuffer &output, uint16_t &seed, std::span<polygon_span
         // Plane-three writes may cross the nominal right edge or wrap into
         // the next physical row, as in the original mode-X aperture.
         int const at{span.row * screen_width + x};
-        if(at >= 0 && at < screen_width * screen_height) output.write(static_cast<unsigned int>(at),colour);
+        if(at >= 0 && at < screen_width * screen_height) output.write(static_cast<unsigned int>(at), colour);
       }
-      offset = !offset;advance();
+      offset = !offset;
+      advance();
     }
     return;
   }
@@ -140,7 +169,7 @@ void pattern_polygon(framebuffer &output, uint16_t &seed, std::span<polygon_span
       // pixel spans in one byte continue; an inverted byte boundary ends it.
       if((span.right | 3) < span.left) return;
     } else if(span.left > span.right && (mode != 4 || span.left / 4 > span.right / 4)) return;
-    pattern_span(output,seed,span.row,span.left,span.right,colour,mode,spans.back().row,true);
+    pattern_span(output, seed, span.row, span.left, span.right, colour, mode, spans.back().row, true);
   }
 }
 

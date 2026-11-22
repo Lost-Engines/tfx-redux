@@ -8,7 +8,7 @@ namespace tfx::cockpit {
 struct instrument_setup {
   hud_selection displays;
   vec2<int16_t> offset;
-  std::array<flight::system_condition,flight::aircraft_system_count> systems;
+  std::array<flight::system_condition, flight::aircraft_system_count> systems;
   flight::fuel_gauge fuel;
   uint8_t chaff;
   uint8_t flares;

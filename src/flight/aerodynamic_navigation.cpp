@@ -22,7 +22,7 @@ void measure_route_distance(aerodynamic_navigation &state) {
   state.route_distance = static_cast<double>(std::sqrt(static_cast<calculation>(squared)) * route_distance_scale);
 }
 void update_bearing(aerodynamic_navigation &state, aerodynamic_autopilot_targets &targets) {
-  auto const bearing{math::bearing(state.player_position,state.target_position)};
+  auto const bearing{math::bearing(state.player_position, state.target_position)};
   state.target_pitch = bearing.x;
   targets.heading = bearing.y;
 }
@@ -32,11 +32,20 @@ bool select_player_route(aerodynamic_navigation &state, std::span<vec2<uint8_t> 
   if(cells.size() > static_cast<unsigned int>(std::numeric_limits<int16_t>::max())) throw std::invalid_argument{"player route exceeds the original signed-word count"};
   int16_t index{state.route_index};
   switch(action) {
-    case player_route_action::previous: index = math::signed_word(static_cast<uint16_t>(index - 1)); break;
-    case player_route_action::next: index = math::signed_word(static_cast<uint16_t>(index + 1)); break;
-    case player_route_action::first: index = 1; break;
-    case player_route_action::last: index = static_cast<int16_t>(cells.size()); break;
-    case player_route_action::current: break;
+  case player_route_action::previous:
+    index = math::signed_word(static_cast<uint16_t>(index - 1));
+    break;
+  case player_route_action::next:
+    index = math::signed_word(static_cast<uint16_t>(index + 1));
+    break;
+  case player_route_action::first:
+    index = 1;
+    break;
+  case player_route_action::last:
+    index = static_cast<int16_t>(cells.size());
+    break;
+  case player_route_action::current:
+    break;
   }
   if(index < 1 || static_cast<unsigned int>(index) > cells.size()) return false;
   auto const &cell{cells[static_cast<unsigned int>(index - 1)]};
@@ -53,12 +62,12 @@ void update_aerodynamic_navigation(aerodynamic_navigation &state, aerodynamic_gu
     truncate(static_cast<calculation>(motion.pose.metres_ned.x) * world_units_per_metre),
   };
   guidance.desired_flight_path = 0;
-  select_player_route(state,context.route_cells,player_route_action::current);
+  select_player_route(state, context.route_cells, player_route_action::current);
   guidance.saved_roll_rate = motion.angular_rate.x;
   if(targets.mode == follow_mode && context.followed_aircraft) {
     auto const &followed{*context.followed_aircraft};
     for(unsigned int axis{0}; axis != 3; ++axis) state.target_position[axis] = followed.position_q8[axis] >> 8;
-    update_bearing(state,targets);
+    update_bearing(state, targets);
     targets.down_metres = static_cast<double>(static_cast<calculation>(state.target_position.y) * metres_per_foot * feet_per_world_unit);
     measure_route_distance(state);
     int16_t const fixed_speed{math::signed_word(static_cast<uint16_t>(followed.speed_q16 >> 16))};
@@ -68,8 +77,8 @@ void update_aerodynamic_navigation(aerodynamic_navigation &state, aerodynamic_gu
   }
   if(targets.mode == route_mode) {
     measure_route_distance(state);
-    if(state.route_distance < waypoint_advance_distance && (select_player_route(state,context.route_cells,player_route_action::next) || select_player_route(state,context.route_cells,player_route_action::first))) measure_route_distance(state);
-    update_bearing(state,targets);
+    if(state.route_distance < waypoint_advance_distance && (select_player_route(state, context.route_cells, player_route_action::next) || select_player_route(state, context.route_cells, player_route_action::first))) measure_route_distance(state);
+    update_bearing(state, targets);
   }
   if(targets.mode == heading_mode || (targets.mode == follow_mode && !context.followed_aircraft)) state.route_distance = untracked_distance;
 }

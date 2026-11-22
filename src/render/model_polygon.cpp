@@ -18,14 +18,14 @@ bool paint_model_polygon(framebuffer &output, models::primitive const &source, s
       for(unsigned int i{0}; i != result.size(); ++i) result[i] = static_cast<uint8_t>(i);
       return result;
     }()};
-    return integer_model_texture(output,vertices,view,texture,remap ? *remap : identity);
+    return integer_model_texture(output, vertices, view, texture, remap ? *remap : identity);
   }
-  if(source.rounded && texture.empty()) return rounded_model_polygon(output,vertices,view,ink,source.mode,seed);
+  if(source.rounded && texture.empty()) return rounded_model_polygon(output, vertices, view, ink, source.mode, seed);
   if(!source.rounded && texture.empty()) {
-    if(source.mode == -1) return integer_model_polygon(output,vertices,view,ink,remap);
-    if(std::ranges::all_of(vertices,[](auto const &vertex){ return vertex.shade < 0; })) {
-      if(auto const screen{project_model_face(vertices,view)}) {
-        pattern_polygon(output,seed,integer_polygon_spans(*screen,view.viewport_minimum,view.viewport_maximum),ink,source.mode);
+    if(source.mode == -1) return integer_model_polygon(output, vertices, view, ink, remap);
+    if(std::ranges::all_of(vertices, [](auto const &vertex){return vertex.shade < 0;})) {
+      if(auto const screen{project_model_face(vertices, view)}) {
+        pattern_polygon(output, seed, integer_polygon_spans(*screen, view.viewport_minimum, view.viewport_maximum), ink, source.mode);
         return true;
       }
     }

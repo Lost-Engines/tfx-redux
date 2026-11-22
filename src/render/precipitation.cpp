@@ -14,7 +14,8 @@ int32_t wrap(uint32_t const value) {
 int16_t advect(int16_t const initial, float const wind) {
   // Original x87 operations load both constants from single precision, retain
   // 53-bit arithmetic, then truncate to a signed dword before the word store.
-  float constexpr wind_scale{4}, per_frame{.1f};
+  float constexpr wind_scale{4};
+  float constexpr per_frame{0.1f};
   double const result{static_cast<double>(wind) * wind_scale * per_frame + initial};
   int32_t const truncated{!std::isfinite(result) || result < std::numeric_limits<int32_t>::min() || result >= 2147483648. ? std::numeric_limits<int32_t>::min() : static_cast<int32_t>(result)};
   return word(truncated);
@@ -31,9 +32,11 @@ std::optional<int16_t> precipitation_count(precipitation_gate const &context) {
 
 precipitation::precipitation(vec3<int16_t> const &drift) : offset{drift} {}
 void precipitation::initialise(math::random_state &random) {
-  for(auto &point : particles) for(unsigned int axis{0}; axis != 3; ++axis) {
-    uint16_t const first{random.next()};
-    point[axis] = math::signed_word(static_cast<uint16_t>(first + random.next()));
+  for(auto &point : particles) {
+    for(unsigned int axis{0}; axis != 3; ++axis) {
+      uint16_t const first{random.next()};
+      point[axis] = math::signed_word(static_cast<uint16_t>(first + random.next()));
+    }
   }
 }
 std::span<vec3<int16_t> const> precipitation::field() const {
@@ -43,9 +46,11 @@ vec3<int16_t> const &precipitation::drift() const {
   return offset;
 }
 void precipitation::paint(framebuffer &output, precipitation_view const &view, int16_t const requested_count, vec2f const &wind_xz) {
-  int constexpr volume_half_size{512}, volume_mask{1023}, camera_scale{4};
+  int constexpr volume_half_size{512};
+  int constexpr volume_mask{1023};
+  int constexpr camera_scale{4};
   uint8_t constexpr colour{241};
-  int const count{std::clamp<int>(requested_count,0,precipitation_particles)};
+  int const count{std::clamp<int>(requested_count, 0, precipitation_particles)};
   vec3<int16_t> look_ahead;
   // Transpose-camera times {0,0,512}: keep the word narrowing before wrapping
   // particles into the moving 1,024-unit box around this forward-biased view.
@@ -62,11 +67,11 @@ void precipitation::paint(framebuffer &output, precipitation_view const &view, i
     // Native 0x78a9c adds 512 Q15 depth units before its fixed SAR8 divide.
     // This particle projection is independent of the model driver's FOV mode.
     int32_t const depth{wrap(static_cast<uint32_t>(camera.z) + (1u << 24)) >> 8};
-    vec2<int16_t> const point{depth <= 16 ? vec2<int16_t>{-1,-1} : vec2<int16_t>{word(camera.x / depth + view.origin.x),word(camera.y / depth + view.origin.y)}};
-    if(point.x >= view.minimum.x && point.y >= view.minimum.y && point.x <= view.maximum.x && point.y <= view.maximum.y && point.x >= 0 && point.y >= 0 && point.x < screen_width && point.y < screen_height) output.write(static_cast<unsigned int>(point.y * screen_width + point.x),colour);
+    vec2<int16_t> const point{depth <= 16 ? vec2<int16_t>{-1, -1} : vec2<int16_t>{word(camera.x / depth + view.origin.x), word(camera.y / depth + view.origin.y)}};
+    if(point.x >= view.minimum.x && point.y >= view.minimum.y && point.x <= view.maximum.x && point.y <= view.maximum.y && point.x >= 0 && point.y >= 0 && point.x < screen_width && point.y < screen_height) output.write(static_cast<unsigned int>(point.y * screen_width + point.x), colour);
   }
-  offset.x = advect(offset.x,wind_xz.x);
-  offset.z = advect(offset.z,wind_xz.y);
+  offset.x = advect(offset.x, wind_xz.x);
+  offset.z = advect(offset.z, wind_xz.y);
   offset.y = word(offset.y + 30);
 }
 

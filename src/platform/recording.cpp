@@ -11,8 +11,10 @@
 namespace tfx::platform {
 namespace {
 presentation::scene_counters counters(double const seconds) {
-  double constexpr bios_divisor{65536}, text_divisor{21845}, pit_hz{1193182};
-  auto const wrapped{[](double const value){ return static_cast<uint32_t>(std::fmod(std::floor(value),4294967296.0)); }};
+  double constexpr bios_divisor{65536};
+  double constexpr text_divisor{21845};
+  double constexpr pit_hz{1193182};
+  auto const wrapped{[](double const value){return static_cast<uint32_t>(std::fmod(std::floor(value), 4294967296.0));}};
   return {
     .bios{wrapped(seconds * pit_hz / bios_divisor)},
     .text{wrapped(seconds * pit_hz / text_divisor)},
@@ -26,45 +28,53 @@ void replay_recording(window &window, resources::archive const &game,
   int16_t const camera_y, int16_t const ground_phase, render::dac_palette const &infrared, bool const introduction) {
   std::optional<recording::video_playback> video;
   std::optional<recording::playback> movie;
-  if(recording::video_playback::recognises(path)) video.emplace(path);
-  else movie.emplace(path);
+  if(recording::video_playback::recognises(path)) {
+    video.emplace(path);
+  } else {
+    movie.emplace(path);
+  }
   if(!(video ? video->frame_count() : movie->frame_count())) return;
   auto *const host{window.get()};
-  glfwSetInputMode(host,GLFW_CURSOR,GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(host, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   render::dac_palette palette{};
   // Native DAVE_FADE loads the first block without its own ramp. The
   // wrapper then performs one 40-retrace fade and one complete traversal.
   // Neither introduction polls the keyboard; the replay clears make codes.
-  if(introduction) for(auto const *name : {"wwn","prtv2"}) {
-    presentation::clip const clip{
-      .resource{name},
-      .fade_in{1},
-      .frame_delay{1},
-      .play_until_end{true},
-    };
-    presentation::scene_input input;
-    presentation::sequence_controls sequence;
-    double const started{glfwGetTime()};
-    double next{started};
-    presentation::scene_player sequence_player{presentation::node_kind::animation,clip,
-      game.read("anim/" + clip.resource + ".256"),tables.presentation_fonts(),{},
-      {},palette,tables.text_palette,counters(0),input};
-    window.title("TFX Redux — WNN — " + clip.resource);
-    while(window.poll()) {
-      double const now{glfwGetTime()};
-      if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
-      next = now + 1.0 / 70;
-      bool const complete{sequence_player.advance(counters(now - started),input,sequence)};
-      window.present(sequence_player.image().colourise(sequence_player.colours()));
-      if(complete) break;
+  if(introduction) {
+    for(auto const *name : {"wwn", "prtv2"}) {
+      presentation::clip const clip{
+        .resource{name},
+        .fade_in{1},
+        .frame_delay{1},
+        .play_until_end{true},
+      };
+      presentation::scene_input input;
+      presentation::sequence_controls sequence;
+      double const started{glfwGetTime()};
+      double next{started};
+      presentation::scene_player sequence_player{presentation::node_kind::animation, clip,
+        game.read("anim/" + clip.resource + ".256"), tables.presentation_fonts(), {},
+        {}, palette, tables.text_palette, counters(0), input};
+      window.title("TFX Redux — WNN — " + clip.resource);
+      while(window.poll()) {
+        double const now{glfwGetTime()};
+        if(now < next) {
+          glfwWaitEventsTimeout(std::min(.01, next - now));
+          continue;
+        }
+        next = now + 1.0 / 70;
+        bool const complete{sequence_player.advance(counters(now - started), input, sequence)};
+        window.present(sequence_player.image().colourise(sequence_player.colours()));
+        if(complete) break;
+      }
+      if(glfwWindowShouldClose(host)) return;
+      palette = sequence_player.palette();
     }
-    if(glfwWindowShouldClose(host)) return;
-    palette = sequence_player.palette();
   }
   window.title("TFX Redux — Flight recording");
   auto const colours{render::expand_dac_palette(infrared)};
   renderer.output.pixels.fill(0);
-  std::array<bool,GLFW_KEY_LAST + 1> held{};
+  std::array<bool, GLFW_KEY_LAST + 1> held{};
   auto sample_keys{[&]{
     bool pressed{false};
     for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) {
@@ -83,30 +93,33 @@ void replay_recording(window &window, resources::archive const &game,
   while(window.poll()) {
     double const now{glfwGetTime()};
     if(sample_keys() && window.focused()) break;
-    if(now < next) { glfwWaitEventsTimeout(std::min(.01,next - now));continue; }
+    if(now < next) {
+      glfwWaitEventsTimeout(std::min(.01, next - now));
+      continue;
+    }
     if(video) {
       auto const frame{video->next()};
       if(!frame) break;
-      window.present_frame(frame->image,render::expand_dac_palette(frame->palette));
+      window.present_frame(frame->image, render::expand_dac_palette(frame->palette));
       next = now + std::chrono::duration<double>{frame->duration}.count();
       continue;
     }
     auto const frame{movie->next()};
     if(!frame) break;
     auto const &angles{frame->data.camera_angles};
-    auto const view{render::orbit_camera(angles,0,{159,99})};
-    render::paint_horizon(renderer.output,{
+    auto const view{render::orbit_camera(angles, 0, {159, 99})};
+    render::paint_horizon(renderer.output, {
       .pitch{angles.x},
       .roll{angles.z},
       .camera_y{camera_y},
       .ground_phase{ground_phase},
       .origin_y{99},
     });
-    scene.replay(renderer,view,*frame);
+    scene.replay(renderer, view, *frame);
     if(index % 2 == 0) {
       auto const &text{tables.configuration_widgets().recording_play};
-      tables.presentation_fonts().draw_driver(renderer.output,{285,1},text,0);
-      tables.presentation_fonts().draw_driver(renderer.output,{284,0},text,6);
+      tables.presentation_fonts().draw_driver(renderer.output, {285, 1}, text, 0);
+      tables.presentation_fonts().draw_driver(renderer.output, {284, 0}, text, 6);
     }
     window.present(renderer.output.colourise(colours));
     ++index;

@@ -8,8 +8,9 @@ vec3<int32_t> scale_model_cache(vec3<int32_t> const &origin, uint8_t const scale
   auto const factor{std::bit_cast<int8_t>(scale)};
   vec3<int32_t> result;
   for(unsigned int axis{0}; axis != 3; ++axis) {
-    if(factor > 0) result[axis] = origin[axis] / factor;
-    else {
+    if(factor > 0) {
+      result[axis] = origin[axis] / factor;
+    } else {
       auto const multiplier{std::bit_cast<int8_t>(static_cast<uint8_t>(0u - scale))};
       result[axis] = std::bit_cast<int32_t>(static_cast<uint32_t>(origin[axis]) * static_cast<uint32_t>(multiplier));
     }
@@ -17,7 +18,9 @@ vec3<int32_t> scale_model_cache(vec3<int32_t> const &origin, uint8_t const scale
   return result;
 }
 
-model_transform::model_transform(mat3<int32_t> const &view, vec3<math::angle> const &angles, vec3<int32_t> const &origin, model_surface const surface) : basis{view}, camera_origin{origin} {
+model_transform::model_transform(mat3<int32_t> const &view, vec3<math::angle> const &angles, vec3<int32_t> const &origin, model_surface const surface)
+  : basis{view},
+    camera_origin{origin} {
   // BABCB bypasses the component generator when every angle is zero. Applying
   // an identity sine matrix would incorrectly reduce its diagonal by one.
   if(surface == model_surface::body && !angles.x && !angles.y && !angles.z) return;
@@ -31,7 +34,7 @@ model_transform::model_transform(mat3<int32_t> const &view, vec3<math::angle> co
       body.data[column * 3 + 2] = math::signed_word(static_cast<uint16_t>((body.data[column * 3 + 2] * 32767) >> math::matrix_fraction_bits));
     }
   }
-  basis = math::compose_model_basis(view,body);
+  basis = math::compose_model_basis(view, body);
 }
 mat3<int32_t> const &model_transform::matrix() const {
   return basis;

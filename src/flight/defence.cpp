@@ -26,7 +26,9 @@ defensive_effects press_defensive_key(defensive_systems &state, defensive_key co
   auto &remaining{radar ? state.chaff : state.flares};
   if(!remaining) return result;
   --remaining;
-  int16_t constexpr radar_strength{60}, flare_strength{40}, afterburning_flare_strength{5};
+  int16_t constexpr radar_strength{60};
+  int16_t constexpr flare_strength{40};
+  int16_t constexpr afterburning_flare_strength{5};
   result.release.emplace(countermeasure_release{
     .radar{radar},
     .strength{radar ? radar_strength : context.afterburner ? afterburning_flare_strength : flare_strength},

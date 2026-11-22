@@ -4,7 +4,10 @@
 
 namespace tfx::presentation {
 
-struct menu_assignment { std::string variable; uint32_t value; };
+struct menu_assignment {
+  std::string variable;
+  uint32_t value;
+};
 struct menu_choice {
   vec2<int16_t> minimum;
   vec2<int16_t> maximum;

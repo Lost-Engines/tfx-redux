@@ -7,8 +7,17 @@
 
 namespace tfx::flight {
 
-enum class automatic_landing_phase : uint8_t { inactive, prepare, approach };
-enum class automatic_landing_event { afterburner_stopped, gear_lowered, gear_raised, stopped };
+enum class automatic_landing_phase : uint8_t {
+  inactive,
+  prepare,
+  approach
+};
+enum class automatic_landing_event {
+  afterburner_stopped,
+  gear_lowered,
+  gear_raised,
+  stopped
+};
 struct automatic_landing {
   automatic_approach approach{};
   automatic_landing_phase phase{automatic_landing_phase::inactive};

@@ -16,18 +16,19 @@ std::optional<palette_bank> palette_selection::advance(palette_context const &co
   bool infrared{context.view == view_mode::designator || (context.view == view_mode::missile_infrared && context.projectiles_present)};
   if(!infrared && context.infrared_available && context.night && context.night_vision) {
     switch(context.view) {
-      case view_mode::chase:
-      case view_mode::unused_5:
-      case view_mode::missile:
-      case view_mode::tactical:
-      case view_mode::approach_cockpit:
-      case view_mode::depart_cockpit:
-      case view_mode::fly_past:
-      case view_mode::ejection:
-      case view_mode::turning_recovery:
-      case view_mode::impact_orbit:
-        break;
-      default: infrared = true;
+    case view_mode::chase:
+    case view_mode::unused_5:
+    case view_mode::missile:
+    case view_mode::tactical:
+    case view_mode::approach_cockpit:
+    case view_mode::depart_cockpit:
+    case view_mode::fly_past:
+    case view_mode::ejection:
+    case view_mode::turning_recovery:
+    case view_mode::impact_orbit:
+      break;
+    default:
+      infrared = true;
     }
   }
   if(infrared) {

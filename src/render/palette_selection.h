@@ -5,7 +5,10 @@
 
 namespace tfx::render {
 
-enum class palette_bank { normal, infrared };
+enum class palette_bank {
+  normal,
+  infrared
+};
 struct palette_selection_state {
   bool normal_changed{true};
   bool infrared{false};

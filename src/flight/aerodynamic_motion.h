@@ -7,13 +7,13 @@ namespace tfx::flight {
 
 struct aerodynamic_motion {
   aerodynamic_pose pose{};
-  vec3d velocity_ned{0,0,0};
-  vec3d acceleration_ned{0,0,0};
-  vec3d ground_velocity_body{0,0,0};
-  vec3d air_velocity_body{0,0,0};
-  vec3d angular_rate{0,0,0};                                                   // Local roll, pitch, yaw, in radians per second.
-  vec2d angular_acceleration{0,0};
-  vec2d rotation_remainder{0,0};                                               // Roll/pitch in original 65,536-unit angles.
+  vec3d velocity_ned{0, 0, 0};
+  vec3d acceleration_ned{0, 0, 0};
+  vec3d ground_velocity_body{0, 0, 0};
+  vec3d air_velocity_body{0, 0, 0};
+  vec3d angular_rate{0, 0, 0};                                                 // Local roll, pitch, yaw, in radians per second.
+  vec2d angular_acceleration{0, 0};
+  vec2d rotation_remainder{0, 0};                                              // Roll/pitch in original 65,536-unit angles.
   double yaw_step_radians{0};
   int16_t collision{0};
   int32_t integer_world_y{0};

@@ -23,20 +23,29 @@ int main(int const argc, char const *const argv[]) try {
     tables = assets.arming;
   }
   std::ifstream fixture;
-  if(checking) { fixture.open(argv[2]);if(!fixture) throw std::runtime_error{"cannot open arming fixture"}; }
+  if(checking) {
+    fixture.open(argv[2]);
+    if(!fixture) throw std::runtime_error{"cannot open arming fixture"};
+  }
   std::istream &input{checking ? fixture : std::cin};
-  unsigned int aircraft{0}, occupied{0}, slot{0}, cases{0};int weapon{-1};
+  unsigned int aircraft{0};
+  unsigned int occupied{0};
+  unsigned int slot{0};
+  unsigned int cases{0};
+  int weapon{-1};
   while(input >> aircraft >> weapon >> occupied >> slot) {
-    tfx::weapons::armament inventory{static_cast<tfx::flight::player_aircraft>(aircraft),definitions,tables};
+    tfx::weapons::armament inventory{static_cast<tfx::flight::player_aircraft>(aircraft), definitions, tables};
     for(unsigned int index{0}; index != tfx::flight::store_slots; ++index) {
-      if(occupied & (1u << index)) inventory.assign(index,tfx::weapons::weapon_id::sidewinder_s);
+      if(occupied & (1u << index)) inventory.assign(index, tfx::weapons::weapon_id::sidewinder_s);
     }
     unsigned int allowed{0};
-    if(weapon >= 0) for(unsigned int mount{0}; mount != tfx::flight::store_slots; ++mount) {
-      if(inventory.can_fit(mount,static_cast<tfx::weapons::weapon_id>(weapon))) allowed |= 1u << mount;
+    if(weapon >= 0) {
+      for(unsigned int mount{0}; mount != tfx::flight::store_slots; ++mount) {
+        if(inventory.can_fit(mount, static_cast<tfx::weapons::weapon_id>(weapon))) allowed |= 1u << mount;
+      }
     }
-    inventory.assign(slot,weapon < 0 ? std::nullopt : std::optional{static_cast<tfx::weapons::weapon_id>(weapon)});
-    std::array<uint32_t,1 + tfx::flight::store_slots * 3> result{};
+    inventory.assign(slot, weapon < 0 ? std::nullopt : std::optional{static_cast<tfx::weapons::weapon_id>(weapon)});
+    std::array<uint32_t, 1 + tfx::flight::store_slots * 3> result{};
     result[0] = allowed;
     for(unsigned int index{0}; index != tfx::flight::store_slots; ++index) {
       auto const &pylon{inventory.pylons[index]};
@@ -48,7 +57,9 @@ int main(int const argc, char const *const argv[]) try {
       uint64_t expected{0};
       if(!(input >> expected)) throw std::runtime_error{"incomplete arming fixture"};
       uint64_t digest{14695981039346656037ull};
-      for(auto const value : result) for(unsigned int byte{0}; byte != 4; ++byte) digest = (digest ^ ((value >> (byte * 8)) & 255u)) * 1099511628211ull;
+      for(auto const value : result) {
+        for(unsigned int byte{0}; byte != 4; ++byte) digest = (digest ^ ((value >> (byte * 8)) & 255u)) * 1099511628211ull;
+      }
       if(digest != expected) throw std::runtime_error{"native arming fixture differs at case " + std::to_string(cases)};
     } else {
       for(auto const value : result) std::cout << value << ' ';

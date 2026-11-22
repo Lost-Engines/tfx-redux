@@ -12,8 +12,9 @@ class midi_stream {
 private:
   midi_receiver &receiver;
   std::vector<uint8_t> system;
-  std::array<uint8_t,2> data{};
-  uint8_t status{0}, count{0};
+  std::array<uint8_t, 2> data{};
+  uint8_t status{0};
+  uint8_t count{0};
 
 public:
   explicit midi_stream(midi_receiver &receiver);

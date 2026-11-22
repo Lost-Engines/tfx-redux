@@ -11,7 +11,12 @@ unsigned int constexpr pit_input_hz{1193182}, pit_divisor{21845};
 double constexpr timer_hz{static_cast<double>(pit_input_hz) / pit_divisor};
 
 // Native codes differ from the four MODEL configuration-file indices.
-enum class flight_model : uint8_t { arcade, military_spec, simple, realistic = 6 };
+enum class flight_model : uint8_t {
+  arcade,
+  military_spec,
+  simple,
+  realistic = 6
+};
 flight_model configured_flight_model(unsigned int index);
 
 struct frame_timing {

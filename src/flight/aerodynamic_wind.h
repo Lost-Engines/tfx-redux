@@ -9,7 +9,7 @@ unsigned int constexpr aerodynamic_weather_profiles{5}, aerodynamic_temperature_
 // Native 0x95f3c explicitly starts in profile zero; the temperature column is
 // initialized to zero and has no referenced writer in the reference executable.
 unsigned int constexpr aerodynamic_initial_weather{0}, aerodynamic_initial_temperature_column{0};
-using aerodynamic_surface_temperatures = std::array<std::array<int16_t,aerodynamic_temperature_columns>,aerodynamic_weather_profiles>;
+using aerodynamic_surface_temperatures = std::array<std::array<int16_t, aerodynamic_temperature_columns>, aerodynamic_weather_profiles>;
 struct aerodynamic_wind_parameters {
   double direction_wobble_scale{0};
   double surface_speed{0};
@@ -32,12 +32,12 @@ struct aerodynamic_wind {
   double vertical_phase_frequency{0};
   double vertical_phase_offset{0};
   double vertical_scale{0};                                                    // Compiled zero, with no native writer.
-  vec2d upper_wind{0,0};
+  vec2d upper_wind{0, 0};
   double upper_mix{0};
   double legacy_gust_period{0};
   double legacy_gust_target{0};
   double legacy_gust_smoothing{0};                                             // Three initialized fields have no native readers.
-  vec3f velocity_ned{0,0,0};
+  vec3f velocity_ned{0, 0, 0};
 };
 struct aerodynamic_wind_context {
   double down_metres{0};
@@ -45,7 +45,7 @@ struct aerodynamic_wind_context {
   bool weather_wind_boost{false};                                              // Native environment flag 0x80.
 };
 
-std::array<aerodynamic_wind_parameters,aerodynamic_weather_profiles> load_aerodynamic_wind_parameters(std::span<uint8_t const> executable);
+std::array<aerodynamic_wind_parameters, aerodynamic_weather_profiles> load_aerodynamic_wind_parameters(std::span<uint8_t const> executable);
 aerodynamic_surface_temperatures load_aerodynamic_surface_temperatures(std::span<uint8_t const> executable);
 // Original 0x95f3c wind initialization, including all three random draws.
 void initialise_aerodynamic_wind(aerodynamic_wind &state, aerodynamic_wind_parameters const &parameters, math::random_state &random, aerodynamic_wind_context const &context, bool strongest_weather);

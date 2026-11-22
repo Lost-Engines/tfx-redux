@@ -26,17 +26,19 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
   // Native 0x9fe14/0x9fe50 checks the prior-model marker only on entry.
   // The enclosing game loop acknowledges it AFTER this callback (0x8f98c),
   // so a request raised within this update does not cause a later reset.
-  if(state.autopilot.recovery.model_reset_requested) state.reset_motion(context.ground_elevation_steps,context.terrain_present);
+  if(state.autopilot.recovery.model_reset_requested) state.reset_motion(context.ground_elevation_steps, context.terrain_present);
   double const seconds{state.seconds};
 
   state.wind.simulation_seconds = data.simulation_seconds;
-  if(context.wind_enabled) update_aerodynamic_wind(state.wind,wind_parameters,random,{
-    .down_metres{motion.pose.metres_ned.z},
-    .terrain_wind_boost{context.terrain_wind_boost},
-    .weather_wind_boost{context.weather_wind_boost},
-  });
+  if(context.wind_enabled) {
+    update_aerodynamic_wind(state.wind, wind_parameters, random, {
+      .down_metres{motion.pose.metres_ned.z},
+      .terrain_wind_boost{context.terrain_wind_boost},
+      .weather_wind_boost{context.weather_wind_boost},
+    });
+  }
   data.simulation_seconds = state.wind.simulation_seconds;
-  update_aerodynamic_airdata(data,motion,{
+  update_aerodynamic_airdata(data, motion, {
     .wind_ned{vec3f{state.wind.velocity_ned}},
     .empty_mass_kg{aircraft.empty_mass_kg},
     .fuel_kg{powerplant.fuel},
@@ -46,7 +48,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     .surface_celsius{context.surface_celsius},
   });
   state.wind.simulation_seconds = data.simulation_seconds;
-  state.coefficients = update_aerodynamic_coefficients(craft,data.mach,state.coefficient_parameters);
+  state.coefficients = update_aerodynamic_coefficients(craft, data.mach, state.coefficient_parameters);
   aerodynamic_powerplant_context const engine_context{
     .altitude_km{data.altitude_km},
     .seconds{seconds},
@@ -56,13 +58,13 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     damage.condition(aircraft_system::left_engine),
     damage.condition(aircraft_system::right_engine),
   };
-  if(consume_aerodynamic_fuel(powerplant,aircraft.powerplant,engine_context)) events.afterburner.push_back(afterburner_change::stopped);
-  update_aerodynamic_engine_faults(powerplant,random);
+  if(consume_aerodynamic_fuel(powerplant, aircraft.powerplant, engine_context)) events.afterburner.push_back(afterburner_change::stopped);
+  update_aerodynamic_engine_faults(powerplant, random);
   damage.systems[std::to_underlying(aircraft_system::left_engine)] = powerplant.engine_condition[0];
   damage.systems[std::to_underlying(aircraft_system::right_engine)] = powerplant.engine_condition[1];
 
   if(context.approach_reference_enabled) {
-    update_aerodynamic_approach_reference(state.approach,{
+    update_aerodynamic_approach_reference(state.approach, {
       .data{data},
       .motion{motion},
       .coefficients{state.coefficients},
@@ -75,7 +77,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
   }
 
   manual.air_brake_condition = damage.condition(aircraft_system::air_brake);
-  auto const predicted{check_aerodynamic_recovery(state.autopilot.recovery,manual.controls,powerplant,manual.air_brake_condition,{
+  auto const predicted{check_aerodynamic_recovery(state.autopilot.recovery, manual.controls, powerplant, manual.air_brake_condition, {
     .eligibility{
       .afterburner_stages{aircraft.powerplant.afterburner_stages},
       .available{context.recovery_available},
@@ -92,7 +94,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
   })};
   if(predicted.recovery.change != aerodynamic_recovery_change::none) events.recovery_changes.push_back(predicted.recovery.change);
   events.descent_warning = predicted.descent_warning;
-  events.afterburner.insert(events.afterburner.end(),predicted.recovery.afterburner.begin(),predicted.recovery.afterburner.end());
+  events.afterburner.insert(events.afterburner.end(), predicted.recovery.afterburner.begin(), predicted.recovery.afterburner.end());
   damage.systems[std::to_underlying(aircraft_system::air_brake)] = manual.air_brake_condition;
 
   aerodynamic_control_context const control_context{
@@ -113,7 +115,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     .accelerate{context.input.accelerate},
     .decelerate{context.input.decelerate},
   };
-  if(update_aerodynamic_controls(manual.controls,powerplant,control_context)) events.afterburner.push_back(afterburner_change::stopped);
+  if(update_aerodynamic_controls(manual.controls, powerplant, control_context)) events.afterburner.push_back(afterburner_change::stopped);
   if(realistic_setting && ground.landed && data.metres_per_second < aircraft.stall_metres_per_second) manual.controls.elevator = manual.controls.keyboard_elevator = 0;
   manual.air_brake_condition = damage.condition(aircraft_system::air_brake);
   aerodynamic_manual_context const manual_context{
@@ -159,27 +161,29 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
       .landed{ground.landed},
     },
   };
-  auto const controlled{update_aerodynamic_autopilot(autopilot,manual,powerplant,motion,{
+  auto const controlled{update_aerodynamic_autopilot(autopilot, manual, powerplant, motion, {
     .guidance{guidance_context},
     .navigation{context.navigation},
   })};
-  events.afterburner.insert(events.afterburner.end(),controlled.afterburner.begin(),controlled.afterburner.end());
+  events.afterburner.insert(events.afterburner.end(), controlled.afterburner.begin(), controlled.afterburner.end());
   if(controlled.recovery != aerodynamic_recovery_change::none) events.recovery_changes.push_back(controlled.recovery);
   state.response.previous_pitch_rate = autopilot.guidance.ground_speed;
   state.ground.roll_angle = autopilot.guidance.roll_angle;
   damage.systems[std::to_underlying(aircraft_system::air_brake)] = manual.air_brake_condition;
-  if(realistic_callback) update_aerodynamic_commands(state.commands,manual,powerplant,{
-    .data{data},
-    .coefficients{state.coefficients},
-    .geometry{geometry},
-    .engine_roll_arm{aircraft.powerplant.roll_thrust_arm},
-    .engine_pitch_arm{aircraft.powerplant.pitch_thrust_arm},
-    .body_forward_force{state.forces.body_force.x},
-    .body_down_force{state.forces.body_force.z},
-    .seconds{seconds},
-    .stick_pressure{context.stick_pressure},
-  });
-  update_aerodynamic_surfaces(state.surfaces,geometry,{
+  if(realistic_callback) {
+    update_aerodynamic_commands(state.commands, manual, powerplant, {
+      .data{data},
+      .coefficients{state.coefficients},
+      .geometry{geometry},
+      .engine_roll_arm{aircraft.powerplant.roll_thrust_arm},
+      .engine_pitch_arm{aircraft.powerplant.pitch_thrust_arm},
+      .body_forward_force{state.forces.body_force.x},
+      .body_down_force{state.forces.body_force.z},
+      .seconds{seconds},
+      .stick_pressure{context.stick_pressure},
+    });
+  }
+  update_aerodynamic_surfaces(state.surfaces, geometry, {
     .aircraft{craft},
     .coefficients{state.coefficients},
     .angle_of_attack{data.angle_of_attack},
@@ -198,7 +202,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     .calculate_moments{!realistic_callback},
     .flaps_condition{damage.condition(aircraft_system::flaps)},
   });
-  update_aerodynamic_thrust(powerplant,aircraft.powerplant,engine_context);
+  update_aerodynamic_thrust(powerplant, aircraft.powerplant, engine_context);
   aerodynamic_ground_context const ground_context{
     .contact{
       .basis{data.basis},
@@ -227,7 +231,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
   if(realistic_callback) {
     state.ground.commanded_roll_rate = state.commands.roll_rate;
     state.ground.commanded_angle_of_attack = state.commands.angle_of_attack;
-    events.ground = update_aerodynamic_realistic_ground(state.ground,motion,manual.controls,damage,random,aircraft.ground,{
+    events.ground = update_aerodynamic_realistic_ground(state.ground, motion, manual.controls, damage, random, aircraft.ground, {
       .ground{ground_context},
       .stall_metres_per_second{aircraft.stall_metres_per_second},
       .angle_of_attack{data.angle_of_attack},
@@ -235,7 +239,9 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     });
     state.commands.roll_rate = state.ground.commanded_roll_rate;
     state.commands.angle_of_attack = state.ground.commanded_angle_of_attack;
-  } else events.ground = update_aerodynamic_ground(ground,motion,damage,random,aircraft.ground,ground_context);
+  } else {
+    events.ground = update_aerodynamic_ground(ground, motion, damage, random, aircraft.ground, ground_context);
+  }
   state.response.previous_pitch_rate = ground.cable_speed;
 
   aerodynamic_inertia const inertia{
@@ -244,7 +250,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     .pitch_moment{state.stores.total_moment_b},
     .fuel_kg{powerplant.fuel},
   };
-  state.forces = update_aerodynamic_forces(motion,{
+  state.forces = update_aerodynamic_forces(motion, {
     .basis{data.basis},
     .loads{
       .aerodynamic_force{vec3d{state.surfaces.force}},
@@ -260,7 +266,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     .fully_arrested{ground.arrestor == aerodynamic_arrestor_phase::stopped},
   });
   state.response.g_load = state.forces.g_load;
-  update_aerodynamic_response(state.response,{
+  update_aerodynamic_response(state.response, {
     .basis{data.basis},
     .inertia{inertia},
     .parameters{
@@ -299,7 +305,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     .stick_pressure{context.stick_pressure},
   });
   ground.cable_speed = state.response.previous_pitch_rate;
-  advance_aerodynamic_motion(motion,{
+  advance_aerodynamic_motion(motion, {
     .seconds{seconds},
     .time_warp{context.time_warp},
     .landed{ground.landed},
@@ -310,7 +316,7 @@ aerodynamic_tick_events advance_aerodynamic_flight(aerodynamic_flight &state, da
     .commanded_angle_of_attack{state.commands.angle_of_attack},
     .angle_of_attack{data.angle_of_attack},
   });
-  state.view = update_aerodynamic_view(motion.pose,craft,aircraft.viewpoint);
+  state.view = update_aerodynamic_view(motion.pose, craft, aircraft.viewpoint);
   motion.integer_world_y = state.view.integer_position.y;
   if(realistic_callback && ground.contact.force.x != 0) motion.velocity_ned.z = 0;
   autopilot.guidance.ground_speed = state.response.previous_pitch_rate;

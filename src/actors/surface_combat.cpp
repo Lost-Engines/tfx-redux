@@ -11,26 +11,28 @@ int32_t subtract(int32_t const a, int32_t const b) {
   return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
 }
 int32_t magnitude(int32_t const value) {
-  return value < 0 ? subtract(0,value) : value;
+  return value < 0 ? subtract(0, value) : value;
 }
 int32_t horizontal_range(vec3<int32_t> const &from, vec3<int32_t> const &to) {
-  return std::max(magnitude(subtract(to.x,from.x)),magnitude(subtract(to.z,from.z)));
+  return std::max(magnitude(subtract(to.x, from.x)), magnitude(subtract(to.z, from.z)));
 }
 weapons::release make_shot(surface_state const &state, unsigned int const owner, uint16_t const weapon, vec3<int32_t> const &target, math::angle const pitch, std::optional<unsigned int> const actor = {}) {
-  auto const bearing{math::bearing(state.pose.position,target)};
+  auto const bearing{math::bearing(state.pose.position, target)};
   int32_t constexpr minimum_launch_speed{200};
   weapons::target_reference destination{
     .position{vec3<int32_t>{target}},
   };
-  if(actor) destination.actor = weapons::actor_identity{
-    .pool{*actor == player_air_target ? weapons::actor_pool::player : weapons::actor_pool::aircraft},
-    .index{*actor == player_air_target ? 0u : *actor},
-  };
+  if(actor) {
+    destination.actor = weapons::actor_identity{
+      .pool{*actor == player_air_target ? weapons::actor_pool::player : weapons::actor_pool::aircraft},
+      .index{*actor == player_air_target ? 0u : *actor},
+    };
+  }
   return {
     .weapon{weapon},
     .position{vec3<int32_t>{state.pose.position}},
-    .angles{pitch,bearing.y,0},
-    .speed{std::max(minimum_launch_speed,state.pose.speed >> speed_fraction_bits)},
+    .angles{pitch, bearing.y, 0},
+    .speed{std::max(minimum_launch_speed, state.pose.speed >> speed_fraction_bits)},
     .owner{
       .pool{weapons::actor_pool::surface},
       .index{owner},
@@ -52,25 +54,25 @@ std::vector<weapons::release> engage_surface_targets(surface_state &state, profi
     unsigned int constexpr firing_chance_divisor{60};
     if(random.next() % firing_chance_divisor) return false;
     math::angle constexpr vertical_launch_pitch{0xc000};
-    shots.push_back(make_shot(state,context.owner,native.byte(44),target,vertical_launch_pitch,actor));
+    shots.push_back(make_shot(state, context.owner, native.byte(44), target, vertical_launch_pitch, actor));
     return true;
   }};
   if(profile.side != allegiance::allied && state.player_shots < native.byte(45)) {
-    int32_t separation{horizontal_range(state.pose.position,context.player)};
+    int32_t separation{horizontal_range(state.pose.position, context.player)};
     int32_t detection_range{range};
     if(context.aircraft == flight::player_aircraft::nighthawk) {
-      separation = std::max(separation,magnitude(subtract(context.player.y,state.pose.position.y)));
+      separation = std::max(separation, magnitude(subtract(context.player.y, state.pose.position.y)));
       detection_range /= 8;
     }
-    if(separation <= detection_range && fire(context.player,player_air_target)) ++state.player_shots;
+    if(separation <= detection_range && fire(context.player, player_air_target)) ++state.player_shots;
   }
   unsigned int const base{profile.side == allegiance::allied ? 0u : aircraft_per_side};
   for(unsigned int reverse{aircraft_per_side}; reverse; --reverse) {
     unsigned int const actor{base + reverse - 1};
-    auto const found{std::ranges::find(context.aircraft_targets,actor,&surface_air_target::actor)};
+    auto const found{std::ranges::find(context.aircraft_targets, actor, &surface_air_target::actor)};
     // The native enumerator omits retired slots, but does not omit a falling aircraft merely because it has crashed.
     if(found == context.aircraft_targets.end() || (found->flags & std::to_underlying(air_flag::retired))) continue;
-    if(horizontal_range(state.pose.position,found->position) < range) fire(found->position,actor);
+    if(horizontal_range(state.pose.position, found->position) < range) fire(found->position, actor);
   }
   return shots;
 }
@@ -85,7 +87,7 @@ std::optional<weapons::release> surface_ground_attack(surface_state const &state
     std::bit_cast<int32_t>(static_cast<uint32_t>(request.cell.y) * world::cell_units * position_unit + world::cell_units / 2 * position_unit),
   };
   math::angle constexpr ground_launch_pitch{0x1ffe};
-  return make_shot(state,owner,request.weapon,target,ground_launch_pitch);
+  return make_shot(state, owner, request.weapon, target, ground_launch_pitch);
 }
 
 } // namespace tfx::actors

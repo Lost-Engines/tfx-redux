@@ -21,8 +21,15 @@ struct scene_handle {
   unsigned int value;
   bool operator==(scene_handle const&) const = default;
 };
-enum class scene_pass { primary, instrument };
-enum class submission_phase { before_sky, before_actors, after_actors };
+enum class scene_pass {
+  primary,
+  instrument
+};
+enum class submission_phase {
+  before_sky,
+  before_actors,
+  after_actors
+};
 struct scene_events {
   bool animated{false};
   bool eject_player{false};
@@ -33,7 +40,8 @@ private:
   environment const &terrain;
   environment const *upper_terrain;
   assets &resources;
-  std::map<unsigned int,instance> instances, upper_instances;
+  std::map<unsigned int, instance> instances;
+  std::map<unsigned int, instance> upper_instances;
   struct moving_instance {
     instance state;
     vec3d position;
@@ -42,13 +50,13 @@ private:
     std::optional<unsigned int> preview_entry{};
     bool aircraft{false};
   };
-  std::map<unsigned int,moving_instance> actors;
+  std::map<unsigned int, moving_instance> actors;
   std::vector<scene_handle> actor_order;
   unsigned int next_actor{0};
   instance &terrain_instance(unsigned int x, unsigned int z);
   std::function<void(effect_record const&)> effect_sink{};
   vec3<int32_t> const *query_reference{nullptr};                               // Borrowed from the mission player.
-  vec3<int16_t> reference_words(vec3d const &fallback = {0,0,0}) const;
+  vec3<int16_t> reference_words(vec3d const &fallback = {0, 0, 0}) const;
   void emit_effect(scene_request const &request, vec3d const &origin, math::angle heading = 0);
   bool advance_instance(instance &state, vec3d const &origin, math::angle heading = 0);
   struct actor_submission {
@@ -66,7 +74,7 @@ private:
   std::vector<model_submission> model_submissions;
   render::model_slot_metadata model_slots;
   std::vector<models::shape const*> carried_models;
-  std::array<uint8_t,part_parameters> model_parameters{};
+  std::array<uint8_t, part_parameters> model_parameters{};
   animation_clock local_clock;
   animation_clock &clock;                                                      // Optional application-owned gate survives mission changes.
   bool animation_pending{false};
@@ -84,7 +92,7 @@ private:
   std::optional<player_rendering> player_model;
   std::optional<render::camera> installed_camera;
   double visual_lod_scale{1};
-  std::function<render::texture_overlay(std::string_view,models::texture_binding const&)> texture_overlay;
+  std::function<render::texture_overlay(std::string_view, models::texture_binding const&)> texture_overlay;
 
 public:
   std::set<std::string> warnings;

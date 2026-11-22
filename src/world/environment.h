@@ -41,14 +41,15 @@ struct mission {
 struct lighting_configuration {
   std::string config;
   std::string palette_name;
-  std::array<std::string,4> upper_palette_names;
-  std::array<int32_t,5> palette_altitudes{};
+  std::array<std::string, 4> upper_palette_names;
+  std::array<int32_t, 5> palette_altitudes{};
   std::string infrared_palette_name;
   std::string schematic_name;
   uint16_t status{0};
   bool water_world{false};
   bool cloud_layer{false};                                                     // Native altitude-prefix flag at 0xe762.
-  int16_t layer_y{0}, layer_offset_y{0};
+  int16_t layer_y{0};
+  int16_t layer_offset_y{0};
   std::string upper_grid{};
   bool initial_cockpit_raised{false};                                          // Native environment bit 0: start with the panel fully raised.
   bool sun_suppressed{false};                                                  // Native environment bit 0x200.

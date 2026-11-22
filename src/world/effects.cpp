@@ -13,7 +13,7 @@ effect_slot effect_pool::spawn(vec3<int32_t> const &position, effect_kind const 
   if(std::to_underlying(kind) >= effect_kind_count) throw std::out_of_range{"unknown transient effect kind"};
   effect_slot const slot{next};
   records[slot] = {
-    .position{math::signed_word(static_cast<uint16_t>(position.x)),math::signed_word(static_cast<uint16_t>(position.y)),math::signed_word(static_cast<uint16_t>(position.z))},
+    .position{math::signed_word(static_cast<uint16_t>(position.x)), math::signed_word(static_cast<uint16_t>(position.y)), math::signed_word(static_cast<uint16_t>(position.z))},
     .kind{kind},
   };
   next = next ? next - 1 : effect_capacity - 1;

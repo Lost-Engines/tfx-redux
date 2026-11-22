@@ -10,12 +10,12 @@ struct score_entry {
   std::string surname;
   std::string callsign;
   int32_t score;
-  bool operator==(score_entry const&) const = default;
+  bool operator==(score_entry const &) const = default;
 };
-using score_table = std::array<score_entry,score_entries>;
+using score_table = std::array<score_entry, score_entries>;
 struct score_assets {
   score_table defaults;
-  std::array<uint8_t,30> highlight;
+  std::array<uint8_t, 30> highlight;
   explicit score_assets(std::span<uint8_t const> executable);
 };
 resources::bytes pack_scores(score_table const &scores);

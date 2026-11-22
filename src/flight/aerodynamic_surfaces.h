@@ -24,7 +24,7 @@ struct aerodynamic_surface_parameters {
   double chute_area{0};
   double zero_pitch_moment{0};
   double chute_pitch_arm{0};
-  vec2d air_brake_moment_arm{0,0};                                             // Original sin(alpha), cos(alpha) terms.
+  vec2d air_brake_moment_arm{0, 0};                                            // Original sin(alpha), cos(alpha) terms.
   double maximum_aileron_angle{0};
   double maximum_elevator_angle{0};
 };
@@ -43,8 +43,8 @@ struct aerodynamic_surface_state {
   double pitch_moment{0};
   double roll_rate_moment_term{0};
   double roll_moment{0};
-  vec3d force{0,0,0};
-  vec3d moment{0,0,0};
+  vec3d force{0, 0, 0};
+  vec3d moment{0, 0, 0};
   bool stalled{false};
 };
 struct aerodynamic_surface_context {

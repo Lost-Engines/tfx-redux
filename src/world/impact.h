@@ -6,9 +6,21 @@
 
 namespace tfx::world {
 
-enum class impact_surface : int16_t { unknown = -1, terrain, structure, water };
-enum class crash_appearance { land, water };
-enum class player_contact_action { none, restore_destroyed, explode };
+enum class impact_surface : int16_t {
+  unknown = -1,
+  terrain,
+  structure,
+  water
+};
+enum class crash_appearance {
+  land,
+  water
+};
+enum class player_contact_action {
+  none,
+  restore_destroyed,
+  explode
+};
 struct player_contact_context {
   bool previously_destroyed;
   bool destroyed;

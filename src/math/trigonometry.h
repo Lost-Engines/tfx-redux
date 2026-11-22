@@ -8,7 +8,7 @@
 namespace tfx::math {
 
 using angle = uint16_t;
-inline unsigned constexpr angle_units_per_turn=65536;
+inline unsigned constexpr angle_units_per_turn = 65536;
 constexpr int16_t signed_word(uint16_t const value) {
   return std::bit_cast<int16_t>(value);
 }

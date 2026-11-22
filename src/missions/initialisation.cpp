@@ -11,7 +11,7 @@ namespace {
 std::string_view trim(std::string_view value) {
   auto const first{value.find_first_not_of(" \t\r\n")};
   if(first == value.npos) return {};
-  return value.substr(first,value.find_last_not_of(" \t\r\n") - first + 1);
+  return value.substr(first, value.find_last_not_of(" \t\r\n") - first + 1);
 }
 std::string lower(std::string_view const value) {
   std::string result{value};
@@ -30,7 +30,7 @@ public:
     if(remaining.empty()) return std::nullopt;
     auto const newline{remaining.find('\n')};
     auto const count{newline == remaining.npos ? remaining.size() : newline + 1};
-    auto const result{remaining.substr(0,count)};
+    auto const result{remaining.substr(0, count)};
     remaining.remove_prefix(count);
     return result;
   }
@@ -55,11 +55,14 @@ public:
   }
   std::string_view next() {
     auto const first{remaining.find_first_not_of(" \t\r\n,#()")};
-    if(first == remaining.npos || remaining[first] == ';') { remaining = {}; return {}; }
+    if(first == remaining.npos || remaining[first] == ';') {
+      remaining = {};
+      return {};
+    }
     remaining.remove_prefix(first);
     auto const end{remaining.find_first_of(" \t\r\n,#()")};
     auto const count{end == remaining.npos ? remaining.size() : end};
-    auto const result{remaining.substr(0,count)};
+    auto const result{remaining.substr(0, count)};
     remaining.remove_prefix(count);
     return result;
   }
@@ -69,7 +72,7 @@ public:
     if(word.starts_with('+')) word.remove_prefix(1);
     if(word.empty()) return 0;
     int32_t value{0};
-    auto const result{std::from_chars(word.data(),word.data() + word.size(),value)};
+    auto const result{std::from_chars(word.data(), word.data() + word.size(), value)};
     if(result.ec == std::errc::result_out_of_range) throw std::runtime_error{"mission integer exceeds its native word"};
     return value;
   }
@@ -106,10 +109,13 @@ setup initialise(std::string_view const script, inherited_setup const &inherited
       continue;
     }
     if(command.ends_with(':')) break;
-    if(command == "world") result.world = fields.next();
-    else if(command == "type") result.environment = fields.next();
-    else if(command == "way") result.waypoints = fields.next();
-    else if(command == "start") {
+    if(command == "world") {
+      result.world = fields.next();
+    } else if(command == "type") {
+      result.environment = fields.next();
+    } else if(command == "way") {
+      result.waypoints = fields.next();
+    } else if(command == "start") {
       result.start.position.x = fields.integer();
       auto const altitude{fields.next()};
       result.start.landed = lower(altitude) == "landed";
@@ -129,15 +135,22 @@ setup initialise(std::string_view const script, inherited_setup const &inherited
     } else if(command == "speed") {
       // original 0x8c414 converts a signed word with three float constants, then stores a float
       // preserve their exact values without assigning unverified physical units
-      float constexpr fixed_speed_scale{1.0f / 256}, native_speed_scale{122}, reference_speed_reciprocal{0.0029411765281111f};
+      float constexpr fixed_speed_scale{1.0f / 256};
+      float constexpr native_speed_scale{122};
+      float constexpr reference_speed_reciprocal{0.0029411765281111f};
       int16_t const speed{math::signed_word(static_cast<uint16_t>(fields.integer()))};
       result.speed_factor = static_cast<float>(speed * static_cast<double>(fixed_speed_scale) * native_speed_scale * reference_speed_reciprocal);
-    } else if(command == "weapons") result.weapons = static_cast<uint8_t>(fields.integer());
-    else if(command == "default_weapons") result.default_weapons = true;
-    else if(command == "setidnum") result.aircraft_type_filter = math::signed_word(static_cast<uint16_t>(fields.integer()));
-    else if(command == "setmobileid") result.surface_type_filter = math::signed_word(static_cast<uint16_t>(fields.integer()));
-    else if(command == "timer") result.timer = fields.integer();
-    else if(command == "unc_start") {
+    } else if(command == "weapons") {
+      result.weapons = static_cast<uint8_t>(fields.integer());
+    } else if(command == "default_weapons") {
+      result.default_weapons = true;
+    } else if(command == "setidnum") {
+      result.aircraft_type_filter = math::signed_word(static_cast<uint16_t>(fields.integer()));
+    } else if(command == "setmobileid") {
+      result.surface_type_filter = math::signed_word(static_cast<uint16_t>(fields.integer()));
+    } else if(command == "timer") {
+      result.timer = fields.integer();
+    } else if(command == "unc_start") {
       auto const extension{fields.next()};
       result.saved_start_extension = extension.starts_with('.') && extension.size() < 5 ? std::string{extension} : ".udd";
     } else if(command == "settime") {
@@ -148,22 +161,28 @@ setup initialise(std::string_view const script, inherited_setup const &inherited
     } else if(command == "targ") {
       auto const number{fields.integer()};
       if(result.targets.size() >= maximum_targets || number != static_cast<int32_t>(result.targets.size()) + 1) throw std::runtime_error{"mission targets must be consecutively numbered within the native limit"};
-      int32_t const x{fields.integer()}, z{fields.integer()};
-      auto const centred{[](int32_t const cell){ return std::bit_cast<int32_t>(static_cast<uint32_t>(cell) * world::cell_units + world::cell_units / 2); }};
+      int32_t const x{fields.integer()};
+      int32_t const z{fields.integer()};
+      auto const centred{[](int32_t const cell){
+        return std::bit_cast<int32_t>(static_cast<uint32_t>(cell) * world::cell_units + world::cell_units / 2);
+      }};
       result.targets.push_back({
-        .position{centred(x),0,centred(z)},
+        .position{centred(x), 0, centred(z)},
       });
       auto const next{lower(fields.next())};
       if(next == "time") {
         result.targets.back().time_limit = scaled_time(fields.integer());
-        result.targets.back().text = optional_text(fields,source);
+        result.targets.back().text = optional_text(fields, source);
       } else if(next == "text") result.targets.back().text = source.text();
     } else if(command == "flak") {
       if(result.flak.size() == maximum_flak_regions) throw std::runtime_error{"mission exceeds native flak region limit"};
-      int32_t const x1{fields.integer()}, z1{fields.integer()}, x2{fields.integer()}, z2{fields.integer()};
+      int32_t const x1{fields.integer()};
+      int32_t const z1{fields.integer()};
+      int32_t const x2{fields.integer()};
+      int32_t const z2{fields.integer()};
       result.flak.push_back({
-        .first{x1,z1},
-        .last{x2,z2},
+        .first{x1, z1},
+        .last{x2, z2},
       });
     } else if(command == "message") {
       if(result.messages.size() == maximum_messages) throw std::runtime_error{"mission exceeds native timed message limit"};
@@ -176,14 +195,22 @@ setup initialise(std::string_view const script, inherited_setup const &inherited
       auto const kind{lower(fields.next())};
       completion_kind type;
       int32_t value{0};
-      if(kind == "all_targets") type = completion_kind::all_targets;
-      else {
-        if(kind == "enemy") type = completion_kind::enemy;
-        else if(kind == "allied") type = completion_kind::allied;
-        else if(kind == "timer") type = completion_kind::timer;
-        else if(kind == "emobile") type = completion_kind::enemy_mobile;
-        else if(kind == "protect") type = completion_kind::protect;
-        else throw std::runtime_error{"unknown mission completion kind: " + kind};
+      if(kind == "all_targets") {
+        type = completion_kind::all_targets;
+      } else {
+        if(kind == "enemy") {
+          type = completion_kind::enemy;
+        } else if(kind == "allied") {
+          type = completion_kind::allied;
+        } else if(kind == "timer") {
+          type = completion_kind::timer;
+        } else if(kind == "emobile") {
+          type = completion_kind::enemy_mobile;
+        } else if(kind == "protect") {
+          type = completion_kind::protect;
+        } else {
+          throw std::runtime_error{"unknown mission completion kind: " + kind};
+        }
         fields.next();                                                         // original consumes the comparison token without interpreting it
         value = fields.integer();
         if(type == completion_kind::timer || type == completion_kind::protect) value = scaled_time(value);
@@ -191,7 +218,7 @@ setup initialise(std::string_view const script, inherited_setup const &inherited
       result.completion = completion_rule{
         .kind{type},
         .value{value},
-        .text{optional_text(fields,source)},
+        .text{optional_text(fields, source)},
       };
     } else if(command == "setbob") {
       if(result.scenery_events.size() == maximum_scenery_events) throw std::runtime_error{"mission exceeds native scenery event limit"};
@@ -200,13 +227,16 @@ setup initialise(std::string_view const script, inherited_setup const &inherited
       tokens value{first};
       auto const time{timed ? scaled_time(fields.integer()) : 0};
       auto const a{static_cast<uint8_t>(timed ? fields.integer() : value.integer())};
-      auto const b{static_cast<uint8_t>(fields.integer())}, c{static_cast<uint8_t>(fields.integer())};
+      auto const b{static_cast<uint8_t>(fields.integer())};
+      auto const c{static_cast<uint8_t>(fields.integer())};
       result.scenery_events.push_back({
         .time{time},
         .entry{a},
-        .cell{b,c},
+        .cell{b, c},
       });
-    } else throw std::runtime_error{"unsupported mission INIT command: " + command};
+    } else {
+      throw std::runtime_error{"unsupported mission INIT command: " + command};
+    }
   }
   if(!initialising || result.world.empty() || result.environment.empty() || result.waypoints.empty()) throw std::runtime_error{"mission INIT lacks required world/type/way declarations"};
   return result;

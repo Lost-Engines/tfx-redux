@@ -27,14 +27,18 @@
 
 namespace {
 
-enum class qsound_mode { automatic, on, off };
+enum class qsound_mode {
+  automatic,
+  on,
+  off
+};
 
 // Native LANG values 1..5 index the directory table at DATA:AB1C.
-std::array<std::string_view,5> constexpr language_names{"english","french","german","italian","spanish"};
+std::array<std::string_view, 5> constexpr language_names{"english", "french", "german", "italian", "spanish"};
 
 unsigned int number(std::string_view const text) {
   unsigned int result{0};
-  auto const [end,error]{std::from_chars(text.data(),text.data() + text.size(),result)};
+  auto const [end, error]{std::from_chars(text.data(), text.data() + text.size(), result)};
   if(error != std::errc{} || end != text.data() + text.size()) throw std::runtime_error{"expected a non-negative integer: " + std::string{text}};
   return result;
 }
@@ -44,30 +48,45 @@ unsigned int number(std::string_view const text) {
 auto main(int const argc, char const *const argv[])->int try {
   std::optional<std::filesystem::path> data_directory;
   std::optional<std::filesystem::path> rom_directory;
-  std::optional<std::filesystem::path> cd_cue, cd_audio_directory;
+  std::optional<std::filesystem::path> cd_cue;
+  std::optional<std::filesystem::path> cd_audio_directory;
   std::optional<uint8_t> music_override;
   qsound_mode selected_qsound{qsound_mode::automatic};
   tfx::audio::sound_canvas_model canvas_model{tfx::audio::sound_canvas_model::scc1a};
-  std::string mission_name{"miss501"}, override_environment, override_grid;
+  std::string mission_name{"miss501"};
+  std::string override_environment;
+  std::string override_grid;
   tfx::configuration::graphics_settings graphics;
-  auto &video{graphics.video};auto &scale{graphics.window_scale};
-  std::vector<std::pair<tfx::configuration::graphics_field,std::string>> graphics_overrides;
-  unsigned int scene_radius{6}, frame_limit{0}, flight_steps{0}, flight_frames{0};
+  auto &video{graphics.video};
+  auto &scale{graphics.window_scale};
+  std::vector<std::pair<tfx::configuration::graphics_field, std::string>> graphics_overrides;
+  unsigned int scene_radius{6};
+  unsigned int frame_limit{0};
+  unsigned int flight_steps{0};
+  unsigned int flight_frames{0};
   tfx::simulation::flight_model model{tfx::simulation::flight_model::arcade};
-  bool inspect{false}, direct_mission{false}, skip_intro{false}, model_selected{false}, language_selected{false};
-  bool career_rules{false}, fullscreen{false};
+  bool inspect{false};
+  bool direct_mission{false};
+  bool skip_intro{false};
+  bool model_selected{false};
+  bool language_selected{false};
+  bool career_rules{false};
+  bool fullscreen{false};
   std::optional<tfx::flight::control_source> control_override;
   std::optional<unsigned int> joystick;
-  std::string presentation, presentation_function, language{"english"};
+  std::string presentation;
+  std::string presentation_function;
+  std::string language{"english"};
   std::optional<vec2<unsigned int>> override_cell;
-  std::optional<std::filesystem::path> screenshot, replay;
+  std::optional<std::filesystem::path> screenshot;
+  std::optional<std::filesystem::path> replay;
 #ifndef NDEBUG
   std::optional<std::filesystem::path> capture_recipe;
 #endif // NDEBUG
   for(int i{1}; i != argc; ++i) {
     std::string_view const argument{argv[i]};
     auto const equals{argument.find('=')};
-    auto const key{argument.substr(0,equals)};
+    auto const key{argument.substr(0, equals)};
     auto const value{[&]()->std::string_view {
       if(equals != std::string_view::npos) return argument.substr(equals + 1);
       if(i + 1 == argc) throw std::runtime_error{"missing value for " + std::string{key}};
@@ -140,31 +159,55 @@ auto main(int const argc, char const *const argv[])->int try {
 #endif // NDEBUG
       return EXIT_SUCCESS;
     }
-    if(key == "--data-dir") data_directory = value();
-    else if(key == "--rom-dir") rom_directory = value();
-    else if(key == "--qsound") {
+    if(key == "--data-dir") {
+      data_directory = value();
+    } else if(key == "--rom-dir") {
+      rom_directory = value();
+    } else if(key == "--qsound") {
       auto const selected{value()};
-      if(selected == "auto") selected_qsound = qsound_mode::automatic;
-      else if(selected == "on") selected_qsound = qsound_mode::on;
-      else if(selected == "off") selected_qsound = qsound_mode::off;
-      else throw std::runtime_error{"qsound must be auto, on or off"};
-    } else if(key == "--cd-cue") cd_cue = value();
-    else if(key == "--cd-audio-dir") cd_audio_directory = value();
-    else if(key == "--music") {
+      if(selected == "auto") {
+        selected_qsound = qsound_mode::automatic;
+      } else if(selected == "on") {
+        selected_qsound = qsound_mode::on;
+      } else if(selected == "off") {
+        selected_qsound = qsound_mode::off;
+      } else {
+        throw std::runtime_error{"qsound must be auto, on or off"};
+      }
+    } else if(key == "--cd-cue") {
+      cd_cue = value();
+    } else if(key == "--cd-audio-dir") {
+      cd_audio_directory = value();
+    } else if(key == "--music") {
       auto const selected{value()};
-      if(selected == "none") music_override = 0;
-      else if(selected == "soundblaster-cd" || selected == "cd") music_override = 1;
-      else if(selected == "soundblaster-fm") music_override = 3;
-      else if(selected == "roland-lapc") music_override = 2;
-      else if(selected == "roland-scc1a") { music_override = 4;canvas_model = tfx::audio::sound_canvas_model::scc1a; } else if(selected == "roland-sc55") { music_override = 4;canvas_model = tfx::audio::sound_canvas_model::sc55; } else throw std::runtime_error{"music must be none, soundblaster-cd, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55"};
+      if(selected == "none") {
+        music_override = 0;
+      } else if(selected == "soundblaster-cd" || selected == "cd") {
+        music_override = 1;
+      } else if(selected == "soundblaster-fm") {
+        music_override = 3;
+      } else if(selected == "roland-lapc") {
+        music_override = 2;
+      } else if(selected == "roland-scc1a") {
+        music_override = 4;
+        canvas_model = tfx::audio::sound_canvas_model::scc1a;
+      } else if(selected == "roland-sc55") {
+        music_override = 4;
+        canvas_model = tfx::audio::sound_canvas_model::sc55;
+      } else {
+        throw std::runtime_error{"music must be none, soundblaster-cd, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55"};
+      }
     } else if(key == "--language") {
       language = value();
       language_selected = true;
-      if(std::ranges::find(language_names,language) == language_names.end()) throw std::runtime_error{"unknown TFX language: " + language};
-    } else if(key == "--replay") replay = value();
-    else if(key == "--skip-intro") skip_intro = true;
-    else if(key == "--fullscreen") fullscreen = true;
-    else if(key == "--mission") {
+      if(std::ranges::find(language_names, language) == language_names.end()) throw std::runtime_error{"unknown TFX language: " + language};
+    } else if(key == "--replay") {
+      replay = value();
+    } else if(key == "--skip-intro") {
+      skip_intro = true;
+    } else if(key == "--fullscreen") {
+      fullscreen = true;
+    } else if(key == "--mission") {
       direct_mission = true;
       auto const selected{value()};
       mission_name = "miss" + std::to_string(number(selected));
@@ -174,35 +217,46 @@ auto main(int const argc, char const *const argv[])->int try {
       control_override = tfx::flight::control_source::joystick;
     } else if(key == "--control") {
       auto const selected{value()};
-      if(selected == "keyboard") control_override = tfx::flight::control_source::keyboard;
-      else if(selected == "mouse") control_override = tfx::flight::control_source::mouse;
-      else if(selected == "joystick") control_override = tfx::flight::control_source::joystick;
-      else throw std::runtime_error{"control must be keyboard, mouse or joystick"};
+      if(selected == "keyboard") {
+        control_override = tfx::flight::control_source::keyboard;
+      } else if(selected == "mouse") {
+        control_override = tfx::flight::control_source::mouse;
+      } else if(selected == "joystick") {
+        control_override = tfx::flight::control_source::joystick;
+      } else {
+        throw std::runtime_error{"control must be keyboard, mouse or joystick"};
+      }
     } else if(key == "--flight-model") {
       model_selected = true;
       auto const selected{value()};
-      if(selected == "arcade") model = tfx::simulation::flight_model::arcade;
-      else if(selected == "simple") model = tfx::simulation::flight_model::simple;
-      else if(selected == "military-spec") model = tfx::simulation::flight_model::military_spec;
-      else if(selected == "realistic") model = tfx::simulation::flight_model::realistic;
-      else throw std::runtime_error{"flight model must be arcade, simple, military-spec or realistic"};
+      if(selected == "arcade") {
+        model = tfx::simulation::flight_model::arcade;
+      } else if(selected == "simple") {
+        model = tfx::simulation::flight_model::simple;
+      } else if(selected == "military-spec") {
+        model = tfx::simulation::flight_model::military_spec;
+      } else if(selected == "realistic") {
+        model = tfx::simulation::flight_model::realistic;
+      } else {
+        throw std::runtime_error{"flight model must be arcade, simple, military-spec or realistic"};
+      }
     } else if(key == "--resolution" || key == "--scale" || key == "--fov" || key == "--draw-distance" || key == "--lod-scale") {
       using tfx::configuration::graphics_field;
       auto const field{key == "--resolution" ? graphics_field::resolution : key == "--scale" ? graphics_field::window_scale
         : key == "--fov" ? graphics_field::field_of_view : key == "--draw-distance" ? graphics_field::draw_distance : graphics_field::lod_scale};
       auto const text{value()};
-      tfx::configuration::set_graphics_value(graphics,field,text);
-      graphics_overrides.emplace_back(field,text);
+      tfx::configuration::set_graphics_value(graphics, field, text);
+      graphics_overrides.emplace_back(field, text);
     }
 #ifndef NDEBUG
     else if(key == "--career-rules") career_rules = true;
     else if(key == "--menu") presentation = "menu:" + std::string{value()};
     else if(key == "--presentation") {
-      auto const selection{value()};
-      auto const colon{selection.find(':')};
-      presentation = selection.substr(0,colon);
-      if(colon != std::string_view::npos) presentation_function = selection.substr(colon + 1);
-    }
+  auto const selection{value()};
+  auto const colon{selection.find(':')};
+  presentation = selection.substr(0, colon);
+  if(colon != std::string_view::npos) presentation_function = selection.substr(colon + 1);
+}
     else if(key == "--capture-scene") capture_recipe = value();
     else if(key == "--inspect") inspect = true;
     else if(key == "--flight-steps") flight_steps = number(value());
@@ -210,16 +264,16 @@ auto main(int const argc, char const *const argv[])->int try {
     else if(key == "--environment") override_environment = value();
     else if(key == "--grid") override_grid = value();
     else if(key == "--cell") {
-      auto const cell{value()};
-      auto const comma{cell.find(',')};
-      if(comma == std::string_view::npos) throw std::runtime_error{"--cell expects X,Z"};
-      inspect = true;
-      override_cell = vec2<unsigned int>{number(cell.substr(0,comma)),number(cell.substr(comma + 1))};
-      if(override_cell->x >= tfx::world::map_width || override_cell->y >= tfx::world::map_height) throw std::runtime_error{"cell must lie within 0..199 on each axis"};
-    } else if(key == "--scene-radius") {
-      scene_radius = number(value());
-      if(scene_radius < 1 || scene_radius > 20) throw std::runtime_error{"scene radius must be between 1 and 20 tiles"};
-    } else if(key == "--screenshot") screenshot = value();
+  auto const cell{value()};
+  auto const comma{cell.find(',')};
+  if(comma == std::string_view::npos) throw std::runtime_error{"--cell expects X,Z"};
+  inspect = true;
+  override_cell = vec2<unsigned int>{number(cell.substr(0, comma)), number(cell.substr(comma + 1))};
+  if(override_cell->x >= tfx::world::map_width || override_cell->y >= tfx::world::map_height) throw std::runtime_error{"cell must lie within 0..199 on each axis"};
+} else if(key == "--scene-radius") {
+  scene_radius = number(value());
+  if(scene_radius < 1 || scene_radius > 20) throw std::runtime_error{"scene radius must be between 1 and 20 tiles"};
+} else if(key == "--screenshot") screenshot = value();
     else if(key == "--frames") frame_limit = number(value());
 #endif // NDEBUG
     else throw std::runtime_error{"unrecognised option: " + std::string{key} + "; use --help"};
@@ -231,17 +285,20 @@ auto main(int const argc, char const *const argv[])->int try {
 #endif // NDEBUG
   if(cd_cue && cd_audio_directory) throw std::runtime_error{"choose either --cd-cue or --cd-audio-dir"};
   if(career_rules && !direct_mission) throw std::runtime_error{"--career-rules requires --mission"};
-  auto const archive_path{tfx::resources::select_game_archive(data_directory,cd_cue)};
-  try { graphics = tfx::configuration::load_graphics(archive_path.parent_path()); }
+  auto const archive_path{tfx::resources::select_game_archive(data_directory, cd_cue)};
+  try {
+    graphics = tfx::configuration::load_graphics(archive_path.parent_path());
+  }
   catch(std::exception const &error) {
     std::cerr << "Graphics preferences unavailable: " << error.what() << "; using defaults.\n";
     graphics = {};
   }
-  for(auto const &[field,value] : graphics_overrides) tfx::configuration::set_graphics_value(graphics,field,value);
+  for(auto const &[field, value] : graphics_overrides) tfx::configuration::set_graphics_value(graphics, field, value);
   auto preferences{tfx::configuration::load(archive_path.parent_path())};
   if(model_selected) preferences.model = model;
-  if(music_override) preferences.music = *music_override;
-  else if(cd_cue || cd_audio_directory) preferences.music = 1;
+  if(music_override) {
+    preferences.music = *music_override;
+  } else if(cd_cue || cd_audio_directory) preferences.music = 1;
   if(control_override) preferences.preferred_control = preferences.control = *control_override;
   if(control_override == tfx::flight::control_source::joystick && preferences.model == tfx::simulation::flight_model::arcade) throw std::runtime_error{"joystick steering requires Simple, Military-spec or Realistic flight; Arcade uses relative mouse input"};
   if(control_override == tfx::flight::control_source::mouse && preferences.model == tfx::simulation::flight_model::simple) throw std::runtime_error{"the original Simple model has no mouse steering; choose keyboard or joystick"};
@@ -253,13 +310,18 @@ auto main(int const argc, char const *const argv[])->int try {
   if(!screenshot && !inspect && !replay) {
     std::unique_ptr<tfx::audio::cd_player> cd;
     if(preferences.music == 1) {
-      if(cd_cue || cd_audio_directory) cd = std::make_unique<tfx::audio::cd_player>(cd_cue ? *cd_cue : *cd_audio_directory,tfx::platform::audio_output::sample_rate);
-      else {
-        for(auto const &directory : {archive_path.parent_path(),tfx::resources::default_game_directory()}) {
+      if(cd_cue || cd_audio_directory) {
+        cd = std::make_unique<tfx::audio::cd_player>(cd_cue ? *cd_cue : *cd_audio_directory, tfx::platform::audio_output::sample_rate);
+      } else {
+        for(auto const &directory : {archive_path.parent_path(), tfx::resources::default_game_directory()}) {
           auto const cue{directory / "cd" / "tfx.cue"};
           if(std::filesystem::is_regular_file(cue)) {
-            try { cd = std::make_unique<tfx::audio::cd_player>(cue,tfx::platform::audio_output::sample_rate); }
-            catch(std::exception const &error) { std::cerr << "CD image unavailable: " << error.what() << "; rerun scripts/fetch-assets to repair the disc.\n"; }
+            try {
+              cd = std::make_unique<tfx::audio::cd_player>(cue, tfx::platform::audio_output::sample_rate);
+            }
+            catch(std::exception const &error) {
+              std::cerr << "CD image unavailable: " << error.what() << "; rerun scripts/fetch-assets to repair the disc.\n";
+            }
             break;
           }
         }
@@ -271,17 +333,24 @@ auto main(int const argc, char const *const argv[])->int try {
         auto const launcher{tfx::resources::read_file(archive_path.parent_path() / "START.EXE")};
         if(preferences.music == 2 || preferences.music == 4) {
           std::string failure;
-          for(auto const &directory : tfx::resources::rom_directories(archive_path.parent_path(),rom_directory)) {
+          for(auto const &directory : tfx::resources::rom_directories(archive_path.parent_path(), rom_directory)) {
             try {
-              if(preferences.music == 2) music = std::make_unique<tfx::audio::music_player>(game,launcher,directory,tfx::platform::audio_output::sample_rate);
-              else music = std::make_unique<tfx::audio::music_player>(game,launcher,
-                tfx::audio::make_scc_music_device(launcher,std::make_unique<tfx::audio::sc55_synth>(directory,tfx::platform::audio_output::sample_rate,canvas_model)),tfx::platform::audio_output::sample_rate);
+              if(preferences.music == 2) {
+                music = std::make_unique<tfx::audio::music_player>(game, launcher, directory, tfx::platform::audio_output::sample_rate);
+              } else {
+                music = std::make_unique<tfx::audio::music_player>(game, launcher,
+                  tfx::audio::make_scc_music_device(launcher, std::make_unique<tfx::audio::sc55_synth>(directory, tfx::platform::audio_output::sample_rate, canvas_model)), tfx::platform::audio_output::sample_rate);
+              }
               break;
-            } catch(std::exception const &error) { failure = error.what(); }
+            } catch(std::exception const &error) {
+              failure = error.what();
+            }
           }
           if(!music) throw std::runtime_error{failure};
-        } else music = std::make_unique<tfx::audio::music_player>(game,launcher,
-          tfx::audio::make_fm_music_device(launcher,tfx::platform::audio_output::sample_rate),tfx::platform::audio_output::sample_rate);
+        } else {
+          music = std::make_unique<tfx::audio::music_player>(game, launcher,
+            tfx::audio::make_fm_music_device(launcher, tfx::platform::audio_output::sample_rate), tfx::platform::audio_output::sample_rate);
+        }
       } catch(std::exception const &error) {
         std::cerr << "Music unavailable: " << error.what();
         if(preferences.music == 2 || preferences.music == 4) std::cerr << "; run "
@@ -294,12 +363,17 @@ auto main(int const argc, char const *const argv[])->int try {
         std::cerr << ".\n";
       }
     }
-    if(music) music->configure(static_cast<tfx::audio::music_mode>(preferences.music),preferences.sound_effects,tables.music_orders);
+    if(music) music->configure(static_cast<tfx::audio::music_mode>(preferences.music), preferences.sound_effects, tables.music_orders);
     std::optional<tfx::audio::gus_parameters> gravis;
     auto effects_device{static_cast<tfx::audio::sound_device>(preferences.sound_effects)};
     if(preferences.sound_effects == 4) {
-      try { gravis = tfx::audio::load_gus_parameters(tfx::resources::read_file(archive_path.parent_path() / "GUS.COM")); }
-      catch(std::exception const &error) { std::cerr << "Gravis effects unavailable: " << error.what() << '\n';effects_device = tfx::audio::sound_device::none; }
+      try {
+        gravis = tfx::audio::load_gus_parameters(tfx::resources::read_file(archive_path.parent_path() / "GUS.COM"));
+      }
+      catch(std::exception const &error) {
+        std::cerr << "Gravis effects unavailable: " << error.what() << '\n';
+        effects_device = tfx::audio::sound_device::none;
+      }
     }
     std::unique_ptr<tfx::audio::qsound_effect> spatial;
     bool const sound_blaster{effects_device == tfx::audio::sound_device::sound_blaster || effects_device == tfx::audio::sound_device::sound_blaster16};
@@ -310,10 +384,10 @@ auto main(int const argc, char const *const argv[])->int try {
     }
     if(preferences.sound_effects || music || cd) {
       try {
-        sound = std::make_unique<tfx::audio::runtime>(tables.samples,game,tfx::platform::audio_output::sample_rate,effects_device,std::move(music),gravis,std::move(cd),static_cast<tfx::audio::music_mode>(preferences.music),preferences.music != 0,std::move(spatial));
+        sound = std::make_unique<tfx::audio::runtime>(tables.samples, game, tfx::platform::audio_output::sample_rate, effects_device, std::move(music), gravis, std::move(cd), static_cast<tfx::audio::music_mode>(preferences.music), preferences.music != 0, std::move(spatial));
         output = std::make_unique<tfx::platform::audio_output>([](void *const user, std::span<float> const pcm) noexcept {
           static_cast<tfx::audio::runtime*>(user)->render(pcm);
-        },sound.get());
+        }, sound.get());
       } catch(std::exception const &error) {
         std::cerr << "Sound output unavailable: " << error.what() << '\n';
         sound.reset();
@@ -321,19 +395,19 @@ auto main(int const argc, char const *const argv[])->int try {
     }
   }
   if(!presentation.empty()) {
-    tfx::platform::play_presentation(game,tables,presentation,presentation_function,language,scale,frame_limit,screenshot,sound.get(),fullscreen);
+    tfx::platform::play_presentation(game, tables, presentation, presentation_function, language, scale, frame_limit, screenshot, sound.get(), fullscreen);
     return EXIT_SUCCESS;
   }
   tfx::world::flak_state flak_state;
   tfx::world::sky_state sky_state;
   tfx::world::animation_clock scenery_clock;
   tfx::sensors::air_lock seeker;
-  vec2<int16_t> projection_origin{tfx::render::centre_x - 1,tfx::render::centre_y - 1};
+  vec2<int16_t> projection_origin{tfx::render::centre_x - 1, tfx::render::centre_y - 1};
   tfx::render::horizon_phase ground_phase;
-  vec3<int32_t> ground_reference{0,0,0};
+  vec3<int32_t> ground_reference{0, 0, 0};
   tfx::actors::air_contact player_contact{
-    .position{0,0,0},
-    .angles{0,0,0},
+    .position{0, 0, 0},
+    .angles{0, 0, 0},
     .speed{0},
   };
   tfx::render::precipitation rain;
@@ -355,7 +429,7 @@ auto main(int const argc, char const *const argv[])->int try {
     .data_directory{archive_path.parent_path()},
     .environment{override_environment},
     .grid{override_grid},
-    .cell{override_cell ? std::optional<vec2<unsigned int>>{std::in_place,*override_cell} : std::nullopt},
+    .cell{override_cell ? std::optional<vec2<unsigned int>>{std::in_place, *override_cell} : std::nullopt},
     .screenshot{screenshot},
     .joystick{joystick},
     .scale{scale},
@@ -393,22 +467,26 @@ auto main(int const argc, char const *const argv[])->int try {
 #endif
   };
   if(replay) {
-    tfx::world::mission const selected{game,mission_name};
-    tfx::world::environment const environment{game,selected.grid_name(),selected.environment};
-    tfx::world::assets assets{game};tfx::world::scene scene{environment,assets};
-    tfx::render::software_renderer renderer{tables};tfx::platform::window window{scale,video.resolution,video.automatic_resolution,fullscreen};
+    tfx::world::mission const selected{game, mission_name};
+    tfx::world::environment const environment{game, selected.grid_name(), selected.environment};
+    tfx::world::assets assets{game};
+    tfx::world::scene scene{environment, assets};
+    tfx::render::software_renderer renderer{tables};
+    tfx::platform::window window{scale, video.resolution, video.automatic_resolution, fullscreen};
     tfx::render::dac_palette infrared{};
     auto const colours{game.read("colours/" + environment.lighting.infrared_palette_name + ".col")};
-    std::ranges::copy(colours,infrared.begin());
-    tfx::platform::replay_recording(window,game,tables,scene,renderer,*replay,0,0,infrared,!skip_intro);
+    std::ranges::copy(colours, infrared.begin());
+    tfx::platform::replay_recording(window, game, tables, scene, renderer, *replay, 0, 0, infrared, !skip_intro);
   } else if(direct_mission || inspect || flight_steps || flight_frames || !override_environment.empty() || !override_grid.empty()) {
     auto const mission_digits{std::string_view{mission_name}.substr(std::string_view{"miss"}.size())};
     tfx::missions::variables campaign{
-      {"mission",static_cast<int32_t>(number(mission_digits))},
-      {"arcade",career_rules ? 0 : 1},
+      {"mission", static_cast<int32_t>(number(mission_digits))},
+      {"arcade", career_rules ? 0 : 1},
     };
-    tfx::platform::fly_mission(game,tables,flight,campaign);
-  } else tfx::platform::play_game(game,tables,archive_path.parent_path(),language,skip_intro,flight);
+    tfx::platform::fly_mission(game, tables, flight, campaign);
+  } else {
+    tfx::platform::play_game(game, tables, archive_path.parent_path(), language, skip_intro, flight);
+  }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {
   std::cerr << "ERROR: " << error.what() << std::endl;

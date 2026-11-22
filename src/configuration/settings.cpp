@@ -44,24 +44,34 @@ settings fallback() {
 void apply(settings &state, std::string_view const key, std::string_view value) {
   if(value.empty()) return;
   auto const byte{static_cast<uint8_t>(integer(value))};
-  if(key == "CONTROL") state.preferred_control = state.control = static_cast<flight::control_source>(byte);
-  else if(key == "DETAIL") state.detail = byte;
-  else if(key == "MODEL") state.model = simulation::configured_flight_model(static_cast<uint32_t>(integer(value)));
-  else if(key == "SOUNDFX") state.sound_effects = byte;
-  else if(key == "MUSIC") state.music = byte;
-  else if(key == "STICK") state.stick_type = byte;
-  else if(key == "LANG") state.language = byte;
-  else if(key == "LOWMEM") state.low_memory = byte;
-  else if(key == "IRQBASE") state.irq_base = integer(value);
-  else if(key == "HUDCOL") state.hud_green = static_cast<uint16_t>(integer(value));
-  else if(key == "JOYSCALE") {
+  if(key == "CONTROL") {
+    state.preferred_control = state.control = static_cast<flight::control_source>(byte);
+  } else if(key == "DETAIL") {
+    state.detail = byte;
+  } else if(key == "MODEL") {
+    state.model = simulation::configured_flight_model(static_cast<uint32_t>(integer(value)));
+  } else if(key == "SOUNDFX") {
+    state.sound_effects = byte;
+  } else if(key == "MUSIC") {
+    state.music = byte;
+  } else if(key == "STICK") {
+    state.stick_type = byte;
+  } else if(key == "LANG") {
+    state.language = byte;
+  } else if(key == "LOWMEM") {
+    state.low_memory = byte;
+  } else if(key == "IRQBASE") {
+    state.irq_base = integer(value);
+  } else if(key == "HUDCOL") {
+    state.hud_green = static_cast<uint16_t>(integer(value));
+  } else if(key == "JOYSCALE") {
     value = skip_space(value);
     if(!value.empty() && value.front() == '+') value.remove_prefix(1);
     float scale{0};
-    auto const [end,error]{std::from_chars(value.data(),value.data() + value.size(),scale)};
+    auto const [end, error]{std::from_chars(value.data(), value.data() + value.size(), scale)};
     if(error == std::errc{} && end != value.data()) state.joystick_scale = scale == 0 ? 0.0f : scale; // Native scanf discards the sign of zero.
   } else if(key == "REALISM") {
-    std::array<uint8_t,7> values{};
+    std::array<uint8_t, 7> values{};
     for(auto &item : values) {
       auto const number{scan_integer(value)};
       if(!number) break;
@@ -94,9 +104,9 @@ settings parse(std::string_view const text) {
   std::string_view remaining{normal};
   while(!remaining.empty()) {
     auto const end{remaining.find('\n')};
-    auto const line{remaining.substr(0,end)};
+    auto const line{remaining.substr(0, end)};
     auto const equals{line.find('=')};
-    if(equals != std::string_view::npos) apply(state,line.substr(0,equals),line.substr(equals + 1));
+    if(equals != std::string_view::npos) apply(state, line.substr(0, equals), line.substr(equals + 1));
     if(end == std::string_view::npos) break;
     remaining.remove_prefix(end + 1);
   }
@@ -107,7 +117,7 @@ settings parse(std::string_view const text) {
 settings load(std::filesystem::path const &directory) {
   auto path{directory / "TFX.CFG"};
   if(!std::filesystem::exists(path)) path = directory / "tfx.cfg";
-  std::ifstream stream{path,std::ios::binary};
+  std::ifstream stream{path, std::ios::binary};
   if(!stream) {
     // A fresh native port starts with keyboard flight. Arcade has no keyboard
     // steering law, so pair this with Military-spec; existing DOS files still parse
@@ -118,8 +128,8 @@ settings load(std::filesystem::path const &directory) {
     state.effects.wind = 1;
     return state;
   }
-  std::string text(configuration_buffer_size,'\0');
-  stream.read(text.data(),text.size());
+  std::string text(configuration_buffer_size, '\0');
+  stream.read(text.data(), text.size());
   auto const count{stream.gcount()};
   if(count == 0 || count >= configuration_buffer_size) return fallback();
   text.resize(static_cast<unsigned int>(count));

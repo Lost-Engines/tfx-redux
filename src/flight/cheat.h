@@ -4,7 +4,13 @@
 
 namespace tfx::flight {
 
-enum class cheat_key { none, p, l, o, other };
+enum class cheat_key {
+  none,
+  p,
+  l,
+  o,
+  other
+};
 struct cheat_state {
   bool enabled{false};
   uint8_t matched{0};
@@ -18,7 +24,7 @@ private:
 
 public:
   auto press(cheat_key key, bool right_shift)->bool;
-  auto value() const->cheat_state const&;
+  auto value() const->cheat_state const &;
 };
 
 } // namespace tfx::flight

@@ -9,8 +9,11 @@
 namespace {
 
 uint64_t run(std::istream &input, bool const emit) {
-  unsigned int messages{0},events{0},steps{0};
-  uint32_t elapsed{0},clock{0};
+  unsigned int messages{0};
+  unsigned int events{0};
+  unsigned int steps{0};
+  uint32_t elapsed{0};
+  uint32_t clock{0};
   if(!(input >> messages >> events >> steps >> elapsed >> clock)) throw std::runtime_error{"invalid mission timeline fixture"};
   tfx::missions::setup source{};
   source.clock = std::bit_cast<int32_t>(clock);
@@ -28,7 +31,7 @@ uint64_t run(std::istream &input, bool const emit) {
     source.scenery_events.push_back({
       .time{std::bit_cast<int32_t>(time)},
       .entry{0},
-      .cell{0,0},
+      .cell{0, 0},
     });
   }
   tfx::missions::timeline state{source};
@@ -44,7 +47,8 @@ uint64_t run(std::istream &input, bool const emit) {
     auto const due_messages{state.begin_frame()};
     state.advance_clock(static_cast<uint16_t>(ticks));
     // HUD consumers observe the advanced clock before scenery events run.
-    auto const hud_elapsed{state.elapsed()}, hud_time{state.time_of_day()};
+    auto const hud_elapsed{state.elapsed()};
+    auto const hud_time{state.time_of_day()};
     auto const due_events{state.finish_frame()};
     word(hud_elapsed);
     word(hud_time);
@@ -67,7 +71,7 @@ auto main(int const argc, char const *const argv[])->int try {
     if(!input) throw std::runtime_error{"cannot open mission timeline fixture"};
     unsigned int cases{0};
     while(input >> std::ws && input.peek() != std::char_traits<char>::eof()) {
-      auto const digest{run(input,false)};
+      auto const digest{run(input, false)};
       uint64_t expected{0};
       if(!(input >> expected) || digest != expected) throw std::runtime_error{"native mission timeline differs in case " + std::to_string(cases)};
       ++cases;
@@ -75,7 +79,7 @@ auto main(int const argc, char const *const argv[])->int try {
     if(!cases || !input.eof()) throw std::runtime_error{"incomplete mission timeline fixture"};
     std::cout << cases << " native mission timelines passed" << std::endl;
   } else {
-    while(std::cin >> std::ws && std::cin.peek() != std::char_traits<char>::eof()) run(std::cin,true);
+    while(std::cin >> std::ws && std::cin.peek() != std::char_traits<char>::eof()) run(std::cin, true);
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

@@ -6,8 +6,17 @@
 
 namespace tfx::flight {
 
-enum class engine_side { left, right };
-enum class engine_key_event { stop_afterburner, stop_sample, start_samples, start_synth, stop_synth };
+enum class engine_side {
+  left,
+  right
+};
+enum class engine_key_event {
+  stop_afterburner,
+  stop_sample,
+  start_samples,
+  start_synth,
+  stop_synth
+};
 struct engine_key_context {
   engine_side side;
   system_condition condition;

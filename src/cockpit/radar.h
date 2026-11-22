@@ -9,7 +9,10 @@
 
 namespace tfx::cockpit {
 
-enum class radar_mode { horizontal, beyond_visual_range };
+enum class radar_mode {
+  horizontal,
+  beyond_visual_range
+};
 struct radar_aircraft {
   vec3<int32_t> position_q8;
   bool selected{false};
@@ -24,7 +27,7 @@ struct radar_projectile {
   bool player_owned{false};
 };
 struct radar_state {
-  vec3<int32_t> player{0,0,0};
+  vec3<int32_t> player{0, 0, 0};
   math::angle heading{0};
   flight::player_aircraft aircraft{flight::player_aircraft::eurofighter};
   flight::system_condition condition{flight::system_condition::normal};
@@ -36,7 +39,7 @@ struct radar_state {
   std::span<radar_surface const> enemy_surface;
   std::span<radar_surface const> allied_surface;
   std::span<radar_projectile const> projectiles;
-  vec2<int16_t> offset{0,0};
+  vec2<int16_t> offset{0, 0};
 };
 
 class radar {

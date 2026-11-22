@@ -7,15 +7,36 @@
 
 namespace tfx::missions {
 
-enum class session_outcome : int32_t { normal, aircraft_lost, violated_orders, ejected, critical_loss = 99 };
-enum class session_status : int32_t { normal, critical_loss, violated_orders, missing, aircraft_lost };
-enum class notice_kind { target_destroyed, completion, protection_failed, timer_expired };
+enum class session_outcome : int32_t {
+  normal,
+  aircraft_lost,
+  violated_orders,
+  ejected,
+  critical_loss = 99
+};
+enum class session_status : int32_t {
+  normal,
+  critical_loss,
+  violated_orders,
+  missing,
+  aircraft_lost
+};
+enum class notice_kind {
+  target_destroyed,
+  completion,
+  protection_failed,
+  timer_expired
+};
 struct progress_notice {
   notice_kind kind;
   unsigned int target{0};
 };
 struct mission_completed_event {};
-enum class airspace_notice { none, approaching, departed };
+enum class airspace_notice {
+  none,
+  approaching,
+  departed
+};
 struct airspace_event {
   airspace_notice notice{airspace_notice::none};
   bool cancel_acceleration{false};
@@ -25,14 +46,18 @@ struct airspace_context {
   bool acceleration_active{false};
   bool radio_idle{true};
 };
-using progress_event = std::variant<progress_notice,mission_completed_event,airspace_event>;
+using progress_event = std::variant<progress_notice, mission_completed_event, airspace_event>;
 
 struct loss_effects {
   std::optional<unsigned int> acknowledgement_sample{};
   bool friendly_target{false};
   bool orders_violated{false};
 };
-enum class terrain_loss_notice { none, training_warning, violation };
+enum class terrain_loss_notice {
+  none,
+  training_warning,
+  violation
+};
 struct terrain_loss_context {
   vec2<int32_t> cell;
   bool player_owned;

@@ -20,7 +20,7 @@ afterburner_change update_aerodynamic_speed(aerodynamic_speed_state &state, aero
   bool const running{powerplant.engine_factor.x != 0 || powerplant.engine_factor.y != 0};
   if(context.strategy == aerodynamic_speed_strategy::maintain) {
     if(running) {
-      if(!powerplant.afterburner) adjust_throttle(state,powerplant,context);
+      if(!powerplant.afterburner) adjust_throttle(state, powerplant, context);
       if(powerplant.throttle < idle_throttle) powerplant.throttle = static_cast<float>(idle_throttle);
       if(powerplant.afterburner) {
         powerplant.throttle = 1;
@@ -34,7 +34,7 @@ afterburner_change update_aerodynamic_speed(aerodynamic_speed_state &state, aero
     if(running) {
       double const target{state.target_metres_per_second};
       if(target < context.metres_per_second) state.target_metres_per_second = static_cast<double>(static_cast<calculation>(context.metres_per_second) * recovery_speed_multiplier);
-      if(!powerplant.afterburner) adjust_throttle(state,powerplant,context);
+      if(!powerplant.afterburner) adjust_throttle(state, powerplant, context);
       if(powerplant.throttle < idle_throttle) powerplant.throttle = static_cast<float>(idle_throttle);
       if(powerplant.throttle >= 1) {
         powerplant.throttle = 1;

@@ -5,7 +5,12 @@
 namespace tfx::presentation {
 
 unsigned int constexpr saved_variable_slots{30}, saved_string_bytes{21}, saved_return_limit{100};
-enum class save_mode : uint16_t { without_resume, previous_statement, current_statement, following_statement };
+enum class save_mode : uint16_t {
+  without_resume,
+  previous_statement,
+  current_statement,
+  following_statement
+};
 struct saved_state {
   variables values;
   // The native file writes thirty slots even though retail tfx.par declares only twenty-seven.

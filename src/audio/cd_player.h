@@ -16,8 +16,8 @@ private:
 public:
   cd_player(std::filesystem::path const &source, unsigned int output_rate);
   ~cd_player();
-  cd_player(cd_player const&) = delete;
-  cd_player &operator=(cd_player const&) = delete;
+  cd_player(cd_player const &) = delete;
+  cd_player &operator=(cd_player const &) = delete;
   bool contains(unsigned int track) const;
   bool play(unsigned int track);
   void stop();

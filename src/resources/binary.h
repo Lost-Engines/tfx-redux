@@ -20,7 +20,7 @@ inline bytes read_file(std::filesystem::path const &path) {
   if(size < 0) throw std::runtime_error{"cannot determine file size: " + path.string()};
   bytes result(static_cast<size_t>(size));
   stream.seekg(0);
-  if(!stream.read(reinterpret_cast<char*>(result.data()), size)) throw std::runtime_error{"cannot read " + path.string()};
+  if(!stream.read(reinterpret_cast<char *>(result.data()), size)) throw std::runtime_error{"cannot read " + path.string()};
   return result;
 }
 

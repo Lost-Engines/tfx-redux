@@ -13,25 +13,25 @@ unsigned int constexpr plane_count{4}, screen_pixels{render::screen_width * rend
 
 monochrome_image decode_monochrome(std::span<uint8_t const> const source) {
   binary_view const view{source};
-  vec2<unsigned int> const size{view.byte(0),view.byte(1)};
+  vec2<unsigned int> const size{view.byte(0), view.byte(1)};
   if(!size.x || !size.y) throw std::runtime_error{"empty native monochrome bitmap"};
   unsigned int const count{((size.x + 7) / 8) * size.y};
-  auto const rows{view.slice(2,count)};
+  auto const rows{view.slice(2, count)};
   if(source.size() != count + 2) throw std::runtime_error{"unused monochrome bitmap bytes"};
   return {
     .size{vec2<unsigned int>{size}},
-    .rows{rows.begin(),rows.end()},
+    .rows{rows.begin(), rows.end()},
   };
 }
 
 screen_image decode_screen(std::span<uint8_t const> const source) {
   binary_view const view{source};
-  if(source.size() != pixel_offset + screen_pixels || std::string_view{reinterpret_cast<char const*>(source.data()),4} != "war ") throw std::runtime_error{"invalid native screen image"};
+  if(source.size() != pixel_offset + screen_pixels || std::string_view{reinterpret_cast<char const *>(source.data()), 4} != "war ") throw std::runtime_error{"invalid native screen image"};
   screen_image result{
     .image{},
-    .colours{render::decode_palette(view.slice(palette_offset,palette_bytes))},
+    .colours{render::decode_palette(view.slice(palette_offset, palette_bytes))},
   };
-  std::ranges::copy(view.slice(pixel_offset,screen_pixels),result.image.pixels.begin());
+  std::ranges::copy(view.slice(pixel_offset, screen_pixels), result.image.pixels.begin());
   return result;
 }
 
@@ -39,7 +39,9 @@ bytes deplane(std::span<uint8_t const> const source, vec2<unsigned int> const &s
   if(!size.x || !size.y || size.x % plane_count || static_cast<uint64_t>(size.x) * size.y != source.size()) throw std::runtime_error{"invalid four-plane image dimensions"};
   bytes result(source.size());
   unsigned int const plane_size{static_cast<unsigned int>(source.size() / plane_count)};
-  for(unsigned int plane{0}; plane != plane_count; ++plane) for(unsigned int pixel{0}; pixel != plane_size; ++pixel) result[pixel * plane_count + plane] = source[plane * plane_size + pixel];
+  for(unsigned int plane{0}; plane != plane_count; ++plane) {
+    for(unsigned int pixel{0}; pixel != plane_size; ++pixel) result[pixel * plane_count + plane] = source[plane * plane_size + pixel];
+  }
   return result;
 }
 
@@ -52,12 +54,12 @@ std::vector<indexed_image> decode_sprites(std::span<uint8_t const> const source)
   std::vector<indexed_image> result;
   for(unsigned int index{0}; index != count; ++index) {
     if(view.le16(1 + index * 2) != cursor) throw std::runtime_error{"sprite offsets do not cover their resource"};
-    vec2<unsigned int> const size{view.byte(cursor) * 2u,view.byte(cursor + 1)};
+    vec2<unsigned int> const size{view.byte(cursor) * 2u, view.byte(cursor + 1)};
     cursor += 2;
     unsigned int const pixels{size.x * size.y};
     result.push_back({
       .size{vec2<unsigned int>{size}},
-      .pixels{deplane(view.slice(cursor,pixels),size)},
+      .pixels{deplane(view.slice(cursor, pixels), size)},
     });
     cursor += pixels;
   }
@@ -68,13 +70,18 @@ std::vector<indexed_image> decode_sprites(std::span<uint8_t const> const source)
 bytes decode_animation_block(std::span<uint8_t const> const source) {
   // Native 0xde8cc: sixteen MSB-first flag bits share a stream with literal/back-reference bytes.
   binary_view const view{source};
-  unsigned int cursor{0}, remaining{0};
+  unsigned int cursor{0};
+  unsigned int remaining{0};
   uint16_t buffer{0};
   bytes output;
   unsigned int constexpr maximum_block_bytes{262144};
-  auto const byte{[&]{ return view.byte(cursor++); }};
+  auto const byte{[&]{return view.byte(cursor++);}};
   auto const bit{[&]{
-    if(!remaining) { buffer = view.le16(cursor); cursor += 2; remaining = 16; }
+    if(!remaining) {
+      buffer = view.le16(cursor);
+      cursor += 2;
+      remaining = 16;
+    }
     unsigned int const value{static_cast<unsigned int>(buffer) >> 15};
     buffer = static_cast<uint16_t>(buffer << 1);
     --remaining;
@@ -85,12 +92,16 @@ bytes decode_animation_block(std::span<uint8_t const> const source) {
     output.push_back(value);
   }};
   for(;;) {
-    if(!bit()) { append(byte()); continue; }
+    if(!bit()) {
+      append(byte());
+      continue;
+    }
     unsigned int count{2};
     std::optional<unsigned int> high;
     if(bit()) {
-      if(!bit()) high = 0;
-      else {
+      if(!bit()) {
+        high = 0;
+      } else {
         count = 3;
         if(bit()) {
           auto const value{byte()};
@@ -131,10 +142,10 @@ bytes decode_animation_block(std::span<uint8_t const> const source) {
   }
 }
 
-animation::animation(std::span<uint8_t const> const input) : source{input.begin(),input.end()} {
+animation::animation(std::span<uint8_t const> const input) : source{input.begin(), input.end()} {
   binary_view const view{source};
   if(view.le16(0) != 256 || view.le16(pixel_offset) > 1) throw std::runtime_error{"invalid native animation header"};
-  colours = render::decode_palette(view.slice(palette_offset,palette_bytes));
+  colours = render::decode_palette(view.slice(palette_offset, palette_bytes));
   game_frames = view.le16(2);
   initial_full = view.le16(pixel_offset) != 0;
   unsigned int constexpr maximum_frames{2000};
@@ -143,7 +154,7 @@ animation::animation(std::span<uint8_t const> const input) : source{input.begin(
   while(at < source.size()) {
     unsigned int const size{view.le32(at)};
     at += 4;
-    view.slice(at,size);
+    view.slice(at, size);
     if(!size) throw std::runtime_error{"empty animation block"};
     blocks.push_back({
       .offset{at},
@@ -163,18 +174,24 @@ unsigned int animation::position() const {
 
 void animation::reset(render::framebuffer const *const background) {
   cursor = 0;
-  if(!background) { planes.fill(0); coverage.fill(0); return; }
-  for(unsigned int plane{0}; plane != plane_count; ++plane) for(unsigned int pixel{0}; pixel != plane_pixels; ++pixel) planes[plane * plane_pixels + pixel] = background->pixels[pixel * plane_count + plane];
+  if(!background) {
+    planes.fill(0);
+    coverage.fill(0);
+    return;
+  }
+  for(unsigned int plane{0}; plane != plane_count; ++plane) {
+    for(unsigned int pixel{0}; pixel != plane_pixels; ++pixel) planes[plane * plane_pixels + pixel] = background->pixels[pixel * plane_count + plane];
+  }
   coverage.fill(255);
 }
 
 bool animation::advance() {
   if(cursor == blocks.size()) return false;
   auto const block{blocks[cursor]};
-  auto const decoded{decode_animation_block(binary_view{source}.slice(block.offset,block.size))};
+  auto const decoded{decode_animation_block(binary_view{source}.slice(block.offset, block.size))};
   if(!cursor && initial_full) {
     if(decoded.size() != screen_pixels) throw std::runtime_error{"full animation frame does not cover the screen"};
-    std::ranges::copy(decoded,planes.begin());
+    std::ranges::copy(decoded, planes.begin());
     coverage.fill(255);
   } else {
     binary_view const view{decoded};
@@ -188,8 +205,8 @@ bool animation::advance() {
         unsigned int const length{view.le16(at + 2) * 2u};
         at += 4;
         if(destination > (plane + 1) * plane_pixels || length > (plane + 1) * plane_pixels - destination) throw std::runtime_error{"animation delta leaves its VGA plane"};
-        std::ranges::copy(view.slice(at,length),planes.begin() + destination);
-        std::fill_n(coverage.begin() + destination,length,255);
+        std::ranges::copy(view.slice(at, length), planes.begin() + destination);
+        std::fill_n(coverage.begin() + destination, length, 255);
         at += length;
         destination += length;
       }
@@ -207,15 +224,15 @@ void animation::repeat() {
 
 render::framebuffer animation::image() const {
   render::framebuffer result;
-  auto const pixels{deplane(planes,{render::screen_width,render::screen_height})};
-  std::ranges::copy(pixels,result.pixels.begin());
+  auto const pixels{deplane(planes, {render::screen_width, render::screen_height})};
+  std::ranges::copy(pixels, result.pixels.begin());
   return result;
 }
 
 render::framebuffer animation::mask() const {
   render::framebuffer result;
-  auto const pixels{deplane(coverage,{render::screen_width,render::screen_height})};
-  std::ranges::copy(pixels,result.pixels.begin());
+  auto const pixels{deplane(coverage, {render::screen_width, render::screen_height})};
+  std::ranges::copy(pixels, result.pixels.begin());
   return result;
 }
 

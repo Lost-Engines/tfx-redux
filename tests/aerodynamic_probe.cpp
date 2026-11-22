@@ -19,8 +19,21 @@ int main(int const argc, char const *const argv[]) try {
   auto const frames{tfx::flight::load_aerodynamic_airframes(source)};
   auto const wind{tfx::flight::load_aerodynamic_wind_parameters(source)};
   auto const weapons{tfx::weapons::load_definitions(source)};
-  unsigned int craft,model,landed,cold,terrain,boost,terrain_boost,gear,slot,weapon,occupied,low,high;
-  int height,fixed_speed;
+  unsigned int craft;
+  unsigned int model;
+  unsigned int landed;
+  unsigned int cold;
+  unsigned int terrain;
+  unsigned int boost;
+  unsigned int terrain_boost;
+  unsigned int gear;
+  unsigned int slot;
+  unsigned int weapon;
+  unsigned int occupied;
+  unsigned int low;
+  unsigned int high;
+  int height;
+  int fixed_speed;
   while(std::cin >> craft >> model >> landed >> cold >> terrain >> boost >> terrain_boost >> gear >> slot >> weapon >> occupied >> low >> high >> height >> fixed_speed) {
     tfx::flight::aerodynamic_start_context context{
       .fixed_speed{fixed_speed},
@@ -30,11 +43,13 @@ int main(int const argc, char const *const argv[]) try {
       .terrain_present{terrain != 0},
     };
     for(auto &value : context.position) {
-      uint32_t bits; std::cin >> bits;
+      uint32_t bits;
+      std::cin >> bits;
       value = std::bit_cast<float>(bits);
     }
     for(unsigned int row{0}; row != 3; ++row) std::cin >> context.orientation.right[row] >> context.orientation.down[row] >> context.orientation.forward[row];
-    unsigned int temperature; int celsius;
+    unsigned int temperature;
+    int celsius;
     std::cin >> temperature >> celsius;
     context.heading = context.orientation.angles().y;
     tfx::flight::damage_state damage;
@@ -66,29 +81,57 @@ int main(int const argc, char const *const argv[]) try {
       .wind{wind_context},
       .surface_celsius{temperature ? std::optional<int16_t>{static_cast<int16_t>(celsius)} : std::nullopt},
     };
-    auto state{tfx::flight::initialise_aerodynamic_flight(frames.at(craft - 1),stores,initial,wind[0],damage,random)};
-    for(auto const value : aerodynamic_snapshot(state,damage,random)) std::cout << value << ' ';
+    auto state{tfx::flight::initialise_aerodynamic_flight(frames.at(craft - 1), stores, initial, wind[0], damage, random)};
+    for(auto const value : aerodynamic_snapshot(state, damage, random)) std::cout << value << ' ';
     std::cout << '\n';
-    if(pilot_key) capture_aerodynamic_pilot_key(state,damage,random,std::cin,static_cast<int16_t>(height),terrain != 0);
-    if(landing_trace) trace_automatic_landing(state,damage,random,std::cin);
+    if(pilot_key) capture_aerodynamic_pilot_key(state, damage, random, std::cin, static_cast<int16_t>(height), terrain != 0);
+    if(landing_trace) trace_automatic_landing(state, damage, random, std::cin);
     if(trace) {
-      unsigned int count; std::cin >> count;
+      unsigned int count;
+      std::cin >> count;
       for(unsigned int tick{0}; tick != count; ++tick) {
-        uint64_t seconds; unsigned int source,up,left,down,right,alt,accelerate,decelerate,wind_enabled,warp,pressure,braking,crashing,wet,gear_damage,surface;
-        int joystick_x,joystick_y,mouse_x,mouse_y;
+        uint64_t seconds;
+        unsigned int source;
+        unsigned int up;
+        unsigned int left;
+        unsigned int down;
+        unsigned int right;
+        unsigned int alt;
+        unsigned int accelerate;
+        unsigned int decelerate;
+        unsigned int wind_enabled;
+        unsigned int warp;
+        unsigned int pressure;
+        unsigned int braking;
+        unsigned int crashing;
+        unsigned int wet;
+        unsigned int gear_damage;
+        unsigned int surface;
+        int joystick_x;
+        int joystick_y;
+        int mouse_x;
+        int mouse_y;
         if(!(std::cin >> seconds >> source >> up >> left >> down >> right >> alt >> accelerate >> decelerate >> joystick_x >> joystick_y >> mouse_x >> mouse_y >> wind_enabled >> warp >> pressure >> braking >> crashing >> wet >> gear_damage >> surface)) throw std::runtime_error{"truncated aerodynamic trace input"};
         tfx::flight::aerodynamic_navigation_context navigation;
         std::vector<vec2<uint8_t>> cells;
-        unsigned int ils{0},callback{0};
+        unsigned int ils{0};
+        unsigned int callback{0};
         if(autopilot_trace) {
-          unsigned int mode,enabled,heading,pitch,count,followed; int route_index;
-          uint64_t target_down,target_speed;
+          unsigned int mode;
+          unsigned int enabled;
+          unsigned int heading;
+          unsigned int pitch;
+          unsigned int count;
+          unsigned int followed;
+          int route_index;
+          uint64_t target_down;
+          uint64_t target_speed;
           std::cin >> mode >> enabled >> heading >> target_down >> target_speed >> route_index >> pitch >> followed >> count >> ils >> callback;
           auto &targets{state.manual.controls.autopilot};
           if(mode == 65534) {
             // A key-triggered request precedes the callback, unlike automatic
             // recovery raised during its air-data stage.
-            tfx::flight::toggle_aerodynamic_recovery(state.autopilot.recovery,state.manual.controls,state.powerplant,state.manual.air_brake_condition,{
+            tfx::flight::toggle_aerodynamic_recovery(state.autopilot.recovery, state.manual.controls, state.powerplant, state.manual.air_brake_condition, {
               .afterburner_stages{state.aircraft.powerplant.afterburner_stages},
               .available{true},
               .crashed{state.response.motion.collision != 0},
@@ -106,8 +149,10 @@ int main(int const argc, char const *const argv[]) try {
             state.autopilot.navigation.target_pitch = static_cast<tfx::math::angle>(pitch);
           }
           for(unsigned int cell{0}; cell != count; ++cell) {
-            unsigned int x,z; std::cin >> x >> z;
-            cells.emplace_back(static_cast<uint8_t>(x),static_cast<uint8_t>(z));
+            unsigned int x;
+            unsigned int z;
+            std::cin >> x >> z;
+            cells.emplace_back(static_cast<uint8_t>(x), static_cast<uint8_t>(z));
           }
           navigation.route_cells = cells;
           tfx::flight::aerodynamic_follow_target target;
@@ -124,8 +169,8 @@ int main(int const argc, char const *const argv[]) try {
               .down{down != 0},
               .right{right != 0},
             },
-            .joystick{static_cast<int16_t>(joystick_x),static_cast<int16_t>(joystick_y)},
-            .mouse{static_cast<int16_t>(mouse_x),static_cast<int16_t>(mouse_y)},
+            .joystick{static_cast<int16_t>(joystick_x), static_cast<int16_t>(joystick_y)},
+            .mouse{static_cast<int16_t>(mouse_x), static_cast<int16_t>(mouse_y)},
             .alt{alt != 0},
             .accelerate{accelerate != 0},
             .decelerate{decelerate != 0},
@@ -150,11 +195,11 @@ int main(int const argc, char const *const argv[]) try {
           .approach_reference_enabled{ils != 0},
           .callback{static_cast<tfx::flight::aerodynamic_callback>(callback)},
         };
-        auto const events{tfx::flight::advance_aerodynamic_flight(state,damage,random,wind[0],step)};
-        for(auto const value : aerodynamic_snapshot(state,damage,random)) std::cout << value << ' ';
+        auto const events{tfx::flight::advance_aerodynamic_flight(state, damage, random, wind[0], step)};
+        for(auto const value : aerodynamic_snapshot(state, damage, random)) std::cout << value << ' ';
         if(autopilot_trace) {
           for(auto const value : aerodynamic_autopilot_snapshot(state.autopilot)) std::cout << value << ' ';
-          for(auto const value : {state.approach.flap_fraction,state.approach.lift_coefficient,state.approach.angle_of_attack,state.approach.flight_path_degrees,state.approach.ground_speed}) std::cout << std::bit_cast<uint64_t>(value) << ' ';
+          for(auto const value : {state.approach.flap_fraction, state.approach.lift_coefficient, state.approach.angle_of_attack, state.approach.flight_path_degrees, state.approach.ground_speed}) std::cout << std::bit_cast<uint64_t>(value) << ' ';
         }
         std::cout << events.ground.gear_impacts << ' ' << events.ground.cockpit_bump << ' ' << events.afterburner.size() << ' ';
         for(auto const change : events.afterburner) std::cout << std::to_underlying(change) << ' ';
@@ -169,4 +214,7 @@ int main(int const argc, char const *const argv[]) try {
     }
   }
   return EXIT_SUCCESS;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }
+} catch(std::exception const &error) {
+  std::cerr << error.what() << '\n';
+  return EXIT_FAILURE;
+}

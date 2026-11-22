@@ -40,9 +40,9 @@ void view_control::start_impact_orbit(int32_t const speed) {
   // Native 7D349 queues the loss camera, then replaces its orbit basis with
   // a fresh 1/16-turn pitch. It must not inherit the previous chase orbit.
   math::angle constexpr initial_pitch{0x1000};
-  enqueue(view_mode::impact_orbit,speed);
+  enqueue(view_mode::impact_orbit, speed);
   state.orbit = {};
-  state.orbit.rotate(math::rotation_axis::pitch,initial_pitch);
+  state.orbit.rotate(math::rotation_axis::pitch, initial_pitch);
 }
 void view_control::consume() {
   // The flight loop calls this only after the active camera stage signals ready.
@@ -52,8 +52,10 @@ void view_control::consume() {
     state.redraw = 3;
     if(state.pending_offset.x != -1) state.offset.x = state.pending_offset.x;
     if(state.pending_offset.y != -1) state.offset.y = state.pending_offset.y;
-    state.pending_offset = {-1,-1};
-  } else clear_queue();
+    state.pending_offset = {-1, -1};
+  } else {
+    clear_queue();
+  }
   if(state.pending_distance) state.distance = state.pending_distance;
   state.pending_distance = 0;
   state.ready = false;
@@ -63,20 +65,24 @@ void view_control::save_offset() {
 }
 void view_control::centre(view_key_context const &context) {
   if(context.inhibited || context.crashed || context.ejected) return;
-  auto const queue{[&](view_mode const view){ enqueue(view,context.speed); }};
+  auto const queue{[&](view_mode const view){enqueue(view, context.speed);}};
   state.recenter = 0;
   switch(state.current) {
-  case view_mode::look_left:case view_mode::look_right:
-  case view_mode::look_far_left:case view_mode::look_far_right:
+  case view_mode::look_left:
+  case view_mode::look_right:
+  case view_mode::look_far_left:
+  case view_mode::look_far_right:
     queue(view_mode::centre_head);
     return;
-  case view_mode::fly_past:case view_mode::approach_cockpit:
-  case view_mode::virtual_cockpit:case view_mode::centre_head:
+  case view_mode::fly_past:
+  case view_mode::approach_cockpit:
+  case view_mode::virtual_cockpit:
+  case view_mode::centre_head:
     return;
   case view_mode::chase:
     clear_queue();
     state.orbit = math::attitude{};
-    state.orbit.rotate(math::rotation_axis::pitch,0x2000);
+    state.orbit.rotate(math::rotation_axis::pitch, 0x2000);
     state.distance = 50;
     queue(view_mode::approach_cockpit);
     state.recenter = 0;
@@ -102,12 +108,12 @@ view_key_events view_control::press(view_key const key, view_key_context const &
   if(context.inhibited || context.crashed || context.ejected) return result;
   // F5 intentionally lacks the automatic-landing gate used by the other keys.
   if(key != view_key::chase && context.landing) return result;
-  auto const queue{[&](view_mode const view){ enqueue(view,context.speed); }};
+  auto const queue{[&](view_mode const view){enqueue(view, context.speed);}};
   switch(key) {
   case view_key::front:
     if(context.shift) {
       save_offset();
-      state.pending_offset = {0,50};
+      state.pending_offset = {0, 50};
       queue(view_mode::full_forward);
       break;
     }
@@ -135,28 +141,34 @@ view_key_events view_control::press(view_key const key, view_key_context const &
     queue(view_mode::cockpit);
     break;
   case view_key::left:
-    if(state.current == view_mode::look_left) queue(view_mode::look_far_left);
-    else if(state.current == view_mode::look_far_left) {
+    if(state.current == view_mode::look_left) {
+      queue(view_mode::look_far_left);
+    } else if(state.current == view_mode::look_far_left) {
       queue(view_mode::centre_head);
       queue(view_mode::virtual_cockpit);
     } else {
       if(state.current == view_mode::look_far_right) {
         queue(view_mode::centre_head);
         queue(view_mode::virtual_cockpit);
-      } else centre(context);
+      } else {
+        centre(context);
+      }
       queue(view_mode::look_left);
     }
     break;
   case view_key::right:
-    if(state.current == view_mode::look_right) queue(view_mode::look_far_right);
-    else if(state.current == view_mode::look_far_right) {
+    if(state.current == view_mode::look_right) {
+      queue(view_mode::look_far_right);
+    } else if(state.current == view_mode::look_far_right) {
       queue(view_mode::centre_head);
       queue(view_mode::virtual_cockpit);
     } else {
       if(state.current == view_mode::look_far_left) {
         queue(view_mode::centre_head);
         queue(view_mode::virtual_cockpit);
-      } else centre(context);
+      } else {
+        centre(context);
+      }
       queue(view_mode::look_right);
     }
     break;
@@ -186,11 +198,12 @@ view_key_events view_control::press(view_key const key, view_key_context const &
     }
     queue(view_mode::chase);
     break;
-  case view_key::fly_past: {
+  case view_key::fly_past:
+    {
     if(context.speed < 20) break;
     state.fixed_position = vec3<int32_t>{context.position};
-    vec3<math::angle> const angles{context.angles.x,static_cast<math::angle>(context.angles.y - 700),context.angles.z};
-    math::advance_position(state.fixed_position,angles,math::signed_word(static_cast<uint16_t>(context.speed >> 1)),context.height_bounds.x,context.height_bounds.y);
+    vec3<math::angle> const angles{context.angles.x, static_cast<math::angle>(context.angles.y - 700), context.angles.z};
+    math::advance_position(state.fixed_position, angles, math::signed_word(static_cast<uint16_t>(context.speed >> 1)), context.height_bounds.x, context.height_bounds.y);
     // Native also computes a bearing into an otherwise unused stack temporary.
     queue(view_mode::fly_past);
     result.fly_past_sound = true;
@@ -205,13 +218,13 @@ view_key_events view_control::press(view_key const key, view_key_context const &
     if(state.current == view_mode::missile) {
       queue(view_mode::missile_infrared);
       save_offset();
-      state.pending_offset = {0,0};
+      state.pending_offset = {0, 0};
     } else {
       state.recenter = 1;
       state.orbit = math::attitude{};
       state.missile_orbit = math::attitude{};
-      state.orbit.rotate(math::rotation_axis::heading,0x500);
-      state.orbit.rotate(math::rotation_axis::pitch,0x500);
+      state.orbit.rotate(math::rotation_axis::heading, 0x500);
+      state.orbit.rotate(math::rotation_axis::pitch, 0x500);
       state.distance = 300;
       queue(view_mode::missile);
     }

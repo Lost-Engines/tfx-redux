@@ -11,12 +11,12 @@ struct mission_parameters {
   uint16_t departure_cell{0xffff};
   uint16_t primary_target_cell{0xffff};
   uint16_t additional_target_count{0};
-  std::array<uint16_t,7> additional_targets{0xffff,0xffff,0xffff,0xffff,0xffff,0xffff,0xffff};
+  std::array<uint16_t, 7> additional_targets{0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff};
   int16_t weather_index{-1};
   // Retained authoring fields whose consuming code has not yet been established.
-  std::array<uint16_t,4> retained{0xffff,0xffff,0xffff,0xffff};
+  std::array<uint16_t, 4> retained{0xffff, 0xffff, 0xffff, 0xffff};
   explicit mission_parameters(std::span<int32_t const> fields);
-  std::array<uint16_t,16> words() const;
+  std::array<uint16_t, 16> words() const;
 };
 struct waypoint {
   int16_t ordinal;
@@ -32,7 +32,7 @@ public:
   uint16_t format;
   mission_parameters parameters;
   // Native metadata order: planner's three alternative map images, world and palette.
-  std::array<std::string,3> map_images;
+  std::array<std::string, 3> map_images;
   std::string world;
   std::string palette;
   std::vector<route> routes;

@@ -19,8 +19,9 @@ void capture_shared_player(aerodynamic_flight &physical, simple_state const &bas
   physical.response.motion.integer_world_y = view.integer_position.y;
   physical.response.low_speed_ground_contact = view.low_speed_ground_contact;
   physical.ground.ground.landed = view.landed;
-  if(!view.arrested) physical.ground.ground.arrestor = aerodynamic_arrestor_phase::free;
-  else if(physical.ground.ground.arrestor == aerodynamic_arrestor_phase::free) physical.ground.ground.arrestor = aerodynamic_arrestor_phase::engaged;
+  if(!view.arrested) {
+    physical.ground.ground.arrestor = aerodynamic_arrestor_phase::free;
+  } else if(physical.ground.ground.arrestor == aerodynamic_arrestor_phase::free) physical.ground.ground.arrestor = aerodynamic_arrestor_phase::engaged;
   physical.gear_fraction = view.gear_down ? 1 : 0;
   physical.arrestor_hook_down = view.arrestor_hook;
   physical.chute_deployed = view.brake_chute;
@@ -35,11 +36,13 @@ void capture_shared_player(aerodynamic_flight &physical, simple_state const &bas
   engine.fuel_readout = view.fuel_readout;
   // The UI's engine switches express on/off, while these factors also retain
   // partial power loss. Preserve a nonzero factor when the switch stays on.
-  if(!view.left_engine) engine.engine_factor.x = 0;
-  else if(engine.engine_factor.x == 0) engine.engine_factor.x = 1;
-  if(!view.right_engine) engine.engine_factor.y = 0;
-  else if(engine.engine_factor.y == 0) engine.engine_factor.y = 1;
-  engine.engine_condition = {damage.condition(aircraft_system::left_engine),damage.condition(aircraft_system::right_engine)};
+  if(!view.left_engine) {
+    engine.engine_factor.x = 0;
+  } else if(engine.engine_factor.x == 0) engine.engine_factor.x = 1;
+  if(!view.right_engine) {
+    engine.engine_factor.y = 0;
+  } else if(engine.engine_factor.y == 0) engine.engine_factor.y = 1;
+  engine.engine_condition = {damage.condition(aircraft_system::left_engine), damage.condition(aircraft_system::right_engine)};
   physical.manual.air_brake_condition = damage.condition(aircraft_system::air_brake);
 }
 

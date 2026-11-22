@@ -6,14 +6,22 @@
 
 namespace tfx::flight {
 
-enum class pilot_phase : uint8_t { inactive, launch, seat_flight, falling, opening, parachute, landed = 10 };
+enum class pilot_phase : uint8_t {
+  inactive,
+  launch,
+  seat_flight,
+  falling,
+  opening,
+  parachute,
+  landed = 10
+};
 struct pilot_motion {
   pilot_phase phase{pilot_phase::inactive};
-  vec3f position{0,0,0};
-  vec3f velocity{0,0,0};
+  vec3f position{0, 0, 0};
+  vec3f velocity{0, 0, 0};
   math::attitude orientation{};
-  vec3<int32_t> integer_position{0,0,0};
-  vec3<math::angle> angles{0,0,0};
+  vec3<int32_t> integer_position{0, 0, 0};
+  vec3<math::angle> angles{0, 0, 0};
   int32_t aircraft_speed{0};
   int32_t elapsed{0};
   bool parachute_open{false};

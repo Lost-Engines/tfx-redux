@@ -21,17 +21,17 @@ std::optional<int16_t> precipitation_count(precipitation_gate const &context);
 
 struct precipitation_view {
   mat3<int32_t> const &matrix;
-  vec3<int16_t> camera{0,0,0};
-  vec2<int16_t> origin{centre_x,centre_y};
-  vec2<int16_t> minimum{0,0};
-  vec2<int16_t> maximum{screen_width - 1,screen_height - 1};
+  vec3<int16_t> camera{0, 0, 0};
+  vec2<int16_t> origin{centre_x, centre_y};
+  vec2<int16_t> minimum{0, 0};
+  vec2<int16_t> maximum{screen_width - 1, screen_height - 1};
 };
 class precipitation {
 private:
-  std::array<vec3<int16_t>,precipitation_particles> particles{};
+  std::array<vec3<int16_t>, precipitation_particles> particles{};
   vec3<int16_t> offset;
 public:
-  explicit precipitation(vec3<int16_t> const &drift = {0,0,0});
+  explicit precipitation(vec3<int16_t> const &drift = {0, 0, 0});
   // Native 0x78af8 replaces the field, consuming 1,800 shared random draws.
   // It deliberately retains the three drift offsets across mission changes.
   void initialise(math::random_state &random);

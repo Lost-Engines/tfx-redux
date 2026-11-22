@@ -9,7 +9,13 @@ namespace tfx::configuration {
 
 // Redux-only preferences: the original TFX.CFG remains interoperable with DOS/TFX C++.
 inline char constexpr graphics_filename[]{"REDUX.CFG"};
-enum class graphics_field { resolution, window_scale, field_of_view, draw_distance, lod_scale };
+enum class graphics_field {
+  resolution,
+  window_scale,
+  field_of_view,
+  draw_distance,
+  lod_scale
+};
 struct graphics_settings {
   render::view_settings video{};
   unsigned int window_scale{0};

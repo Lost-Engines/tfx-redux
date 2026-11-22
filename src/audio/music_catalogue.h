@@ -8,7 +8,7 @@ namespace tfx::audio {
 
 class music_catalogue {
 private:
-  std::array<std::vector<std::string>,3> names;
+  std::array<std::vector<std::string>, 3> names;
 
 public:
   explicit music_catalogue(std::span<uint8_t const> launcher);

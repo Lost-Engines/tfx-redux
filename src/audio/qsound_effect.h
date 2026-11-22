@@ -6,8 +6,8 @@
 namespace tfx::audio {
 
 struct stereo_frame {
-  float left{};
-  float right{};
+  float left{0.0f};
+  float right{0.0f};
 };
 
 // The recovered two-input model receives the mono Sound Blaster stream only.

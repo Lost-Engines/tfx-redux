@@ -9,7 +9,11 @@ namespace tfx::configuration {
 
 unsigned int constexpr configuration_buffer_size{1024};
 
-enum class g_effects : uint8_t { none, reduced, realistic };
+enum class g_effects : uint8_t {
+  none,
+  reduced,
+  realistic
+};
 struct realism {
   g_effects g_force{g_effects::none};
   uint8_t precipitation{1};

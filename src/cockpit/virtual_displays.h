@@ -11,9 +11,9 @@ namespace tfx::cockpit {
 // The six front-canopy models share two atlases. Map their instrument regions
 // directly to the complete F1 panel, preserving its native pixels and updates.
 class virtual_displays {
-  std::array<std::vector<uint8_t>,2> cells;
-  std::array<std::vector<render::texture_patch>,2> patches;
-  std::array<uint8_t,320 * 200> panel{};
+  std::array<std::vector<uint8_t>, 2> cells;
+  std::array<std::vector<render::texture_patch>, 2> patches;
+  std::array<uint8_t, 320 * 200> panel{};
   void add(unsigned int page, render::texture_patch const &patch);
 public:
   explicit virtual_displays(instrument_assets const &instruments);

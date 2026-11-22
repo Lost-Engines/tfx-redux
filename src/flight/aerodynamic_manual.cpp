@@ -19,7 +19,7 @@ double constexpr nozzle_angle{native_pi * nozzle_degrees * inverse_degrees};
 uint16_t constexpr external_control_mode{3};
 
 calculation asin(calculation const value) {
-  return std::atan2(value,std::sqrt(1.0 - value * value));
+  return std::atan2(value, std::sqrt(1.0 - value * value));
 }
 calculation velocity_area(aerodynamic_airdata const &data, double const area) {
   calculation const speed{data.metres_per_second};
@@ -41,7 +41,7 @@ afterburner_change overspeed(aerodynamic_manual_state &state, aerodynamic_powerp
     .air_brake_drag{context.geometry.air_brake_drag},
     .afterburner_stages{context.afterburner_stages},
   };
-  auto const change{update_aerodynamic_speed(speed,powerplant,inputs)};
+  auto const change{update_aerodynamic_speed(speed, powerplant, inputs)};
   state.air_brake_fraction = speed.air_brake_fraction;
   state.air_brake_condition = speed.air_brake_condition;
   return change;
@@ -54,7 +54,8 @@ afterburner_change update_aerodynamic_manual(aerodynamic_manual_state &state, ae
   auto const &data{context.data};
   auto const &c{context.coefficients};
   auto const &p{context.geometry};
-  calculation const speed{data.metres_per_second}, alpha{data.angle_of_attack};
+  calculation const speed{data.metres_per_second};
+  calculation const alpha{data.angle_of_attack};
   bool const trim{speed > trim_minimum_speed && (context.source == control_source::joystick || (context.source == control_source::keyboard && controls.keyboard_elevator == 0))};
   if(trim) {
     if(context.stick_pressure && (!controls.autopilot.enabled || controls.autopilot.mode == external_control_mode)) {
@@ -69,19 +70,25 @@ afterburner_change update_aerodynamic_manual(aerodynamic_manual_state &state, ae
       }
       double const positive{native_pi * bank_limit_degrees * inverse_degrees};
       double const negative{native_pi * -bank_limit_degrees * inverse_degrees};
-      if(bank > positive) bank = positive;
-      else if(bank < negative) bank = negative;
+      if(bank > positive) {
+        bank = positive;
+      } else if(bank < negative) bank = negative;
       state.pitch_rate_bias = static_cast<double>(std::sin(bank) * gravity * std::tan(bank) / speed);
-    } else state.pitch_rate_bias = 0;
-    calculation const dynamic{velocity_area(data,p.wing_area) * p.mean_chord};
-    if(context.aircraft == player_aircraft::raptor) state.elevator_trim = static_cast<double>(-(alpha * c.pitch_stability + p.zero_pitch_moment) / (thrust_moment(state,powerplant,context) / dynamic + static_cast<calculation>(c.elevator_moment) * p.maximum_elevator_angle));
-    else state.elevator_trim = static_cast<double>((alpha * c.pitch_stability + p.zero_pitch_moment) * (-1.0 / (static_cast<calculation>(c.elevator_moment) * p.maximum_elevator_angle)));
+    } else {
+      state.pitch_rate_bias = 0;
+    }
+    calculation const dynamic{velocity_area(data, p.wing_area) * p.mean_chord};
+    if(context.aircraft == player_aircraft::raptor) {
+      state.elevator_trim = static_cast<double>(-(alpha * c.pitch_stability + p.zero_pitch_moment) / (thrust_moment(state, powerplant, context) / dynamic + static_cast<calculation>(c.elevator_moment) * p.maximum_elevator_angle));
+    } else {
+      state.elevator_trim = static_cast<double>((alpha * c.pitch_stability + p.zero_pitch_moment) * (-1.0 / (static_cast<calculation>(c.elevator_moment) * p.maximum_elevator_angle)));
+    }
     if(context.military) {
-      calculation const denominator{thrust_moment(state,powerplant,context) / dynamic + static_cast<calculation>(c.elevator_moment) * p.maximum_elevator_angle};
+      calculation const denominator{thrust_moment(state, powerplant, context) / dynamic + static_cast<calculation>(c.elevator_moment) * p.maximum_elevator_angle};
       state.elevator_trim = static_cast<double>(state.elevator_trim - (static_cast<calculation>(state.pitch_rate_bias) * c.pitch_damping * p.mean_chord / (speed * 2)) / denominator);
     }
   }
-  return finish_aerodynamic_controls(state,powerplant,context);
+  return finish_aerodynamic_controls(state, powerplant, context);
 }
 
 afterburner_change finish_aerodynamic_controls(aerodynamic_manual_state &state, aerodynamic_powerplant &powerplant, aerodynamic_manual_context const &context) {
@@ -89,22 +96,25 @@ afterburner_change finish_aerodynamic_controls(aerodynamic_manual_state &state, 
   auto const &data{context.data};
   auto const &c{context.coefficients};
   auto const &p{context.geometry};
-  calculation const speed{data.metres_per_second}, alpha{data.angle_of_attack};
+  calculation const speed{data.metres_per_second};
+  calculation const alpha{data.angle_of_attack};
   if(speed > flap_minimum_speed && context.aircraft != player_aircraft::nighthawk && context.flaps_condition != system_condition::failed) {
-    state.flap_fraction = static_cast<double>((static_cast<calculation>(data.mass_kg) * 2 * gravity / velocity_area(data,p.wing_area) - p.zero_lift) / (static_cast<calculation>(p.flap_lift_gradient) * p.maximum_flap_angle));
+    state.flap_fraction = static_cast<double>((static_cast<calculation>(data.mass_kg) * 2 * gravity / velocity_area(data, p.wing_area) - p.zero_lift) / (static_cast<calculation>(p.flap_lift_gradient) * p.maximum_flap_angle));
     if(state.flap_fraction > 1) state.flap_fraction = 1;
     if(state.flap_fraction < 0) state.flap_fraction = 0;
-  } else state.flap_fraction = 0;
+  } else {
+    state.flap_fraction = 0;
+  }
   afterburner_change change{afterburner_change::none};
   if(context.aircraft == player_aircraft::eurofighter) {
     double const target{static_cast<double>(static_cast<calculation>(data.atmosphere.sound_metres_per_second) * eurofighter_speed_target)};
     if(alpha > p.critical_angle) state.elevator_trim = static_cast<double>(state.elevator_trim - (alpha - p.critical_angle) * degrees_per_radian * stall_trim_scale * controls.minimum_elevator);
-    if(data.mach > eurofighter_limit_mach) change = overspeed(state,powerplant,context,target);
+    if(data.mach > eurofighter_limit_mach) change = overspeed(state, powerplant, context, target);
   }
-  if(context.aircraft == player_aircraft::nighthawk && data.mach > nighthawk_limit_mach) change = overspeed(state,powerplant,context,static_cast<double>(static_cast<calculation>(data.atmosphere.sound_metres_per_second) * nighthawk_speed_target));
+  if(context.aircraft == player_aircraft::nighthawk && data.mach > nighthawk_limit_mach) change = overspeed(state, powerplant, context, static_cast<double>(static_cast<calculation>(data.atmosphere.sound_metres_per_second) * nighthawk_speed_target));
   controls.elevator = static_cast<double>(static_cast<calculation>(state.elevator_trim) + controls.elevator);
   if(speed > limit_minimum_speed) {
-    calculation const dynamic{velocity_area(data,p.wing_area)};
+    calculation const dynamic{velocity_area(data, p.wing_area)};
     state.positive_g_lift_limit = static_cast<double>((static_cast<calculation>(context.maximum_g) - 1) * 2 * data.mass_kg * gravity / dynamic);
     if(state.positive_g_lift_limit > context.surfaces.positive_lift_limit) state.positive_g_lift_limit = context.surfaces.positive_lift_limit;
     state.negative_g_lift_limit = static_cast<double>(static_cast<calculation>(context.minimum_g) * 2 * data.mass_kg * gravity / dynamic);
@@ -133,7 +143,8 @@ afterburner_change finish_aerodynamic_controls(aerodynamic_manual_state &state, 
     }
     if(controls.aileron_limit > 1) controls.aileron_limit = 1;
     if(context.accumulated_damage != 0) {
-      calculation const damage{context.accumulated_damage}, time{data.simulation_seconds};
+      calculation const damage{context.accumulated_damage};
+      calculation const time{data.simulation_seconds};
       controls.aileron = static_cast<double>(static_cast<calculation>(controls.aileron_limit) * aileron_damage_scale * damage * std::sin(time * damage_roll_frequency) + controls.aileron);
       controls.elevator = static_cast<double>(static_cast<calculation>(controls.minimum_elevator) * elevator_damage_scale * damage * std::sin(time * (damage * damage_pitch_frequency) + damage) + controls.elevator);
     }
@@ -144,12 +155,14 @@ afterburner_change finish_aerodynamic_controls(aerodynamic_manual_state &state, 
   if(controls.aileron < -controls.aileron_limit) controls.aileron = -controls.aileron_limit;
   state.thrust_vector_fraction = 0;
   if(context.aircraft == player_aircraft::raptor) {
-    powerplant.nozzle_angles = vec2d{0,0};
+    powerplant.nozzle_angles = vec2d{0, 0};
     if(powerplant.engine_factor.x != 0 && powerplant.engine_factor.y != 0) {
       if(speed < vector_full_speed) {
         state.thrust_vector_fraction = static_cast<double>((speed - vector_zero_speed) * vector_speed_scale);
         if(speed < vector_zero_speed) state.thrust_vector_fraction = 0;
-      } else state.thrust_vector_fraction = 1;
+      } else {
+        state.thrust_vector_fraction = 1;
+      }
       auto const sine{std::sin(nozzle_angle)};
       double const pitch{static_cast<double>(-asin(static_cast<calculation>(controls.elevator) * state.thrust_vector_fraction * sine))};
       auto const roll{asin(static_cast<calculation>(controls.aileron) * state.thrust_vector_fraction * sine)};

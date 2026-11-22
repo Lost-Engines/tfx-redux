@@ -15,7 +15,7 @@ struct store_properties {
   bool fuel_tank{false};
 };
 struct mounted_store {
-  vec3d position{0,0,0};
+  vec3d position{0, 0, 0};
   store_properties properties{};
   bool occupied{false};
 };

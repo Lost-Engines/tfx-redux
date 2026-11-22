@@ -22,7 +22,10 @@ enum class air_flag : uint16_t {
   retired = 256,
   afterburner_display = 512,
 };
-enum class air_visual_event : uint8_t { afterburner_on = 9, afterburner_off };
+enum class air_visual_event : uint8_t {
+  afterburner_on = 9,
+  afterburner_off
+};
 struct air_performance {
   int32_t acceleration;
   int32_t deceleration;
@@ -37,7 +40,7 @@ struct air_performance {
 };
 struct air_state {
   initial_actor pose{};
-  vec3<int16_t> angular_rate{0,0,0};
+  vec3<int16_t> angular_rate{0, 0, 0};
   int32_t acceleration{0};
   int16_t input_ticks{0};
 };

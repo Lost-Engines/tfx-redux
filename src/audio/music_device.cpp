@@ -13,8 +13,10 @@ private:
   osl_fm_driver callbacks;
 
 public:
-  fm_music_device(std::span<uint8_t const> const launcher, unsigned int const rate) :
-    synth{rate}, callbacks{launcher,[this](opl_write const command){ synth.write(command); }} {}
+  fm_music_device(std::span<uint8_t const> const launcher, unsigned int const rate)
+    :
+    synth{rate},
+      callbacks{launcher, [this](opl_write const command){synth.write(command);}} {}
   osl_device_driver &driver() override {
     return callbacks;
   }
@@ -31,9 +33,11 @@ private:
   Driver callbacks;
 
 public:
-  midi_music_device(std::span<uint8_t const> const launcher, std::unique_ptr<midi_receiver> receiver) :
-    receiver{std::move(receiver)}, stream{*this->receiver},
-    callbacks{launcher,[this](uint8_t const byte){ stream.byte(byte); }} {}
+  midi_music_device(std::span<uint8_t const> const launcher, std::unique_ptr<midi_receiver> receiver)
+    :
+    receiver{std::move(receiver)},
+      stream{*this->receiver},
+    callbacks{launcher, [this](uint8_t const byte){stream.byte(byte);}} {}
   osl_device_driver &driver() override {
     return callbacks;
   }
@@ -50,17 +54,17 @@ public:
 } // anonymous namespace
 
 std::unique_ptr<music_device> make_fm_music_device(std::span<uint8_t const> const launcher, unsigned int const sample_rate) {
-  return std::make_unique<fm_music_device>(launcher,sample_rate);
+  return std::make_unique<fm_music_device>(launcher, sample_rate);
 }
 std::unique_ptr<music_device> make_scc_music_device(std::span<uint8_t const> const launcher,
     std::unique_ptr<midi_receiver> receiver) {
   if(!receiver) throw std::invalid_argument{"music device requires a MIDI receiver"};
-  return std::make_unique<midi_music_device<osl_scc_driver>>(launcher,std::move(receiver));
+  return std::make_unique<midi_music_device<osl_scc_driver>>(launcher, std::move(receiver));
 }
 std::unique_ptr<music_device> make_la_music_device(std::span<uint8_t const> const launcher,
     std::unique_ptr<midi_receiver> receiver) {
   if(!receiver) throw std::invalid_argument{"music device requires a MIDI receiver"};
-  return std::make_unique<midi_music_device<osl_la_driver>>(launcher,std::move(receiver));
+  return std::make_unique<midi_music_device<osl_la_driver>>(launcher, std::move(receiver));
 }
 
 } // namespace tfx::audio

@@ -20,7 +20,7 @@ struct trail_segment {
   vec3<int32_t> midpoint() const;
 };
 std::optional<trail_segment> prepare_trail(vec3<int32_t> const &previous, vec3<int32_t> const &current, bool enabled);
-void emit_trail(trail_segment const &segment, std::function_ref<void(vec3<int32_t> const&)> output);
+void emit_trail(trail_segment const &segment, std::function_ref<void(vec3<int32_t> const &)> output);
 
 // Redux: retain fractional spacing across projectile updates, independent of
 // how many simulation ticks a rendered frame took.
@@ -28,17 +28,18 @@ class trail_sampler {
   double until_next{0};
 public:
   void advance(vec3<int32_t> const &previous_q8, vec3<int32_t> const &current_q8,
-               std::function_ref<void(vec3<int32_t> const&)> output);
+               std::function_ref<void(vec3<int32_t> const &)> output);
 };
 
 using trail_slot = unsigned int;
 struct trail_record {
-  vec3<int32_t> position_q8{0,0,0};
+  vec3<int32_t> position_q8{0, 0, 0};
 };
 class trail_pool {
 private:
-  std::array<trail_record,trail_capacity> records;
-  trail_slot first{0}, next{0};
+  std::array<trail_record, trail_capacity> records;
+  trail_slot first{0};
+  trail_slot next{0};
   unsigned int count{0};
 
 public:
@@ -48,7 +49,7 @@ public:
   void clean(vec3<int32_t> const &reference, std::function_ref<bool(trail_slot)> destroyed, bool limit_distance = true);
   trail_record const &record(trail_slot slot) const;
   auto active_slots() const {
-    return std::views::iota(0u,count) | std::views::transform([this](unsigned int const index){ return (first + index) % trail_capacity; });
+    return std::views::iota(0u, count) | std::views::transform([this](unsigned int const index){return (first + index) % trail_capacity;});
   }
 };
 vec3d trail_position(vec3<int32_t> const &position_q8, vec3<int32_t> const &reference);

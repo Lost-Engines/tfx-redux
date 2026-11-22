@@ -4,7 +4,10 @@
 
 namespace tfx::render {
 
-enum class model_surface { body, ground_shadow };
+enum class model_surface {
+  body,
+  ground_shadow
+};
 
 vec3<int32_t> scale_model_cache(vec3<int32_t> const &origin, uint8_t scale);
 

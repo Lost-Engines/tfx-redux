@@ -22,9 +22,9 @@ calculation wide(double const value) {
 
 } // anonymous namespace
 
-std::array<aerodynamic_wind_parameters,aerodynamic_weather_profiles> load_aerodynamic_wind_parameters(std::span<uint8_t const> const executable) {
+std::array<aerodynamic_wind_parameters, aerodynamic_weather_profiles> load_aerodynamic_wind_parameters(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
-  std::array<aerodynamic_wind_parameters,aerodynamic_weather_profiles> result;
+  std::array<aerodynamic_wind_parameters, aerodynamic_weather_profiles> result;
   for(unsigned int index{0}; index != result.size(); ++index) {
     auto const value{[&](unsigned int const field){
       auto const at{data_object_file + field + index * 8};
@@ -68,7 +68,7 @@ void initialise_aerodynamic_wind(aerodynamic_wind &state, aerodynamic_wind_param
   state.legacy_gust_period = parameters.legacy_gust_period;
   state.legacy_gust_target = static_cast<double>(wide(random.next()) * parameters.legacy_gust_range * legacy_gust_scale);
   state.legacy_gust_smoothing = .08;
-  state.velocity_ned = vec3f{0,0,0};
+  state.velocity_ned = vec3f{0, 0, 0};
   state.direction = static_cast<double>(wide(random.next()) * (native_pi * 2) * inverse_random_max);
   calculation const upper_angle{wide(native_pi) * parameters.upper_direction_degrees * inverse_degrees};
   state.upper_wind.x = static_cast<double>(std::cos(upper_angle) * parameters.upper_speed);

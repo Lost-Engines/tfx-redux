@@ -9,14 +9,14 @@
 namespace tfx::cockpit {
 
 struct warning_state {
-  std::array<flight::system_condition,flight::aircraft_system_count> systems{};
+  std::array<flight::system_condition, flight::aircraft_system_count> systems{};
   bool autopilot{false};
   bool hook{false};
   bool fire_permission_notice{false};
   std::optional<uint8_t> tracked_weapon_category;
   bool stall_recovery{false};
   bool threat{false};
-  vec2<int16_t> offset{0,0};
+  vec2<int16_t> offset{0, 0};
 };
 struct warning_animation {
   uint16_t countdown{0};
@@ -27,7 +27,7 @@ struct warning_animation {
 class warning_lamps {
 private:
   instrument_assets const &assets;
-  std::array<std::vector<resources::indexed_image>,2> banks;
+  std::array<std::vector<resources::indexed_image>, 2> banks;
   warning_animation animation;
 
 public:

@@ -12,7 +12,7 @@ auto main(int const argc, char const *const argv[])->int try {
   tfx::resources::archive const game{archive};
   tfx::resources::executable_tables const tables{archive.parent_path() / "TFX.DAT"};
   tfx::cockpit::tactical_map_animation animation;
-  tfx::cockpit::tactical_map map{game,tables,argv[2],animation};
+  tfx::cockpit::tactical_map map{game, tables, argv[2], animation};
   unsigned int colour;
   while(std::cin >> colour) {
     animation.target_colour = static_cast<uint8_t>(colour);
@@ -25,9 +25,10 @@ auto main(int const argc, char const *const argv[])->int try {
     std::cin >> count;
     std::vector<vec2<uint8_t>> route;
     for(unsigned int i{0}; i != count; ++i) {
-      unsigned int x,z;
+      unsigned int x;
+      unsigned int z;
       std::cin >> x >> z;
-      route.emplace_back(static_cast<uint8_t>(x),static_cast<uint8_t>(z));
+      route.emplace_back(static_cast<uint8_t>(x), static_cast<uint8_t>(z));
     }
     state.route = route;
     auto const positions{[]{
@@ -39,8 +40,8 @@ auto main(int const argc, char const *const argv[])->int try {
     }};
     auto targets{positions()};
     state.targets = targets;
-    std::array<std::vector<tfx::cockpit::tactical_map_aircraft>,2> aircraft;
-    std::array<std::vector<std::string>,2> names;
+    std::array<std::vector<tfx::cockpit::tactical_map_aircraft>, 2> aircraft;
+    std::array<std::vector<std::string>, 2> names;
     for(unsigned int pool{0}; pool != aircraft.size(); ++pool) {
       std::cin >> count;
       aircraft[pool].resize(count);
@@ -54,7 +55,8 @@ auto main(int const argc, char const *const argv[])->int try {
     }
     state.hostile_aircraft = aircraft[0];
     state.allied_aircraft = aircraft[1];
-    auto hostile{positions()}, allied{positions()};
+    auto hostile{positions()};
+    auto allied{positions()};
     state.hostile_surface = hostile;
     state.allied_surface = allied;
     std::cin >> count;
@@ -67,7 +69,7 @@ auto main(int const argc, char const *const argv[])->int try {
       for(unsigned int byte{0}; byte != 4; ++byte) std::cout.put(static_cast<char>(animation.ticks >> (byte * 8)));
       std::cout.put(static_cast<char>(animation.target_colour));
       auto const &pixels{map.image().pixels};
-      std::cout.write(reinterpret_cast<char const*>(pixels.data()),pixels.size());
+      std::cout.write(reinterpret_cast<char const *>(pixels.data()), pixels.size());
     }
   }
   return EXIT_SUCCESS;

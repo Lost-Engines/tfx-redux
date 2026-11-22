@@ -27,14 +27,14 @@ struct motion_context {
   uint16_t elapsed;
   vec3<int32_t> target;
   bool player_owned{false};
-  vec3<int32_t> launch_anchor{0,0,0};
-  vec3<math::angle> player_angles{0,0,0};
+  vec3<int32_t> launch_anchor{0, 0, 0};
+  vec3<math::angle> player_angles{0, 0, 0};
   int32_t player_speed{0};
   bool target_is_player{false};
   bool player_ejected{false};
   bool player_decoys{false};
   int32_t player_distance{0};
-  vec2<int32_t> height_bounds{actors::minimum_world_y,actors::maximum_world_y};
+  vec2<int32_t> height_bounds{actors::minimum_world_y, actors::maximum_world_y};
 };
 struct child_release {
   vec3<int32_t> position;
@@ -48,8 +48,8 @@ struct motion_result {
 };
 
 struct motion_hooks {
-  std::function<void(child_release const&)> release{};
-  std::function<definition const&(uint8_t)> current_definition{};
+  std::function<void(child_release const &)> release{};
+  std::function<definition const &(uint8_t)> current_definition{};
 };
 
 // Native 0xa373c excludes these three callbacks by identity, including after ejection.

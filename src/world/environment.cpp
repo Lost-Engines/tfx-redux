@@ -31,12 +31,18 @@ mission::mission(resources::archive const &game, std::string const &source_name)
     fields >> key;
     key = lower(std::move(key));
     if(key == "finish:" || key == "end:") break;
-    if(key == "end_text") { in_text = false; continue; }
+    if(key == "end_text") {
+      in_text = false;
+      continue;
+    }
     if(in_text) continue;
-    if(key == "world") fields >> world_name;
-    else if(key == "type") fields >> environment;
-    else if(key == "way") fields >> waypoints;
-    else if(key == "plane") {
+    if(key == "world") {
+      fields >> world_name;
+    } else if(key == "type") {
+      fields >> environment;
+    } else if(key == "way") {
+      fields >> waypoints;
+    } else if(key == "plane") {
       unsigned int value{0};
       fields >> value;
       if(value < std::to_underlying(player_aircraft::eurofighter) || value > std::to_underlying(player_aircraft::raptor)) throw std::runtime_error{"invalid player craft in " + name};
@@ -52,7 +58,9 @@ mission::mission(resources::archive const &game, std::string const &source_name)
       if(!start.landed) start.position.y = std::stoi(altitude);                // numeric Y is already signed native world height, not positive altitude
     }
     std::string word;
-    while(fields >> word) if(lower(word) == "text") in_text = true;
+    while(fields >> word) {
+      if(lower(word) == "text") in_text = true;
+    }
   }
   if(world_name.empty()) throw std::runtime_error{"mission lacks a world: " + name};
   if(environment.empty()) throw std::runtime_error{"mission lacks an environment: " + name};
@@ -61,16 +69,21 @@ mission::mission(resources::archive const &game, std::string const &source_name)
 std::string mission::grid_name() const {
   /// Original world loader terminates the DOS filename after eight characters at 2.05 file 0xb0a80
   unsigned int constexpr dos_basename_length{8};
-  return lower(world_name.substr(0,dos_basename_length));
+  return lower(world_name.substr(0, dos_basename_length));
 }
 
 uint16_t apply_detail_status(uint16_t const status, uint8_t const detail) {
-  uint16_t constexpr low_detail{1u << 2}, reduced_detail{1u << 6};
+  uint16_t constexpr low_detail{1u << 2};
+  uint16_t constexpr reduced_detail{1u << 6};
   switch(detail) {
-    case 0: return static_cast<uint16_t>(status | reduced_detail | low_detail);
-    case 1: return static_cast<uint16_t>((status | reduced_detail) & ~low_detail);
-    case 2: return static_cast<uint16_t>(status & ~(low_detail | reduced_detail));
-    default: return status;
+  case 0:
+    return static_cast<uint16_t>(status | reduced_detail | low_detail);
+  case 1:
+    return static_cast<uint16_t>((status | reduced_detail) & ~low_detail);
+  case 2:
+    return static_cast<uint16_t>(status & ~(low_detail | reduced_detail));
+  default:
+    return status;
   }
 }
 
@@ -82,7 +95,8 @@ lighting_configuration::lighting_configuration(resources::archive const &game, s
     token = lower(std::move(token));
     if(token == "altitude") {
       cloud_layer = true;
-      int32_t height,offset;
+      int32_t height;
+      int32_t offset;
       if(!(settings >> height >> offset >> upper_grid)) throw std::runtime_error{"environment lacks its altitude-layer binding: " + name};
       layer_y = math::signed_word(static_cast<uint16_t>(0u - static_cast<uint32_t>(height)));
       layer_offset_y = math::signed_word(static_cast<uint16_t>(0u - static_cast<uint32_t>(offset)));
@@ -107,10 +121,11 @@ lighting_configuration::lighting_configuration(resources::archive const &game, s
 environment::environment(resources::archive const &game, std::string source_name, std::string source_lighting) :
   name{std::move(source_name)},
   lighting_name{source_lighting.empty() ? name : std::move(source_lighting)},
-  lighting{game,lighting_name} {
+  lighting{game, lighting_name} {
   /// The native grid is column-major with reversed Z; retain a convenient row-major runtime lookup
   auto const prefix{"lev/" + name};
-  auto const low{game.read(prefix + ".lev")}, high{game.read(prefix + ".le2")};
+  auto const low{game.read(prefix + ".lev")};
+  auto const high{game.read(prefix + ".le2")};
   if(low.size() != cells.size() || high.size() != cells.size()) throw std::runtime_error{"terrain grid extent differs from 200 by 200: " + name};
   auto const table{game.read(prefix + ".dat")};
   resources::binary_view const view{table};
@@ -137,7 +152,8 @@ environment::environment(resources::archive const &game, std::string source_name
   // Random draws belong to that traversal order, not the storage layout.
   for(unsigned int row{0}; row != map_height; ++row) {
     for(unsigned int x{0}; x != map_width; ++x) {
-      auto const source{x * map_height + row}, target{(map_height - 1 - row) * map_width + x};
+      auto const source{x * map_height + row};
+      auto const target{(map_height - 1 - row) * map_width + x};
       cells[target] = static_cast<uint16_t>(low[source] | (high[source] << 8));
       if(cells[target] >= tiles.size()) throw std::runtime_error{"terrain grid references an undefined tile in " + name};
       choices[target] = static_cast<uint16_t>(random.next() % tiles[cells[target]].variants.size());

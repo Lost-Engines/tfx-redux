@@ -2,7 +2,7 @@
 
 namespace tfx::audio {
 
-sample_bank::sample_bank(std::span<sample_definition const> const source, resources::archive const &game) : definitions{source.begin(),source.end()} {
+sample_bank::sample_bank(std::span<sample_definition const> const source, resources::archive const &game) : definitions{source.begin(), source.end()} {
   descriptors.reserve(definitions.size());
   buffers.reserve(definitions.size());
   for(auto const &definition : definitions) {

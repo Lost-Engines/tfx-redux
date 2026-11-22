@@ -5,7 +5,11 @@
 
 namespace tfx::flight {
 
-enum class aerodynamic_contact_kind { body, wheel, retracted_wheel };
+enum class aerodynamic_contact_kind {
+  body,
+  wheel,
+  retracted_wheel
+};
 
 struct aerodynamic_contact_parameters {
   double spring_stiffness{0};
@@ -23,13 +27,13 @@ struct aerodynamic_contact_parameters {
   double unloaded_clearance{0};
 };
 struct aerodynamic_contact_state {
-  vec3d offset_body{0,0,0};
-  vec3d point_ned{0,0,0};
-  vec3d velocity_body{0,0,0};
-  vec3d velocity_ned{0,0,0};
-  vec3d working_force{0,0,0};
-  vec3d force{0,0,0};
-  vec3d moment{0,0,0};
+  vec3d offset_body{0, 0, 0};
+  vec3d point_ned{0, 0, 0};
+  vec3d velocity_body{0, 0, 0};
+  vec3d velocity_ned{0, 0, 0};
+  vec3d working_force{0, 0, 0};
+  vec3d force{0, 0, 0};
+  vec3d moment{0, 0, 0};
   double stiffness{0};
   double damping{0};
   double penetration{0};

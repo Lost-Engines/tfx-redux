@@ -16,27 +16,27 @@ struct refuel_ports {
   vec3<int16_t> tanker;
 };
 struct refuel_assets {
-  std::array<refuel_ports,3> ports;
+  std::array<refuel_ports, 3> ports;
   double fuel_per_update;
   std::string afterburner_message;
   explicit refuel_assets(std::span<uint8_t const> executable);
 };
 struct refuel_aircraft {
-  vec3<int32_t> position_q8{0,0,0};
-  vec3<math::angle> angles{0,0,0};
+  vec3<int32_t> position_q8{0, 0, 0};
+  vec3<math::angle> angles{0, 0, 0};
   uint16_t flags{0};
   int16_t shape_type{-1};
 };
-using refuel_registry = std::array<std::optional<refuel_aircraft>,actors::aircraft_per_side>;
+using refuel_registry = std::array<std::optional<refuel_aircraft>, actors::aircraft_per_side>;
 struct refuel_player {
   player_aircraft aircraft{player_aircraft::eurofighter};
-  vec3<int32_t> position{0,0,0};
-  vec3<int32_t> position_q8{0,0,0};
-  vec3<math::angle> angles{0,0,0};
+  vec3<int32_t> position{0, 0, 0};
+  vec3<int32_t> position_q8{0, 0, 0};
+  vec3<math::angle> angles{0, 0, 0};
   int32_t speed{0};
 };
-inline vec3<int16_t> constexpr default_refuel_divisors{24,12,24};
-inline vec3<int16_t> constexpr released_refuel_divisors{50,30,50};
+inline vec3<int16_t> constexpr default_refuel_divisors{24, 12, 24};
+inline vec3<int16_t> constexpr released_refuel_divisors{50, 30, 50};
 
 struct refuel_state {
   bool enabled{false};
@@ -46,9 +46,15 @@ struct refuel_state {
   int16_t delay{0};
   uint8_t phase{0};                                                            // Native 0x13b04; the connection controller produces 0 or 3.
   int32_t horizontal_distance{0};
-  vec3<int32_t> angle_errors{0,0,0};
+  vec3<int32_t> angle_errors{0, 0, 0};
 };
-enum class refuel_event_kind { urgent_sample, normal_sample, player_model, tanker_model, connected_voice };
+enum class refuel_event_kind {
+  urgent_sample,
+  normal_sample,
+  player_model,
+  tanker_model,
+  connected_voice
+};
 struct refuel_event {
   refuel_event_kind kind;
   unsigned int argument{0};

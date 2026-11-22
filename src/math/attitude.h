@@ -4,11 +4,15 @@
 
 namespace tfx::math {
 
-enum class rotation_axis { pitch, heading, roll };
+enum class rotation_axis {
+  pitch,
+  heading,
+  roll
+};
 struct attitude {
-  vec3<int32_t> right{32767,0,0};
-  vec3<int32_t> down{0,32767,0};
-  vec3<int32_t> forward{0,0,32767};
+  vec3<int32_t> right{32767, 0, 0};
+  vec3<int32_t> down{0, 32767, 0};
+  vec3<int32_t> forward{0, 0, 32767};
   void rotate(rotation_axis axis, angle amount);
   void normalise();
   bool align_down(vec3f const &direction);

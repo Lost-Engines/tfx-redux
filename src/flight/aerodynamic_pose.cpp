@@ -36,9 +36,9 @@ void aerodynamic_frame::normalise() {
 math::attitude aerodynamic_frame::world_basis() const {
   // N/E/D become world Z/X/Y; local F/R/D become renderer F/R/D.
   return {
-    .right{right.y,right.z,right.x},
-    .down{down.y,down.z,down.x},
-    .forward{forward.y,forward.z,forward.x},
+    .right{right.y, right.z, right.x},
+    .down{down.y, down.z, down.x},
+    .forward{forward.y, forward.z, forward.x},
   };
 }
 aerodynamic_view update_aerodynamic_view(aerodynamic_pose &state, player_aircraft const aircraft, aerodynamic_viewpoint const &viewpoint) {
@@ -46,7 +46,7 @@ aerodynamic_view update_aerodynamic_view(aerodynamic_pose &state, player_aircraf
   aerodynamic_view result{
     .orientation{state.frame.world_basis()},
   };
-  vec3d const metres_world{state.metres_ned.y,state.metres_ned.z,state.metres_ned.x};
+  vec3d const metres_world{state.metres_ned.y, state.metres_ned.z, state.metres_ned.x};
   bool const standard_cockpit{aircraft == player_aircraft::eurofighter || aircraft == player_aircraft::nighthawk};
   for(unsigned int axis{0}; axis != 3; ++axis) {
     // Native stores this sum as double before applying the upward offset.

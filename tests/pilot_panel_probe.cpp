@@ -16,14 +16,15 @@ int main(int const argc, char const *const argv[]) try {
     std::cout.put(static_cast<char>(colour.y));
     std::cout.put(static_cast<char>(colour.z));
   }
-  std::cout.write(reinterpret_cast<char const*>(background.image.pixels.data()),background.image.pixels.size());
-  bool load{false}, confirm{false};
+  std::cout.write(reinterpret_cast<char const *>(background.image.pixels.data()), background.image.pixels.size());
+  bool load{false};
+  bool confirm{false};
   unsigned int selected{0};
   while(std::cin >> load >> selected >> confirm) {
     if(selected >= tfx::presentation::pilot_slots) throw std::runtime_error{"pilot panel selection exceeds its slot count"};
     tfx::presentation::variables state;
-    tfx::presentation::reset_pilot(schema,state);
-    tfx::presentation::pilot_panel panel{game,fonts,assets,schema,state,store};
+    tfx::presentation::reset_pilot(schema, state);
+    tfx::presentation::pilot_panel panel{game, fonts, assets, schema, state, store};
     for(unsigned int frame{0}; frame != 40; ++frame) panel.advance();
     if(load) panel.press(0x50);
     panel.press(0x1c);
@@ -34,7 +35,7 @@ int main(int const argc, char const *const argv[]) try {
     if(confirm) panel.press(0x1c);
     panel.advance();
     auto const &pixels{panel.image().pixels};
-    std::cout.write(reinterpret_cast<char const*>(pixels.data()),pixels.size());
+    std::cout.write(reinterpret_cast<char const *>(pixels.data()), pixels.size());
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

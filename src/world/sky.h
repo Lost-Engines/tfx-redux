@@ -7,7 +7,10 @@
 namespace tfx::world {
 
 int16_t constexpr sky_visibility_radius{4000};
-enum class sky_model { sun, lightning };
+enum class sky_model {
+  sun,
+  lightning
+};
 std::string_view sky_model_name(sky_model model);
 struct sky_request {
   sky_model model;
@@ -15,8 +18,9 @@ struct sky_request {
 };
 struct sky_state {
   int16_t delay{5};
-  uint16_t phase{0xac57}, scatter{0x6b5a};
-  vec2<int32_t> lightning_position{0,0};
+  uint16_t phase{0xac57};
+  uint16_t scatter{0x6b5a};
+  vec2<int32_t> lightning_position{0, 0};
   uint8_t pending_flash{0};
 };
 struct sky_context {

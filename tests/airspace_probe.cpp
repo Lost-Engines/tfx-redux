@@ -11,9 +11,14 @@ auto main(int const argc, char const *const argv[])->int try {
   std::ifstream fixture;
   if(argc == 2) fixture.open(argv[1]);
   auto &input{fixture.is_open() ? fixture : std::cin};
-  int32_t x,z;
-  unsigned int outside,requested,active,idle;
-  int violations,exit_ticks;
+  int32_t x;
+  int32_t z;
+  unsigned int outside;
+  unsigned int requested;
+  unsigned int active;
+  unsigned int idle;
+  int violations;
+  int exit_ticks;
   unsigned int cases{0};
   while(input >> x >> z >> outside >> violations >> exit_ticks >> requested >> active >> idle) {
     tfx::missions::setup setup;
@@ -26,13 +31,16 @@ auto main(int const argc, char const *const argv[])->int try {
       .active{active != 0},
     };
     auto const event{progress.observe_airspace({
-      .position{x,z},
+      .position{x, z},
       .acceleration_active{acceleration.active},
       .radio_idle{idle != 0},
     })};
-    if(event.cancel_acceleration) { acceleration.cancel();idle = 1; }
+    if(event.cancel_acceleration) {
+      acceleration.cancel();
+      idle = 1;
+    }
     if(event.notice != tfx::missions::airspace_notice::none) idle = 0;
-    std::array<int,7> const actual{progress.beyond_airspace,progress.violations,progress.exit_ticks,acceleration.requested,acceleration.active,static_cast<int>(idle),std::to_underlying(event.notice)};
+    std::array<int, 7> const actual{progress.beyond_airspace, progress.violations, progress.exit_ticks, acceleration.requested, acceleration.active, static_cast<int>(idle), std::to_underlying(event.notice)};
     if(fixture.is_open()) {
       for(auto const value : actual) {
         int expected;

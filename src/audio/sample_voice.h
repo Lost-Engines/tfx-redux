@@ -14,14 +14,15 @@ private:
   sample_scheduler scheduler;
   std::mutex mutex;
   std::vector<unsigned int> queue;
-  unsigned int item{0}, offset{0};
+  unsigned int item{0};
+  unsigned int offset{0};
   uint64_t phase{0};
   uint32_t const output_rate;
   std::unique_ptr<qsound_effect> spatial;
   uint16_t source_period{125};
-  unsigned int tail_remaining{};
+  unsigned int tail_remaining{0};
   stereo_frame held{};
-  bool latch_pending{};
+  bool latch_pending{false};
   void select_item();
 
 public:

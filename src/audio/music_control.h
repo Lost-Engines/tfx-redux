@@ -6,7 +6,7 @@
 
 namespace tfx::audio {
 
-using lapc_order_profiles = std::array<std::array<uint8_t,12>,6>;
+using lapc_order_profiles = std::array<std::array<uint8_t, 12>, 6>;
 
 struct flight_audio_state {
   float throttle{0};
@@ -16,7 +16,13 @@ struct flight_audio_state {
   bool aircraft_disabled{false};
 };
 
-enum class music_mode : uint8_t { none, soundblaster_cd, lapc, fm, sound_canvas };
+enum class music_mode : uint8_t {
+  none,
+  soundblaster_cd,
+  lapc,
+  fm,
+  sound_canvas
+};
 struct music_control_state {
   uint8_t last_cue{0};
   int16_t resume_cue{0};
@@ -35,7 +41,7 @@ struct music_control_context {
   bool aircraft_disabled{false};
   bool engines_running{false};
   float throttle{0};
-  std::array<uint8_t,12> lapc_orders{};
+  std::array<uint8_t, 12> lapc_orders{};
 };
 struct music_selection {
   bool replace_resource{false};

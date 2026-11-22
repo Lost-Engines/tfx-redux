@@ -27,19 +27,24 @@ target_binding bind_target(vec3<int32_t> const &position,
   auto const matches{[&](vec3<int32_t> const &candidate){
     return candidate.x == point.x && candidate.z == point.y;
   }};
-  for(unsigned int index{0}; index != fixed.size(); ++index)
-    if(matches(fixed[index])) return fixed_target{
-      .index{index},
-    };
+  for(unsigned int index{0}; index != fixed.size(); ++index) {
+    if(matches(fixed[index])) {
+      return fixed_target{
+        .index{index},
+      };
+    }
+  }
   std::optional<unsigned int> slot;
   auto constexpr excluded{std::to_underlying(actors::surface_flag::destroyed) | std::to_underlying(actors::surface_flag::retired)};
   for(auto const &candidate : surface) {
     if(candidate.slot >= actors::surface_capacity) throw std::out_of_range{"mission target surface slot exceeds its registry"};
     if(!(candidate.flags & excluded) && matches(candidate.position_q8) && (!slot || candidate.slot < *slot)) slot = candidate.slot;
   }
-  if(slot) return surface_target{
-    .slot{*slot},
-  };
+  if(slot) {
+    return surface_target{
+      .slot{*slot},
+    };
+  }
   return terrain_target{
     .cell{vec2<int32_t>{cell}},
   };

@@ -21,7 +21,7 @@ struct air_scan_report {
 };
 class air_contacts {
 public:
-  std::array<std::optional<unsigned int>,contact_capacity> slots{};
+  std::array<std::optional<unsigned int>, contact_capacity> slots{};
   int16_t cursor{-1};
   std::optional<unsigned int> selected{};
   bool hostile_nearby{false};                                                  // Within 50 miles.
@@ -33,13 +33,13 @@ public:
 struct air_lock {
   std::optional<unsigned int> tracking{};
   std::optional<unsigned int> guidance{};
-  vec2<int32_t> reticle{0,0};
-  vec2<int16_t> projected{0,0};
+  vec2<int32_t> reticle{0, 0};
+  vec2<int16_t> projected{0, 0};
   int16_t lock_ticks{0};
   int16_t acquisition_ticks{0};
   bool too_close{false};
   void begin_mission(vec2<int16_t> const &projection_origin);
-  void clear(vec2<int16_t> const &centre = {160,100});
+  void clear(vec2<int16_t> const &centre = {160, 100});
 };
 struct lock_context {
   vec3<int32_t> position;                                                      // Player's world-integer pose, as used by the native HUD.
@@ -47,7 +47,7 @@ struct lock_context {
   simulation::timer_ticks elapsed;
   bool guns{false};
   bool sensor_suppressed{false};
-  vec2<int16_t> centre{160,100};
+  vec2<int16_t> centre{160, 100};
   std::function<vec2<int16_t>(vec3<int32_t> const&)> project;
 };
 void advance_air_lock(air_lock &state, air_contacts &radar, std::span<air_contact const> contacts, weapons::definition const &weapon, lock_context const &context);

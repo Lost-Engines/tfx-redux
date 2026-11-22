@@ -15,7 +15,7 @@ private:
   std::optional<location> successor() const;
 
 public:
-  explicit runtime(program const &source, variables &state, location entry = {0,0});
+  explicit runtime(program const &source, variables &state, location entry = {0, 0});
   std::optional<location> position() const;
   unsigned int call_depth() const;
   statement const *current() const;

@@ -7,7 +7,11 @@
 
 namespace tfx::audio {
 
-enum class sample_priority : uint8_t { background, normal, urgent };
+enum class sample_priority : uint8_t {
+  background,
+  normal,
+  urgent
+};
 struct sample_descriptor {
   int16_t retrigger_delay{0};                                                  // Native signed word; -1 prevents subsequent requests.
   uint32_t samples{0};

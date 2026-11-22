@@ -8,11 +8,12 @@ namespace tfx::world {
 vec3<int32_t> trail_segment::midpoint() const {
   // Native 0x7b7fc averages sign-extended endpoint words with SAR rounding.
   auto const sum{vec3<int32_t>{previous} + vec3<int32_t>{current}};
-  return {sum.x >> 1,sum.y >> 1,sum.z >> 1};
+  return {sum.x >> 1, sum.y >> 1, sum.z >> 1};
 }
 std::optional<trail_segment> prepare_trail(vec3<int32_t> const &previous, vec3<int32_t> const &current, bool const enabled) {
   if(!enabled) return std::nullopt;
-  vec3<int16_t> const begin{previous}, end{current};
+  vec3<int16_t> const begin{previous};
+  vec3<int16_t> const end{current};
   int16_t const length{math::distance_word(end - begin)};
   if(!length) return std::nullopt;
   return trail_segment{
@@ -21,7 +22,7 @@ std::optional<trail_segment> prepare_trail(vec3<int32_t> const &previous, vec3<i
     .length{length},
   };
 }
-void emit_trail(trail_segment const &segment, std::function_ref<void(vec3<int32_t> const&)> output) {
+void emit_trail(trail_segment const &segment, std::function_ref<void(vec3<int32_t> const &)> output) {
   if(!segment.length) throw std::invalid_argument{"zero-length trail segment"};
   vec3<int32_t> const delta{segment.current - segment.previous};
   int constexpr step_scale{trail_spacing * actors::position_unit};
@@ -38,15 +39,16 @@ void emit_trail(trail_segment const &segment, std::function_ref<void(vec3<int32_
 }
 
 void trail_sampler::advance(vec3<int32_t> const &previous_q8, vec3<int32_t> const &current_q8,
-                            std::function_ref<void(vec3<int32_t> const&)> output) {
-  auto const start{vec3d{previous_q8}}, delta{vec3d{current_q8} - start};
+                            std::function_ref<void(vec3<int32_t> const &)> output) {
+  auto const start{vec3d{previous_q8}};
+  auto const delta{vec3d{current_q8} - start};
   double const length{std::sqrt(delta.dot(delta))};
   if(length == 0) return;
   double const spacing{trail_spacing * actors::position_unit};
   // Exclude the endpoint so splitting a segment cannot duplicate a sample.
   for(; until_next < length; until_next += spacing) {
     auto const point{start + delta * (until_next / length)};
-    output({static_cast<int32_t>(std::lround(point.x)),static_cast<int32_t>(std::lround(point.y)),static_cast<int32_t>(std::lround(point.z))});
+    output({static_cast<int32_t>(std::lround(point.x)), static_cast<int32_t>(std::lround(point.y)), static_cast<int32_t>(std::lround(point.z))});
   }
   until_next -= length;
 }
@@ -101,7 +103,7 @@ vec3d trail_position(vec3<int32_t> const &position_q8, vec3<int32_t> const &refe
     static_cast<double>(static_cast<uint32_t>(position_q8.y) & fraction_mask),
     static_cast<double>(static_cast<uint32_t>(position_q8.z) & fraction_mask),
   };
-  return vec3d{effect_position(whole,reference)} + fraction / actors::position_unit;
+  return vec3d{effect_position(whole, reference)} + fraction / actors::position_unit;
 }
 
 } // namespace tfx::world

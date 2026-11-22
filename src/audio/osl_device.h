@@ -20,7 +20,7 @@ public:
   virtual void volume(osl_channel &state, unsigned int channel, uint8_t value) = 0;
   virtual void pitch(osl_channel const &state, unsigned int channel) = 0;
   virtual void modulation(unsigned int channel, uint8_t value) = 0;
-  virtual void reverb(std::array<uint8_t,3> const &values) = 0;
+  virtual void reverb(std::array<uint8_t, 3> const &values) = 0;
   // LA and FM return unchanged; SCC implements GS/NRPN extension commands.
   virtual void extension(osl_channel const &, unsigned int) {}
 };

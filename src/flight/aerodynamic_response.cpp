@@ -20,11 +20,13 @@ void update_aerodynamic_response(aerodynamic_response_state &state, aerodynamic_
   auto const &basis{context.basis};
   auto const &p{context.parameters};
   auto const &inertia{context.inertia};
-  calculation const seconds{context.seconds}, speed{context.metres_per_second};
-  if(motion.air_velocity_body.x > sideslip_speed || motion.air_velocity_body.x < -sideslip_speed) state.sideslip_radians = static_cast<double>(std::atan2(motion.air_velocity_body.y,motion.air_velocity_body.x));
+  calculation const seconds{context.seconds};
+  calculation const speed{context.metres_per_second};
+  if(motion.air_velocity_body.x > sideslip_speed || motion.air_velocity_body.x < -sideslip_speed) state.sideslip_radians = static_cast<double>(std::atan2(motion.air_velocity_body.y, motion.air_velocity_body.x));
   bool low_speed_ground{false};
-  if(!context.landed) motion.yaw_step_radians = state.sideslip_radians;
-  else {
+  if(!context.landed) {
+    motion.yaw_step_radians = state.sideslip_radians;
+  } else {
     low_speed_ground = motion.ground_velocity_body.x < rolling_speed;
     state.sideslip_radians = 0;
     motion.yaw_step_radians = 0;

@@ -17,13 +17,16 @@ private:
   unsigned int end;
 
 public:
-  preset_literals(resources::binary_view const &source, unsigned int const begin, unsigned int const end) : source{source}, begin{begin}, end{end} {
-    source.slice(begin,end - begin);
+  preset_literals(resources::binary_view const &source, unsigned int const begin, unsigned int const end)
+    : source{source},
+      begin{begin},
+      end{end} {
+    source.slice(begin, end - begin);
   }
   double number(unsigned int const field) const {
     // Read the two literal words assigned to a compiled double. This recognises
     // only MOV [absolute address], immediate data; no original code executes.
-    std::array<std::optional<uint32_t>,2> words;
+    std::array<std::optional<uint32_t>, 2> words;
     for(unsigned int at{begin}; at + 10 <= end; ++at) {
       if(source.le16(at) != 0x05c7) continue;
       auto const address{source.le32(at + 2)};
@@ -49,24 +52,27 @@ double root_argument(resources::binary_view const &source, unsigned int const lo
 
 } // anonymous namespace
 
-std::array<airframe,3> load_airframes(std::span<uint8_t const> const executable) {
+std::array<airframe, 3> load_airframes(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
-  std::array<airframe,3> result;
-  std::array<unsigned int,3> constexpr starts{0x98234,0x97598,0x96918}, ends{0x98eba,0x98231,0x97598};
-  std::array<unsigned int,3> constexpr coordinates{0x13bd0,0x13c20,0x13c70};
+  std::array<airframe, 3> result;
+  std::array<unsigned int, 3> constexpr starts{0x98234, 0x97598, 0x96918};
+  std::array<unsigned int, 3> constexpr ends{0x98eba, 0x98231, 0x97598};
+  std::array<unsigned int, 3> constexpr coordinates{0x13bd0, 0x13c20, 0x13c70};
   for(unsigned int aircraft{0}; aircraft != result.size(); ++aircraft) {
-    preset_literals const literals{source,starts[aircraft],ends[aircraft]};
+    preset_literals const literals{source, starts[aircraft], ends[aircraft]};
     auto &profile{result[aircraft]};
     profile.stores.aircraft = static_cast<player_aircraft>(aircraft + 1);
     profile.stores.fuel_capacity = literals.number(0x14850);
-    for(unsigned int slot{0}; slot != store_slots; ++slot) for(unsigned int axis{0}; axis != coordinates.size(); ++axis) profile.mounts[slot][axis] = literals.number(coordinates[axis] + slot * 8u);
+    for(unsigned int slot{0}; slot != store_slots; ++slot) {
+      for(unsigned int axis{0}; axis != coordinates.size(); ++axis) profile.mounts[slot][axis] = literals.number(coordinates[axis] + slot * 8u);
+    }
     if(aircraft == 0) {
       // Native 0x953a4 is sqrt, followed by these ordered extended-precision multiplications.
-      profile.stores.moment_a = static_cast<double>(root_argument(source,0x985bc,0x985a3) * constant(source,0x28f8) * constant(source,0x2900) * constant(source,0x2908));
-      profile.stores.moment_b = static_cast<double>(root_argument(source,0x985f7,0x985f2) * constant(source,0x2910));
+      profile.stores.moment_a = static_cast<double>(root_argument(source, 0x985bc, 0x985a3) * constant(source, 0x28f8) * constant(source, 0x2900) * constant(source, 0x2908));
+      profile.stores.moment_b = static_cast<double>(root_argument(source, 0x985f7, 0x985f2) * constant(source, 0x2910));
     } else if(aircraft == 1) {
-      profile.stores.moment_a = static_cast<double>(root_argument(source,0x9798c,0x97973) * constant(source,0x2848));
-      profile.stores.moment_b = static_cast<double>(root_argument(source,0x979bb,0x979b6) * constant(source,0x2850));
+      profile.stores.moment_a = static_cast<double>(root_argument(source, 0x9798c, 0x97973) * constant(source, 0x2848));
+      profile.stores.moment_b = static_cast<double>(root_argument(source, 0x979bb, 0x979b6) * constant(source, 0x2850));
     } else {
       profile.stores.moment_a = literals.number(0x142c8);
       profile.stores.moment_b = literals.number(0x14258);
@@ -98,7 +104,7 @@ struct gear_drag_fields {
 };
 double gear_drag(resources::binary_view const &source, gear_drag_fields const &fields) {
   using calculation = double;
-  auto const value{[&](unsigned int const field){ return constant(source,field); }};
+  auto const value{[&](unsigned int const field){return constant(source, field);}};
   calculation const pi{value(0x579c)};
   calculation const main{pi * value(fields.main_multiplier) * value(fields.main_radius) * value(fields.scale) * value(fields.main_radius) * value(fields.scale)};
   calculation const nose{pi * value(fields.nose_multiplier) * value(fields.nose_radius) * value(fields.scale) * value(fields.nose_radius) * value(fields.scale)};
@@ -108,12 +114,13 @@ double gear_drag(resources::binary_view const &source, gear_drag_fields const &f
 
 } // anonymous namespace
 
-std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t const> const executable) {
+std::array<aerodynamic_airframe, 3> load_aerodynamic_airframes(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
   auto const stores{load_airframes(executable)};
-  std::array<aerodynamic_airframe,3> result;
-  std::array<unsigned int,3> constexpr starts{0x98234,0x97598,0x96918}, ends{0x98eba,0x98234,0x97598};
-  std::array<angular_fields,3> constexpr angular{{
+  std::array<aerodynamic_airframe, 3> result;
+  std::array<unsigned int, 3> constexpr starts{0x98234, 0x97598, 0x96918};
+  std::array<unsigned int, 3> constexpr ends{0x98eba, 0x98234, 0x97598};
+  std::array<angular_fields, 3> constexpr angular{{
     {
       .critical_degrees{0x28a0},
       .inverse_degrees{0x28a8},
@@ -137,7 +144,7 @@ std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t 
       .automatic_flap_degrees{0x2790},
     },
   }};
-  std::array<gear_drag_fields,3> constexpr gear{{
+  std::array<gear_drag_fields, 3> constexpr gear{{
     {
       .main_multiplier{0x2900},
       .main_radius{0x2940},
@@ -175,10 +182,12 @@ std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t 
   for(unsigned int aircraft{0}; aircraft != result.size(); ++aircraft) {
     auto &profile{result[aircraft]};
     profile.stores_and_mounts = stores[aircraft];
-    preset_literals const literals{source,starts[aircraft],ends[aircraft]};
+    preset_literals const literals{source, starts[aircraft], ends[aircraft]};
     auto const &angles{angular[aircraft]};
-    auto const value{[&](unsigned int const field){ return constant(source,field); }};
-    auto const angle{[&](unsigned int const degrees){ return static_cast<double>(static_cast<double>(value(0x579c)) * value(degrees) * value(angles.inverse_degrees)); }};
+    auto const value{[&](unsigned int const field){return constant(source, field);}};
+    auto const angle{[&](unsigned int const degrees){
+      return static_cast<double>(static_cast<double>(value(0x579c)) * value(degrees) * value(angles.inverse_degrees));
+    }};
     auto &p{profile.surfaces};
     p.wing_area = literals.number(0x147a0);
     p.wing_span = literals.number(0x14218);
@@ -193,7 +202,7 @@ std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t 
     p.critical_angle = angle(angles.critical_degrees);
     p.induced_drag = aircraft == 0 ? static_cast<double>(1.0 / (static_cast<double>(value(0x579c)) * value(0x28b0))) : literals.number(0x14150);
     p.air_brake_drag = literals.number(0x14430);
-    p.gear_drag = gear_drag(source,gear[aircraft]);
+    p.gear_drag = gear_drag(source, gear[aircraft]);
     p.elevator_drag = aircraft == 0 ? static_cast<double>(static_cast<double>(p.induced_drag) * value(0x28b8) * value(0x28c0)) : literals.number(0x141b0);
     if(aircraft != 2) {
       auto const radius{value(aircraft == 0 ? 0x28d8 : 0x2868)};
@@ -201,7 +210,7 @@ std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t 
       p.chute_pitch_arm = literals.number(0x140e0);
     }
     p.zero_pitch_moment = literals.number(0x141b8);
-    if(aircraft == 0) p.air_brake_moment_arm = vec2d{static_cast<double>(value(0x2938) - static_cast<double>(literals.number(0x13b68))),literals.number(0x14108)};
+    if(aircraft == 0) p.air_brake_moment_arm = vec2d{static_cast<double>(value(0x2938) - static_cast<double>(literals.number(0x13b68))), literals.number(0x14108)};
     p.maximum_aileron_angle = angle(angles.aileron_degrees);
     p.maximum_elevator_angle = angle(angles.elevator_degrees);
     profile.coefficient_base = {
@@ -239,15 +248,20 @@ std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t 
       .forward{literals.number(0x8d28)},
       .upward{literals.number(0x8d30)},
     };
-    preset_literals const common{source,0x95f3c,0x96918};
+    preset_literals const common{source, 0x95f3c, 0x96918};
     auto &ground{profile.ground};
-    std::array<unsigned int,6> constexpr contact_offsets{0x13ed0,0x145d8,0x13df8,0x13d60,0x13d78,0x13e10};
+    std::array<unsigned int, 6> constexpr contact_offsets{0x13ed0, 0x145d8, 0x13df8, 0x13d60, 0x13d78, 0x13e10};
     // F-22 overwrites its preliminary wing/body points later in the same
     // straight-line preset. EF gear-forward positions subtract its authored CG.
-    preset_literals const final_body{source,aircraft == 2 ? 0x96ee8 : starts[aircraft],ends[aircraft]};
-    for(unsigned int point{0}; point != ground.offsets.size(); ++point) for(unsigned int axis{0}; axis != 3; ++axis) {
-      if(aircraft == 0 && point < 3 && axis == 0) ground.offsets[point][axis] = static_cast<double>(static_cast<double>(value(point == 0 ? 0x2928 : 0x2930)) - literals.number(0x13b68));
-      else ground.offsets[point][axis] = (point < 3 ? literals : final_body).number(contact_offsets[point] + axis * 8u);
+    preset_literals const final_body{source, aircraft == 2 ? 0x96ee8 : starts[aircraft], ends[aircraft]};
+    for(unsigned int point{0}; point != ground.offsets.size(); ++point) {
+      for(unsigned int axis{0}; axis != 3; ++axis) {
+        if(aircraft == 0 && point < 3 && axis == 0) {
+          ground.offsets[point][axis] = static_cast<double>(static_cast<double>(value(point == 0 ? 0x2928 : 0x2930)) - literals.number(0x13b68));
+        } else {
+          ground.offsets[point][axis] = (point < 3 ? literals : final_body).number(contact_offsets[point] + axis * 8u);
+        }
+      }
     }
     for(unsigned int axis{0}; axis != 3; ++axis) ground.hook_offset[axis] = literals.number(0x13dd8 + axis * 8u);
     ground.maximum_gear_speed = literals.number(0x14550);
@@ -275,8 +289,8 @@ std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t 
     profile.stall_metres_per_second = literals.number(0x14540);
     profile.low_speed_reference = literals.number(0x14548);
     profile.cruise_mach = literals.number(0x14698);
-    preset_literals const carrier{source,0x968d4,0x96918};
-    preset_literals const atmosphere{source,0x95d44,0x95dc8};
+    preset_literals const carrier{source, 0x968d4, 0x96918};
+    preset_literals const atmosphere{source, 0x95d44, 0x95dc8};
     profile.atmosphere = {
       .sea_level_density{atmosphere.number(0x141e8)},
       .temperature_lapse_per_metre{atmosphere.number(0x14210)},
@@ -303,7 +317,9 @@ aerodynamic_coefficient_parameters aerodynamic_airframe::initial_coefficients(do
   using calculation = double;
   auto result{coefficient_base};
   auto const &p{surfaces};
-  double constexpr control_multiplier{2.8}, moment_scale{.00001}, damping_scale{-4};
+  double constexpr control_multiplier{2.8};
+  double constexpr moment_scale{.00001};
+  double constexpr damping_scale{-4};
   calculation const capacity{static_cast<calculation>(p.flap_limit_gradient) * p.maximum_flap_angle + p.maximum_lift + static_cast<calculation>(p.automatic_flap_gradient) * p.maximum_automatic_flap_angle - previous_flap_lift_offset};
   calculation const gradient{static_cast<calculation>(result.elevator_moment_gradient) * p.maximum_elevator_angle * control_multiplier / capacity};
   result.pitch_stability_correction = static_cast<double>(gradient - result.pitch_stability_base);

@@ -7,7 +7,11 @@
 
 namespace tfx::planning {
 
-enum class map_layer : uint8_t { physical, awac, political };
+enum class map_layer : uint8_t {
+  physical,
+  awac,
+  political
+};
 class map_view {
 private:
   resources::planner_artwork const &artwork;
@@ -15,9 +19,9 @@ private:
   document const &plan;
   struct layer {
     render::framebuffer image;
-    std::array<uint8_t,256 * 3> colours;
+    std::array<uint8_t, 256 * 3> colours;
   };
-  std::array<layer,3> layers;
+  std::array<layer, 3> layers;
   map_layer selected{map_layer::physical};
   render::framebuffer display;
 
@@ -29,7 +33,7 @@ public:
   unsigned int extend(render::framebuffer &target, unsigned int count, unsigned int extent) const;
   void draw();
   render::framebuffer const &image() const;
-  std::array<uint8_t,256 * 3> const &palette() const;
+  std::array<uint8_t, 256 * 3> const &palette() const;
 };
 
 } // namespace tfx::planning

@@ -15,10 +15,10 @@ score_assets::score_assets(std::span<uint8_t const> const executable) {
   resources::binary_view const view{executable};
   unsigned int constexpr data{973476};
   auto const text{[&](unsigned int const address){
-    auto const bytes{view.slice(data + address,score_name_bytes)};
-    auto const end{std::ranges::find(bytes,uint8_t{0})};
+    auto const bytes{view.slice(data + address, score_name_bytes)};
+    auto const end{std::ranges::find(bytes, uint8_t{0})};
     if(end == bytes.end()) throw std::runtime_error{"unterminated original high-score name"};
-    return std::string{bytes.begin(),end};
+    return std::string{bytes.begin(), end};
   }};
   for(unsigned int index{0}; index != defaults.size(); ++index) {
     unsigned int const record{data + 0xa518 + index * 16};
@@ -35,12 +35,12 @@ resources::bytes pack_scores(score_table const &scores) {
   resources::bytes bytes;
   bytes.reserve(score_payload_bytes);
   for(auto const &entry : scores) {
-    for(auto const *name : {&entry.firstname,&entry.surname,&entry.callsign}) {
+    for(auto const *name : {&entry.firstname, &entry.surname, &entry.callsign}) {
       if(name->size() >= score_name_bytes || name->find('\0') != std::string::npos) throw std::runtime_error{"high-score name exceeds native storage"};
-      bytes.insert(bytes.end(),name->begin(),name->end());
-      bytes.insert(bytes.end(),score_name_bytes - name->size(),0);
+      bytes.insert(bytes.end(), name->begin(), name->end());
+      bytes.insert(bytes.end(), score_name_bytes - name->size(), 0);
     }
-    dword(bytes,std::bit_cast<uint32_t>(entry.score));
+    dword(bytes, std::bit_cast<uint32_t>(entry.score));
   }
   return bytes;
 }
@@ -48,10 +48,10 @@ score_table unpack_scores(std::span<uint8_t const> const source) {
   if(source.size() != score_payload_bytes) throw std::runtime_error{"high-score payload has the wrong size"};
   resources::binary_view const view{source};
   auto const text{[&](unsigned int const at){
-    auto const bytes{view.slice(at,score_name_bytes)};
-    auto const end{std::ranges::find(bytes,uint8_t{0})};
+    auto const bytes{view.slice(at, score_name_bytes)};
+    auto const end{std::ranges::find(bytes, uint8_t{0})};
     if(end == bytes.end()) throw std::runtime_error{"unterminated high-score name"};
-    return std::string{bytes.begin(),end};
+    return std::string{bytes.begin(), end};
   }};
   score_table scores;
   for(unsigned int index{0}; index != scores.size(); ++index) {
@@ -73,12 +73,12 @@ resources::bytes encode_scores(score_table const &scores) {
     byte ^= static_cast<uint8_t>(random.next());
     checksum += static_cast<uint32_t>(byte) + random.next();
   }
-  dword(bytes,checksum);
+  dword(bytes, checksum);
   return bytes;
 }
 std::optional<score_table> decode_scores(std::span<uint8_t const> const source) {
   if(source.size() != score_payload_bytes + 4) return {};
-  resources::bytes bytes{source.begin(),source.begin() + score_payload_bytes};
+  resources::bytes bytes{source.begin(), source.begin() + score_payload_bytes};
   math::random_state random;
   uint32_t checksum{0};
   for(auto &byte : bytes) {
@@ -87,13 +87,17 @@ std::optional<score_table> decode_scores(std::span<uint8_t const> const source) 
     byte ^= mask;
   }
   if(checksum != resources::binary_view{source}.le32(score_payload_bytes)) return {};
-  try { return unpack_scores(bytes); }
-  catch(std::runtime_error const&) { return {}; }
+  try {
+    return unpack_scores(bytes);
+  }
+  catch(std::runtime_error const &) {
+    return {};
+  }
 }
 std::optional<unsigned int> insert_score(score_table &scores, score_entry entry) {
-  auto const position{std::ranges::find_if(scores,[&](score_entry const &other){ return entry.score > other.score; })};
+  auto const position{std::ranges::find_if(scores, [&](score_entry const &other){return entry.score > other.score;})};
   if(position == scores.end()) return {};
-  std::move_backward(position,scores.end() - 1,scores.end());
+  std::move_backward(position, scores.end() - 1, scores.end());
   auto const index{static_cast<unsigned int>(position - scores.begin())};
   *position = std::move(entry);
   return index;

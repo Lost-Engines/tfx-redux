@@ -21,8 +21,8 @@ std::filesystem::path default_game_directory() {
   // Match the Windows fetch helper: assets live beside the packaged executable,
   // including when a shortcut or PATH launch has a different working directory.
   unsigned int constexpr maximum_path_characters{32768};
-  std::wstring filename(maximum_path_characters,L'\0');
-  auto const size{GetModuleFileNameW(nullptr,filename.data(),maximum_path_characters)};
+  std::wstring filename(maximum_path_characters, L'\0');
+  auto const size{GetModuleFileNameW(nullptr, filename.data(), maximum_path_characters)};
   if(!size || size == maximum_path_characters) throw std::runtime_error{"cannot locate the TFX executable directory"};
   filename.resize(size);
   return std::filesystem::path{filename}.parent_path();
@@ -37,12 +37,15 @@ std::filesystem::path select_game_archive(std::optional<std::filesystem::path> c
   auto const prepared{[&](std::filesystem::path const &directory){
     bool const installed{std::filesystem::is_regular_file(directory / "DID.DAT") || std::filesystem::is_regular_file(directory / "did.dat")};
     auto const managed{directory / "cd" / "tfx.cue"};
-    if(std::filesystem::is_regular_file(managed)) install_reference_cd(managed,directory);
-    else if(!installed && media && std::filesystem::is_regular_file(*media)) install_reference_cd(*media,directory);
+    if(std::filesystem::is_regular_file(managed)) {
+      install_reference_cd(managed, directory);
+    } else if(!installed && media && std::filesystem::is_regular_file(*media)) install_reference_cd(*media, directory);
     return find_game_archive(directory);
   }};
   if(requested) return prepared(*requested);
-  for(auto const *name : {"DID.DAT","did.dat"}) if(std::filesystem::is_regular_file(name)) return find_game_archive(".");
+  for(auto const *name : {"DID.DAT", "did.dat"}) {
+    if(std::filesystem::is_regular_file(name)) return find_game_archive(".");
+  }
   return prepared(default_game_directory());
 }
 
@@ -52,7 +55,7 @@ std::vector<std::filesystem::path> rom_directories(std::filesystem::path const &
   auto const fetched{default_game_directory()};
   std::error_code error;
   if(std::filesystem::absolute(game_directory).lexically_normal() != std::filesystem::absolute(fetched).lexically_normal()
-    && !std::filesystem::equivalent(game_directory,fetched,error)) result.push_back(fetched);
+    && !std::filesystem::equivalent(game_directory, fetched, error)) result.push_back(fetched);
   return result;
 }
 

@@ -13,7 +13,7 @@ inline uint8_t constexpr display_page_count{3};
 class display_pages {
 private:
   static unsigned int constexpr first_page{1};
-  std::unique_ptr<std::array<framebuffer,display_page_count>> pages{std::make_unique<std::array<framebuffer,display_page_count>>()};
+  std::unique_ptr<std::array<framebuffer, display_page_count>> pages{std::make_unique<std::array<framebuffer, display_page_count>>()};
   unsigned int current{first_page};
   int16_t previous_offset_y{-1};
 

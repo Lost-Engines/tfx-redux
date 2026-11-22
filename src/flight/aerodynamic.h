@@ -13,7 +13,10 @@ namespace tfx::flight {
 
 using aerodynamic_model = simulation::flight_model;                            // Configured native mode, distinct from the callback selected for this update.
 
-enum class input_configuration : uint16_t { combat, cruise };
+enum class input_configuration : uint16_t {
+  combat,
+  cruise
+};
 
 struct aerodynamic_input_gains {
   double pitch{1};

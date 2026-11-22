@@ -6,7 +6,8 @@ namespace tfx::cockpit {
 
 // Relative camera input, independent of flight controls and render/update rate.
 class designator_mouse {
-  vec2d pending{0,0}, remainder{0,0};
+  vec2d pending{0, 0};
+  vec2d remainder{0, 0};
   double wheel{0};
 public:
   void reset();

@@ -16,19 +16,32 @@ int16_t word(int const value) {
 
 } // anonymous namespace
 
-progress::progress(setup const &source) : initialisation{source}, reported(source.targets.size()), remaining_timer{source.timer.value_or(-1)} {
+progress::progress(setup const &source)
+  : initialisation{source},
+    reported(source.targets.size()),
+    remaining_timer{source.timer.value_or(-1)} {
   reset();
 }
 
 void progress::reset() {
   results = {};
-  results.targets.resize(initialisation.targets.size(),target_life::alive);
-  std::ranges::fill(reported,0);
-  return_score = 0; target_cursor = 0; violations = 0; exit_ticks = 0;
+  results.targets.resize(initialisation.targets.size(), target_life::alive);
+  std::ranges::fill(reported, 0);
+  return_score = 0;
+  target_cursor = 0;
+  violations = 0;
+  exit_ticks = 0;
   remaining_timer = initialisation.timer.value_or(-1);
   beyond_airspace = false;
-  resolved = false; ended = false; force_landed_return = false; critical_loss = false; player_ejected = false; impact_started = false; death_ticks = 0;
-  outcome = session_outcome::normal; status = session_status::normal;
+  resolved = false;
+  ended = false;
+  force_landed_return = false;
+  critical_loss = false;
+  player_ejected = false;
+  impact_started = false;
+  death_ticks = 0;
+  outcome = session_outcome::normal;
+  status = session_status::normal;
 }
 
 void progress::begin_contact_explosion() {
@@ -79,12 +92,16 @@ loss_effects progress::record_air_loss(bool const enemy_pool, int16_t const type
   if(enemy_pool) {
     // 0x782f8 acknowledges a player hit before fatal-aircraft handling consumes its ejection random value.
     if(player_owned) effects.acknowledgement_sample = random.next() & 1 ? 0x46u : 0x22u;
-    if(authorised) results.personal_air_score = add(results.personal_air_score,1000);
-    else { violations = word(violations + 1);effects.orders_violated = true; }
-    results.credited_air_kills = add(results.credited_air_kills,1);
-    if(matches) results.enemy_aircraft_down = add(results.enemy_aircraft_down,1);
+    if(authorised) {
+      results.personal_air_score = add(results.personal_air_score, 1000);
+    } else {
+      violations = word(violations + 1);
+      effects.orders_violated = true;
+    }
+    results.credited_air_kills = add(results.credited_air_kills, 1);
+    if(matches) results.enemy_aircraft_down = add(results.enemy_aircraft_down, 1);
   } else {
-    if(matches) results.friendly_aircraft_down = add(results.friendly_aircraft_down,1);
+    if(matches) results.friendly_aircraft_down = add(results.friendly_aircraft_down, 1);
     effects.friendly_target = true;
   }
   return effects;
@@ -92,9 +109,9 @@ loss_effects progress::record_air_loss(bool const enemy_pool, int16_t const type
 
 loss_effects progress::record_surface_loss(bool const hostile, int16_t const type) {
   // 0x7c418 awards the mobile kill/score even for another actor's shot and for a friendly victim.
-  results.credited_ground_kills = add(results.credited_ground_kills,1);
-  results.personal_air_score = add(results.personal_air_score,1000);
-  if(hostile && (initialisation.surface_type_filter == -1 || type == initialisation.surface_type_filter)) results.enemy_mobile_down = add(results.enemy_mobile_down,1);
+  results.credited_ground_kills = add(results.credited_ground_kills, 1);
+  results.personal_air_score = add(results.personal_air_score, 1000);
+  if(hostile && (initialisation.surface_type_filter == -1 || type == initialisation.surface_type_filter)) results.enemy_mobile_down = add(results.enemy_mobile_down, 1);
   return {.friendly_target{!hostile}};
 }
 
@@ -103,13 +120,14 @@ terrain_loss_effects progress::record_terrain_loss(terrain_loss_context const &c
   if(!context.player_owned) return effects;
   effects.explosion = true;
   // Native 0xa36e4 matches unwrapped cells, independently of radar/fire permission.
-  effects.unauthorised = !std::ranges::any_of(initialisation.targets,[&](target const &value){
+  effects.unauthorised = !std::ranges::any_of(initialisation.targets, [&](target const &value){
     return (value.position.x >> world::cell_shift) == context.cell.x && (value.position.z >> world::cell_shift) == context.cell.y;
   });
   // Native 0xa39c0 still requests the unauthorized-hit cue/sample for Arcade and decoys.
   if(!effects.unauthorised || context.arcade || context.weapon == std::to_underlying(weapons::weapon_id::chaff) || context.weapon == std::to_underlying(weapons::weapon_id::flare)) return effects;
-  if(context.training) effects.notice = terrain_loss_notice::training_warning;
-  else {
+  if(context.training) {
+    effects.notice = terrain_loss_notice::training_warning;
+  } else {
     violations = word(violations + 1);
     effects.notice = terrain_loss_notice::violation;
   }
@@ -124,10 +142,12 @@ void progress::set_termination(bool const arcade) {
 
 airspace_event progress::observe_airspace(airspace_context const &context) {
   // Native 0x71d74 divides toward zero, then compares the signed WORD cells.
-  auto const cells{vec2<int16_t>{word(context.position.x / world::cell_units),word(context.position.y / world::cell_units)}};
-  auto const [minimum,maximum]{std::minmax(cells.x,cells.y)};
-  int16_t constexpr safe_first_cell{1}, safe_last_cell{world::map_width - 2};
-  int16_t constexpr outer_first_cell{-2}, outer_last_cell{world::map_width + 1};
+  auto const cells{vec2<int16_t>{word(context.position.x / world::cell_units), word(context.position.y / world::cell_units)}};
+  auto const [minimum, maximum]{std::minmax(cells.x, cells.y)};
+  int16_t constexpr safe_first_cell{1};
+  int16_t constexpr safe_last_cell{world::map_width - 2};
+  int16_t constexpr outer_first_cell{-2};
+  int16_t constexpr outer_last_cell{world::map_width + 1};
   int16_t constexpr departure_return_ticks{810};
   if(minimum >= safe_first_cell && maximum <= safe_last_cell) {
     beyond_airspace = false;
@@ -149,18 +169,20 @@ airspace_event progress::observe_airspace(airspace_context const &context) {
 
 std::vector<progress_event> progress::begin_frame(progress_context const &context) {
   if(context.targets.size() != reported.size()) throw std::runtime_error{"mission target observations differ from the authored targets"};
-  results.targets.assign(context.targets.begin(),context.targets.end());
+  results.targets.assign(context.targets.begin(), context.targets.end());
   std::vector<progress_event> notices;
   // Native 0x7188c records each authored target once, in script order, independently of the killer.
   for(unsigned int index{0}; index != reported.size(); ++index) {
     if(results.targets[index] != target_life::dead || reported[index]) continue;
     reported[index] = 1;
-    results.targets_destroyed = add(results.targets_destroyed,1);
+    results.targets_destroyed = add(results.targets_destroyed, 1);
     results.credited_targets = word(results.credited_targets + 1);
-    if(initialisation.targets[index].text) notices.emplace_back(progress_notice{
-      .kind{notice_kind::target_destroyed},
-      .target{index}
-    });
+    if(initialisation.targets[index].text) {
+      notices.emplace_back(progress_notice{
+        .kind{notice_kind::target_destroyed},
+        .target{index}
+      });
+    }
     if(initialisation.targets[index].time_limit != -1) remaining_timer = initialisation.targets[index].time_limit;
     target_cursor = word(target_cursor + 1);
     if(target_cursor >= static_cast<int>(reported.size())) target_cursor = 0;
@@ -176,32 +198,49 @@ std::vector<progress_event> progress::begin_frame(progress_context const &contex
     auto const &rule{*initialisation.completion};
     bool completed{false};
     switch(rule.kind) {
-    case completion_kind::enemy: completed = results.enemy_aircraft_down >= rule.value; break;
-    case completion_kind::allied: completed = results.friendly_aircraft_down >= rule.value; break;
-    case completion_kind::all_targets: completed = !results.targets.empty() && std::ranges::all_of(results.targets,[](auto const life){ return life == target_life::dead; }); break;
-    case completion_kind::timer: case completion_kind::protect: completed = context.mission_time > static_cast<mission_tick>(rule.value); break;
-    case completion_kind::enemy_mobile: completed = results.enemy_mobile_down >= rule.value; break;
+    case completion_kind::enemy:
+      completed = results.enemy_aircraft_down >= rule.value;
+      break;
+    case completion_kind::allied:
+      completed = results.friendly_aircraft_down >= rule.value;
+      break;
+    case completion_kind::all_targets:
+      completed = !results.targets.empty() && std::ranges::all_of(results.targets, [](auto const life){
+        return life == target_life::dead;
+      });
+      break;
+    case completion_kind::timer:
+    case completion_kind::protect:
+      completed = context.mission_time > static_cast<mission_tick>(rule.value);
+      break;
+    case completion_kind::enemy_mobile:
+      completed = results.enemy_mobile_down >= rule.value;
+      break;
     }
     if(completed) {
       resolved = true;
       results.completed = 1;
       notices.emplace_back(mission_completed_event{});
-      if(rule.text && rule.kind != completion_kind::protect) notices.emplace_back(progress_notice{
-        .kind{notice_kind::completion}
-      });
+      if(rule.text && rule.kind != completion_kind::protect) {
+        notices.emplace_back(progress_notice{
+          .kind{notice_kind::completion}
+        });
+      }
       // Airborne starts return after ten native seconds; landed starts must return and stop.
       if(!initialisation.start.landed) exit_ticks = 540;
     } else if(rule.kind == completion_kind::protect && results.friendly_aircraft_down) {
       resolved = true;
       exit_ticks = 1620;
-      if(rule.text) notices.emplace_back(progress_notice{
-        .kind{notice_kind::protection_failed}
-      });
+      if(rule.text) {
+        notices.emplace_back(progress_notice{
+          .kind{notice_kind::protection_failed}
+        });
+      }
     }
   }
   // 0x71a9c: landing after completion or an orders violation awards the authored return-to-base score.
   if(context.landed && !context.speed && (results.completed || violations)) {
-    return_score = add(return_score,10000);
+    return_score = add(return_score, 10000);
     set_termination(context.arcade);
   }
   return notices;
@@ -215,7 +254,13 @@ void progress::advance_return_countdown(simulation::timer_ticks const elapsed, b
     if(exit_ticks <= 0) {
       exit_ticks = 0;
       force_landed_return = true;                                              // Native 71BBB/71BCA; this does not perform physical ground placement.
-      if(critical_loss) { outcome = session_outcome::critical_loss; status = session_status::critical_loss; ended = true; } else set_termination(arcade);
+      if(critical_loss) {
+        outcome = session_outcome::critical_loss;
+        status = session_status::critical_loss;
+        ended = true;
+      } else {
+        set_termination(arcade);
+      }
     }
   }
 }
@@ -223,8 +268,8 @@ void progress::advance_return_countdown(simulation::timer_ticks const elapsed, b
 bool progress::finish_frame(simulation::timer_ticks const elapsed) {
   // 0x70d74 runs only while the signed timer differs from -1, including after it becomes negative.
   if(remaining_timer == -1) return false;
-  bool const expired{remaining_timer > 0 && add(remaining_timer,-static_cast<int32_t>(elapsed)) <= 0};
-  remaining_timer = add(remaining_timer,-static_cast<int32_t>(elapsed));
+  bool const expired{remaining_timer > 0 && add(remaining_timer, -static_cast<int32_t>(elapsed)) <= 0};
+  remaining_timer = add(remaining_timer, -static_cast<int32_t>(elapsed));
   return expired;
 }
 

@@ -29,7 +29,7 @@ calculation wide(double const value) {
   return value;
 }
 calculation native_asin(calculation const x) {
-  return std::atan2(x,std::sqrt(1.0 - x * x));
+  return std::atan2(x, std::sqrt(1.0 - x * x));
 }
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
@@ -53,7 +53,7 @@ void control_speed(aerodynamic_guidance_events &events, aerodynamic_manual_state
     .afterburner_stages{context.engine.afterburner_stages},
     .strategy{recover ? aerodynamic_speed_strategy::recover : aerodynamic_speed_strategy::maintain},
   };
-  auto const change{update_aerodynamic_speed(speed,powerplant,input)};
+  auto const change{update_aerodynamic_speed(speed, powerplant, input)};
   manual.controls.autopilot.metres_per_second = speed.target_metres_per_second;
   manual.air_brake_fraction = speed.air_brake_fraction;
   manual.air_brake_condition = speed.air_brake_condition;
@@ -90,8 +90,9 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
   state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (dynamic * law.surfaces.positive_lift_limit)) * bank_margin);
   if(manual.positive_g_lift_limit < law.surfaces.positive_lift_limit) state.maximum_bank = static_cast<double>(native_acos(wide(weight) / (wide(stored_dynamic) * manual.positive_g_lift_limit)) * bank_margin);
   // Original threshold and assigned clamp differ (80 versus 83 degrees).
-  if(state.maximum_bank > positive_bank_threshold) state.maximum_bank = positive_clamped_bank;
-  else if(state.maximum_bank < negative_bank_threshold) state.maximum_bank = negative_clamped_bank;
+  if(state.maximum_bank > positive_bank_threshold) {
+    state.maximum_bank = positive_clamped_bank;
+  } else if(state.maximum_bank < negative_bank_threshold) state.maximum_bank = negative_clamped_bank;
   if(law.aircraft == player_aircraft::nighthawk) state.maximum_bank = static_cast<double>(wide(state.maximum_bank) * nighthawk_bank_scale);
   state.desired_bank = static_cast<double>(std::sin(state.heading_error) * heading_bank_scale * state.maximum_bank);
   if(targets.mode == followed_mode && context.followed_aircraft) state.desired_bank = static_cast<double>(wide(state.desired_bank) * followed_bank_scale);
@@ -105,7 +106,9 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
     double const divisor{static_cast<double>(std::cos(pitch))};
     double const ratio{static_cast<double>(wide(basis.right.z) / divisor)};
     state.roll_angle = static_cast<double>(-native_asin(ratio >= -1 && ratio <= 1 ? wide(ratio) : wide(basis.right.z)));
-  } else state.roll_angle = 0;
+  } else {
+    state.roll_angle = 0;
+  }
   if(basis.down.z >= 0 && data.metres_per_second > minimum_response_speed) {
     manual.pitch_rate_bias = basis.down.z > pitch_bias_bank_threshold ? static_cast<double>(std::sin(state.roll_angle) * gravity * std::tan(state.roll_angle) / data.metres_per_second) : 0;
     if(manual.pitch_rate_bias < 0) manual.pitch_rate_bias = -manual.pitch_rate_bias;
@@ -133,30 +136,30 @@ aerodynamic_guidance_events update_aerodynamic_guidance(aerodynamic_guidance &st
   if((!law.military || (roll_damping >= -1 && data.metres_per_second > minimum_response_speed)) && wide(state.commanded_roll_rate) * seconds * state.commanded_roll_rate * seconds > wide(state.roll_error) * state.roll_error) {
     state.commanded_roll_rate = 0;
     motion.angular_rate.x = 0;
-    rotate_aerodynamic_units(motion,aerodynamic_rotation::roll,static_cast<double>(wide(state.roll_error) * angle_units_per_half_turn / native_pi));
+    rotate_aerodynamic_units(motion, aerodynamic_rotation::roll, static_cast<double>(wide(state.roll_error) * angle_units_per_half_turn / native_pi));
   }
   calculation const pitch_damping{wide(data.atmosphere.density) * .5 * data.metres_per_second * p.wing_area * p.mean_chord * p.mean_chord * seconds / context.pitch_moment * c.pitch_damping * .5};
   double const pitch_error{static_cast<double>(wide(state.desired_flight_path) - state.actual_flight_path)};
   if((!law.military || (pitch_damping >= -.5 && data.metres_per_second > minimum_response_speed)) && wide(manual.pitch_rate_bias) * seconds * manual.pitch_rate_bias * seconds > wide(pitch_error) * pitch_error) {
     manual.pitch_rate_bias = 0;
     motion.angular_rate.y = 0;
-    rotate_aerodynamic_units(motion,aerodynamic_rotation::pitch,static_cast<double>(wide(pitch_error) * pitch_snap_fraction * angle_units_per_half_turn / native_pi));
+    rotate_aerodynamic_units(motion, aerodynamic_rotation::pitch, static_cast<double>(wide(pitch_error) * pitch_snap_fraction * angle_units_per_half_turn / native_pi));
   }
   if(targets.mode == recovery_mode) {
     if(data.metres_per_second < recovery_speed_threshold) {
       double const target{targets.metres_per_second};
       targets.metres_per_second = recovery_target_speed;
-      control_speed(events,manual,powerplant,context,true);
+      control_speed(events, manual, powerplant, context, true);
       targets.metres_per_second = target;
     }
     if(state.roll_angle < settled_bank && state.roll_angle > -settled_bank && state.saved_roll_rate < settled_roll_rate && state.saved_roll_rate > -settled_roll_rate && state.actual_flight_path < settled_flight_path && state.actual_flight_path > -settled_flight_path && motion.angular_rate.y < settled_pitch_rate && motion.angular_rate.y > -settled_pitch_rate) {
-      auto const result{toggle_aerodynamic_recovery(recovery,manual.controls,powerplant,manual.air_brake_condition,context.recovery)};
+      auto const result{toggle_aerodynamic_recovery(recovery, manual.controls, powerplant, manual.air_brake_condition, context.recovery)};
       events.recovery = result.change;
-      events.afterburner.insert(events.afterburner.end(),result.afterburner.begin(),result.afterburner.end());
+      events.afterburner.insert(events.afterburner.end(), result.afterburner.begin(), result.afterburner.end());
     }
   } else {
-    if(data.metres_per_second < targets.metres_per_second) control_speed(events,manual,powerplant,context,true);
-    if(data.metres_per_second > targets.metres_per_second) control_speed(events,manual,powerplant,context,false);
+    if(data.metres_per_second < targets.metres_per_second) control_speed(events, manual, powerplant, context, true);
+    if(data.metres_per_second > targets.metres_per_second) control_speed(events, manual, powerplant, context, false);
   }
   return events;
 }
@@ -189,8 +192,11 @@ void apply_aerodynamic_guidance(aerodynamic_guidance const &state, aerodynamic_m
     controls.keyboard_elevator = controls.elevator;
     controls.keyboard_aileron = controls.aileron;
     controls.keyboard_rudder = controls.rudder;
-    if(law.aircraft == player_aircraft::raptor) manual.elevator_trim = static_cast<double>(-(wide(data.angle_of_attack) * c.pitch_stability + p.zero_pitch_moment) * inverse_denominator);
-    else manual.elevator_trim = static_cast<double>((wide(data.angle_of_attack) * c.pitch_stability + p.zero_pitch_moment) * (-1.0 / stored_elevator_control));
+    if(law.aircraft == player_aircraft::raptor) {
+      manual.elevator_trim = static_cast<double>(-(wide(data.angle_of_attack) * c.pitch_stability + p.zero_pitch_moment) * inverse_denominator);
+    } else {
+      manual.elevator_trim = static_cast<double>((wide(data.angle_of_attack) * c.pitch_stability + p.zero_pitch_moment) * (-1.0 / stored_elevator_control));
+    }
   }
   manual.pitch_rate_bias = 0;
 }

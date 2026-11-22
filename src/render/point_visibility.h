@@ -9,16 +9,26 @@ namespace tfx::render {
 // Sparse depth queries for small point sprites. Polygon colours still use the
 // authored painter's order; only points need to see across terrain tile sorts.
 class point_visibility {
-  struct vertex { vec2d position, uv; double inverse_depth; };
+  struct vertex {
+    vec2d position;
+    vec2d uv;
+    double inverse_depth;
+  };
   struct surface_record {
-    size_t begin, count;
+    size_t begin;
+    size_t count;
     vec3d depth_plane;
-    int mode, bottom;
+    int mode;
+    int bottom;
     std::span<uint8_t const> texture;
     colour_map const *remap;
   };
-  struct link { size_t surface; int next; };
-  vec2<int> size{0,0}, grid{0,0};
+  struct link {
+    size_t surface;
+    int next;
+  };
+  vec2<int> size{0, 0};
+  vec2<int> grid{0, 0};
   std::vector<vertex> vertices;
   std::vector<surface_record> surfaces;
   std::vector<int> heads;

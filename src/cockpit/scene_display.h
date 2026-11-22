@@ -7,12 +7,12 @@ namespace tfx::cockpit {
 
 struct scene_camera_state {
   flight::player_aircraft aircraft{flight::player_aircraft::eurofighter};
-  vec3<int32_t> position{0,0,0};
-  vec3<math::angle> angles{0,0,0};
-  vec2<math::angle> free_angles{0,0};
+  vec3<int32_t> position{0, 0, 0};
+  vec3<math::angle> angles{0, 0, 0};
+  vec2<math::angle> free_angles{0, 0};
   std::optional<vec3<int32_t>> tracked_position_q8;
   math::angle tracking_roll{0};                                                // The native bearing helper leaves this caller-local word unwritten.
-  vec3<int32_t> ground_target{0,0,0};
+  vec3<int32_t> ground_target{0, 0, 0};
   std::optional<vec2<int32_t>> height_bounds{};                                // Mission-initialized limits; absent for prelaunch inspection.
 };
 struct scene_camera_request {
@@ -28,7 +28,7 @@ struct scene_camera_animation {
   vec3<math::angle> orbit_angles;
   int16_t orbit_step;
 };
-using scene_painter = std::function<vec2<int16_t>(scene_camera_request const&)>;
+using scene_painter = std::function<vec2<int16_t>(scene_camera_request const &)>;
 
 class scene_displays {
 private:

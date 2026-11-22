@@ -10,7 +10,20 @@ int main(int const argc, char const *const argv[]) try {
   auto const executable{tfx::resources::read_file(argv[argc - 1])};
   tfx::presentation::configuration_menu_assets const assets{executable};
   tfx::presentation::widget_font const font{executable};
-  unsigned int model,source,detail,scale,green,g,precipitation,crashing,gear,wind,temperature,recovery,page,action;
+  unsigned int model;
+  unsigned int source;
+  unsigned int detail;
+  unsigned int scale;
+  unsigned int green;
+  unsigned int g;
+  unsigned int precipitation;
+  unsigned int crashing;
+  unsigned int gear;
+  unsigned int wind;
+  unsigned int temperature;
+  unsigned int recovery;
+  unsigned int page;
+  unsigned int action;
   while(std::cin >> model >> source >> detail >> scale >> green >> g >> precipitation >> crashing >> gear >> wind >> temperature >> recovery) {
     tfx::presentation::configuration_audio audio;
     if(audio_case) std::cin >> audio.sound_available >> audio.music_available >> audio.sound_enabled >> audio.music_enabled;
@@ -31,17 +44,21 @@ int main(int const argc, char const *const argv[]) try {
       .recovery{static_cast<uint8_t>(recovery)},
     };
     auto recording_name{assets.recording_name};
-    tfx::presentation::configuration_menu menu{state,assets,font,recording_name,audio_case ? &audio : nullptr};
-    if(page == 1) menu.select(static_cast<unsigned int>(menu.widgets().size() - 1));
-    else if(page == 2) menu.select(static_cast<unsigned int>(menu.widgets().size() - 3));
+    tfx::presentation::configuration_menu menu{state, assets, font, recording_name, audio_case ? &audio : nullptr};
+    if(page == 1) {
+      menu.select(static_cast<unsigned int>(menu.widgets().size() - 1));
+    } else if(page == 2) menu.select(static_cast<unsigned int>(menu.widgets().size() - 3));
     auto const result{menu.select(action)};
     std::cout << std::to_underlying(state.model) + 0u << ' ' << std::to_underlying(state.control) + 0u << ' ' << static_cast<unsigned int>(state.detail) << ' ' << std::bit_cast<uint32_t>(state.joystick_scale) << ' ';
-    for(unsigned int const value : {std::to_underlying(state.effects.g_force),state.effects.precipitation,state.effects.crashing,state.effects.gear_damage,state.effects.wind,state.effects.temperature,state.effects.recovery}) std::cout << value << ' ';
+    for(unsigned int const value : {std::to_underlying(state.effects.g_force), state.effects.precipitation, state.effects.crashing, state.effects.gear_damage, state.effects.wind, state.effects.temperature, state.effects.recovery}) std::cout << value << ' ';
     std::cout << static_cast<unsigned int>(menu.page()) << ' ' << static_cast<unsigned int>(result);
     if(audio_case) std::cout << ' ' << (audio.sound_available && audio.sound_enabled) << ' ' << (audio.music_available && audio.music_enabled);
     std::cout << '\n';
     tfx::render::framebuffer image;
     menu.draw(image);
-    std::cout.write(reinterpret_cast<char const*>(image.pixels.data()),image.pixels.size());
+    std::cout.write(reinterpret_cast<char const *>(image.pixels.data()), image.pixels.size());
   }
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }
+} catch(std::exception const &error) {
+  std::cerr << error.what() << '\n';
+  return EXIT_FAILURE;
+}

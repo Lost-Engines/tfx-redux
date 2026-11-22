@@ -11,9 +11,9 @@ class widget_font {
 private:
   struct glyph {
     uint8_t advance;
-    std::array<uint8_t,8> rows;
+    std::array<uint8_t, 8> rows;
   };
-  std::array<glyph,256> characters;
+  std::array<glyph, 256> characters;
 
 public:
   explicit widget_font(std::span<uint8_t const> executable);

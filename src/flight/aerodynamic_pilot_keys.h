@@ -4,9 +4,30 @@
 
 namespace tfx::flight {
 
-enum class aerodynamic_pilot_key { cruise_speed, stick_pressure, waypoint, heading, track, autothrottle, toggle_autopilot };
-enum class aerodynamic_pilot_notice { waypoint, heading, track, autothrottle, tracking, engaged, pressure_on, pressure_off };
-enum class autopilot_external_status { unchanged, on, off };
+enum class aerodynamic_pilot_key {
+  cruise_speed,
+  stick_pressure,
+  waypoint,
+  heading,
+  track,
+  autothrottle,
+  toggle_autopilot
+};
+enum class aerodynamic_pilot_notice {
+  waypoint,
+  heading,
+  track,
+  autothrottle,
+  tracking,
+  engaged,
+  pressure_on,
+  pressure_off
+};
+enum class autopilot_external_status {
+  unchanged,
+  on,
+  off
+};
 struct aerodynamic_pilot_key_context {
   int16_t ground_elevation_steps{0};
   bool terrain_present{false};

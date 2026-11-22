@@ -15,28 +15,46 @@ int main(int const argc, char const *const argv[]) try {
   while(input >> operation) {
     int value;
     if(operation == 'P' || operation == 'W') {
-      unsigned int valid,pixel,water;
-      int x,y;
+      unsigned int valid;
+      unsigned int pixel;
+      unsigned int water;
+      int x;
+      int y;
       input >> valid >> x >> y >> pixel >> water;
       unsigned int cannon{0};
       if(operation == 'W') input >> cannon;
       tfx::render::framebuffer frame;
       if(x >= 0 && x < tfx::render::screen_width && y >= 0 && y < tfx::render::screen_height) frame.pixels[static_cast<unsigned int>(y * tfx::render::screen_width + x)] = static_cast<uint8_t>(pixel);
       std::optional<vec2<int16_t>> point;
-      if(valid) point.emplace(static_cast<int16_t>(x),static_cast<int16_t>(y));
-      auto const surface{tfx::world::classify_impact(frame,point,water != 0)};
+      if(valid) point.emplace(static_cast<int16_t>(x), static_cast<int16_t>(y));
+      auto const surface{tfx::world::classify_impact(frame, point, water != 0)};
       if(operation == 'W') {
-        auto const effect{tfx::world::select_impact_effect(surface,cannon != 0)};
+        auto const effect{tfx::world::select_impact_effect(surface, cannon != 0)};
         value = effect ? static_cast<int>(std::to_underlying(*effect)) : -1;
-      } else value = std::to_underlying(surface);
+      } else {
+        value = std::to_underlying(surface);
+      }
     } else if(operation == 'C') {
-      int collision,type,surface;
-      unsigned int present,water;
+      int collision;
+      int type;
+      int surface;
+      unsigned int present;
+      unsigned int water;
       input >> collision >> present >> type >> surface >> water;
-      value = std::to_underlying(tfx::world::select_crash_appearance(static_cast<int16_t>(collision),present ? std::optional{static_cast<int16_t>(type)} : std::nullopt,static_cast<tfx::world::impact_surface>(surface),water != 0));
-    } else throw std::runtime_error{"unknown impact operation"};
-    if(argc == 2) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"impact mismatch at case " + std::to_string(cases)}; } else std::cout << value << '\n';
+      value = std::to_underlying(tfx::world::select_crash_appearance(static_cast<int16_t>(collision), present ? std::optional{static_cast<int16_t>(type)} : std::nullopt, static_cast<tfx::world::impact_surface>(surface), water != 0));
+    } else {
+      throw std::runtime_error{"unknown impact operation"};
+    }
+    if(argc == 2) {
+      int expected;
+      if(!(input >> expected) || value != expected) throw std::runtime_error{"impact mismatch at case " + std::to_string(cases)};
+    } else {
+      std::cout << value << '\n';
+    }
     ++cases;
   }
   return cases ? EXIT_SUCCESS : EXIT_FAILURE;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }
+} catch(std::exception const &error) {
+  std::cerr << error.what() << '\n';
+  return EXIT_FAILURE;
+}

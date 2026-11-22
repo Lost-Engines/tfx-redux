@@ -7,10 +7,10 @@
 namespace tfx::render {
 
 unsigned int constexpr colour_map_size{256}, colour_map_count{16};
-using colour_map = std::array<uint8_t,colour_map_size>;
+using colour_map = std::array<uint8_t, colour_map_size>;
 class colour_maps {
 private:
-  std::array<colour_map,colour_map_count> rows;
+  std::array<colour_map, colour_map_count> rows;
 public:
   // Native D7954 starts with identities before loading root coltab.dat.
   explicit colour_maps(std::span<uint8_t const> bytes = {});

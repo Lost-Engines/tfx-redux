@@ -13,9 +13,11 @@ int32_t magnitude(int32_t const value) {
 }
 
 model_metrics measure_model(vec3<int32_t> const &camera_origin, int16_t const sort_bias) {
-  int32_t largest{magnitude(camera_origin.x)}, other{magnitude(camera_origin.y)}, third{magnitude(camera_origin.z)};
-  if(third >= largest) std::swap(third,largest);
-  if(other >= largest) std::swap(other,largest);
+  int32_t largest{magnitude(camera_origin.x)};
+  int32_t other{magnitude(camera_origin.y)};
+  int32_t third{magnitude(camera_origin.z)};
+  if(third >= largest) std::swap(third, largest);
+  if(other >= largest) std::swap(other, largest);
   // The original estimates max(|axis|) + (the other two axes)/4 before
   // taking its signed high word. Dword ADD and NEG deliberately wrap.
   int32_t const remainder{wrap(static_cast<uint32_t>(other) + static_cast<uint32_t>(third)) >> 2};

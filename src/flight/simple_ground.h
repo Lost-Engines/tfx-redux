@@ -7,10 +7,10 @@ namespace tfx::flight {
 struct simple_ground_state {
   math::attitude body{};
   math::attitude visible{};
-  vec3f rotation_remainder{0,0,0};
+  vec3f rotation_remainder{0, 0, 0};
   float position_y{0};
   int16_t stall_pitch{0};
-  vec2<int16_t> landing_angles{0,0};
+  vec2<int16_t> landing_angles{0, 0};
   bool landed{false};
   bool previous_landed{false};
   bool low_speed_ground_contact{false};

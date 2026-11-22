@@ -13,12 +13,23 @@ void midi_stream::reset() {
 void midi_stream::byte(uint8_t const value) {
   // MIDI real-time bytes can interrupt either kind of message without losing
   // its running status or partially collected payload.
-  if(value >= 0xf8) { receiver.short_message(value);return; }
+  if(value >= 0xf8) {
+    receiver.short_message(value);
+    return;
+  }
   if(!system.empty()) {
-    if(value == 0xf7) { system.push_back(value);receiver.sysex(system);reset();return; }
+    if(value == 0xf7) {
+      system.push_back(value);
+      receiver.sysex(system);
+      reset();
+      return;
+    }
     if(!(value & 128)) {
       unsigned int constexpr maximum_sysex_bytes{65536};
-      if(system.size() == maximum_sysex_bytes) { reset();throw std::runtime_error{"MIDI SysEx exceeds the stream limit"}; }
+      if(system.size() == maximum_sysex_bytes) {
+        reset();
+        throw std::runtime_error{"MIDI SysEx exceeds the stream limit"};
+      }
       system.push_back(value);
       return;
     }
@@ -27,7 +38,13 @@ void midi_stream::byte(uint8_t const value) {
   if(value & 128) {
     count = 0;
     status = value;
-    if(value == 0xf0) { system.push_back(value);status = 0; } else if(value == 0xf6 || value == 0xf7) { receiver.short_message(value);status = 0; } else if(value == 0xf4 || value == 0xf5) status = 0;
+    if(value == 0xf0) {
+      system.push_back(value);
+      status = 0;
+    } else if(value == 0xf6 || value == 0xf7) {
+      receiver.short_message(value);
+      status = 0;
+    } else if(value == 0xf4 || value == 0xf5) status = 0;
     return;
   }
   if(!status) return;

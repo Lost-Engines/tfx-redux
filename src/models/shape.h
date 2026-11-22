@@ -20,7 +20,12 @@ struct shape_instruction {
   uint16_t opcode;
   std::vector<uint16_t> operands;
 };
-enum class detail_kind : uint16_t { polygon, reserved, pixel_block, pixel };
+enum class detail_kind : uint16_t {
+  polygon,
+  reserved,
+  pixel_block,
+  pixel
+};
 struct shape_detail {
   unsigned int distance;
   detail_kind kind;
@@ -39,11 +44,27 @@ struct shape {
   shape_detail const *detail_for_distance(int16_t distance) const;
 };
 
-enum class point_role { light, object, particle };
+enum class point_role {
+  light,
+  object,
+  particle
+};
 
-enum class primitive_kind : uint32_t { polygon, line, point };
-enum class texture_source { global, model };
-enum class palette_source { distance, fixed, face_depth, direct };
+enum class primitive_kind : uint32_t {
+  polygon,
+  line,
+  point
+};
+enum class texture_source {
+  global,
+  model
+};
+enum class palette_source {
+  distance,
+  fixed,
+  face_depth,
+  direct
+};
 struct texture_binding {
   texture_source source;
   unsigned int slot;
@@ -72,7 +93,10 @@ struct primitive {
   std::optional<unsigned int> attachment_slot;
   models::point_role point_role{models::point_role::light};
 };
-enum class facing_test { branch, polygon };
+enum class facing_test {
+  branch,
+  polygon
+};
 
 // Native interpretation emits camera vertices directly. Inspection instead
 // retains continuous local geometry for its separate interactive transform.
@@ -92,9 +116,9 @@ struct shape_context {
   double reference_scale{1};
   bool facing{true};
   std::optional<shape_camera> camera{};
-  std::function<vec2d(vec3d const&, double)> project{};
-  std::function<double(vec3d const&)> camera_depth{};
-  std::function<std::optional<bool>(std::span<model_vertex const>,facing_test)> face_visibility{};
+  std::function<vec2d(vec3d const &, double)> project{};
+  std::function<double(vec3d const &)> camera_depth{};
+  std::function<std::optional<bool>(std::span<model_vertex const>, facing_test)> face_visibility{};
   math::jitter_state *jitter{nullptr};
   std::span<shape const *const> attachments{};
 };

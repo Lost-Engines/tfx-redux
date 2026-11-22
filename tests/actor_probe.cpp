@@ -16,7 +16,7 @@ auto main(int const argc, char const *const argv[])->int try {
     vec3<tfx::math::angle> angles;
     int32_t distance{0};
     while(std::cin >> position.x >> position.y >> position.z >> angles.x >> angles.y >> angles.z >> distance) {
-      tfx::actors::move(position,angles,distance);
+      tfx::actors::move(position, angles, distance);
       std::cout << position.x << ' ' << position.y << ' ' << position.z << '\n';
     }
     return EXIT_SUCCESS;
@@ -30,23 +30,25 @@ auto main(int const argc, char const *const argv[])->int try {
   std::string name;
   while(std::cin >> name) {
     uint32_t identifier{0};
-    auto const [end,error]{std::from_chars(name.data(),name.data() + name.size(),identifier,16)};
+    auto const [end, error]{std::from_chars(name.data(), name.data() + name.size(), identifier, 16)};
     auto const bytes{error == std::errc{} && end == name.data() + name.size() ? game.read(identifier) : game.read(name)};
     tfx::actors::program const program{bytes};
-    auto const actors{tfx::actors::initialise(program,profiles,tables.formations)};
+    auto const actors{tfx::actors::initialise(program, profiles, tables.formations)};
     if(surface) {
       unsigned int ticks{0};
       std::cin >> ticks;
       unsigned int count{0};
-      for(auto const &actor : actors) if(actor.kind == tfx::actors::record_kind::surface) ++count;
+      for(auto const &actor : actors) {
+        if(actor.kind == tfx::actors::record_kind::surface) ++count;
+      }
       std::cout << name << ' ' << count << '\n';
       for(auto const &actor : actors) {
         if(actor.kind != tfx::actors::record_kind::surface) continue;
-        auto const profile{std::ranges::find(profiles,actor.profile_id,&tfx::actors::profile::id)};
-        auto state{tfx::actors::create_surface(actor,program)};
+        auto const profile{std::ranges::find(profiles, actor.profile_id, &tfx::actors::profile::id)};
+        auto state{tfx::actors::create_surface(actor, program)};
         uint64_t digest{14695981039346656037ULL};
         for(unsigned int tick{0}; tick != ticks; ++tick) {
-          tfx::actors::advance_surface(state,*profile);
+          tfx::actors::advance_surface(state, *profile);
           auto const word{[&](uint32_t const value){
             for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((value >> shift) & 255)) * 1099511628211ULL;
           }};

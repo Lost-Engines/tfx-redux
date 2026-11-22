@@ -5,15 +5,33 @@
 
 namespace tfx::presentation {
 
-enum class graphics_action { none, cancel, apply };
-enum class graphics_key { enter, escape, backspace, tab, left, right, up, down, erase };
+enum class graphics_action {
+  none,
+  cancel,
+  apply
+};
+enum class graphics_key {
+  enter,
+  escape,
+  backspace,
+  tab,
+  left,
+  right,
+  up,
+  down,
+  erase
+};
 class graphics_menu {
   widget_font const &font;
   configuration::graphics_settings pending;
   dialogue_form form{};
   unsigned int selected{0};
-  bool editing{false}, replace_text{false}, field_changed{false}, resize_window{false};
-  std::string text, error;
+  bool editing{false};
+  bool replace_text{false};
+  bool field_changed{false};
+  bool resize_window{false};
+  std::string text;
+  std::string error;
   graphics_action action{graphics_action::none};
   bool accept_field();
   void adjust(int direction);
@@ -22,7 +40,7 @@ public:
   graphics_menu(widget_font const &font, configuration::graphics_settings const &settings);
   void click(vec2<int16_t> const &point);
   void character(unsigned int codepoint);
-  void press(graphics_key key, bool shift=false);
+  void press(graphics_key key, bool shift = false);
   void draw(render::framebuffer &image) const;
   graphics_action result() const;
   configuration::graphics_settings const &value() const;

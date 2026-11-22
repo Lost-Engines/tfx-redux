@@ -7,7 +7,7 @@
 namespace tfx::flight {
 
 struct simple_control_state {
-  vec3f angular_rate{0,0,0};                                                   // Pitch, heading and roll in the native angle units.
+  vec3f angular_rate{0, 0, 0};                                                 // Pitch, heading and roll in the native angle units.
   float negative_pitch_limit{0};
   float positive_pitch_limit{0};
   float roll_limit{0};
@@ -22,7 +22,7 @@ struct simple_control_context {
   math::attitude const &orientation;
   simulation::timer_ticks elapsed{0};
   control_source source{control_source::keyboard};
-  vec2<int16_t> joystick{0,0};
+  vec2<int16_t> joystick{0, 0};
   direction_keys keys{};
   bool landed{false};
   bool low_speed_ground_contact{false};
