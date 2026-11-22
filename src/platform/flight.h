@@ -55,7 +55,7 @@ struct flight_options {
   audio::runtime *sound{nullptr};
   bool inspect{false};
   render::view_settings video{};
-  configuration::graphics_settings *graphics{nullptr}; // Shared across campaign missions.
+  configuration::graphics_settings *graphics{nullptr};                          // Shared across campaign missions.
 #ifndef NDEBUG
   std::optional<std::filesystem::path> capture_recipe{};
 #endif

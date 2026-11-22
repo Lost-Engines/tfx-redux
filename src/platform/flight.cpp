@@ -323,7 +323,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     auto const &last_thumbnail{tables.arming_art().rows.back()};
     options.projection_origin = (last_thumbnail.minimum + last_thumbnail.maximum) / int16_t{2};
   }
-  armament.last_released = options.last_released_mount; // Native DATA 0x16e98 survives mission changes.
+  armament.last_released = options.last_released_mount;                         // Native DATA 0x16e98 survives mission changes.
   auto const initial_stores{armament.pylons};
   tfx::sensors::air_contacts radar;
   auto &seeker{options.seeker};
@@ -331,7 +331,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
   tfx::sensors::designator designator;
   tfx::cockpit::designator_mouse designator_mouse;
   bool designator_view{false},designator_tracking_frame{false};
-  uint32_t designator_frame_gap{0}; // Native 0x8844 counts input frames since the last designator draw.
+  uint32_t designator_frame_gap{0};                                             // Native 0x8844 counts input frames since the last designator draw.
   auto &cannon_navigation{options.cannon_navigation};
   tfx::flight::refuelling refuelling{tables.refuel_parameters()};
   tfx::flight::landing_system landing;
@@ -1099,7 +1099,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       seeker.reticle = vec2<int32_t>{target.reticle_q8};
     }
   }};
-  tfx::simulation::timer_ticks constexpr first_animation_ticks{5}; // Native 0x7202f.
+  tfx::simulation::timer_ticks constexpr first_animation_ticks{5};              // Native 0x7202f.
   tfx::simulation::timer_ticks previous_animation_ticks{first_animation_ticks};
   auto const restart{[&]{
     frame_pages.reset();
@@ -1410,7 +1410,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
     // leaving the first launch update to the next flight frame.
     if(ejection.advance_aircraft(player.position,body_basis(),player.fixed_speed,elapsed)) {
       player_visual = pilot_visual;
-      scene.show_actor(aircraft_visual,false); // The departed aircraft has its own pre-terrain submission.
+      scene.show_actor(aircraft_visual,false);                                  // The departed aircraft has its own pre-terrain submission.
     }
     if(ejection.value().stage == tfx::flight::ejection_stage::pilot) scene.place_actor(aircraft_visual,vec3d{ejection.value().aircraft_position_q8} / tfx::actors::position_unit,ejection.value().aircraft_orientation.angles());
     // Native 0x86898 fires the held Space key after its player-physics callback, before other actors update.
@@ -1500,7 +1500,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         .surface_celsius{surface_celsius()},
       },1.0f,wind_parameters,player_damage,air_simulation.random_stream());
       // Retain the chosen wind setting after servicing, as on mission start.
-      automatic_landing = retained_approach; // Shared approach scratch survives 8FAD4.
+      automatic_landing = retained_approach;                                    // Shared approach scratch survives 8FAD4.
       // 8FAD4/95F3C retain route and guidance scratch, including the coordinates
       // shared with the approach callback. This is not a new mission launch.
       physical_player.autopilot.navigation = retained_navigation;
@@ -1636,7 +1636,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       .night{night_flak},
       .cloud_layer{environment.lighting.cloud_layer},
       .layer_y{environment.lighting.layer_y},
-      .radio_idle{radio.status().complete}, // Native 0x7612 is the ticker's idle gate.
+      .radio_idle{radio.status().complete},                                     // Native 0x7612 is the ticker's idle gate.
     })}) {
       if(event->sample) sample(audio::sample_priority::normal,audio::sample_id::nearby_flak);
       if(event->radio) radio.show(tables.flak_warning);
@@ -1909,7 +1909,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
         select_actor_draw_region(request.position);
         options.projection_origin = vec2<int16_t>{request.view().projection_origin};
         scene.set_visual_lod_scale(video.lod_scale);
-        if(virtual_panel) scene.set_render_paused(true); // The primary view owns scene animation.
+        if(virtual_panel) scene.set_render_paused(true);                        // The primary view owns scene animation.
         auto const rendered{scene.draw(camera_renderer,camera,scene_radius,[&] { queue_effects(camera); },request.position.y,ground.height,tfx::world::scene_pass::instrument)};
         if(virtual_panel) scene.set_render_paused(paused);
         if(!paused && !virtual_panel) clean_trails();
@@ -2305,7 +2305,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       tfx::render::interface_layout const interface{video.resolution};
       auto const actual_view{tfx::render::scene_camera(view,video)};
       view.point_focal_distance = actual_view.focal_distance / interface.scale;
-      trail_camera = actual_view; // MFD passes replace scene.last_camera() later.
+      trail_camera = actual_view;                                               // MFD passes replace scene.last_camera() later.
       impact_projection.emplace(view.projector());
       if(!designator_view) prepare_lighting(view);
     }
@@ -2451,7 +2451,7 @@ flight_result fly_mission(resources::archive const &game, resources::executable_
       case capture_event_target::terrain: scene.terrain_event(event.x,event.z,event.entry);break;
       }
     }
-    if(frame==capture->warmup_frames) break; // The ordinary screenshot path draws the final frame.
+    if(frame==capture->warmup_frames) break;                                    // The ordinary screenshot path draws the final frame.
     // Hold photographic poses while the original animation streams run.
     scene.advance(4);
     scene.animate_player_model(player_visual);
