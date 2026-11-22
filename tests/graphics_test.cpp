@@ -6,8 +6,17 @@
 
 void require(bool ok,char const *message) {if(!ok) throw std::runtime_error{message};}
 int main() try {
-  using namespace tfx::configuration;
-  using namespace tfx::presentation;
+  using tfx::configuration::graphics_field;
+  using tfx::configuration::graphics_filename;
+  using tfx::configuration::graphics_settings;
+  using tfx::configuration::load_graphics;
+  using tfx::configuration::parse_graphics;
+  using tfx::configuration::save_graphics;
+  using tfx::configuration::set_graphics_value;
+  using tfx::presentation::graphics_action;
+  using tfx::presentation::graphics_key;
+  using tfx::presentation::graphics_menu;
+  using tfx::presentation::widget_font;
   graphics_settings state;
   auto const unchanged{state};
   for(auto const &[field,text] : std::initializer_list<std::pair<graphics_field,std::string_view>>{

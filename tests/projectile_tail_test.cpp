@@ -10,7 +10,14 @@ void require(bool const condition, char const *const message) {
 }
 
 int main() try {
-  using namespace tfx::weapons;
+  using tfx::weapons::active_projectile;
+  using tfx::weapons::actor_pool;
+  using tfx::weapons::definition;
+  using tfx::weapons::flight_stage;
+  using tfx::weapons::motion_context;
+  using tfx::weapons::projectile_id;
+  using tfx::weapons::runtime;
+  using tfx::weapons::weapon_count;
   std::array<definition,weapon_count> definitions;
   definitions[1].stages = {{
     .ticks{100},

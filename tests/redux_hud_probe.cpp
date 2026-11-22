@@ -7,7 +7,7 @@
 
 void require(bool ok,char const *message){if(!ok)throw std::runtime_error{message};}
 namespace {
-using namespace tfx;
+namespace render = tfx::render;
 void reference_stroke(render::framebuffer &target, vec2d const &from, vec2d const &to, vec2<int> const &low, vec2<int> const &high) {
   render::interface_layout const layout{target.size};
   auto const a{layout.project(from+vec2d{.5,.5})},b{layout.project(to+vec2d{.5,.5})},delta{b-a};
@@ -26,8 +26,8 @@ void reference_stroke(render::framebuffer &target, vec2d const &from, vec2d cons
   }
 }
 
-void check_stroke_reference(cockpit::instrument_assets const &assets) {
-  cockpit::vector_hud hud{assets};
+void check_stroke_reference(tfx::cockpit::instrument_assets const &assets) {
+  tfx::cockpit::vector_hud hud{assets};
   std::array<std::pair<vec2d,vec2d>,9> const lines{{
     {{0,0},{319,199}},{{319,199},{0,0}},{{12.25,188.1},{307.8,3.75}},
     {{0,50.25},{319,50.25}},{{80.25,-20},{80.25,220}},{{0,80},{319,80.001}},

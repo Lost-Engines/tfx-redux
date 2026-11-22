@@ -10,7 +10,11 @@ template<typename Action> void rejects(Action const &action) {
 }
 
 int main() try {
-  using namespace tfx::recording;
+  using tfx::recording::decode;
+  using tfx::recording::encode;
+  using tfx::recording::file;
+  using tfx::recording::header_bytes;
+  using tfx::recording::model_kind;
   file recording;
   tfx::resources::bytes const empty{0,0,20,0,0,0,10,0,0,0,2,0,0,0,1,0,0,0,0,0};
   require(encode(recording) == empty);

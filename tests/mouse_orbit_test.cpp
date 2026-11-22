@@ -12,7 +12,11 @@ void close(vec3d const &a, vec3d const &b, char const *message) {
 }
 }
 int main() {
-  using namespace tfx::cockpit;
+  using tfx::cockpit::missile_camera_pose;
+  using tfx::cockpit::mouse_look;
+  using tfx::cockpit::mouse_orbit;
+  using tfx::cockpit::view_camera_context;
+  using tfx::cockpit::view_mode;
   view_camera_context context;
   context.position_q8 = {25600,-128000,51200};
   context.observed_target_q8.emplace(51200,-25600,102400);

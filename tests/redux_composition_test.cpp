@@ -6,7 +6,7 @@
 #include "resources/executable_tables.h"
 
 namespace {
-using namespace tfx;
+namespace render = tfx::render;
 void require(bool value, char const *message) { if(!value) throw std::runtime_error{message}; }
 
 // Independent destination-pixel reference: deliberately retain the simple
@@ -75,7 +75,7 @@ void benchmark(std::filesystem::path const &directory) {
   render::framebuffer image;image.resize({3840,2160});
   render::framebuffer ui;ui.track_writes();
   for(int y=120;y<200;++y) for(int x=0;x<320;++x) ui.write(static_cast<size_t>(y*320+x),static_cast<uint8_t>(x/8+y/8));
-  resources::executable_tables const tables{directory/"TFX.DAT"};cockpit::vector_hud hud{tables.instruments()};
+  tfx::resources::executable_tables const tables{directory/"TFX.DAT"};tfx::cockpit::vector_hud hud{tables.instruments()};
   render::palette palette;for(unsigned i=0;i<256;++i) palette[i]={static_cast<uint8_t>(i),static_cast<uint8_t>(255-i),static_cast<uint8_t>(i/2)};
   auto const time{[&](char const *name,auto const &run) {
     for(int i=0;i<3;++i) run();

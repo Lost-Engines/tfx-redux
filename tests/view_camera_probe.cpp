@@ -14,7 +14,12 @@ int main(int const argc, char const *const argv[]) {
     else if(argument == "--split-basis") split_basis = true;
     else return 2;
   }
-  using namespace tfx::cockpit;
+  using tfx::cockpit::missile_camera_pose;
+  using tfx::cockpit::view_camera;
+  using tfx::cockpit::view_camera_context;
+  using tfx::cockpit::view_control;
+  using tfx::cockpit::view_control_state;
+  using tfx::cockpit::view_mode;
   view_control views;
   view_camera motion;
   bool reset;

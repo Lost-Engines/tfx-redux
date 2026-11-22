@@ -14,7 +14,18 @@ tfx::resources::bytes font_image() {
 } // anonymous namespace
 
 int main() try {
-  using namespace tfx::presentation;
+  using tfx::presentation::clip;
+  using tfx::presentation::dac_palette;
+  using tfx::presentation::fonts;
+  using tfx::presentation::node_kind;
+  using tfx::presentation::playback_phase;
+  using tfx::presentation::scene_input;
+  using tfx::presentation::scene_key;
+  using tfx::presentation::scene_player;
+  using tfx::presentation::sequence_controls;
+  using tfx::presentation::text_alignment;
+  using tfx::presentation::text_block;
+  using tfx::presentation::variables;
   tfx::resources::bytes screen(772 + 64000,0);
   screen[0] = 'w';screen[1] = 'a';screen[2] = 'r';screen[3] = ' ';
   for(unsigned int i{4}; i != 772; ++i) screen[i] = 63;

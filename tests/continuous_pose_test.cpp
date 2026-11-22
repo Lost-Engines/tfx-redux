@@ -32,7 +32,10 @@ tfx::models::shape helper_shape(tfx::math::angle const heading) {
 }
 }
 int main() {
-  using namespace tfx;
+  namespace cockpit = tfx::cockpit;
+  namespace math = tfx::math;
+  namespace models = tfx::models;
+  namespace render = tfx::render;
   for(int p: {-8192,0,4096,16384}) for(int h:{0,8192,32000,49152}) for(int r:{0,4096,16384,49152}) {
     vec3<math::angle> const angles{static_cast<math::angle>(p),static_cast<math::angle>(h),static_cast<math::angle>(r)};
     auto const precise{render::continuous_rotation(angles)}, native{math::rotation(angles)};
@@ -148,7 +151,7 @@ int main() {
     require(previous.position==retained.position && previous.forward==retained.forward,"lost missile changed the retained display pose");
   }
   {
-    sensors::designator designator;
+    tfx::sensors::designator designator;
     double last=0;
     for(unsigned step=0;step<128;++step) {
       designator.heading=static_cast<math::angle>(step);

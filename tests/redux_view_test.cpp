@@ -15,7 +15,19 @@ void require(bool const value, char const *message) {
 }
 
 int main() try {
-  using namespace tfx::render;
+  using tfx::render::aperture;
+  using tfx::render::camera;
+  using tfx::render::composite_interface;
+  using tfx::render::framebuffer;
+  using tfx::render::inspection_camera;
+  using tfx::render::instrument_camera;
+  using tfx::render::interface_layout;
+  using tfx::render::model_facing;
+  using tfx::render::paint_horizon;
+  using tfx::render::raster_clip;
+  using tfx::render::scene_camera;
+  using tfx::render::screen_width;
+  using tfx::render::view_settings;
   auto const clip{raster_clip::pixels({0,0},{1000,602})};
   require(clip.glyph_limit == vec2<int>{1001,603},"last render column or row was excluded");
   framebuffer image;image.resize({1001,603});

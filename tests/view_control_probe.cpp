@@ -3,7 +3,11 @@
 #include "cockpit/view_control.h"
 
 int main() {
-  using namespace tfx::cockpit;
+  using tfx::cockpit::view_control;
+  using tfx::cockpit::view_control_state;
+  using tfx::cockpit::view_key;
+  using tfx::cockpit::view_key_context;
+  using tfx::cockpit::view_mode;
   view_control views;
   int operation;
   while(std::cin >> operation) {

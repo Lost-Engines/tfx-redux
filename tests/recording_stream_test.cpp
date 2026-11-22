@@ -17,7 +17,11 @@ template<typename Action> void rejects(Action const &action) {
 }
 
 int main() try {
-  using namespace tfx::recording;
+  using tfx::recording::decode;
+  using tfx::recording::encode_frame;
+  using tfx::recording::playback;
+  using tfx::recording::recorder;
+  using tfx::recording::scene_frame;
   temporary_directory directory;
   auto const path{directory.path / "video.rec"};
   scene_frame first;

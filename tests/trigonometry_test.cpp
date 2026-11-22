@@ -16,7 +16,8 @@ constexpr double tau=2*std::numbers::pi_v<double>;
 double radians(unsigned angle) { return angle*tau/65536; }
 }
 int main() {
-  using namespace tfx;
+  namespace flight = tfx::flight;
+  namespace math = tfx::math;
   double max_error=0,max_bearing_error=0;
   for(unsigned units=0;units<65536;++units) {
     auto const angle=static_cast<math::angle>(units);
@@ -65,8 +66,8 @@ int main() {
     auto const bearing=math::bearing({0,-1000,0},position);
     require(std::abs(math::signed_word(static_cast<uint16_t>(bearing.y-h)))<=2,"movement and bearing disagree");
   }
-  auto const centre=sensors::ground_intersection({0,-1000,0},8192,0);
-  auto const right=sensors::ground_intersection({0,-1000,0},8192,32);
+  auto const centre=tfx::sensors::ground_intersection({0,-1000,0},8192,0);
+  auto const right=tfx::sensors::ground_intersection({0,-1000,0},8192,32);
   require(centre.x==0 && right.x>centre.x && std::abs(right.z-centre.z)<2,"ground targeting retains the coarse heading step");
   flight::aerodynamic_motion motion;
   motion.pose.frame.forward={32767,0,0};motion.pose.frame.right={0,32767,0};motion.pose.frame.down={0,0,32767};

@@ -18,7 +18,9 @@ void save(std::filesystem::path const &path, std::span<uint8_t const> const byte
 }
 
 int main() try {
-  using namespace tfx;
+  namespace recording = tfx::recording;
+  namespace render = tfx::render;
+  namespace resources = tfx::resources;
   temporary_directory temporary;
   auto const path{temporary.path / "flight.rec"};
   recording::video_recorder writer;
