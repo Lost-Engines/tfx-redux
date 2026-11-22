@@ -10,7 +10,7 @@ auto require(bool const condition, char const *const message)->void {
   if(!condition) throw std::runtime_error{message};
 }
 auto decode(std::vector<uint8_t> const &file)->tfx::render::framebuffer {
-  auto const word{[&](unsigned int const offset, unsigned int const bytes) {
+  auto const word{[&](unsigned int const offset, unsigned int const bytes){
     uint32_t value{0};
     for(unsigned int index{0}; index != bytes; ++index) value = value << 8 | file.at(offset + index);
     return value;
@@ -74,24 +74,24 @@ int main() try {
     }
   }
   image.resize({157,31});image.hud_coverage.resize(image.pixels.size());
-  colours.fill(0);colours[0]=10;colours[1]=15;colours[2]=20;colours[19]=63;
-  for(size_t i=0;i<image.pixels.size();++i) image.hud_coverage[i]=static_cast<uint8_t>(i);
+  colours.fill(0);colours[0] = 10;colours[1] = 15;colours[2] = 20;colours[19] = 63;
+  for(size_t i=0;i < image.pixels.size();++i) image.hud_coverage[i] = static_cast<uint8_t>(i);
   auto const rgb{image.colourise(tfx::render::expand_dac_palette(colours))};
   auto const optical{tfx::render::encode_ilbm(image,colours)};
-  require(optical[28]==24 && std::string{optical.begin()+40,optical.begin()+44}=="BODY","optical screenshot did not use true colour");
+  require(optical[28] == 24 && std::string{optical.begin() + 40,optical.begin() + 44} == "BODY","optical screenshot did not use true colour");
   std::vector<tfx::render::rgba_pixel> restored(rgb.size(),{0,0,0,255});size_t at{48};
-  for(int y=0;y<image.size.y;++y) for(unsigned plane=0;plane<24;++plane) {
-    std::vector<uint8_t> row(static_cast<size_t>((image.size.x+15)/16*2));size_t out{0};
-    while(out<row.size()) {
+  for(int y=0;y < image.size.y;++y) for(unsigned plane=0;plane < 24;++plane) {
+    std::vector<uint8_t> row(static_cast<size_t>((image.size.x + 15) / 16 * 2));size_t out{0};
+    while(out < row.size()) {
       int const control{std::bit_cast<int8_t>(optical.at(at++))};
-      unsigned const count{static_cast<unsigned>(control<0 ? 1-control : control+1)};
-      uint8_t const repeated{control<0 ? optical.at(at++) : uint8_t{0}};
-      for(unsigned i=0;i<count;++i) row.at(out++)=control<0 ? repeated : optical.at(at++);
+      unsigned const count{static_cast<unsigned>(control < 0 ? 1 - control : control + 1)};
+      uint8_t const repeated{control < 0 ? optical.at(at++) : uint8_t{0}};
+      for(unsigned i=0;i < count;++i) row.at(out++) = control < 0 ? repeated : optical.at(at++);
     }
-    for(int x=0;x<image.size.x;++x) restored[static_cast<size_t>(y*image.size.x+x)][plane/8]|=static_cast<uint8_t>(((row[static_cast<size_t>(x/8)]>>(7-x%8))&1)<<(plane%8));
+    for(int x=0;x < image.size.x;++x) restored[static_cast<size_t>(y * image.size.x + x)][plane / 8] |= static_cast<uint8_t>(((row[static_cast<size_t>(x / 8)] >> (7 - x % 8)) & 1) << (plane % 8));
   }
-  require((at&1) && at+1==optical.size() && optical.back()==0,"odd true-colour BODY chunk is missing IFF padding");
-  require(restored==rgb,"true-colour screenshot changed additive HUD pixels");
+  require((at & 1) && at + 1 == optical.size() && optical.back() == 0,"odd true-colour BODY chunk is missing IFF padding");
+  require(restored == rgb,"true-colour screenshot changed additive HUD pixels");
   std::cout << "ILBM capture: square pixel aspect, palette, compressed row boundaries and complete indexed-image round trips passed\n";
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

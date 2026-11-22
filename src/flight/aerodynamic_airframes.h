@@ -1,11 +1,11 @@
 #pragma once
 
-#include "flight/airframes.h"
 #include "flight/aerodynamic_coefficients.h"
+#include "flight/aerodynamic_ground.h"
+#include "flight/aerodynamic_pose.h"
 #include "flight/aerodynamic_powerplant.h"
 #include "flight/aerodynamic_surfaces.h"
-#include "flight/aerodynamic_pose.h"
-#include "flight/aerodynamic_ground.h"
+#include "flight/airframes.h"
 #include "flight/atmosphere.h"
 
 namespace tfx::flight {

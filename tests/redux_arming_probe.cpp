@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -7,7 +8,9 @@
 #include "presentation/arming_screen.h"
 
 namespace {
-void require(bool const value, char const *message) { if(!value) throw std::runtime_error{message}; }
+void require(bool const value, char const *message) {
+  if(!value) throw std::runtime_error{message};
+}
 }
 
 int main(int const argc, char const *const argv[]) try {
@@ -75,5 +78,5 @@ int main(int const argc, char const *const argv[]) try {
     rearm.press(1);rearm.press(0x15);require(rearm.state().mode == tfx::presentation::arming_mode::cancelled,"Yes did not leave rearming");
     std::cout << "Aircraft " << craft << ": " << mounts.size() << " pylons before rotation, " << rotated.size() << " after; Escape checks passed\n";
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

@@ -1,9 +1,9 @@
 #include "simple.h"
-#include "gear_controls.h"
-#include "world/environment.h"
 #include <cmath>
 #include <limits>
 #include <utility>
+#include "gear_controls.h"
+#include "world/environment.h"
 
 namespace tfx::flight {
 namespace {

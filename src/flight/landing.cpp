@@ -8,9 +8,15 @@
 namespace tfx::flight {
 namespace {
 
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t subtract(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int32_t magnitude(int32_t const value) { return value < 0 ? subtract(0,value) : value; }
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t subtract(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int32_t magnitude(int32_t const value) {
+  return value < 0 ? subtract(0,value) : value;
+}
 int heading_degrees(math::angle const heading) {
   // Native HUD reverses the bearing, then removes at most one complete turn.
   int result{static_cast<int>((static_cast<unsigned int>(heading) + 0x8000u) * 360u >> 16)};
@@ -25,9 +31,15 @@ vec3<int32_t> runway(landing_state const &state) {
 } // anonymous namespace
 
 landing_system::landing_system(landing_state initial) : state{std::move(initial)} {}
-landing_state const &landing_system::value() const { return state; }
-void landing_system::reset() { state = {}; }
-void landing_system::disengage() { state.enabled = false; }
+landing_state const &landing_system::value() const {
+  return state;
+}
+void landing_system::reset() {
+  state = {};
+}
+void landing_system::disengage() {
+  state.enabled = false;
+}
 void landing_system::prepare_beacon() {
   auto position{runway(state)};
   position.y = 0;

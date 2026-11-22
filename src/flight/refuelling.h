@@ -35,8 +35,8 @@ struct refuel_player {
   vec3<math::angle> angles{0,0,0};
   int32_t speed{0};
 };
-inline constexpr vec3<int16_t> default_refuel_divisors{24,12,24};
-inline constexpr vec3<int16_t> released_refuel_divisors{50,30,50};
+inline vec3<int16_t> constexpr default_refuel_divisors{24,12,24};
+inline vec3<int16_t> constexpr released_refuel_divisors{50,30,50};
 
 struct refuel_state {
   bool enabled{false};
@@ -44,7 +44,7 @@ struct refuel_state {
   std::optional<unsigned int> selected{};
   vec3<int16_t> divisors{default_refuel_divisors};
   int16_t delay{0};
-  uint8_t phase{0}; // Native 0x13b04; the connection controller produces 0 or 3.
+  uint8_t phase{0};                                                            // Native 0x13b04; the connection controller produces 0 or 3.
   int32_t horizontal_distance{0};
   vec3<int32_t> angle_errors{0,0,0};
 };
@@ -78,7 +78,7 @@ public:
   explicit refuelling(refuel_assets const &assets, refuel_state initial = {});
   refuel_state const &value() const;
   void reset();
-  void disengage(); // Ejection clears enable without restoring the previous weapon mode.
+  void disengage();                                                            // Ejection clears enable without restoring the previous weapon mode.
   refuel_toggle toggle(uint8_t weapon_mode, bool inhibited = false, bool crashed = false, bool ejected = false);
   refuel_update advance(refuel_player &player, refuel_registry &allies, simulation::timer_ticks elapsed);
   refuel_transfer transfer(double fuel, double capacity, bool afterburner) const;

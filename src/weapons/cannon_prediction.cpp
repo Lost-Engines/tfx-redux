@@ -16,7 +16,7 @@ std::array<vec3<int32_t>,5> predict_cannon(definition const &cannon, projectile 
     .player_owned{true},
     .height_bounds{vec2<int32_t>{height_bounds}},
   };
-  auto const advance{[&] {
+  auto const advance{[&]{
     if(shot.motion == flight_stage::finished || shot.position.y >= 0) return false;
     advance_motion(shot,cannon,context,random);
     return true;

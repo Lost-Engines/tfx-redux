@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string_view>
-#include "resources/binary.h"
 #include "render/framebuffer.h"
+#include "resources/binary.h"
 
 namespace tfx::presentation {
 

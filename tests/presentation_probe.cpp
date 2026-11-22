@@ -3,15 +3,15 @@
 #include <map>
 #include <memory>
 #include <utility>
-#include "resources/archive.h"
 #include "presentation/runtime.h"
+#include "resources/archive.h"
 
 int main(int const argc, char const *const argv[]) try {
   if(argc != 2) throw std::runtime_error{"presentation_probe DATA_DIRECTORY"};
   tfx::resources::archive const game{tfx::resources::find_game_archive(argv[1])};
   std::map<uint32_t,tfx::presentation::program> programs;
-  auto const word{[](auto const value) { for(unsigned int shift{0}; shift != 32; shift += 8) std::cout.put(static_cast<char>(static_cast<uint32_t>(value) >> shift)); }};
-  auto const string{[&](std::string const &value) { word(value.size());std::cout.write(value.data(),static_cast<std::streamsize>(value.size())); }};
+  auto const word{[](auto const value){ for(unsigned int shift{0}; shift != 32; shift += 8) std::cout.put(static_cast<char>(static_cast<uint32_t>(value) >> shift)); }};
+  auto const string{[&](std::string const &value){ word(value.size());std::cout.write(value.data(),static_cast<std::streamsize>(value.size())); }};
   char command{0};uint32_t id{0};
   while(std::cin >> command >> id) {
     auto found{programs.find(id)};
@@ -30,10 +30,7 @@ int main(int const argc, char const *const argv[]) try {
             if(entry->text) { auto const &text{*entry->text};word(text.position.x);word(text.position.y);word(text.alignment);word(text.shadow);word(text.reveal);word(text.font);word(text.colour);string(text.text); }
           } else if(auto const entry{std::get_if<tfx::presentation::branch>(&node.data)}) {
             word(entry->conditional);word(entry->variable);word(entry->comparison);word(entry->value);word(entry->subroutine);word(entry->target.function);word(entry->target.statement);
-          } else if(auto const entry{std::get_if<tfx::presentation::assignment>(&node.data)}) { word(entry->variable);word(std::to_underlying(entry->operation));word(entry->value); }
-          else if(auto const entry{std::get_if<tfx::presentation::host_action>(&node.data)}) { string(entry->resource);word(entry->mode); }
-          else if(auto const entry{std::get_if<tfx::presentation::audio_request>(&node.data)}) { word(entry->device);word(entry->operation);word(entry->index); }
-          else if(std::holds_alternative<tfx::presentation::opaque_action>(node.data)) throw std::runtime_error{"opaque parser action in the retail comparison"};
+          } else if(auto const entry{std::get_if<tfx::presentation::assignment>(&node.data)}) { word(entry->variable);word(std::to_underlying(entry->operation));word(entry->value); } else if(auto const entry{std::get_if<tfx::presentation::host_action>(&node.data)}) { string(entry->resource);word(entry->mode); } else if(auto const entry{std::get_if<tfx::presentation::audio_request>(&node.data)}) { word(entry->device);word(entry->operation);word(entry->index); } else if(std::holds_alternative<tfx::presentation::opaque_action>(node.data)) throw std::runtime_error{"opaque parser action in the retail comparison"};
         }
       }
     } else if(command == 'R') {

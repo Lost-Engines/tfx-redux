@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -11,8 +12,7 @@ int main(int const argc, char const *const argv[]) try {
   bool const fixture{std::string_view{argv[1]} == "--synthetic"};
   std::ifstream source,expected;
   std::ofstream pcm;
-  if(fixture) { source.open(argv[2]);expected.open(argv[3]);if(!source || !expected) throw std::runtime_error{"cannot open Gravis PCM fixture"}; }
-  else { pcm.open(argv[2],std::ios::binary);if(!pcm) throw std::runtime_error{"cannot create Gravis PCM capture"}; }
+  if(fixture) { source.open(argv[2]);expected.open(argv[3]);if(!source || !expected) throw std::runtime_error{"cannot open Gravis PCM fixture"}; } else { pcm.open(argv[2],std::ios::binary);if(!pcm) throw std::runtime_error{"cannot create Gravis PCM capture"}; }
   auto &input{fixture ? source : std::cin};
   std::string header;
   if(!(input >> header)) throw std::runtime_error{"missing sample count"};
@@ -53,7 +53,7 @@ int main(int const argc, char const *const argv[]) try {
   char command;
   while(input >> command) {
     uint64_t hash{14695981039346656037ull};
-    auto bytes{[&](uint32_t const bits) {
+    auto bytes{[&](uint32_t const bits){
       for(unsigned int shift{0}; shift != 32; shift += 8) { hash ^= (bits >> shift) & 255;hash *= 1099511628211ull; }
     }};
     if(command == 's') {
@@ -87,5 +87,5 @@ int main(int const argc, char const *const argv[]) try {
     ++commands;
   }
   if(!commands) throw std::runtime_error{"empty Gravis playback test"};
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

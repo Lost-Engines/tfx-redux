@@ -13,8 +13,12 @@ public:
   preview_state(State &source, bool frozen) : source{source} {
     if(frozen) copy.emplace(source);
   }
-  State &value() { return copy ? *copy : source; }
-  State *operator->() { return &value(); }
+  State &value() {
+    return copy ? *copy : source;
+  }
+  State *operator->() {
+    return &value();
+  }
 };
 
 } // namespace tfx::render

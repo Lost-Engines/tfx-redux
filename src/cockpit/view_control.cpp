@@ -4,12 +4,24 @@
 namespace tfx::cockpit {
 
 view_control::view_control(view_control_state initial) : state{std::move(initial)} {}
-view_control_state const &view_control::value() const { return state; }
-void view_control::offset(vec2<int16_t> const &position) { state.offset = vec2<int16_t>{position}; }
-void view_control::redraw(uint8_t const remaining) { state.redraw = remaining; }
-void view_control::fixed_position(vec3<int32_t> const &position) { state.fixed_position = vec3<int32_t>{position}; }
-void view_control::clear_queue() { state.written = state.read = 0; }
-void view_control::ready() { state.ready = true; }
+view_control_state const &view_control::value() const {
+  return state;
+}
+void view_control::offset(vec2<int16_t> const &position) {
+  state.offset = vec2<int16_t>{position};
+}
+void view_control::redraw(uint8_t const remaining) {
+  state.redraw = remaining;
+}
+void view_control::fixed_position(vec3<int32_t> const &position) {
+  state.fixed_position = vec3<int32_t>{position};
+}
+void view_control::clear_queue() {
+  state.written = state.read = 0;
+}
+void view_control::ready() {
+  state.ready = true;
+}
 void view_control::enqueue(view_mode view, int32_t const speed) {
   // Native 0x8fd84 discards any pending transition when leaving a missile view.
   if(state.current == view_mode::missile || state.current == view_mode::missile_infrared) {
@@ -51,7 +63,7 @@ void view_control::save_offset() {
 }
 void view_control::centre(view_key_context const &context) {
   if(context.inhibited || context.crashed || context.ejected) return;
-  auto const queue{[&](view_mode const view) { enqueue(view,context.speed); }};
+  auto const queue{[&](view_mode const view){ enqueue(view,context.speed); }};
   state.recenter = 0;
   switch(state.current) {
   case view_mode::look_left:case view_mode::look_right:
@@ -90,7 +102,7 @@ view_key_events view_control::press(view_key const key, view_key_context const &
   if(context.inhibited || context.crashed || context.ejected) return result;
   // F5 intentionally lacks the automatic-landing gate used by the other keys.
   if(key != view_key::chase && context.landing) return result;
-  auto const queue{[&](view_mode const view) { enqueue(view,context.speed); }};
+  auto const queue{[&](view_mode const view){ enqueue(view,context.speed); }};
   switch(key) {
   case view_key::front:
     if(context.shift) {

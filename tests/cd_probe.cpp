@@ -2,6 +2,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -21,7 +22,7 @@ private:
 
 public:
   explicit control_device(std::span<uint8_t const> const launcher) :
-    callbacks{launcher,[](tfx::audio::opl_write) {}} {
+    callbacks{launcher,[](tfx::audio::opl_write){}} {
   }
   tfx::audio::osl_device_driver &driver() override {
     return callbacks;
@@ -49,8 +50,8 @@ int main(int argc, char const *const argv[]) try {
     unsigned int constexpr sectors{6}, frames{sectors * 588};
     std::vector<uint8_t> pcm(frames * 4);
     for(unsigned int i{0}; i != frames; ++i) {
-      pcm[i * 4] = 0;pcm[i * 4 + 1] = 32; // +8192 / 32768
-      pcm[i * 4 + 2] = 0;pcm[i * 4 + 3] = 240; // -4096 / 32768
+      pcm[i * 4] = 0;pcm[i * 4 + 1] = 32;                                      // +8192 / 32768
+      pcm[i * 4 + 2] = 0;pcm[i * 4 + 3] = 240;                                 // -4096 / 32768
     }
     {
       std::ofstream file{root / "audio.bin",std::ios::binary};
@@ -62,13 +63,13 @@ int main(int argc, char const *const argv[]) try {
     { std::ofstream file{cue};file << "FILE \"audio.bin\" BINARY\n  TRACK 02 AUDIO\n    INDEX 00 00:00:00\n    INDEX 01 00:00:01\n"; }
     tfx::resources::cd_image const image{cue};
     if(image.track(2).file_sector != 1 || image.track(2).sectors != sectors || image.track(2).disc_sector != 1) throw std::runtime_error{"CUE extent/pregap changed"};
-    auto const check{[&](std::filesystem::path const &source) {
+    auto const check{[&](std::filesystem::path const &source){
       tfx::audio::cd_player player{source,44100};
       if(player.play(1) || !player.play(2) || !player.playing()) throw std::runtime_error{"CD physical track selection failed"};
       std::vector<float> output((frames + 64) * 2,0);
       player.render(output);
       for(unsigned int i{0}; i != frames; ++i) if(output[i * 2] != .25f || output[i * 2 + 1] != -.125f) throw std::runtime_error{"CD PCM includes a pregap or changed amplitude/channel order"};
-      if(std::ranges::any_of(std::span{output}.subspan(frames * 2),[](float value) { return value != 0; }) || player.playing()) throw std::runtime_error{"CD track exceeded its end"};
+      if(std::ranges::any_of(std::span{output}.subspan(frames * 2),[](float value){ return value != 0; }) || player.playing()) throw std::runtime_error{"CD track exceeded its end"};
       if(!player.play(2)) throw std::runtime_error{"CD restart failed"};
       player.stop();if(player.playing()) throw std::runtime_error{"CD stop failed"};
     }};
@@ -83,7 +84,7 @@ int main(int argc, char const *const argv[]) try {
     }
     check(rip);
     std::cout << "CUE extents, stereo PCM, numbered local WAV, exact EOF, restart and stop passed\n";
-    return 0;
+    return EXIT_SUCCESS;
   }
   if(argc < 3) return 2;
   std::string const command{argv[1]};
@@ -98,15 +99,13 @@ int main(int argc, char const *const argv[]) try {
     tfx::audio::runtime sound{{},game,44100,tfx::audio::sound_device::none,std::move(music),{},std::move(cd),tfx::audio::music_mode::soundblaster_cd,true};
     std::string action;unsigned int value{0};
     while(std::cin >> action >> value) {
-      if(action == "begin") { if(value) sound.select_music(static_cast<int16_t>(value));sound.begin_flight({}); }
-      else if(action == "advance") sound.advance(static_cast<uint16_t>(value));
+      if(action == "begin") { if(value) sound.select_music(static_cast<int16_t>(value));sound.begin_flight({}); } else if(action == "advance") sound.advance(static_cast<uint16_t>(value));
       else if(action == "enable") sound.enable_music(value != 0);
       else if(action == "cue") sound.music_cue(static_cast<uint8_t>(value));
       else if(action == "end") sound.end_flight();
       else if(action == "play") sound.select_cd(static_cast<int16_t>(value));
       else if(action == "stop") sound.stop_cd();
-      else if(action == "drain") { std::array<float,4096> pcm{};sound.render(pcm); }
-      else throw std::runtime_error{"invalid control action"};
+      else if(action == "drain") { std::array<float,4096> pcm{};sound.render(pcm); } else throw std::runtime_error{"invalid control action"};
       std::array<float,2> pcm{};sound.render(pcm);
       std::cout << std::lround(pcm[0] * 32768 / 1000) << ' ' << observer->playing() << '\n';
     }
@@ -135,4 +134,4 @@ int main(int argc, char const *const argv[]) try {
     player.stop();
     if(player.playing()) throw std::runtime_error{"CD did not stop"};
   } else return 2;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

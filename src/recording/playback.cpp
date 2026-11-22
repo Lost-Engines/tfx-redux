@@ -35,7 +35,9 @@ playback::playback(std::filesystem::path const &path) : input{}, header{}, remai
   remaining = header.frames;
   if(!remaining && position != header.dictionary) throw std::runtime_error{"empty flight recording has frame data"};
 }
-uint16_t playback::frame_count() const { return header.frames; }
+uint16_t playback::frame_count() const {
+  return header.frames;
+}
 std::optional<scene_frame> playback::next() {
   if(!remaining) return std::nullopt;
   auto const count{std::min(maximum_frame_bytes,header.dictionary - position)};

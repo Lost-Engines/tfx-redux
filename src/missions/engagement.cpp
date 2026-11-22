@@ -12,7 +12,7 @@ std::vector<engagement_event> engagement_state::observe(engagement_warning const
       // Native aircraft 1 is the F-117; mission-script aircraft start at 1.
       if(context.aircraft != flight::player_aircraft::nighthawk && !context.arcade && !context.training) events.emplace_back(permission_notice{});
     }
-    int16_t constexpr notice_duration{30}; // Rendered frames; independent of the simulation tick count.
+    int16_t constexpr notice_duration{30};                                     // Rendered frames; independent of the simulation tick count.
     notice_frames = notice_duration;
   } else {
     // Native 0x76398: firing at another aircraft can also grant global permission.

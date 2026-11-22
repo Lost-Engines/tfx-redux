@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include "flight/player_frame.h"
@@ -34,11 +35,10 @@ int main(int const argc, char const *const argv[]) try {
     })};
     std::array<int64_t,8> const values{std::bit_cast<uint32_t>(flight.view.position.y),flight.response.motion.collision,static_cast<int64_t>(flight.powerplant.engine_condition[0]),static_cast<int64_t>(flight.powerplant.engine_condition[1]),fuel.reading,fuel.smoothed_burn,speed,flight.autopilot.recovery.model_reset_requested};
     for(auto const value : values) {
-      if(argc == 2) { int64_t expected; if(!(input >> expected) || expected != value) throw std::runtime_error{"player frame mismatch in case " + std::to_string(cases)}; }
-      else std::cout << value << ' ';
+      if(argc == 2) { int64_t expected; if(!(input >> expected) || expected != value) throw std::runtime_error{"player frame mismatch in case " + std::to_string(cases)}; } else std::cout << value << ' ';
     }
     if(argc != 2) std::cout << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

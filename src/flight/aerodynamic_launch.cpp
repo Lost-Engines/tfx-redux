@@ -15,7 +15,9 @@ int32_t truncate(calculation const value) {
   if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
   return static_cast<int32_t>(value);
 }
-int32_t centre(int32_t const value) { return value / world::cell_units * world::cell_units + world::cell_units / 2; }
+int32_t centre(int32_t const value) {
+  return value / world::cell_units * world::cell_units + world::cell_units / 2;
+}
 } // anonymous namespace
 
 aerodynamic_flight launch_aerodynamic_flight(aerodynamic_airframe const &aircraft, loadout const &stores, aerodynamic_launch_context const &context, aerodynamic_wind_parameters const &wind_parameters, damage_state &damage, math::random_state &random) {

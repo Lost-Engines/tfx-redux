@@ -30,7 +30,7 @@ auto main(int const argc, char const *const argv[])->int try {
       route.emplace_back(static_cast<uint8_t>(x),static_cast<uint8_t>(z));
     }
     state.route = route;
-    auto const positions{[] {
+    auto const positions{[]{
       unsigned int count;
       std::cin >> count;
       std::vector<vec3<int32_t>> points(count);

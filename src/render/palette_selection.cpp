@@ -3,8 +3,12 @@
 namespace tfx::render {
 
 palette_selection::palette_selection(palette_selection_state const initial) : state{initial} {}
-palette_selection_state const &palette_selection::value() const { return state; }
-void palette_selection::invalidate_normal() { state.normal_changed = true; }
+palette_selection_state const &palette_selection::value() const {
+  return state;
+}
+void palette_selection::invalidate_normal() {
+  state.normal_changed = true;
+}
 std::optional<palette_bank> palette_selection::advance(palette_context const &context) {
   using cockpit::view_mode;
   // Native 0x73b76: the nose view tests the entire active projectile list,

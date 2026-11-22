@@ -1,9 +1,10 @@
-#include "fixture_check.h"
 #include <bit>
-#include <iostream>
+#include <cstdlib>
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <stdexcept>
+#include <vector>
+#include "fixture_check.h"
 #include "flight/ejection.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -52,4 +53,4 @@ int main(int const argc, char const *const argv[]) try {
     ++count;
   }
   if(argc == 2) { if(!count) throw std::runtime_error{"empty native pilot fixture"};std::cout << count << " native ejected-pilot fixtures passed\n"; }
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

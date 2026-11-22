@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -29,5 +30,5 @@ int main(int const argc, char const *const argv[]) try {
   if(argc == 2) std::cout << cases << " native point-projection fixtures passed\n";
 } catch(std::exception const &error) {
   std::cerr << error.what() << '\n';
-  return 1;
+  return EXIT_FAILURE;
 }

@@ -1,18 +1,22 @@
 #include "integer_model_polygon.h"
-#include "integer_polygon.h"
-#include "near_clip.h"
-#include "model_projection.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <optional>
 #include <ranges>
 #include <vector>
+#include "integer_polygon.h"
+#include "model_projection.h"
+#include "near_clip.h"
 
 namespace tfx::render {
 namespace {
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t wrap(uint32_t const value) { return std::bit_cast<int32_t>(value); }
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t wrap(uint32_t const value) {
+  return std::bit_cast<int32_t>(value);
+}
 using camera_vertices = std::vector<vec3<int32_t>>;
 using screen_vertices = std::vector<vec2<int16_t>>;
 
@@ -43,7 +47,7 @@ std::optional<screen_vertices> clip(camera_vertices const &vertices, camera cons
 }
 bool winding(screen_vertices const &vertices, models::facing_test const purpose) {
   if(vertices.size() < 3) return false;
-  auto const difference{[&](int32_t const value) { return purpose == models::facing_test::polygon ? static_cast<int32_t>(word(value)) : value; }};
+  auto const difference{[&](int32_t const value){ return purpose == models::facing_test::polygon ? static_cast<int32_t>(word(value)) : value; }};
   vec2<int32_t> const a{difference(vertices[1].x - vertices[0].x),difference(vertices[1].y - vertices[0].y)};
   vec2<int32_t> const b{difference(vertices[2].x - vertices[0].x),difference(vertices[2].y - vertices[0].y)};
   return wrap(static_cast<uint32_t>(a.x) * static_cast<uint32_t>(b.y) - static_cast<uint32_t>(a.y) * static_cast<uint32_t>(b.x)) >= 0;
@@ -68,7 +72,7 @@ bool plane_facing(camera_vertices const &vertices) {
   for(unsigned int axis{0}; axis != 3; ++axis) dot += static_cast<uint32_t>(word(-static_cast<int32_t>(b[axis]))) * static_cast<uint32_t>(normal[axis]);
   return wrap(dot) < 0;
 }
-}
+} // anonymous namespace
 
 std::optional<std::vector<vec2<int16_t>>> project_model_face(std::span<models::model_vertex const> const vertices, camera const &view) {
   // Native distance admission belongs to the assembly/model. Once admitted,
@@ -80,7 +84,7 @@ std::optional<std::vector<vec2<int16_t>>> project_model_face(std::span<models::m
 bool integer_model_polygon(framebuffer &output, std::span<models::model_vertex const> const vertices, camera const &view, uint8_t const colour, colour_map const *const remap) {
   auto const native{native_points(vertices,view)};
   if(!native) return false;
-  bool const shaded{std::ranges::all_of(vertices,[](auto const &vertex) { return vertex.shade >= 0; })};
+  bool const shaded{std::ranges::all_of(vertices,[](auto const &vertex){ return vertex.shade >= 0; })};
   if(shaded) {
     std::vector<uint16_t> shades;shades.reserve(vertices.size());
     for(auto const &vertex : vertices) {
@@ -113,7 +117,7 @@ bool integer_model_polygon(framebuffer &output, std::span<models::model_vertex c
     integer_gouraud_polygon(output,projected,remap ? *remap : identity.row(0),view.viewport_minimum,view.viewport_maximum);
     return true;
   }
-  if(std::ranges::any_of(vertices,[](auto const &vertex) { return vertex.shade >= 0; })) return false;
+  if(std::ranges::any_of(vertices,[](auto const &vertex){ return vertex.shade >= 0; })) return false;
   auto const screen{clip(*native,view)};
   if(!screen) return false;
   if(screen->size() >= 3) integer_polygon(output,*screen,colour,view.viewport_minimum,view.viewport_maximum);
@@ -132,7 +136,7 @@ std::optional<bool> model_facing(std::span<models::model_vertex const> const ver
   auto const native{native_points(vertices,view)};
   if(!native) return std::nullopt;
   if(purpose == models::facing_test::branch) {
-    if(std::ranges::any_of(*native | std::views::take(3),[](auto const &point) { return point.z >> 16 <= model_near_depth; })) return plane_facing(*native);
+    if(std::ranges::any_of(*native | std::views::take(3),[](auto const &point){ return point.z >> 16 <= model_near_depth; })) return plane_facing(*native);
     screen_vertices screen;
     for(unsigned int i{0}; i != 3; ++i) {
       auto const point{project_model_point((*native)[i],view)};

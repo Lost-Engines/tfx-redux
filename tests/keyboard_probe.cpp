@@ -6,7 +6,7 @@ int main() {
   tfx::flight::keyboard_state state;
   unsigned int mask;
   while(std::cin >> mask) {
-    auto const held{[&](unsigned int const bit) { return (mask & (1u << bit)) != 0; }};
+    auto const held{[&](unsigned int const bit){ return (mask & (1u << bit)) != 0; }};
     tfx::flight::poll_keyboard(state,{
       .directions{
         .up{held(0)},

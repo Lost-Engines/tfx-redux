@@ -1,14 +1,16 @@
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 #include "presentation/player.h"
 
 namespace {
-void require(bool const condition, char const *const message) { if(!condition) throw std::runtime_error{message}; }
+void require(bool const condition, char const *const message) {
+  if(!condition) throw std::runtime_error{message};
+}
 tfx::resources::bytes font_image() {
   tfx::resources::bytes image(973476 + 0xe100);
-  image[0x70aa4 + 0x5bb51 + 1] = 1; // A single synthetic fixed-font ink pixel.
+  image[0x70aa4 + 0x5bb51 + 1] = 1;                                            // A single synthetic fixed-font ink pixel.
   return image;
 }
 } // anonymous namespace

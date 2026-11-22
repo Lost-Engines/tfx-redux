@@ -5,8 +5,12 @@
 
 namespace tfx::render {
 namespace {
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t wrap(uint32_t const value) { return std::bit_cast<int32_t>(value); }
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t wrap(uint32_t const value) {
+  return std::bit_cast<int32_t>(value);
+}
 int16_t advect(int16_t const initial, float const wind) {
   // Original x87 operations load both constants from single precision, retain
   // 53-bit arithmetic, then truncate to a signed dword before the word store.
@@ -15,7 +19,7 @@ int16_t advect(int16_t const initial, float const wind) {
   int32_t const truncated{!std::isfinite(result) || result < std::numeric_limits<int32_t>::min() || result >= 2147483648. ? std::numeric_limits<int32_t>::min() : static_cast<int32_t>(result)};
   return word(truncated);
 }
-}
+} // anonymous namespace
 
 std::optional<int16_t> precipitation_count(precipitation_gate const &context) {
   // Native FCOMP/JAE also falls through on an unordered height comparison;
@@ -32,8 +36,12 @@ void precipitation::initialise(math::random_state &random) {
     point[axis] = math::signed_word(static_cast<uint16_t>(first + random.next()));
   }
 }
-std::span<vec3<int16_t> const> precipitation::field() const { return particles; }
-vec3<int16_t> const &precipitation::drift() const { return offset; }
+std::span<vec3<int16_t> const> precipitation::field() const {
+  return particles;
+}
+vec3<int16_t> const &precipitation::drift() const {
+  return offset;
+}
 void precipitation::paint(framebuffer &output, precipitation_view const &view, int16_t const requested_count, vec2f const &wind_xz) {
   int constexpr volume_half_size{512}, volume_mask{1023}, camera_scale{4};
   uint8_t constexpr colour{241};

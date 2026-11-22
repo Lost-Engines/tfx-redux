@@ -1,7 +1,7 @@
 #include "model_projection.h"
-#include "near_clip.h"
 #include <cmath>
 #include <limits>
+#include "near_clip.h"
 
 namespace tfx::render {
 

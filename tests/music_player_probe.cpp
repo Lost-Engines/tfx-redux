@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include "audio/music_player.h"
 #include "audio/sc55_synth.h"
@@ -121,8 +122,8 @@ int main(int const argc, char const *const argv[]) try {
   auto const executable{tfx::resources::read_file(std::filesystem::path{argv[2]}.parent_path() / "TFX.DAT")};
   tfx::audio::lapc_order_profiles profiles;
   for(unsigned int profile{0}; profile != profiles.size(); ++profile) std::ranges::copy(tfx::resources::binary_view{executable}.slice(973476 + 0xa38c + profile * 12,12),profiles[profile].begin());
-  auto const configure{[&](tfx::audio::music_player &player, tfx::audio::music_mode const mode) { player.configure(mode,3,profiles); }};
-  auto const record{[&](bool const fragmented) {
+  auto const configure{[&](tfx::audio::music_player &player, tfx::audio::music_mode const mode){ player.configure(mode,3,profiles); }};
+  auto const record{[&](bool const fragmented){
     auto receiver{std::make_unique<recording_receiver>()};
     auto *recording{receiver.get()};
     tfx::audio::music_player player{game,launcher,(argc == 5 ? tfx::audio::make_scc_music_device(launcher,std::move(receiver)) : tfx::audio::make_la_music_device(launcher,std::move(receiver))),rate};
@@ -153,7 +154,7 @@ int main(int const argc, char const *const argv[]) try {
     exercise(player,true,true);
     exercise_flight(player,true,true);
   } else {
-    auto const render{[&](bool const fragmented) {
+    auto const render{[&](bool const fragmented){
       tfx::audio::music_player player{game,launcher,tfx::audio::make_fm_music_device(launcher,rate),rate};
       configure(player,tfx::audio::music_mode::fm);
       auto result{exercise(player,fragmented,true)};
@@ -166,5 +167,5 @@ int main(int const argc, char const *const argv[]) try {
     for(size_t index{0}; index != whole.size(); index += 2) if(whole[index] != whole[index + 1]) throw std::runtime_error{"FM dual mono changed"};
     std::cout << whole.size() << " FM PCM samples agree exactly across callback sizes and control transitions\n";
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

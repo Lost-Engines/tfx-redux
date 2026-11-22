@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <source_location>
@@ -10,9 +11,12 @@ int main() try {
   if(!std::filesystem::create_directory(path)) throw std::runtime_error{"cannot create private preference fixture"};
   struct cleanup {
     std::filesystem::path const &directory;
-    ~cleanup() { std::error_code error;std::filesystem::remove_all(directory,error); }
+    ~cleanup() {
+      std::error_code error;
+      std::filesystem::remove_all(directory,error);
+    }
   } const cleanup{path};
-  auto const check{[](bool const value, std::source_location const where = std::source_location::current()) { if(!value) throw std::runtime_error{"preference file integration mismatch at line " + std::to_string(where.line())}; }};
+  auto const check{[](bool const value, std::source_location const where = std::source_location::current()){ if(!value) throw std::runtime_error{"preference file integration mismatch at line " + std::to_string(where.line())}; }};
   auto const fresh{tfx::configuration::load(path)};
   check(fresh.control == tfx::flight::control_source::keyboard && fresh.preferred_control == fresh.control);
   check(fresh.model == tfx::simulation::flight_model::military_spec);
@@ -51,5 +55,5 @@ int main() try {
   check(!tfx::configuration::save_preferences(path,state));
   check(tfx::resources::read_file(config) == tfx::resources::bytes(oversized.begin(),oversized.end()));
   check(!tfx::configuration::update_preferences(std::string(tfx::configuration::configuration_buffer_size - 1,'x'),state));
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

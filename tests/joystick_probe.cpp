@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -19,11 +20,10 @@ int main(int const argc, char const *const argv[]) try {
     std::vector<int> values{axes.x,axes.y,static_cast<int>(action)};
     for(auto const &profile : buttons.remaining) for(auto const value : profile) values.push_back(value);
     for(auto const value : values) {
-      if(argc == 2) { int expected; if(!(input >> expected) || expected != value) throw std::runtime_error{"joystick mismatch in case " + std::to_string(cases)}; }
-      else std::cout << value << ' ';
+      if(argc == 2) { int expected; if(!(input >> expected) || expected != value) throw std::runtime_error{"joystick mismatch in case " + std::to_string(cases)}; } else std::cout << value << ' ';
     }
     if(argc != 2) std::cout << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

@@ -1,4 +1,5 @@
 #include <array>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -27,4 +28,4 @@ int main(int const argc, char const *const argv[]) try {
     ++count;
   }
   if(argc == 2) { if(!count) throw std::runtime_error{"empty down-axis fixture"};std::cout << count << " native down-axis fixtures passed\n"; }
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

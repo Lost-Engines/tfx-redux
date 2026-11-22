@@ -1,4 +1,3 @@
-#include "fixture_check.h"
 #include <array>
 #include <bit>
 #include <charconv>
@@ -6,8 +5,9 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-#include "air_snapshot.h"
 #include "actors/air.h"
+#include "air_snapshot.h"
+#include "fixture_check.h"
 
 namespace {
 
@@ -48,7 +48,7 @@ auto main(int const argc, char const *const argv[])->int try {
     auto const initial{tfx::actors::initialise(program,profiles,formation)};
     tfx::actors::air_runtime state{program,initial,profiles,formation,{}};
     tfx::actors::air_context const context{
-      .intact_ground_target{[intact](vec2<int16_t> const&) { return intact != 0; }},
+      .intact_ground_target{[intact](vec2<int16_t> const&){ return intact != 0; }},
     };
     uint64_t digest{14695981039346656037ULL};
     for(unsigned int tick{0}; tick != ticks; ++tick) {

@@ -22,10 +22,12 @@ scene_displays::scene_displays(instrument_assets const &source) : assets{source}
   .orbit_step{assets.camera_orbit_step},
 } {
 }
-scene_camera_animation const &scene_displays::state() const { return animation; }
+scene_camera_animation const &scene_displays::state() const {
+  return animation;
+}
 void scene_displays::draw(render::software_renderer &renderer, display_side const side, display_page const page, vec2<int16_t> const &offset, scene_camera_state &state, scene_painter const &scene, render::framebuffer *const coverage) {
   unsigned int const slot{side == display_side::left ? 0u : 2u};
-  auto const point{[&](vec2<int> const &local) {
+  auto const point{[&](vec2<int> const &local){
     return vec2<int>{math::signed_word(static_cast<uint16_t>(assets.display_origins[slot].x + offset.x + local.x)),math::signed_word(static_cast<uint16_t>(assets.display_origins[slot].y + offset.y + local.y))};
   }};
   scene_camera_request request{
@@ -65,7 +67,7 @@ void scene_displays::draw(render::software_renderer &renderer, display_side cons
     math::advance_position(request.position,animation.orbit_angles,target_orbit_distance,height_bounds.x,height_bounds.y);
     request.angles = vec3<math::angle>{static_cast<uint16_t>(-animation.orbit_angles.x),static_cast<uint16_t>(-animation.orbit_angles.y),static_cast<uint16_t>(-animation.orbit_angles.z)};
     animation.orbit_angles.y = static_cast<uint16_t>(animation.orbit_angles.y + animation.orbit_step);
-    auto const magnitude{[](int32_t const a, int32_t const b) {
+    auto const magnitude{[](int32_t const a, int32_t const b){
       uint32_t const value{static_cast<uint32_t>(a) - static_cast<uint32_t>(b)};
       return std::bit_cast<int32_t>(std::bit_cast<int32_t>(value) < 0 ? 0u - value : value);
     }};

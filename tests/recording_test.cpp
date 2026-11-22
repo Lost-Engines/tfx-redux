@@ -2,7 +2,9 @@
 #include "recording/file.h"
 
 namespace {
-void require(bool const condition) { if(!condition) throw std::runtime_error{"recording assertion failed"}; }
+void require(bool const condition) {
+  if(!condition) throw std::runtime_error{"recording assertion failed"};
+}
 template<typename Action> void rejects(Action const &action) {
   try { action(); } catch(std::runtime_error const&) { return; }
   throw std::runtime_error{"invalid recording was accepted"};
@@ -38,21 +40,21 @@ int main() try {
   }
   auto const bytes{encode(recording)};
   require(encode(decode(bytes)) == bytes);
-  for(size_t length{0}; length != bytes.size(); ++length) rejects([&] { decode(std::span{bytes}.first(length)); });
+  for(size_t length{0}; length != bytes.size(); ++length) rejects([&]{ decode(std::span{bytes}.first(length)); });
   auto damaged{bytes};damaged[header_bytes + 14] = 255;damaged[header_bytes + 15] = 255;
-  rejects([&] { decode(damaged); });
+  rejects([&]{ decode(damaged); });
   frame.order[0].slot = tfx::render::model_queue_capacity;
-  rejects([&] { encode(recording); });
+  rejects([&]{ encode(recording); });
   frame.order[0].slot = 0;
   for(auto &model : frame.models) model.parameters.fill(42);
-  rejects([&] { encode(recording); }); // Native C5958's 2 KiB temporary buffer.
+  rejects([&]{ encode(recording); });                                          // Native C5958's 2 KiB temporary buffer.
   for(auto &model : frame.models) model.parameters.fill(0);
   recording.resources[1].name = "badshape.3";
   recording.resources.push_back({
     .handle{12},
     .name{std::string{"bad\0name",8}},
   });
-  rejects([&] { encode(recording); });
+  rejects([&]{ encode(recording); });
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {
   std::cerr << "ERROR: " << error.what() << '\n';return EXIT_FAILURE;

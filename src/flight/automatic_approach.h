@@ -5,7 +5,7 @@
 namespace tfx::flight {
 
 struct automatic_approach {
-  vec3<int32_t> destination_metres{0,0,0}; // World-axis order: East/Down/North.
+  vec3<int32_t> destination_metres{0,0,0};                                     // World-axis order: East/Down/North.
   vec3<int32_t> player_metres{0,0,0};
   double distance_km{0};
   double pitch_degrees{-7};

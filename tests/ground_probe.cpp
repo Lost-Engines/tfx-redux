@@ -1,10 +1,10 @@
-#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <utility>
-#include "sensors/ground.h"
+#include "fixture_check.h"
 #include "render/point_projection.h"
+#include "sensors/ground.h"
 #include "world/instance.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -21,7 +21,7 @@ int main(int const argc, char const *const argv[]) try {
       input >> player.x >> player.y >> player.z >> destination.x >> destination.y;
       for(auto &value : projection.matrix.data) input >> value;
       input >> projection.position_q16.x >> projection.position_q16.y >> projection.position_q16.z >> projection.origin.x >> projection.origin.y;
-      auto const target{tfx::sensors::acquire_cruise_target(player,destination,[&](vec3<int32_t> const &position) {
+      auto const target{tfx::sensors::acquire_cruise_target(player,destination,[&](vec3<int32_t> const &position){
         if(auto const point{projection.integer(position)}) return vec2<int16_t>{*point};
         return vec2<int16_t>{-1,-1};
       })};
@@ -88,8 +88,7 @@ int main(int const argc, char const *const argv[]) try {
     } else throw std::runtime_error{"unknown ground sensor operation"};
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(check) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native ground sensor state differs"}; }
-    else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
+    if(check) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"native ground sensor state differs"}; } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

@@ -1,9 +1,9 @@
 #include "weapon_display.h"
 #include <utility>
+#include "cockpit/landing_display.h"
 #include "presentation/drawing.h"
 #include "render/sprites.h"
 #include "weapons/definition.h"
-#include "cockpit/landing_display.h"
 
 namespace tfx::cockpit {
 namespace {
@@ -16,16 +16,28 @@ uint8_t constexpr lock_blink_frames{9}, launch_message_frames{5};
 weapon_display::weapon_display(instrument_assets const &source, resources::archive const &game)
   : assets{source}, attitude{source,game}, numbers{source}, targets{source}, alerts{source}, framing{resources::decode_sprites(game.read(assets.aiming_bank)).at(0)} {
 }
-void weapon_display::reset_tracking() { tracking = {}; }
-void weapon_display::show_launch() { tracking.launch_frames = launch_message_frames; }
-target_animation weapon_display::animation() const { return tracking; }
-void weapon_display::check_fuel(double const fuel) { alerts.check_fuel(fuel); }
-void weapon_display::show_alert(hud_alert const alert) { alerts.show(alert); }
-hud_alert_state weapon_display::alert_state() const { return alerts.value(); }
+void weapon_display::reset_tracking() {
+  tracking = {};
+}
+void weapon_display::show_launch() {
+  tracking.launch_frames = launch_message_frames;
+}
+target_animation weapon_display::animation() const {
+  return tracking;
+}
+void weapon_display::check_fuel(double const fuel) {
+  alerts.check_fuel(fuel);
+}
+void weapon_display::show_alert(hud_alert const alert) {
+  alerts.show(alert);
+}
+hud_alert_state weapon_display::alert_state() const {
+  return alerts.value();
+}
 weapon_effects weapon_display::draw_forward(render::software_renderer &renderer, weapon_display_state const &state, render::framebuffer *const coverage) {
   // Native 0x800f4 ordering; general navigation/radar cues remain separate.
   auto const &offset{state.attitude.offset};
-  auto const full_clip{[&] { renderer.clipping = render::raster_clip::viewport({0,0},{319,199}); }};
+  auto const full_clip{[&]{ renderer.clipping = render::raster_clip::viewport({0,0},{319,199}); }};
   full_clip();
   if(state.navigation_target) {
     auto const &cue{*state.navigation_target};
@@ -113,8 +125,7 @@ weapon_effects weapon_display::draw_forward(render::software_renderer &renderer,
     // Native NAV draws its alert before the outer brake/chute message repeat.
     alerts.draw(renderer,offset,state.elapsed,coverage);
     full_clip();numbers.draw_messages(renderer,state.flight,coverage);
-  }
-  else if(state.bomb_impact) {
+  } else if(state.bomb_impact) {
     // Native 0x7f798: the impact marker is conditional, but its connecting
     // line is always sent to the original bounded weapon viewport.
     auto const &impact{*state.bomb_impact};
@@ -130,31 +141,31 @@ weapon_effects weapon_display::draw_forward(render::software_renderer &renderer,
 void weapon_display::draw(render::software_renderer &renderer, weapon_display_state const &state, render::framebuffer *const coverage, vec2<int> const &line_limit) {
   uint8_t constexpr colour{6};
   auto const &offset{state.attitude.offset};
-  auto const point{[&](vec2<int> const &local) {
+  auto const point{[&](vec2<int> const &local){
     return vec2<int>{math::signed_word(static_cast<uint16_t>(local.x + offset.x)),math::signed_word(static_cast<uint16_t>(local.y + offset.y))};
   }};
-  auto const clip{[&](vec2<int> const &minimum, vec2<int> const &maximum) {
+  auto const clip{[&](vec2<int> const &minimum, vec2<int> const &maximum){
     renderer.clipping = render::raster_clip::viewport(point(minimum),point(maximum));
   }};
-  auto const full_clip{[&] { renderer.clipping = render::raster_clip::viewport({0,0},{319,199}); }};
-  auto const text{[&](vec2<int> const &local, std::string_view const message) {
+  auto const full_clip{[&]{ renderer.clipping = render::raster_clip::viewport({0,0},{319,199}); }};
+  auto const text{[&](vec2<int> const &local, std::string_view const message){
     auto const position{point(local)};renderer.text(position.x,position.y,message,colour,coverage);
   }};
-  auto const right{[&](int const edge, std::string_view const message) { text({edge - static_cast<int>(renderer.text_width(message)),92},message); }};
-  auto const mask{[&](instrument_mask const shape, vec2<int> const &local) {
+  auto const right{[&](int const edge, std::string_view const message){ text({edge - static_cast<int>(renderer.text_width(message)),92},message); }};
+  auto const mask{[&](instrument_mask const shape, vec2<int> const &local){
     auto const position{point(local)};
     render::draw_monochrome(renderer.output,assets.masks[std::to_underlying(shape)],{static_cast<uint16_t>(position.x),static_cast<uint16_t>(position.y)},colour,coverage,renderer.clipping);
   }};
-  auto const frame{[&] {
+  auto const frame{[&]{
     auto const centre{point({162,56})};
     render::draw_sprite(renderer.output,framing,{static_cast<uint16_t>(centre.x),static_cast<uint16_t>(centre.y)},coverage,renderer.clipping);
   }};
-  auto const line{[&](vec2<int> const &from, vec2<int> const &to, vec2<int> const &minimum, vec2<int> const &maximum) {
+  auto const line{[&](vec2<int> const &from, vec2<int> const &to, vec2<int> const &minimum, vec2<int> const &maximum){
     presentation::draw_clipped_line(renderer.output,vec2<int>{from},vec2<int>{to},minimum,maximum,colour);
     if(coverage) presentation::draw_clipped_line(*coverage,vec2<int>{from},vec2<int>{to},minimum,maximum,255);
   }};
-  auto const cannon_label{[&](unsigned int const prefix) { text({96,91},assets.aiming_labels[prefix] + std::to_string(state.ammunition)); }};
-  auto const pitch{[&] { if(state.limited) attitude.draw_pitch(renderer,state.attitude,coverage,state.mode == aiming_mode::navigation ? vec2<int>{319,199} : vec2<int>{line_limit}); }};
+  auto const cannon_label{[&](unsigned int const prefix){ text({96,91},assets.aiming_labels[prefix] + std::to_string(state.ammunition)); }};
+  auto const pitch{[&]{ if(state.limited) attitude.draw_pitch(renderer,state.attitude,coverage,state.mode == aiming_mode::navigation ? vec2<int>{319,199} : vec2<int>{line_limit}); }};
   if(state.mode == aiming_mode::navigation) {
     // Native 0x7ecb4 replaces ammunition/NAV labels with active ILS guidance.
     full_clip();pitch();full_clip();numbers.draw_messages(renderer,state.flight,coverage);
@@ -184,12 +195,12 @@ void weapon_display::draw(render::software_renderer &renderer, weapon_display_st
     right(230,assets.aiming_labels[3]);pitch();clip({89,2},{231,96});
     if(tracking.launch_frames) {
       text({96,85},assets.launch_label);
-      --tracking.launch_frames; // Native 0x7e8fa counts AA paints, independently of elapsed ticks.
+      --tracking.launch_frames;                                                // Native 0x7e8fa counts AA paints, independently of elapsed ticks.
     } else text({96,85},assets.aiming_labels[state.air_lock ? 5 : 6]);
     if(state.air_target) targets.heading(renderer,state.air_target->reading.heading,state.attitude.angles.y,offset,point({89,2}),point({231,96}),coverage);
     return;
   }
-  if(state.mode != aiming_mode::ground) return; // Tank/other roles retain the common framing only.
+  if(state.mode != aiming_mode::ground) return;                                // Tank/other roles retain the common framing only.
   // Native 0x7e958: the ground sight differs for strafing and carried stores.
   if(state.ground_target) targets.ground(renderer,state.ground_target->position,state.ground_target->display,{0,0},line_limit,coverage);
   if(state.cannon) {

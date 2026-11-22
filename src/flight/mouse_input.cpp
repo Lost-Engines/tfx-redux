@@ -16,8 +16,9 @@ vec2<int16_t> mouse_flight_input::advance(vec2<int16_t> const &mickeys) {
 }
 
 vec2<int16_t> mouse_flight_input::advance_clamped(vec2<int16_t> const &mickeys) {
-  for(unsigned int axis{0}; axis != 2; ++axis)
+  for(unsigned int axis{0}; axis != 2; ++axis) {
     position[axis] = static_cast<int16_t>(std::clamp(int{position[axis]} + mickeys[axis],-512,511));
+  }
   return vec2<int16_t>{position};
 }
 

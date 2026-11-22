@@ -1,10 +1,11 @@
-#include "fixture_check.h"
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string_view>
-#include <vector>
 #include <utility>
+#include <vector>
+#include "fixture_check.h"
 #include "flight/simple.h"
 
 namespace {
@@ -12,9 +13,9 @@ namespace {
 std::vector<uint64_t> words(tfx::flight::simple_state const &state) {
   auto const &flight{state.flight};
   std::vector<uint64_t> values;
-  auto const floating{[&](float const value) { values.push_back(std::bit_cast<uint32_t>(value)); }};
-  auto const integer{[&](int32_t const value) { values.push_back(static_cast<uint32_t>(value)); }};
-  auto const precise{[&](double const value) { values.push_back(std::bit_cast<uint64_t>(value)); }};
+  auto const floating{[&](float const value){ values.push_back(std::bit_cast<uint32_t>(value)); }};
+  auto const integer{[&](int32_t const value){ values.push_back(static_cast<uint32_t>(value)); }};
+  auto const precise{[&](double const value){ values.push_back(std::bit_cast<uint64_t>(value)); }};
   for(auto const value : flight.position) floating(value);
   for(auto const value : flight.integer_position) integer(value);
   for(auto const *basis : {&state.ground.body,&state.ground.visible,&flight.orientation}) for(unsigned int row{0}; row != 3; ++row) {
@@ -95,5 +96,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no Simple flight sequences"};
   if(check) std::cout << cases << " native Simple flight sequences agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

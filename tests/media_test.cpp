@@ -1,12 +1,14 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-#include "resources/media.h"
 #include "render/sprites.h"
+#include "resources/media.h"
 
 namespace {
 
-void require(bool const condition, char const *const message) { if(!condition) throw std::runtime_error{message}; }
+void require(bool const condition, char const *const message) {
+  if(!condition) throw std::runtime_error{message};
+}
 template<typename function> void rejects(function const &action) {
   try { action(); } catch(std::runtime_error const&) { return; }
   throw std::runtime_error{"malformed media was accepted"};
@@ -18,7 +20,7 @@ tfx::resources::bytes literal_block(std::span<uint8_t const> const input) {
   // A test-authored stream of literals followed by the decoder's explicit end marker.
   tfx::resources::bytes result;
   unsigned int remaining{0}, at{0};uint16_t bits{0};
-  auto const bit{[&](bool const value) {
+  auto const bit{[&](bool const value){
     if(!remaining) { at = static_cast<unsigned int>(result.size());result.resize(result.size() + 2);remaining = 16;bits = 0; }
     bits = static_cast<uint16_t>(bits | (static_cast<unsigned int>(value) << --remaining));
     word(result,at,bits);
@@ -60,11 +62,11 @@ int main() try {
   tfx::resources::animation loop{repeated};loop.advance();loop.advance();loop.repeat();loop.advance();
   require(loop.position() == 2 && loop.image().pixels[12] == 8 && loop.image().pixels[4] == 9,"repeat must retain the final planes and restart at the second stored frame");
   word(delta,2,16000);
-  rejects([&] { tfx::resources::animation bad{animation(false,delta)};bad.advance(); });
-  rejects([] { tfx::resources::decode_animation_block(tfx::resources::bytes{0,192,0}); });
-  rejects([] { tfx::resources::decode_animation_block({}); });
-  rejects([] { tfx::resources::decode_screen({}); });
-  rejects([] { tfx::resources::decode_sprites(tfx::resources::bytes{1,3,0,2,2,0}); });
+  rejects([&]{ tfx::resources::animation bad{animation(false,delta)};bad.advance(); });
+  rejects([]{ tfx::resources::decode_animation_block(tfx::resources::bytes{0,192,0}); });
+  rejects([]{ tfx::resources::decode_animation_block({}); });
+  rejects([]{ tfx::resources::decode_screen({}); });
+  rejects([]{ tfx::resources::decode_sprites(tfx::resources::bytes{1,3,0,2,2,0}); });
   auto const bitmap{tfx::resources::decode_monochrome(tfx::resources::bytes{9,2,0x80,0x80,0x40,0})};
   require(bitmap.size == vec2<unsigned int>{9,2},"monochrome dimensions lost a partial final byte");
   tfx::render::framebuffer ink, coverage;
@@ -72,10 +74,10 @@ int main() try {
   tfx::render::draw_monochrome(ink,bitmap,{0,0},0,&coverage);
   require(ink.pixels[0] == 0 && ink.pixels[8] == 0 && ink.pixels[321] == 0 && ink.pixels[1] == 99,"monochrome bit order, row stride or opaque black differs");
   require(coverage.pixels[0] == 255 && coverage.pixels[8] == 255 && coverage.pixels[321] == 255 && coverage.pixels[1] == 0,"monochrome coverage lost black ink or filled a transparent bit");
-  rejects([] { tfx::resources::decode_monochrome({}); });
-  rejects([] { tfx::resources::decode_monochrome(tfx::resources::bytes{0,1}); });
-  rejects([] { tfx::resources::decode_monochrome(tfx::resources::bytes{9,2,0x80,0x80,0x40}); });
-  rejects([] { tfx::resources::decode_monochrome(tfx::resources::bytes{8,1,0x80,0}); });
+  rejects([]{ tfx::resources::decode_monochrome({}); });
+  rejects([]{ tfx::resources::decode_monochrome(tfx::resources::bytes{0,1}); });
+  rejects([]{ tfx::resources::decode_monochrome(tfx::resources::bytes{9,2,0x80,0x80,0x40}); });
+  rejects([]{ tfx::resources::decode_monochrome(tfx::resources::bytes{8,1,0x80,0}); });
   std::cout << "Native planar images, literal refills, retained-background deltas and malformed boundaries passed\n";
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

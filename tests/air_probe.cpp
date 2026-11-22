@@ -5,8 +5,8 @@
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
-#include "air_snapshot.h"
 #include "actors/air.h"
+#include "air_snapshot.h"
 #include "resources/archive.h"
 #include "resources/executable_tables.h"
 
@@ -36,7 +36,7 @@ int main(int const argc, char const *const argv[]) try {
     auto const initial{tfx::actors::initialise(program,profiles,tables.formations)};
     tfx::actors::air_runtime state{program,initial,profiles,tables.formations,tables.aircraft_envelopes,{},manoeuvres};
     tfx::actors::air_context context{
-      .intact_ground_target{[intact](vec2<int16_t> const&) { return intact != 0; }},
+      .intact_ground_target{[intact](vec2<int16_t> const&){ return intact != 0; }},
     };
     std::array<std::optional<tfx::actors::air_threat>,tfx::actors::player_air_target> threats;
     if(combat) {

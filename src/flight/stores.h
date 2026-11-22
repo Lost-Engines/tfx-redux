@@ -2,9 +2,9 @@
 
 #include <array>
 #include <cstdint>
-#include "flight/aircraft.h"
 #include "vectorstorm/vector/vector2.h"
 #include "vectorstorm/vector/vector3.h"
+#include "flight/aircraft.h"
 
 namespace tfx::flight {
 

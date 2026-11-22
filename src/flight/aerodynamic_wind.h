@@ -19,7 +19,7 @@ struct aerodynamic_wind_parameters {
   double legacy_gust_range{0};
 };
 struct aerodynamic_wind {
-  double simulation_seconds{0}; // Shared original flight clock; gust renewal resets it.
+  double simulation_seconds{0};                                                // Shared original flight clock; gust renewal resets it.
   double smooth_speed{0};
   double target_speed{0};
   double direction{0};
@@ -31,18 +31,18 @@ struct aerodynamic_wind {
   double direction_envelope_frequency{0};
   double vertical_phase_frequency{0};
   double vertical_phase_offset{0};
-  double vertical_scale{0}; // Compiled zero, with no native writer.
+  double vertical_scale{0};                                                    // Compiled zero, with no native writer.
   vec2d upper_wind{0,0};
   double upper_mix{0};
   double legacy_gust_period{0};
   double legacy_gust_target{0};
-  double legacy_gust_smoothing{0}; // Three initialized fields have no native readers.
+  double legacy_gust_smoothing{0};                                             // Three initialized fields have no native readers.
   vec3f velocity_ned{0,0,0};
 };
 struct aerodynamic_wind_context {
   double down_metres{0};
-  bool terrain_wind_boost{false}; // Native 0xe762 != 0.
-  bool weather_wind_boost{false}; // Native environment flag 0x80.
+  bool terrain_wind_boost{false};                                              // Native 0xe762 != 0.
+  bool weather_wind_boost{false};                                              // Native environment flag 0x80.
 };
 
 std::array<aerodynamic_wind_parameters,aerodynamic_weather_profiles> load_aerodynamic_wind_parameters(std::span<uint8_t const> executable);

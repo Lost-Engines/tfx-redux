@@ -28,7 +28,7 @@ bool arming_region::contains(vec2<int16_t> const &point) const {
 arming_assets::arming_assets(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
   unsigned int constexpr data{973476}, code{0x70aa4};
-  auto const string{[&](unsigned int const address) {
+  auto const string{[&](unsigned int const address){
     std::string result;
     for(unsigned int index{0}; index != 128; ++index) {
       auto const byte{source.byte(data + address + index)};
@@ -56,7 +56,7 @@ arming_assets::arming_assets(std::span<uint8_t const> const executable) {
   unavailable = {string(0x1c9c),string(0x1cb0)};
   mission_incomplete = string(0x1cc0);
   for(unsigned int corner{0}; corner != unavailable_box.size(); ++corner) unavailable_box[corner] = {source.signed_le16(data + 0x8074 + corner * 4),source.signed_le16(data + 0x8076 + corner * 4)};
-  auto const region{[&](unsigned int const at, arming_action const kind, unsigned int const row = 0) {
+  auto const region{[&](unsigned int const at, arming_action const kind, unsigned int const row = 0){
     return arming_region{
       .minimum{source.signed_le16(data + at),source.signed_le16(data + at + 2)},
       .maximum{source.signed_le16(data + at + 4),source.signed_le16(data + at + 6)},

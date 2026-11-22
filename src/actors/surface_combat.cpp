@@ -7,9 +7,15 @@
 namespace tfx::actors {
 namespace {
 
-int32_t subtract(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int32_t magnitude(int32_t const value) { return value < 0 ? subtract(0,value) : value; }
-int32_t horizontal_range(vec3<int32_t> const &from, vec3<int32_t> const &to) { return std::max(magnitude(subtract(to.x,from.x)),magnitude(subtract(to.z,from.z))); }
+int32_t subtract(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int32_t magnitude(int32_t const value) {
+  return value < 0 ? subtract(0,value) : value;
+}
+int32_t horizontal_range(vec3<int32_t> const &from, vec3<int32_t> const &to) {
+  return std::max(magnitude(subtract(to.x,from.x)),magnitude(subtract(to.z,from.z)));
+}
 weapons::release make_shot(surface_state const &state, unsigned int const owner, uint16_t const weapon, vec3<int32_t> const &target, math::angle const pitch, std::optional<unsigned int> const actor = {}) {
   auto const bearing{math::bearing(state.pose.position,target)};
   int32_t constexpr minimum_launch_speed{200};
@@ -42,7 +48,7 @@ std::vector<weapons::release> engage_surface_targets(surface_state &state, profi
   int32_t const range{std::bit_cast<int32_t>(static_cast<uint32_t>(native.le16(42)) * q8_units_per_mile)};
   std::vector<weapons::release> shots;
   if(!range || std::to_underlying(profile.side) > std::to_underlying(allegiance::neutral)) return shots;
-  auto const fire{[&](vec3<int32_t> const &target, unsigned int const actor) {
+  auto const fire{[&](vec3<int32_t> const &target, unsigned int const actor){
     unsigned int constexpr firing_chance_divisor{60};
     if(random.next() % firing_chance_divisor) return false;
     math::angle constexpr vertical_launch_pitch{0xc000};

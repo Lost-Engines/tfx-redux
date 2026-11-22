@@ -18,7 +18,9 @@ std::optional<uint32_t> gus_sample_ram::allocate(uint32_t const bytes) {
   free_bytes -= bytes;
   return address;
 }
-uint32_t gus_sample_ram::remaining() const { return free_bytes; }
+uint32_t gus_sample_ram::remaining() const {
+  return free_bytes;
+}
 
 gus_residency plan_gus_residency(std::span<uint32_t const> const sizes, unsigned int const ram_kib) {
   // Links occupy nine signed bits; -1 terminates the list, indices are 0..255.
@@ -29,9 +31,11 @@ gus_residency plan_gus_residency(std::span<uint32_t const> const sizes, unsigned
   for(auto const size : sizes) if(size > maximum_sample_bytes) throw std::out_of_range{"Gravis sample exceeds its native word length"};
   // Native swaps strictly larger later entries into place. Equal lengths can
   // be displaced indirectly; stable_sort would change their allocation order.
-  for(unsigned int first{0}; first != order.size(); ++first)
-    for(unsigned int next{first + 1}; next != order.size(); ++next)
+  for(unsigned int first{0}; first != order.size(); ++first) {
+    for(unsigned int next{first + 1}; next != order.size(); ++next) {
       if(sizes[order[first]] < sizes[order[next]]) std::swap(order[first],order[next]);
+  }
+    }
   gus_sample_ram ram{ram_kib};
   gus_residency result{
     .addresses{},

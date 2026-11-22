@@ -7,8 +7,9 @@ engine_key_effects press_engine_key(engine_key_context const &context) {
   if(context.inhibited || context.crashed || context.disabled) return result;
   if(context.condition == system_condition::active) {
     result.running = false;
-    if(context.afterburner && context.other_condition == system_condition::normal)
+    if(context.afterburner && context.other_condition == system_condition::normal) {
       result.ordered.push_back(engine_key_event::stop_afterburner);
+    }
     result.ordered.push_back(engine_key_event::stop_sample);
     result.ordered.push_back(engine_key_event::stop_synth);
   } else if(context.condition == system_condition::normal) {

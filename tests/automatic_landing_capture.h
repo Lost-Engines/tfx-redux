@@ -1,7 +1,7 @@
 #pragma once
 
-#include "aerodynamic_snapshot.h"
 #include "aerodynamic_autopilot_snapshot.h"
+#include "aerodynamic_snapshot.h"
 #include "flight/automatic_landing.h"
 
 inline void trace_automatic_landing(tfx::flight::aerodynamic_flight &flight, tfx::flight::damage_state &damage, tfx::math::random_state &random, std::istream &input) {

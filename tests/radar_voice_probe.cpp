@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -20,5 +21,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases || !input.eof()) throw std::runtime_error{"incomplete radar speech input"};
   if(file.is_open()) std::cout << cases << " native radar voice requests passed\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

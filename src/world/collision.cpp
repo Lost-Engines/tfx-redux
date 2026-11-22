@@ -6,13 +6,13 @@ namespace {
 
 bool crosses_rectangle(vec2<int> const &minimum, vec2<int> const &maximum, vec2<int> const &a, vec2<int> const &b) {
   /// Native 0xd5dbc uses strict endpoint containment and a directed corner test, including its asymmetric tangent cases.
-  auto const region{[&](vec2<int> const &p) {
+  auto const region{[&](vec2<int> const &p){
     return (p.x <= minimum.x ? 1u : 0u) | (p.x >= maximum.x ? 2u : 0u) | (p.y >= maximum.y ? 4u : 0u) | (p.y <= minimum.y ? 8u : 0u);
   }};
   auto const first{region(a)}, second{region(b)};
   if(!first || !second) return true;
   if(first & second) return false;
-  auto const negative{[&](int const x, int const y) {
+  auto const negative{[&](int const x, int const y){
     return static_cast<int64_t>(y - a.y) * (b.x - a.x) - static_cast<int64_t>(x - a.x) * (b.y - a.y) < 0;
   }};
   // Only adjacent outside regions need a corner test. Opposite corners test both diagonally opposed corners.
@@ -34,7 +34,7 @@ bool crosses_rectangle(vec2<int> const &minimum, vec2<int> const &maximum, vec2<
 
 vec3<int16_t> diagonal_position(vec3<int16_t> const &source) {
   // Native 0xb7858's optional 45-degree box transform deliberately wraps each product to 32 bits before dividing towards zero.
-  auto const component{[](int const value) {
+  auto const component{[](int const value){
     auto const product{std::bit_cast<int32_t>(static_cast<uint32_t>(value) * static_cast<uint32_t>(-11585))};
     return math::signed_word(static_cast<uint16_t>(product / 16384));
   }};

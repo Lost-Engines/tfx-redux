@@ -10,7 +10,7 @@ namespace tfx::presentation {
 configuration_menu_assets::configuration_menu_assets(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
   unsigned int constexpr data{0xedaa4};
-  auto const string{[&](unsigned int const offset) {
+  auto const string{[&](unsigned int const offset){
     std::string value;
     for(unsigned int index{0}; index != 128; ++index) {
       auto const byte{source.byte(data + offset + index)};
@@ -36,8 +36,9 @@ configuration_menu_assets::configuration_menu_assets(std::span<uint8_t const> co
   recording_name = string(0x8868);
   recording_marker = string(source.le32(data + 0x594c));
   recording_play = string(0x1344);
-  for(unsigned int shifted{0}; shifted != recording_keys.size(); ++shifted)
+  for(unsigned int shifted{0}; shifted != recording_keys.size(); ++shifted) {
     std::ranges::copy(source.slice(data + (shifted ? 0xad85 : 0xab50),recording_keys[shifted].size()),recording_keys[shifted].begin());
+  }
   no = string(0x24ac);
   yes = string(0x24b0);
   enrol = string(0x249c);
@@ -51,13 +52,20 @@ configuration_menu::configuration_menu(configuration::settings &preferences, con
   preferences{preferences}, assets{assets}, font{font}, video_name{recording_name}, audio{audio}, graphics_enabled{graphics_enabled} {
   rebuild();
 }
-configuration_page configuration_menu::page() const { return current; }
-void configuration_menu::request_quit() { current = configuration_page::confirm_quit;rebuild(); }
-std::span<configuration_button const> configuration_menu::widgets() const { return buttons; }
+configuration_page configuration_menu::page() const {
+  return current;
+}
+void configuration_menu::request_quit() {
+  current = configuration_page::confirm_quit;
+  rebuild();
+}
+std::span<configuration_button const> configuration_menu::widgets() const {
+  return buttons;
+}
 void configuration_menu::rebuild() {
   buttons.clear();
   form = {};
-  auto const add{[&](std::string const &text, uint8_t const x, uint8_t const y, configuration_item const item, uint8_t const value = 0, bool const selected = true, bool const enabled = true) {
+  auto const add{[&](std::string const &text, uint8_t const x, uint8_t const y, configuration_item const item, uint8_t const value = 0, bool const selected = true, bool const enabled = true){
     buttons.push_back({
       .drawing{
         .position{x,y},
@@ -193,7 +201,9 @@ configuration_action configuration_menu::click(vec2<int16_t> const &position) {
   for(unsigned int index{0}; index != buttons.size(); ++index) if(dialogue_contains(form,buttons[index].drawing,position)) return select(index);
   return configuration_action::none;
 }
-bool configuration_menu::entering_recording_name() const { return editing_video_name; }
+bool configuration_menu::entering_recording_name() const {
+  return editing_video_name;
+}
 void configuration_menu::press(uint8_t const scan, bool const shift) {
   if(!editing_video_name) return;
   if(scan == 0x1c) { editing_video_name = false;return; }
@@ -245,7 +255,7 @@ void configuration_menu::draw(render::framebuffer &target) const {
   auto const &subtitle{current == configuration_page::main ? assets.main_title : assets.realism_title};
   font.draw(target,{161 - font.measure(subtitle) / 2,34},subtitle,dialogue_palette_base);
   font.draw(target,{160 - font.measure(subtitle) / 2,33},subtitle,dialogue_palette_base + 15);
-  auto const labels{[&](auto const &lines) {
+  auto const labels{[&](auto const &lines){
     for(unsigned int row{0}; row != lines.size(); ++row) font.draw(target,{78 - font.measure(lines[row]),58 + static_cast<int>(row) * 16},lines[row],dialogue_palette_base + 15);
   }};
   if(current == configuration_page::main) labels(assets.main_labels);

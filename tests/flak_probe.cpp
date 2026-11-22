@@ -1,8 +1,9 @@
-#include "fixture_check.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include "fixture_check.h"
 #include "world/flak.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -56,9 +57,8 @@ int main(int const argc, char const *const argv[]) try {
     values.insert(values.end(),draws.begin(),draws.end());
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(argc == 2) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"flak mismatch at case " + std::to_string(cases)}; }
-    else std::cout << digest << '\n';
+    if(argc == 2) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"flak mismatch at case " + std::to_string(cases)}; } else std::cout << digest << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

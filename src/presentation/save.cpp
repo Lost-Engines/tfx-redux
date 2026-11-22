@@ -31,7 +31,7 @@ saved_state decode_save(program const &schema, std::span<uint8_t const> const so
   unsigned int const depth{view.le16(at)};
   at += 2;
   if(depth > saved_return_limit) throw std::runtime_error{"saved parser return stack exceeds its native capacity"};
-  auto const position{[&] {
+  auto const position{[&]{
     location const value{
       .function{view.le16(at)},
       .statement{view.le16(at + 2)},
@@ -54,8 +54,8 @@ resources::bytes encode_save(program const &schema, saved_state const &state) {
   validate_schema(schema);
   if(state.callers.size() > saved_return_limit || state.reserved.size() != saved_variable_slots - schema.variables.size()) throw std::runtime_error{"invalid native save storage size"};
   resources::bytes result;
-  auto const word{[&](uint16_t const value) { result.push_back(static_cast<uint8_t>(value));result.push_back(static_cast<uint8_t>(value >> 8)); }};
-  auto const dword{[&](uint32_t const value) { word(static_cast<uint16_t>(value));word(static_cast<uint16_t>(value >> 16)); }};
+  auto const word{[&](uint16_t const value){ result.push_back(static_cast<uint8_t>(value));result.push_back(static_cast<uint8_t>(value >> 8)); }};
+  auto const dword{[&](uint32_t const value){ word(static_cast<uint16_t>(value));word(static_cast<uint16_t>(value >> 16)); }};
   for(auto const &variable : schema.variables) {
     auto const found{state.values.find(variable.name)};
     if(found == state.values.end()) throw std::runtime_error{"save is missing parser variable: " + variable.name};
@@ -73,7 +73,7 @@ resources::bytes encode_save(program const &schema, saved_state const &state) {
   }
   for(auto const value : state.reserved) dword(value);
   word(static_cast<uint16_t>(state.callers.size()));
-  auto const position{[&](location const value) {
+  auto const position{[&](location const value){
     validate(value,schema);
     word(static_cast<uint16_t>(value.function));
     word(static_cast<uint16_t>(value.statement));

@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -61,5 +62,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no aerodynamic speed cases"};
   if(argc == 2) std::cout << cases << " native aerodynamic speed fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

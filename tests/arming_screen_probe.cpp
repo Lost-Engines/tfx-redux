@@ -1,8 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 #include "presentation/arming_widgets.h"
-#include "resources/media.h"
 #include "resources/archive.h"
+#include "resources/media.h"
 
 int main(int const argc, char const *const argv[]) try {
   if(argc != 2 && argc != 3) throw std::runtime_error{"usage: arming_screen_probe DATA_DIRECTORY"};

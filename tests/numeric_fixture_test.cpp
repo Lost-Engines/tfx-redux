@@ -1,12 +1,15 @@
-#include "numeric_fixture.h"
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include "numeric_fixture.h"
 
 namespace {
 void require(bool const condition, char const *const message) {
   if(!condition) throw std::runtime_error{message};
 }
-uint64_t bits(double const value) { return std::bit_cast<uint64_t>(value); }
+uint64_t bits(double const value) {
+  return std::bit_cast<uint64_t>(value);
+}
 }
 
 int main() try {
@@ -34,7 +37,7 @@ int main() try {
   for(double const bound : {-1.0,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}) {
     bool rejected{false};
     try { numeric_fixture_value::with_absolute_roundoff(0.0,bound); }
-    catch(std::invalid_argument const &) { rejected=true; }
+    catch(std::invalid_argument const &) { rejected = true; }
     require(rejected,"invalid absolute rounding bound accepted");
   }
   require(numeric_fixture_value{1.0f}.matches(std::bit_cast<uint32_t>(std::nextafter(1.0f,2.0f))),"adjacent float rejected");
@@ -52,8 +55,8 @@ int main() try {
   require(tfx::test::fixture_matches(encoded,numeric_fixture_value{1.5}),"encoded fixture did not round trip");
   bool rejected{false};
   try { std::istringstream empty; tfx::test::fixture_matches(empty,numeric_fixture_value{0.0}); }
-  catch(std::runtime_error const &) { rejected=true; }
+  catch(std::runtime_error const &) { rejected = true; }
   require(rejected,"truncated fixture accepted");
   std::cout << "Portable numeric comparisons preserve integer state, bound rounding, and reject invalid fixtures\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

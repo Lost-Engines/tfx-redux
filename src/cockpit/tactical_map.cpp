@@ -51,7 +51,7 @@ auto tactical_map::contact_card(tactical_map_aircraft const &aircraft, unsigned 
   for(char &character : name) if(character >= 'a' && character <= 'z') character = static_cast<char>(character - 'a' + 'A');
   uint8_t const colour{aircraft.selected ? uint8_t{11} : uint8_t{6}};
   int const x{index % 2 ? 270 : 221}, y{17 + static_cast<int>(index / 2) * 34};
-  auto const text{[&](int const row, std::string const &message) { renderer.text(x,y + row * 6,message,colour); }};
+  auto const text{[&](int const row, std::string const &message){ renderer.text(x,y + row * 6,message,colour); }};
   text(0,name);
   int16_t const speed{math::signed_word(static_cast<uint16_t>(reading.speed_q16 >> 16))};
   text(1,detail::decimal(assets.tactical_map_formats[0],static_cast<double>(static_cast<double>(speed) * assets.speed_scale),0));
@@ -71,7 +71,7 @@ auto tactical_map::open(tactical_map_snapshot const &state)->void {
   renderer.clipping = render::raster_clip::viewport({0,0},{319,199});
   render::draw_sprite(renderer.output,schematic,{100,100},nullptr,renderer.clipping);
   overlay.image().paint(renderer.output);
-  auto const line{[&](vec2<int> const &from, vec2<int> const &to, uint8_t const colour) {
+  auto const line{[&](vec2<int> const &from, vec2<int> const &to, uint8_t const colour){
     presentation::draw_clipped_line(renderer.output,vec2<int>{from},vec2<int>{to},line_minimum,line_maximum,colour);
   }};
   for(unsigned int index{1}; index < snapshot.route.size(); ++index) {
@@ -107,6 +107,8 @@ auto tactical_map::advance(simulation::timer_ticks const elapsed)->void {
   target_points();
   landing_point(animation.target_colour == 15 ? 6 : 7);
 }
-auto tactical_map::image() const->render::framebuffer const& { return renderer.output; }
+auto tactical_map::image() const->render::framebuffer const& {
+  return renderer.output;
+}
 
 } // namespace tfx::cockpit

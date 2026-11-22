@@ -18,10 +18,10 @@ bool inside(vec3<int32_t> const &position, vec3<int32_t> const &reference, bool 
 } // anonymous namespace
 
 bool aircraft_in_draw_region(vec3<int32_t> const &position, vec3<int32_t> const &reference) {
-  return inside(position,reference,false); // Native 0x78180: X and Z, inclusive.
+  return inside(position,reference,false);                                     // Native 0x78180: X and Z, inclusive.
 }
 bool surface_in_draw_region(vec3<int32_t> const &position, vec3<int32_t> const &reference) {
-  return inside(position,reference,true); // Native 0x7c354: X, Y and Z, inclusive.
+  return inside(position,reference,true);                                      // Native 0x7c354: X, Y and Z, inclusive.
 }
 
 } // namespace tfx::actors

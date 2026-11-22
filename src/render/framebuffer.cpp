@@ -14,7 +14,7 @@ void framebuffer::resize(vec2<int> const &dimensions) {
   auto const count{pixel_count(dimensions)};
   size = vec2<int>{dimensions};
   pixels.assign(count,0);
-  coverage.clear();hud_coverage.clear();hud_capture=nullptr;
+  coverage.clear();hud_coverage.clear();hud_capture = nullptr;
 }
 void framebuffer::track_writes() {
   coverage.assign(pixels.size(),0);
@@ -27,20 +27,22 @@ std::vector<rgba_pixel> framebuffer::colourise(palette const &colours) const {
   return result;
 }
 void framebuffer::colourise(palette const &colours, std::vector<rgba_pixel> &result) const {
-  if(!hud_coverage.empty() && hud_coverage.size()!=pixels.size()) throw std::logic_error{"HUD coverage dimensions do not match the framebuffer"};
+  if(!hud_coverage.empty() && hud_coverage.size() != pixels.size()) throw std::logic_error{"HUD coverage dimensions do not match the framebuffer"};
   // Expand the small palette once, then copy complete RGBA pixels. The live
   // window retains its output allocation across frames and resolution changes.
   std::array<rgba_pixel,256> lookup;
-  for(size_t i=0;i<lookup.size();++i) lookup[i]={colours[i].r,colours[i].g,colours[i].b,255};
+  for(size_t i=0;i < lookup.size();++i) lookup[i] = {colours[i].r,colours[i].g,colours[i].b,255};
   result.resize(pixels.size());
-  for(size_t i=0;i<pixels.size();++i) result[i]=lookup[pixels[i]];
+  for(size_t i=0;i < pixels.size();++i) result[i] = lookup[pixels[i]];
   if(!hud_coverage.empty()) {
     std::array<vec3<uint8_t>,256> light;
     auto const &emission{colours[6]};
-    for(size_t coverage=0;coverage<light.size();++coverage) for(unsigned channel=0;channel<3;++channel)
-      light[coverage][channel]=static_cast<uint8_t>((static_cast<unsigned>(emission[channel])*coverage*9+1275)/2550);
-    for(size_t i=0;i<result.size();++i) if(auto const coverage=hud_coverage[i]) for(unsigned channel=0;channel<3;++channel)
-      result[i][channel]=static_cast<uint8_t>(std::min(255u,static_cast<unsigned>(result[i][channel])+light[coverage][channel]));
+    for(size_t coverage=0;coverage < light.size();++coverage) for(unsigned channel=0;channel < 3;++channel) {
+      light[coverage][channel] = static_cast<uint8_t>((static_cast<unsigned>(emission[channel]) * coverage * 9 + 1275) / 2550);
+    }
+    for(size_t i=0;i < result.size();++i) if(auto const coverage=hud_coverage[i]) for(unsigned channel=0;channel < 3;++channel) {
+      result[i][channel] = static_cast<uint8_t>(std::min(255u,static_cast<unsigned>(result[i][channel]) + light[coverage][channel]));
+    }
   }
 }
 
@@ -69,7 +71,7 @@ palette expand_dac_palette(dac_palette const &source) {
   // VGA's six-bit DAC ignores the upper two bits. Live HUDCOL brightness
   // deliberately stores 90..127; authored palette files remain strictly checked.
   dac_palette visible;
-  std::ranges::transform(source,visible.begin(),[](uint8_t const value) { return static_cast<uint8_t>(value & 63); });
+  std::ranges::transform(source,visible.begin(),[](uint8_t const value){ return static_cast<uint8_t>(value & 63); });
   return decode_palette(visible);
 }
 

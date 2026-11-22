@@ -9,7 +9,9 @@ gus_scheduler::gus_scheduler(std::span<gus_sample_descriptor const> const defini
   : definitions{definitions}, cooldown(definitions.size(),0), state{initial} {
   if(state.resident_cursor >= voice_count) throw std::out_of_range{"Gravis resident voice cursor exceeds its pool"};
 }
-void gus_scheduler::enable(bool const enabled) { state.enabled = enabled; }
+void gus_scheduler::enable(bool const enabled) {
+  state.enabled = enabled;
+}
 void gus_scheduler::advance(simulation::timer_ticks const elapsed) {
   for(auto &remaining : cooldown) if(remaining > 0) {
     remaining = std::bit_cast<int16_t>(static_cast<uint16_t>(remaining - elapsed));
@@ -47,7 +49,11 @@ std::optional<gus_request> gus_scheduler::submit(sample_priority const priority,
   for(auto const index : sequence) if(definitions[index].sample.samples) request.sequence.push_back(index);
   return request;
 }
-gus_scheduler_state const &gus_scheduler::value() const { return state; }
-std::span<int16_t const> gus_scheduler::remaining() const { return cooldown; }
+gus_scheduler_state const &gus_scheduler::value() const {
+  return state;
+}
+std::span<int16_t const> gus_scheduler::remaining() const {
+  return cooldown;
+}
 
 } // namespace tfx::audio

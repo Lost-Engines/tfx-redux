@@ -1,7 +1,7 @@
 #include "recovery.h"
+#include <utility>
 #include "resources/media.h"
 #include "world/environment.h"
-#include <utility>
 
 namespace tfx::missions {
 
@@ -35,7 +35,7 @@ recovery_state recovery_maps::resolve(recovery_state result, recovery_context co
   result.status = context.damaged ? session_status::normal : session_status::violated_orders;
   auto const &map{maps.at(std::to_underlying(context.region))};
   if(!map) throw std::runtime_error{"pilot recovery map unavailable for this region"};
-  auto const point{[](vec2<int32_t> const &coordinates) {
+  auto const point{[](vec2<int32_t> const &coordinates){
     // Native uses truncating division, then stores both pixel coordinates in words.
     return vec2<int16_t>{math::signed_word(static_cast<uint16_t>(coordinates.x / world::cell_units)),math::signed_word(static_cast<uint16_t>(world::map_height - 1 - coordinates.y / world::cell_units))};
   }};

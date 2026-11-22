@@ -1,5 +1,6 @@
 #include <array>
 #include <bit>
+#include <cstdlib>
 #include <iostream>
 #include "audio/osl_resource.h"
 
@@ -20,7 +21,7 @@ int main(int const argc, char const *const argv[]) try {
           auto const data{song.pattern(pattern)};
           tfx::audio::osl_pattern_reader reader{data};
           uint64_t hash{14695981039346656037ull};
-          auto const byte{[&](uint8_t const value) { hash = (hash ^ value) * 1099511628211ull; }};
+          auto const byte{[&](uint8_t const value){ hash = (hash ^ value) * 1099511628211ull; }};
           for(unsigned int row{0}; row != data.rows; ++row) {
             auto const cells{reader.next(song.channels())};
             for(unsigned int channel{0}; channel != song.channels(); ++channel) {
@@ -39,5 +40,5 @@ int main(int const argc, char const *const argv[]) try {
       }
     }
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

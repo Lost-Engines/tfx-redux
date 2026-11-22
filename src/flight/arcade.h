@@ -1,9 +1,9 @@
 #pragma once
 
-#include "flight/stores.h"
-#include "flight/damage.h"
-#include "flight/basic_parameters.h"
 #include "math/attitude.h"
+#include "flight/basic_parameters.h"
+#include "flight/damage.h"
+#include "flight/stores.h"
 #include "simulation/timing.h"
 
 namespace tfx::flight {

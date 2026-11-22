@@ -80,7 +80,7 @@ statement const *session::advance(scene_counters const counters, scene_input &in
         }
         current_palette[0] = current_palette[1] = current_palette[2] = 0;
       }
-      scene = std::make_unique<scene_player>(node->kind,clip,media,font_data,state,[&](std::string_view const filename) {
+      scene = std::make_unique<scene_player>(node->kind,clip,media,font_data,state,[&](std::string_view const filename){
         auto const bytes{game.read(language + "/" + std::string{filename})};return std::string{bytes.begin(),bytes.end()};
       },current_palette,text_palette,counters,input);
       display = scene->image();
@@ -90,7 +90,9 @@ statement const *session::advance(scene_counters const counters, scene_input &in
   }
   throw std::runtime_error{"presentation session does not yield"};
 }
-statement const *session::pending() const { return scene || stack.empty() ? nullptr : stack.back()->execution.current(); }
+statement const *session::pending() const {
+  return scene || stack.empty() ? nullptr : stack.back()->execution.current();
+}
 void session::complete() {
   if(scene || stack.empty()) throw std::runtime_error{"no suspended presentation host action"};
   auto const *action{pending()};
@@ -113,9 +115,15 @@ void session::seek(location const position) {
   saved.callers.clear();
   restore(saved);
 }
-bool session::finished() const { return stack.empty(); }
-render::framebuffer const &session::image() const { return display; }
-render::palette session::colours() const { return render::decode_palette(displayed_colours); }
+bool session::finished() const {
+  return stack.empty();
+}
+render::framebuffer const &session::image() const {
+  return display;
+}
+render::palette session::colours() const {
+  return render::decode_palette(displayed_colours);
+}
 std::string const &session::function_name() const {
   static std::string const empty;
   if(stack.empty() || !stack.back()->execution.position()) return empty;

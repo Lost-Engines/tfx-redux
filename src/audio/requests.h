@@ -54,7 +54,7 @@ enum class sample_id : unsigned int {
   engine_ignition = 77,
 };
 
-inline constexpr std::array<unsigned int,2> engine_start_sequence{
+inline std::array<unsigned int,2> constexpr engine_start_sequence{
   std::to_underlying(sample_id::engine_ignition),
   std::to_underlying(sample_id::engine_running),
 };

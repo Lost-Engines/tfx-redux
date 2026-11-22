@@ -35,7 +35,7 @@ void update_aerodynamic_response(aerodynamic_response_state &state, aerodynamic_
   double const velocity_seconds{context.time_warp && !context.landed && !context.autopilot && motion.pose.metres_ned.z < warp_acceleration_altitude ? static_cast<double>(seconds * warp_multiplier) : context.seconds};
   for(unsigned int axis{0}; axis != 3; ++axis) motion.velocity_ned[axis] = static_cast<double>(static_cast<calculation>(motion.acceleration_ned[axis]) * velocity_seconds + motion.velocity_ned[axis]);
   if(context.rudder != 0 && !context.rudder_inhibited) {
-    auto const projection{[&](vec3d const &direction) {
+    auto const projection{[&](vec3d const &direction){
       return static_cast<double>(static_cast<calculation>(direction.y) * motion.velocity_ned.y + static_cast<calculation>(direction.x) * motion.velocity_ned.x + static_cast<calculation>(direction.z) * motion.velocity_ned.z);
     }};
     motion.ground_velocity_body.x = projection(basis.forward);

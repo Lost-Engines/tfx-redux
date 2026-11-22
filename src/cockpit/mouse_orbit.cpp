@@ -20,7 +20,9 @@ bool mouse_orbit::select(view_mode const mode) {
   selected = mode;
   return supports(mode);
 }
-void mouse_orbit::reset() { heading = pitch = zoom = 0; }
+void mouse_orbit::reset() {
+  heading = pitch = zoom = 0;
+}
 void mouse_orbit::scroll(double offset) {
   if(supports(selected)) zoom = std::clamp(zoom + offset,-32.0,24.0);
 }
@@ -44,13 +46,13 @@ render::camera mouse_orbit::apply(render::camera view, view_camera_context const
     target_q8 = vec3<int32_t>{context.missile ? context.missile->position_q8 : last_missile.position_q8};
   }
   vec3d const target{vec3d{target_q8} / 256.0};
-  auto const normalise{[](vec3d const &v) { return v / std::sqrt(v.dot(v)); }};
+  auto const normalise{[](vec3d const &v){ return v / std::sqrt(v.dot(v)); }};
   auto const forward{normalise(view.forward)};
   auto const right{normalise(view.right - forward * view.right.dot(forward))};
   auto const down{forward.cross(right)};
   double const sh{std::sin(heading)}, ch{std::cos(heading)};
   double const sp{std::sin(pitch)}, cp{std::cos(pitch)};
-  auto const rotate{[&](vec3d const &v) {
+  auto const rotate{[&](vec3d const &v){
     double const x{v.dot(right)}, y{v.dot(down)}, z{v.dot(forward)};
     double const py{cp * y - sp * z}, pz{sp * y + cp * z};
     return right * (ch * x - sh * pz) + down * py + forward * (sh * x + ch * pz);
@@ -78,21 +80,23 @@ bool mouse_look::supports(view_mode mode) {
   default: return false;
   }
 }
-void mouse_look::reset() { heading=pitch=0; }
+void mouse_look::reset() {
+  heading = pitch = 0;
+}
 void mouse_look::move(vec2d const &delta) {
-  heading=std::remainder(heading+delta.x*.004,2*std::numbers::pi);
-  pitch=std::clamp(pitch+delta.y*.004,-std::numbers::pi*.47,std::numbers::pi*.47);
+  heading = std::remainder(heading + delta.x * .004,2 * std::numbers::pi);
+  pitch = std::clamp(pitch + delta.y * .004,-std::numbers::pi * .47,std::numbers::pi * .47);
 }
 render::camera mouse_look::apply(render::camera view) const {
-  if(heading==0 && pitch==0) return view;
-  auto const normalise{[](vec3d const &v) { return v/v.length(); }};
-  auto const forward{normalise(view.forward)}, right{normalise(view.right-forward*view.right.dot(forward))};
+  if(heading == 0 && pitch == 0) return view;
+  auto const normalise{[](vec3d const &v){ return v / v.length(); }};
+  auto const forward{normalise(view.forward)}, right{normalise(view.right - forward * view.right.dot(forward))};
   auto const down{forward.cross(right)};
-  auto const yaw_right{right*std::cos(heading)-forward*std::sin(heading)};
-  auto const yaw_forward{right*std::sin(heading)+forward*std::cos(heading)};
-  view.right=vec3d{yaw_right};
-  view.forward=yaw_forward*std::cos(pitch)+down*std::sin(pitch);
-  view.down=down*std::cos(pitch)-yaw_forward*std::sin(pitch);
+  auto const yaw_right{right * std::cos(heading) - forward * std::sin(heading)};
+  auto const yaw_forward{right * std::sin(heading) + forward * std::cos(heading)};
+  view.right = vec3d{yaw_right};
+  view.forward = yaw_forward * std::cos(pitch) + down * std::sin(pitch);
+  view.down = down * std::cos(pitch) - yaw_forward * std::sin(pitch);
   return view;
 }
 

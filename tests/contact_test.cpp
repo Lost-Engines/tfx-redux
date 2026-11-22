@@ -12,15 +12,15 @@ tfx::resources::bytes program(uint16_t const health, uint16_t const impact, bool
   tfx::resources::bytes result(16);
   result[0] = victim ? 2 : 0;
   result[8] = 3;
-  auto const word{[&](unsigned int const at, uint16_t const value) {
+  auto const word{[&](unsigned int const at, uint16_t const value){
     result.at(at) = static_cast<uint8_t>(value);
     result.at(at + 1) = static_cast<uint8_t>(value >> 8);
   }};
-  auto const entry{[&](unsigned int const index) {
+  auto const entry{[&](unsigned int const index){
     unsigned int const at{10 + index * 2};
     word(at,static_cast<uint16_t>((result.size() - at) / 2));
   }};
-  auto const emit{[&](std::initializer_list<uint16_t> const words) {
+  auto const emit{[&](std::initializer_list<uint16_t> const words){
     for(auto const value : words) { result.push_back(static_cast<uint8_t>(value)); result.push_back(static_cast<uint8_t>(value >> 8)); }
   }};
   entry(0);
@@ -59,7 +59,7 @@ auto main(int const argc, char const *const argv[])->int try {
           .current{20,0,0},
         },
         .impact_damage{source.impact_damage},
-        .collision_response{[&](uint16_t const damage) { source.apply_contact_damage(damage); }},
+        .collision_response{[&](uint16_t const damage){ source.apply_contact_damage(damage); }},
       })};
       for(uint32_t const value : {static_cast<uint32_t>(source.health),static_cast<uint32_t>(source.destroyed),static_cast<uint32_t>(victim.custom[0]),static_cast<uint32_t>(victim.destroyed),static_cast<uint32_t>(victim.modified),result.collisions}) {
         for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((value >> shift) & 255)) * 1099511628211ULL;

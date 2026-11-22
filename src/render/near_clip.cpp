@@ -2,8 +2,12 @@
 
 namespace tfx::render {
 namespace {
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t midpoint(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) + static_cast<uint32_t>(b)) >> 1; }
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t midpoint(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) + static_cast<uint32_t>(b)) >> 1;
+}
 
 template<unsigned int Count> struct near_vertex {
   vec2<int32_t> position;
@@ -27,8 +31,7 @@ near_vertex<Count> intersect(vec3<int32_t> const &outside, vec3<int32_t> const &
       if(step != depth_bits - 1) path = static_cast<uint16_t>(path | (3u << step));
       break;
     }
-    if(centre > model_near_depth) { upper = centre;path = static_cast<uint16_t>(path | (1u << step)); }
-    else lower = centre;
+    if(centre > model_near_depth) { upper = centre;path = static_cast<uint16_t>(path | (1u << step)); } else lower = centre;
   }
   vec2<int32_t> a{outside.x,outside.y}, b{inside.x,inside.y};
   auto attributes_a{outside_attributes},attributes_b{inside_attributes};
@@ -73,7 +76,7 @@ vec2<int16_t> project_near_plane(vec2<int32_t> const &point, aperture const open
   unsigned int const shift{projection_shift(opening)};
   int32_t constexpr normal_coordinate_limit{2030}, screen_saturation{32000};
   int32_t const limit{normal_coordinate_limit * static_cast<int32_t>(1u << (shift - 8)) * 65536};
-  auto const coordinate{[&](int32_t const value, int16_t const offset) {
+  auto const coordinate{[&](int32_t const value, int16_t const offset){
     // Saturation writes a final screen word, without adding the origin. The
     // ordinary path retains arithmetic-shift rounding even for negative XY.
     if(value > limit) return static_cast<int16_t>(screen_saturation);

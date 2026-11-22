@@ -1,7 +1,8 @@
-#include "fixture_check.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include "fixture_check.h"
 #include "render/horizon.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -19,5 +20,5 @@ int main(int const argc, char const *const argv[]) try {
     if(!expected.matches(hash)) throw std::runtime_error{"native horizon pixels differ at case " + std::to_string(cases)};
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

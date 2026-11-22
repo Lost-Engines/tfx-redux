@@ -7,8 +7,12 @@
 namespace tfx::missions {
 namespace {
 
-int32_t add(int32_t const first, int32_t const second) { return std::bit_cast<int32_t>(static_cast<uint32_t>(first) + static_cast<uint32_t>(second)); }
-int16_t word(int const value) { return math::signed_word(static_cast<uint16_t>(value)); }
+int32_t add(int32_t const first, int32_t const second) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(first) + static_cast<uint32_t>(second));
+}
+int16_t word(int const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
 
 } // anonymous namespace
 
@@ -99,7 +103,7 @@ terrain_loss_effects progress::record_terrain_loss(terrain_loss_context const &c
   if(!context.player_owned) return effects;
   effects.explosion = true;
   // Native 0xa36e4 matches unwrapped cells, independently of radar/fire permission.
-  effects.unauthorised = !std::ranges::any_of(initialisation.targets,[&](target const &value) {
+  effects.unauthorised = !std::ranges::any_of(initialisation.targets,[&](target const &value){
     return (value.position.x >> world::cell_shift) == context.cell.x && (value.position.z >> world::cell_shift) == context.cell.y;
   });
   // Native 0xa39c0 still requests the unauthorized-hit cue/sample for Arcade and decoys.
@@ -174,7 +178,7 @@ std::vector<progress_event> progress::begin_frame(progress_context const &contex
     switch(rule.kind) {
     case completion_kind::enemy: completed = results.enemy_aircraft_down >= rule.value; break;
     case completion_kind::allied: completed = results.friendly_aircraft_down >= rule.value; break;
-    case completion_kind::all_targets: completed = !results.targets.empty() && std::ranges::all_of(results.targets,[](auto const life) { return life == target_life::dead; }); break;
+    case completion_kind::all_targets: completed = !results.targets.empty() && std::ranges::all_of(results.targets,[](auto const life){ return life == target_life::dead; }); break;
     case completion_kind::timer: case completion_kind::protect: completed = context.mission_time > static_cast<mission_tick>(rule.value); break;
     case completion_kind::enemy_mobile: completed = results.enemy_mobile_down >= rule.value; break;
     }
@@ -210,9 +214,8 @@ void progress::advance_return_countdown(simulation::timer_ticks const elapsed, b
     exit_ticks = word(exit_ticks - elapsed);
     if(exit_ticks <= 0) {
       exit_ticks = 0;
-      force_landed_return = true; // Native 71BBB/71BCA; this does not perform physical ground placement.
-      if(critical_loss) { outcome = session_outcome::critical_loss; status = session_status::critical_loss; ended = true; }
-      else set_termination(arcade);
+      force_landed_return = true;                                              // Native 71BBB/71BCA; this does not perform physical ground placement.
+      if(critical_loss) { outcome = session_outcome::critical_loss; status = session_status::critical_loss; ended = true; } else set_termination(arcade);
     }
   }
 }

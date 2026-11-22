@@ -10,7 +10,7 @@ namespace tfx::audio {
 struct sample_pan {
   uint16_t position{};
   int16_t increment{};
-  uint16_t movement_enable{}; // Preserve the original word; any nonzero value enables movement.
+  uint16_t movement_enable{};                                                  // Preserve the original word; any nonzero value enables movement.
 };
 
 struct sample_definition {

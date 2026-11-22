@@ -6,7 +6,9 @@ namespace tfx::world {
 assets::assets(resources::archive const &archive) : game{archive}, names{std::make_shared<std::vector<std::string> const>(model_names(game.read("ss/ssinfo.fn")))}, colours{game.contains("coltab.dat") ? game.read("coltab.dat") : resources::bytes{}} {
 }
 
-render::colour_map const &assets::model_colours(uint8_t const row) const { return colours.row(row); }
+render::colour_map const &assets::model_colours(uint8_t const row) const {
+  return colours.row(row);
+}
 
 models::shape const &assets::shape(std::string const &name) {
   /// Cache decoded programs by their native model names; no extracted metadata is needed

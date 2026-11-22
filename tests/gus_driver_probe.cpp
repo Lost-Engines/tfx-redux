@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include "audio/gus_driver.h"
@@ -16,20 +17,22 @@ int main(int const argc, char const *const argv[]) try {
   while(input >> command >> voice >> begin >> end >> rate >> volume >> ramp >> control >> base) {
     if(synthetic) {
       parameters.frequency_base = static_cast<uint16_t>(base);
-      for(unsigned int index{0}; index != parameters.volumes.size(); ++index)
+      for(unsigned int index{0}; index != parameters.volumes.size(); ++index) {
         parameters.volumes[index] = static_cast<uint16_t>((index * 13u + 17u) & 4095u);
+      }
     }
     std::vector<uint32_t> events;
     uint16_t selected{0};
     tfx::audio::gus_driver driver{parameters,{
-      .read{[&](uint16_t const port, uint8_t const size) {
-        if(port != tfx::audio::gus_driver::data_high || size != 1 || (selected != 0x80 && selected != 0x8d))
+      .read{[&](uint16_t const port, uint8_t const size){
+        if(port != tfx::audio::gus_driver::data_high || size != 1 || (selected != 0x80 && selected != 0x8d)) {
           throw std::runtime_error{"unexpected Gravis register read"};
+        }
         auto const value{static_cast<uint16_t>(selected == 0x8d ? ramp : control)};
         events.insert(events.end(),{0,port,size,value});
         return value;
       }},
-      .write{[&](tfx::audio::gus_port_write const &write) {
+      .write{[&](tfx::audio::gus_port_write const &write){
         if(write.port == tfx::audio::gus_driver::register_select) selected = write.value;
         events.insert(events.end(),{1,write.port,write.size,write.value});
       }},
@@ -51,5 +54,5 @@ int main(int const argc, char const *const argv[]) try {
     if(argc != 3) std::cout << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

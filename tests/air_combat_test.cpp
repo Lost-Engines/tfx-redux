@@ -1,4 +1,3 @@
-#include "fixture_check.h"
 #include <array>
 #include <bit>
 #include <charconv>
@@ -8,8 +7,9 @@
 #include <iterator>
 #include <stdexcept>
 #include <string_view>
-#include "air_snapshot.h"
 #include "actors/air.h"
+#include "air_snapshot.h"
+#include "fixture_check.h"
 
 namespace {
 
@@ -71,7 +71,7 @@ auto main(int const argc, char const *const argv[])->int try {
       };
     }
     tfx::actors::air_context const context{
-      .intact_ground_target{[intact](vec2<int16_t> const&) { return intact != 0; }},
+      .intact_ground_target{[intact](vec2<int16_t> const&){ return intact != 0; }},
       .combat{true},
       .weapons_enabled{weapons != 0},
       .player{tfx::actors::air_contact{

@@ -2,8 +2,8 @@
 
 #include <optional>
 #include "cockpit/attitude_display.h"
-#include "cockpit/hud_text.h"
 #include "cockpit/hud_alerts.h"
+#include "cockpit/hud_text.h"
 #include "cockpit/target_display.h"
 #include "flight/aircraft.h"
 #include "flight/landing.h"
@@ -46,7 +46,7 @@ struct weapon_display_state {
   bool cannon{true};
   int16_t ammunition{0};
   bool suppressed{false};
-  bool air_lock{false}; // Native guidance pointer: also set by the AGM-109H ground controller.
+  bool air_lock{false};                                                        // Native guidance pointer: also set by the AGM-109H ground controller.
   bool ground_lock{false};
   bool limited{true};
   simulation::timer_ticks elapsed{0};

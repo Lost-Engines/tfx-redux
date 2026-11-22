@@ -38,8 +38,7 @@ int main(int const argc, char const *const argv[]) try {
     } else throw std::runtime_error{"unknown world-contact operation"};
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(check) { uint64_t expected{0};if(!(input >> expected) || expected != digest) throw std::runtime_error{"native fixed placement or nearby region differs"}; }
-    else { for(auto const val : values) std::cout << val << ' ';std::cout << '\n'; }
+    if(check) { uint64_t expected{0};if(!(input >> expected) || expected != digest) throw std::runtime_error{"native fixed placement or nearby region differs"}; } else { for(auto const val : values) std::cout << val << ' ';std::cout << '\n'; }
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

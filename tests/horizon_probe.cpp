@@ -1,8 +1,9 @@
-#include "fixture_check.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
+#include "fixture_check.h"
 #include "render/horizon.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -21,16 +22,15 @@ int main(int const argc, char const *const argv[]) try {
     }
     auto const surfaces{tfx::render::horizon_surfaces(context)};
     uint64_t hash{14695981039346656037ULL};
-    auto const add{[&](int32_t const value) { if(dump) std::cout << value << ' '; for(unsigned int shift{0}; shift != 32; shift += 8) hash = (hash ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL; }};
+    auto const add{[&](int32_t const value){ if(dump) std::cout << value << ' '; for(unsigned int shift{0}; shift != 32; shift += 8) hash = (hash ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL; }};
     add(static_cast<int32_t>(surfaces.size()));
     for(auto const &surface : surfaces) {
       add(surface.colour);add(surface.rectangle);add(static_cast<int32_t>(surface.vertices.size()));
       for(auto const &v : surface.vertices) { add(v.x);add(v.y); }
     }
     if(dump) std::cout << '\n';
-    else if(argc == 2) { if(!tfx::test::fixture_matches(input,hash)) throw std::runtime_error{"native horizon mismatch at case " + std::to_string(cases)}; }
-    else std::cout << hash << '\n';
+    else if(argc == 2) { if(!tfx::test::fixture_matches(input,hash)) throw std::runtime_error{"native horizon mismatch at case " + std::to_string(cases)}; } else std::cout << hash << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

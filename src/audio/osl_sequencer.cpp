@@ -18,12 +18,14 @@ void osl_sequencer::register_device(osl_device_driver &driver) {
   devices.push_back(&driver);
 }
 osl_device_driver *osl_sequencer::device(osl_device const type) const {
-  auto const found{std::ranges::find_if(devices,[&](auto const *driver) { return driver->device_type() == type; })};
+  auto const found{std::ranges::find_if(devices,[&](auto const *driver){ return driver->device_type() == type; })};
   return found == devices.end() ? nullptr : *found;
 }
-osl_song osl_sequencer::song(playing const &voice) const { return voice.source->song(voice.state.song); }
+osl_song osl_sequencer::song(playing const &voice) const {
+  return voice.source->song(voice.state.song);
+}
 osl_resource_id osl_sequencer::load(resources::bytes source) {
-  auto const found{std::ranges::find_if(resources,[](auto const &value) { return !value; })};
+  auto const found{std::ranges::find_if(resources,[](auto const &value){ return !value; })};
   if(found == resources.end()) throw std::runtime_error{"OSL has no free resource slots"};
   *found = std::make_shared<osl_resource>(std::move(source));
   auto const &resource{**found};
@@ -47,9 +49,9 @@ osl_playing_id osl_sequencer::play(osl_resource_id const resource, unsigned int 
 std::optional<osl_playing_id> osl_sequencer::try_play(osl_resource_id const resource, unsigned int const index, uint8_t const order, uint16_t const row, uint8_t const volume) {
   if(!resources.at(resource)) throw std::out_of_range{"OSL resource is not loaded"};
   auto const data{resources[resource]->song(index)};
-  auto const found{std::ranges::find_if(songs,[](auto const &voice) { return !(voice.state.flags & 1); })};
+  auto const found{std::ranges::find_if(songs,[](auto const &voice){ return !(voice.state.flags & 1); })};
   if(found == songs.end()) return {};
-  if(data.channels() > osl_channels || std::ranges::count_if(channels,[](auto const &channel) { return !channel.allocation; }) < data.channels()) return {};
+  if(data.channels() > osl_channels || std::ranges::count_if(channels,[](auto const &channel){ return !channel.allocation; }) < data.channels()) return {};
   *found = {};
   found->source = resources[resource];
   auto &voice{found->state};
@@ -238,7 +240,7 @@ void osl_sequencer::tick_effect(playing &voice, osl_channel &channel, unsigned i
   }
 }
 void osl_sequencer::new_notes(playing &voice, osl_channel &channel, unsigned int const physical, osl_device_driver &driver, bool &jump, bool &stop) {
-  bool const notes{std::ranges::any_of(channel.cell.notes,[](auto const value) { return value != 0; })};
+  bool const notes{std::ranges::any_of(channel.cell.notes,[](auto const value){ return value != 0; })};
   if(channel.cell.instrument && notes) {
     uint8_t const instrument{static_cast<uint8_t>(channel.cell.instrument - 1)};
     if(instrument != channel.sent_instrument) { channel.sent_instrument = instrument;driver.program(physical,instrument); }
@@ -283,9 +285,17 @@ void osl_sequencer::tick() {
     if(end) stop(id);
   }
 }
-uint16_t osl_sequencer::clock_rate() const { return clock; }
-unsigned int osl_sequencer::pattern_offset(osl_playing_id const id) const { return songs.at(id).pattern ? songs[id].pattern->offset() : 0; }
-osl_playing_state const &osl_sequencer::state(osl_playing_id const id) const { return songs.at(id).state; }
-std::span<osl_channel const> osl_sequencer::channel_states() const { return channels; }
+uint16_t osl_sequencer::clock_rate() const {
+  return clock;
+}
+unsigned int osl_sequencer::pattern_offset(osl_playing_id const id) const {
+  return songs.at(id).pattern ? songs[id].pattern->offset() : 0;
+}
+osl_playing_state const &osl_sequencer::state(osl_playing_id const id) const {
+  return songs.at(id).state;
+}
+std::span<osl_channel const> osl_sequencer::channel_states() const {
+  return channels;
+}
 
 } // namespace tfx::audio

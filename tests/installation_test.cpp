@@ -28,7 +28,11 @@ int main(int const, char const *const argv[]) try {
   struct cleanup {
     fs::path const &original;
     fs::path const &temporary;
-    ~cleanup() { std::error_code error;fs::current_path(original,error);fs::remove_all(temporary,error); }
+    ~cleanup() {
+      std::error_code error;
+      fs::current_path(original,error);
+      fs::remove_all(temporary,error);
+    }
   } const cleanup{
     .original{original_directory},
     .temporary{root},
@@ -72,5 +76,5 @@ int main(int const, char const *const argv[]) try {
   auto const relative{fs::relative(fetched)};
   if(!relative.empty()) check(tfx::resources::rom_directories(relative,std::nullopt).size() == 1,"relative and absolute copies of the default ROM directory tried twice");
   std::cout << "Default game/ROM lookup, local precedence and explicit overrides passed\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

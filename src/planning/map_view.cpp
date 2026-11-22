@@ -1,8 +1,8 @@
 #include "map_view.h"
 #include <algorithm>
 #include <utility>
-#include "resources/media.h"
 #include "presentation/drawing.h"
+#include "resources/media.h"
 
 namespace tfx::planning {
 
@@ -36,8 +36,8 @@ void map_view::draw() {
 void map_view::route(render::framebuffer &target, unsigned int const count) const {
   if(plan.routes.empty()) return;
   auto const &points{plan.routes.front().points};
-  auto const position{[](waypoint const &point) { return vec2<int>{point.cell.x,199 - point.cell.y}; }};
-  auto const label{[&](waypoint const &point) {
+  auto const position{[](waypoint const &point){ return vec2<int>{point.cell.x,199 - point.cell.y}; }};
+  auto const label{[&](waypoint const &point){
     auto const at{position(point)};
     if(at.x < 4 || at.y < 4 || at.x > 195 || at.y > 195) return;
     target.pixels[at.y * render::screen_width + at.x] = 255;

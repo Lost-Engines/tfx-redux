@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string_view>
@@ -80,5 +81,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no aerodynamic recovery cases"};
   if(path) std::cout << cases << " native aerodynamic recovery fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

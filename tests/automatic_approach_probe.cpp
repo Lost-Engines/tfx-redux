@@ -1,9 +1,10 @@
-#include "numeric_fixture.h"
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
 #include "flight/automatic_approach.h"
+#include "numeric_fixture.h"
 
 namespace {
 double read_double(std::istream &input) {
@@ -38,7 +39,7 @@ int main(int const argc, char const *const argv[]) try {
     tfx::flight::aerodynamic_basis basis;
     bool const stopped{tfx::flight::advance_automatic_approach(state,motion,basis,speed,context)};
     std::vector<tfx::test::numeric_fixture_value> values;
-    auto const number{[&](double const value) { values.emplace_back(value); }};
+    auto const number{[&](double const value){ values.emplace_back(value); }};
     for(auto const *vector : {&state.destination_metres,&state.player_metres}) for(auto const value : *vector) values.push_back(static_cast<uint32_t>(value));
     number(state.distance_km); number(state.pitch_degrees); number(speed);
     for(auto const value : motion.pose.metres_ned) number(value);
@@ -58,5 +59,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no automatic approach cases"};
   if(argc == 2) std::cout << cases << " native automatic approach fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

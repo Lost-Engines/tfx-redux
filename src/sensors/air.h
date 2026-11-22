@@ -9,11 +9,11 @@ namespace tfx::sensors {
 unsigned int constexpr contact_capacity{20};
 struct air_contact {
   unsigned int actor;
-  vec3<int32_t> position; // Native Q8 actor coordinates.
+  vec3<int32_t> position;                                                      // Native Q8 actor coordinates.
   math::angle heading;
   uint16_t flags;
   actors::allegiance side{actors::allegiance::enemy};
-  bool enemy_pool{false}; // The warning scan distinguishes the actor registry, not the model classification.
+  bool enemy_pool{false};                                                      // The warning scan distinguishes the actor registry, not the model classification.
 };
 struct air_scan_report {
   bool more_hostiles{false};
@@ -24,8 +24,8 @@ public:
   std::array<std::optional<unsigned int>,contact_capacity> slots{};
   int16_t cursor{-1};
   std::optional<unsigned int> selected{};
-  bool hostile_nearby{false}; // Within 50 miles.
-  int16_t nearby_hostile_count{0}; // Within 25 miles; retained between missions.
+  bool hostile_nearby{false};                                                  // Within 50 miles.
+  int16_t nearby_hostile_count{0};                                             // Within 25 miles; retained between missions.
   air_scan_report update(vec3<int32_t> const &player, std::span<air_contact const> contacts);
   void next();
   unsigned int count() const;
@@ -42,7 +42,7 @@ struct air_lock {
   void clear(vec2<int16_t> const &centre = {160,100});
 };
 struct lock_context {
-  vec3<int32_t> position; // Player's world-integer pose, as used by the native HUD.
+  vec3<int32_t> position;                                                      // Player's world-integer pose, as used by the native HUD.
   vec3<math::angle> angles;
   simulation::timer_ticks elapsed;
   bool guns{false};

@@ -59,17 +59,17 @@ struct gus_samples::implementation {
   }
   implementation(std::span<gus_sample_data const> const source, gus_parameters const &parameters, unsigned int const output_rate)
     : samples{source.begin(),source.end()}, descriptors{describe(source)}, residency{plan(source)}, scheduler{descriptors},
-      chip{[this](std::span<std::byte> const target) {
+      chip{[this](std::span<std::byte> const target){
         if(target.size() != dma_source.size()) throw std::runtime_error{"Gravis DMA transfer has the wrong length"};
         std::ranges::copy(std::as_bytes(dma_source),target.begin());
       },ram_kib},
       driver{parameters,{
-        .read{[this](uint16_t const port, uint8_t const size) { return static_cast<uint16_t>(chip.read(port,size)); }},
-        .write{[this](gus_port_write const &event) { chip.write(event.port,event.size,event.value); }},
+        .read{[this](uint16_t const port, uint8_t const size){ return static_cast<uint16_t>(chip.read(port,size)); }},
+        .write{[this](gus_port_write const &event){ chip.write(event.port,event.size,event.value); }},
       }}, output_rate{output_rate} {
     if(!output_rate) throw std::invalid_argument{"PCM output rate must not be zero"};
     chip.write(gus_driver::card_base,1,0x0b);
-    byte(gus_register::active_voices,0xdf); // Original driver activates all 32 physical oscillators.
+    byte(gus_register::active_voices,0xdf);                                    // Original driver activates all 32 physical oscillators.
     for(unsigned int voice{0}; voice != gus_driver::physical_voices; ++voice) {
       chip.write(gus_driver::voice_select,1,voice);
       byte(gus_register::voice_control,3);
@@ -94,7 +94,7 @@ struct gus_samples::implementation {
       if(!samples[index].rate) throw std::invalid_argument{"Gravis sample rate must not be zero"};
       order.push_back(index);
     }
-    std::ranges::sort(order,[this](unsigned int const a, unsigned int const b) { return *residency.addresses[a] < *residency.addresses[b]; });
+    std::ranges::sort(order,[this](unsigned int const a, unsigned int const b){ return *residency.addresses[a] < *residency.addresses[b]; });
     for(auto const index : order) {
       dma_source = samples[index].pcm;
       chip.dma_count(static_cast<unsigned int>(dma_source.size() - 1));
@@ -103,7 +103,7 @@ struct gus_samples::implementation {
       chip.write(gus_driver::register_select,1,0x42);
       chip.write(gus_driver::data_low,2,*residency.addresses[index] >> 4);
       chip.write(gus_driver::register_select,1,0x41);
-      chip.write(gus_driver::data_high,1,0xa1); // Eight-bit DMA, unsigned source -> signed GF1 RAM.
+      chip.write(gus_driver::data_high,1,0xa1);                                // Eight-bit DMA, unsigned source -> signed GF1 RAM.
       static_cast<void>(chip.advance(1));
       static_cast<void>(chip.read(gus_driver::data_high,1));
     }
@@ -138,8 +138,14 @@ struct gus_samples::implementation {
 gus_samples::gus_samples(std::span<gus_sample_data const> const samples, gus_parameters const &parameters, unsigned int const output_rate)
   : state{std::make_unique<implementation>(samples,parameters,output_rate)} {}
 gus_samples::~gus_samples() = default;
-void gus_samples::enable(bool const enabled) { std::lock_guard lock{state->mutex};state->scheduler.enable(enabled); }
-void gus_samples::advance(simulation::timer_ticks const ticks) { std::lock_guard lock{state->mutex};state->scheduler.advance(ticks); }
+void gus_samples::enable(bool const enabled) {
+  std::lock_guard lock{state->mutex};
+  state->scheduler.enable(enabled);
+}
+void gus_samples::advance(simulation::timer_ticks const ticks) {
+  std::lock_guard lock{state->mutex};
+  state->scheduler.advance(ticks);
+}
 void gus_samples::submit(sample_priority const priority, std::span<unsigned int const> const sequence) {
   auto &s{*state};
   std::lock_guard lock{s.mutex};

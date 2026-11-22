@@ -9,7 +9,9 @@ namespace tfx::audio {
 
 struct la_synth::implementation {
   mt32emu_context context{mt32emu_create_context({},nullptr)};
-  ~implementation() { mt32emu_free_context(context); }
+  ~implementation() {
+    mt32emu_free_context(context);
+  }
 };
 la_synth::la_synth(std::filesystem::path const &directory, unsigned int const sample_rate) : state{std::make_unique<implementation>()} {
   if(!state->context) throw std::runtime_error{"cannot create Munt synthesiser"};
@@ -35,8 +37,12 @@ la_synth::la_synth(std::filesystem::path const &directory, unsigned int const sa
   if(mt32emu_open_synth(state->context) != MT32EMU_RC_OK) throw std::runtime_error{"Munt could not open the Roland ROM pair"};
 }
 la_synth::~la_synth() = default;
-void la_synth::short_message(uint32_t const packed) { mt32emu_play_msg_now(state->context,packed); }
-void la_synth::sysex(std::span<uint8_t const> const message) { mt32emu_play_sysex_now(state->context,message.data(),static_cast<uint32_t>(message.size())); }
+void la_synth::short_message(uint32_t const packed) {
+  mt32emu_play_msg_now(state->context,packed);
+}
+void la_synth::sysex(std::span<uint8_t const> const message) {
+  mt32emu_play_sysex_now(state->context,message.data(),static_cast<uint32_t>(message.size()));
+}
 void la_synth::render(std::span<float> const stereo) {
   if(stereo.size() % 2) throw std::invalid_argument{"Munt output requires complete stereo frames"};
   mt32emu_render_float(state->context,stereo.data(),static_cast<uint32_t>(stereo.size() / 2));

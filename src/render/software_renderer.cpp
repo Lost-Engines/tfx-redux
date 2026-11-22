@@ -1,14 +1,14 @@
 #include "software_renderer.h"
-#include "point_size.h"
-#include "cockpit/vector_hud.h"
-#include "model_raster.h"
-#include "rounded_curve.h"
-#include "integer_polygon.h"
-#include "pattern_raster.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
 #include <utility>
+#include "cockpit/vector_hud.h"
+#include "integer_polygon.h"
+#include "model_raster.h"
+#include "pattern_raster.h"
+#include "point_size.h"
+#include "rounded_curve.h"
 
 namespace tfx::render {
 namespace {
@@ -116,32 +116,31 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
       if(!texture.empty() && mode == -1) {
         // These spans are already clipped. Avoid two out-of-line pixel calls,
         // repeated bounds/mode checks and optional coverage work per texel.
-        auto const paint{[&]<bool mapped, bool live, bool covered>() {
-          double const du{right.uv.x-left.uv.x}, dv{right.uv.y-left.uv.y};
+        auto const paint{[&]<bool mapped, bool live, bool covered>(){
+          double const du{right.uv.x - left.uv.x}, dv{right.uv.y - left.uv.y};
           auto *destination{output.pixels.data() + y * output.size.x};
-          for(int x=start; x<end; ++x) {
+          for(int x=start; x < end; ++x) {
             double const t{(x + .5 - left.position.x) * inverse_width};
-            double const su{left.uv.x+du*t}, sv{left.uv.y+dv*t};
+            double const su{left.uv.x + du * t}, sv{left.uv.y + dv * t};
             int const u{std::clamp(static_cast<int>(su),0,255)};
             int const v{std::clamp(static_cast<int>(sv),0,191)};
-            auto const at{static_cast<unsigned int>(v*256+u)};
+            auto const at{static_cast<unsigned int>(v * 256 + u)};
             uint8_t index{texture[at]};
             // Transparent texels must stay holes when distance shading maps
             // black into the reserved UI colours. Live screens can supply
             // explicitly opaque black over those same source texels.
             uint16_t replacement{0};
-            if constexpr(live) { replacement=overlay.sample(at,su,sv);if(!index && !replacement) continue; }
-            else if(!index) continue;
-            if constexpr(mapped) index=(*remap)[index];
+            if constexpr(live) { replacement = overlay.sample(at,su,sv);if(!index && !replacement) continue; } else if(!index) continue;
+            if constexpr(mapped) index = (*remap)[index];
             if constexpr(live) {
-              if(replacement) index=static_cast<uint8_t>(replacement);
+              if(replacement) index = static_cast<uint8_t>(replacement);
               else if(!index) continue;
             } else if(!index) continue;
-            destination[x]=index;
-            if constexpr(covered) output.coverage[static_cast<size_t>(y*output.size.x+x)]=255;
+            destination[x] = index;
+            if constexpr(covered) output.coverage[static_cast<size_t>(y * output.size.x + x)] = 255;
           }
         }};
-        auto const dispatch{[&]<bool mapped, bool live>() {
+        auto const dispatch{[&]<bool mapped, bool live>(){
           if(output.coverage.empty()) paint.template operator()<mapped,live,false>();
           else paint.template operator()<mapped,live,true>();
         }};
@@ -161,12 +160,12 @@ void software_renderer::polygon(std::span<screen_vertex const> const vertices, u
           int const u{std::clamp(static_cast<int>(uv.x),0,255)}, v{std::clamp(static_cast<int>(uv.y),0,191)};
           auto const at{static_cast<unsigned int>(v * 256 + u)};
           index = texture[at];
-          if(!overlay.empty()) replacement=overlay.sample(at,uv.x,uv.y);
+          if(!overlay.empty()) replacement = overlay.sample(at,uv.x,uv.y);
           if(!index && !replacement) continue;
         } else if(shaded) index = static_cast<uint8_t>(static_cast<int>(std::floor(colour_start + colour_step * (x - colour_origin))));
         if(remap && (!texture.empty() || shaded)) index = (*remap)[index];
         // Original texture transparency is tested after its lighting lookup.
-        if(replacement) index=static_cast<uint8_t>(replacement);
+        if(replacement) index = static_cast<uint8_t>(replacement);
         else if(!texture.empty() && !index) continue;
         ink(x,y,index,mode);
       }
@@ -198,17 +197,19 @@ void software_renderer::begin_points() {
 }
 void software_renderer::finish_points() {
   collect_points = false;
-  std::stable_sort(points.begin(),points.end(),[](auto const &a, auto const &b) { return a.depth>b.depth; });
+  std::stable_sort(points.begin(),points.end(),[](auto const &a, auto const &b){ return a.depth > b.depth; });
   for(auto const &point : points) if(point_depth.visible(point.ray,point.depth)) point_disc(point);
   points.clear();
 }
 void software_renderer::point_disc(point_sprite const &point) {
   int const extent{std::max(1,static_cast<int>(std::lround(point.diameter)))};
-  if(extent==1) { ink(point.position.x,point.position.y,point.colour,point.mode);return; }
-  double const offset{extent%2 ? 0 : .5}, radius{(extent-.5)/2};
-  for(int y{-extent/2}; y<=extent/2; ++y) for(int x{-extent/2}; x<=extent/2; ++x)
-    if((x-offset)*(x-offset)+(y-offset)*(y-offset)<=radius*radius)
-      ink(point.position.x+x,point.position.y+y,point.colour,point.mode);
+  if(extent == 1) { ink(point.position.x,point.position.y,point.colour,point.mode);return; }
+  double const offset{extent % 2 ? 0 : .5}, radius{(extent - .5) / 2};
+  for(int y{-extent / 2}; y <= extent / 2; ++y) for(int x{-extent / 2}; x <= extent / 2; ++x) {
+    if((x - offset) * (x - offset) + (y - offset) * (y - offset) <= radius * radius) {
+      ink(point.position.x + x,point.position.y + y,point.colour,point.mode);
+  }
+    }
 }
 
 void software_renderer::line(vec2d const &a, vec2d const &b, uint8_t const colour) {
@@ -249,8 +250,8 @@ void software_renderer::primitive(models::primitive const &source, std::span<mod
     // separate light, particle and whole-object sizing rules.
     double const pixel_scale{std::max(1.0,view.focal_distance / 512.0)};
     if(source.pixel_size) {
-      if(output.size == vec2<int>{screen_width,screen_height} && source.point_role!=models::point_role::object) {
-        for(unsigned int row{0}; row<source.pixel_size; ++row) for(unsigned int col{0}; col<source.pixel_size; ++col) ink(x+static_cast<int>(col),y+static_cast<int>(row),ink_index,source.mode);
+      if(output.size == vec2<int>{screen_width,screen_height} && source.point_role != models::point_role::object) {
+        for(unsigned int row{0}; row < source.pixel_size; ++row) for(unsigned int col{0}; col < source.pixel_size; ++col) ink(x + static_cast<int>(col),y + static_cast<int>(row),ink_index,source.mode);
       } else {
         point_sprite const sprite{{x,y},vec2d{point},v.z,point_diameter(source,output.size,view.focal_distance,v.length()),ink_index,source.mode};
         if(collect_points) points.push_back(sprite);else point_disc(sprite);
@@ -361,7 +362,7 @@ void software_renderer::text(int x, int const y, std::string_view const message,
     if(character == ' ') { x += 3; continue; }
     auto const *const glyph{tables.glyph(character)};
     if(!glyph) continue;
-    if(output.hud_capture) { output.hud_capture->glyph(glyph->rows,{static_cast<double>(x),static_cast<double>(y)},clipping);x+=static_cast<int>(glyph->advance);continue; }
+    if(output.hud_capture) { output.hud_capture->glyph(glyph->rows,{static_cast<double>(x),static_cast<double>(y)},clipping);x += static_cast<int>(glyph->advance);continue; }
     for(int row{0}; row != 6; ++row) {
       for(int column{0}; column != 8; ++column) {
         if((glyph->rows[static_cast<unsigned int>(row)] & (128 >> column)) && x + column >= clipping.glyph_minimum.x && x + column < clipping.glyph_limit.x && y + row >= clipping.glyph_minimum.y && y + row < clipping.glyph_limit.y) {

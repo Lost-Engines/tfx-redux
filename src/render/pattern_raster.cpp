@@ -94,13 +94,13 @@ void pattern_polygon(framebuffer &output, uint16_t &seed, std::span<polygon_span
       if(spans.back().row & 1) --index;
       if(index < 0 || spans[static_cast<unsigned int>(index)].left > spans[static_cast<unsigned int>(index)].right) return;
     }
-    auto const valid{[&] {
+    auto const valid{[&]{
       if(index < 0) return false;
       auto const &span{spans[static_cast<unsigned int>(index)]};
       return span.left / 4 <= span.right / 4;
     }};
-    auto const width{[&] { auto const &span{spans[static_cast<unsigned int>(index)]};return span.right / 4 - span.left / 4; }};
-    auto const advance{[&] {
+    auto const width{[&]{ auto const &span{spans[static_cast<unsigned int>(index)]};return span.right / 4 - span.left / 4; }};
+    auto const advance{[&]{
       // Skipped physical rows test pixel width; selected rows test byte width.
       for(int row{1}; row <= stride; ++row) {
         if(--index < 0) return;

@@ -4,8 +4,12 @@
 
 namespace tfx::world {
 namespace {
-int32_t add(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) + static_cast<uint32_t>(b)); }
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
+int32_t add(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) + static_cast<uint32_t>(b));
+}
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
 }
 
 std::string_view sky_model_name(sky_model const model) {

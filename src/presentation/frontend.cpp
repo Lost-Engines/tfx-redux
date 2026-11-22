@@ -12,7 +12,7 @@ frontend::frontend(resources::archive const &game, resources::executable_tables 
 }
 void frontend::seek_enrolment() {
   auto const &main{schema.functions.front().statements};
-  auto const entry{std::ranges::find_if(main,[](statement const &node) {
+  auto const entry{std::ranges::find_if(main,[](statement const &node){
     return node.kind == node_kind::launch && std::get<host_action>(node.data).resource == "enrol";
   })};
   if(entry == main.end()) throw std::runtime_error{"root presentation has no enrolment action"};
@@ -31,8 +31,7 @@ void frontend::return_to_enrolment() {
 }
 
 void frontend::cancel_launch() {
-  if(last_menu) { parser.restore(*last_menu);mouse_held = false; }
-  else return_to_enrolment();
+  if(last_menu) { parser.restore(*last_menu);mouse_held = false; } else return_to_enrolment();
 }
 
 statement const *frontend::advance(scene_counters const counters, scene_input &input,

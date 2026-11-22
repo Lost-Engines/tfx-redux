@@ -6,7 +6,7 @@
 
 namespace tfx::presentation {
 
-unsigned int constexpr recording_filename_limit{18}; // Native filename widget at DATA 13768.
+unsigned int constexpr recording_filename_limit{18};                           // Native filename widget at DATA 13768.
 struct configuration_menu_assets {
   std::array<std::string,7> main_labels;
   std::array<std::string,6> realism_labels;

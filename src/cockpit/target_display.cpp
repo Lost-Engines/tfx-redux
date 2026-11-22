@@ -8,10 +8,18 @@
 namespace tfx::cockpit {
 namespace {
 
-int word(int const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t difference(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int32_t magnitude(int32_t const value) { return value < 0 ? difference(0,value) : value; }
-vec2<int> shifted(vec2<int> const &point, vec2<int16_t> const &offset) { return {word(point.x + offset.x),word(point.y + offset.y)}; }
+int word(int const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t difference(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int32_t magnitude(int32_t const value) {
+  return value < 0 ? difference(0,value) : value;
+}
+vec2<int> shifted(vec2<int> const &point, vec2<int16_t> const &offset) {
+  return {word(point.x + offset.x),word(point.y + offset.y)};
+}
 
 } // anonymous namespace
 
@@ -33,7 +41,7 @@ void target_display::information(render::software_renderer &renderer, air_target
   // Native 0x7f59c/0x7ddb0: the uppercased first word, then four data rows.
   std::string name{target.name.substr(0,std::min(target.name.find(' '),target.name.find('\0')))};
   for(char &character : name) if(character >= 'a' && character <= 'z') character = static_cast<char>(character - 'a' + 'A');
-  auto const text{[&](int const row, std::string const &message) {
+  auto const text{[&](int const row, std::string const &message){
     auto const point{shifted({96,row},state.offset)};renderer.text(point.x,point.y,message,6,coverage);
   }};
   text(2,name);
@@ -44,7 +52,7 @@ void target_display::information(render::software_renderer &renderer, air_target
   unsigned int constexpr feet_per_world_unit{8};
   unsigned int const altitude{(0u - static_cast<uint32_t>(target.position_q8.y >> 8)) * feet_per_world_unit};
   text(20,detail::formatted(assets.target_formats[2],altitude));
-  auto const separation{[&](unsigned int const axis) { return magnitude(difference(state.player[axis],target.position_q8[axis] >> 8)); }};
+  auto const separation{[&](unsigned int const axis){ return magnitude(difference(state.player[axis],target.position_q8[axis] >> 8)); }};
   int constexpr horizontal_units_per_range_step{660};
   int const range{word(magnitude(std::max(separation(0),separation(2)) / horizontal_units_per_range_step) + 1)};
   text(26,detail::formatted(assets.target_formats[3],range));
@@ -78,7 +86,7 @@ void target_display::direction(render::software_renderer &renderer, air_target_r
 void target_display::ground(render::software_renderer &renderer, vec3<int32_t> const &target, target_display_state const &state, vec2<int> const &minimum, vec2<int> const &maximum, render::framebuffer *const coverage) const {
   // Native 0x7f2a4 draws the projected cross when in range and always repeats
   // the six-line direction cue, even when the target lies inside the sight.
-  auto const line{[&](vec2<int> const &a, vec2<int> const &b) {
+  auto const line{[&](vec2<int> const &a, vec2<int> const &b){
     presentation::draw_clipped_line(renderer.output,vec2<int>{a},vec2<int>{b},minimum,maximum,6);
     if(coverage) presentation::draw_clipped_line(*coverage,vec2<int>{a},vec2<int>{b},minimum,maximum,255);
   }};
@@ -90,7 +98,7 @@ void target_display::ground(render::software_renderer &renderer, vec3<int32_t> c
   direction_marker(renderer,{difference(target.x,state.player.x),difference(target.y,state.player.y),difference(target.z,state.player.z)},state,minimum,maximum,coverage);
 }
 void target_display::direction_marker(render::software_renderer &renderer, vec3<int32_t> const &delta, target_display_state const &state, vec2<int> const &minimum, vec2<int> const &maximum, render::framebuffer *const coverage) const {
-  auto const dot{[&](vec3<int32_t> const &axis) {
+  auto const dot{[&](vec3<int32_t> const &axis){
     uint32_t result{0};
     for(unsigned int index{0}; index != 3; ++index) result += static_cast<uint32_t>(delta[index]) * static_cast<uint32_t>(axis[index]);
     return std::bit_cast<int32_t>(result);
@@ -108,7 +116,7 @@ void target_display::direction_marker(render::software_renderer &renderer, vec3<
   int constexpr radius{35}, half_size{5}, sine_unit{32767};
   vec2<int> const centre{word(160 + state.offset.x + math::sine_q15(angle) * radius / sine_unit),word(56 + state.offset.y + math::cosine_q15(angle) * radius / sine_unit)};
   std::array<vec2<int>,4> const corners{{{-half_size,0},{0,-half_size},{half_size,0},{0,half_size}}};
-  auto const line{[&](vec2<int> const &a, vec2<int> const &b) {
+  auto const line{[&](vec2<int> const &a, vec2<int> const &b){
     presentation::draw_clipped_line(renderer.output,centre + a,centre + b,minimum,maximum,6);
     if(coverage) presentation::draw_clipped_line(*coverage,centre + a,centre + b,minimum,maximum,255);
   }};

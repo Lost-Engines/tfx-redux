@@ -75,12 +75,12 @@ motion_result advance_motion(projectile &state, definition const &weapon, motion
   state.previous = state.position;
   uint16_t const elapsed{context.elapsed};
   auto const current_weapon{[&]()->definition const& { return hooks.current_definition ? hooks.current_definition(state.weapon) : weapon; }};
-  auto const falling{[&] {
+  auto const falling{[&]{
     expire(state,current_weapon(),elapsed);
     travel(state,context);
     gravity(state,elapsed);
   }};
-  auto const scatter{[&](vec3<int32_t> const &centre, bool const wide) {
+  auto const scatter{[&](vec3<int32_t> const &centre, bool const wide){
     uint16_t const z{static_cast<uint16_t>(random.next() & (wide ? 65535u : 511u))};
     uint16_t const y{static_cast<uint16_t>(random.next() & (wide ? 511u : 2047u))};
     uint16_t const x{static_cast<uint16_t>(random.next() & (wide ? 65535u : 511u))};
@@ -145,7 +145,7 @@ motion_result advance_motion(projectile &state, definition const &weapon, motion
       if(context.target_is_player && context.player_ejected) state.motion = flight_stage::decoyed;
       if(context.target_is_player && context.player_decoys && weapon.category == 1 && (random.next() & 127) < 60 && context.player_distance > 1000) state.motion = flight_stage::decoyed;
       auto const desired{math::bearing(state.position,context.target)};
-      auto const error{[](math::angle const a, math::angle const b) {
+      auto const error{[](math::angle const a, math::angle const b){
         int const difference{math::signed_word(a) - math::signed_word(b)};
         // Original 0xa3b6c negates a wide difference across the seam instead of reducing it modulo one turn.
         return std::abs(difference) > 32767 ? -difference : difference;

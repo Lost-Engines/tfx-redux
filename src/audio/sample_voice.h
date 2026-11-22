@@ -1,8 +1,8 @@
 #pragma once
 
 #include <mutex>
-#include "audio/sample_bank.h"
 #include "audio/qsound_effect.h"
+#include "audio/sample_bank.h"
 
 namespace tfx::audio {
 

@@ -4,8 +4,8 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "flight/aircraft.h"
 #include "math/native.h"
+#include "flight/aircraft.h"
 #include "resources/archive.h"
 
 namespace tfx::world {
@@ -47,12 +47,12 @@ struct lighting_configuration {
   std::string schematic_name;
   uint16_t status{0};
   bool water_world{false};
-  bool cloud_layer{false}; // Native altitude-prefix flag at 0xe762.
+  bool cloud_layer{false};                                                     // Native altitude-prefix flag at 0xe762.
   int16_t layer_y{0}, layer_offset_y{0};
   std::string upper_grid{};
-  bool initial_cockpit_raised{false}; // Native environment bit 0: start with the panel fully raised.
-  bool sun_suppressed{false}; // Native environment bit 0x200.
-  bool storm{false}; // Native environment bit 0x80, separate from night status.
+  bool initial_cockpit_raised{false};                                          // Native environment bit 0: start with the panel fully raised.
+  bool sun_suppressed{false};                                                  // Native environment bit 0x200.
+  bool storm{false};                                                           // Native environment bit 0x80, separate from night status.
   lighting_configuration(resources::archive const &game, std::string const &name);
 };
 

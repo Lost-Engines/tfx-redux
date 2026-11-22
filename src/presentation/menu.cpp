@@ -62,13 +62,11 @@ menu_program::menu_program(std::string_view const source) {
     auto const command{normal.substr(0,split)};
     auto arguments{split == std::string::npos ? std::string_view{} : trim(std::string_view{normal}.substr(split))};
     if(displayed) throw std::runtime_error{"unsupported menu continuation after display"};
-    if(command == "backdrop") { backdrop = arguments;animation.clear(); }
-    else if(command == "anim") { animation = arguments;backdrop.clear(); }
-    else if(command == "nobox") flash_box = false;
+    if(command == "backdrop") { backdrop = arguments;animation.clear(); } else if(command == "anim") { animation = arguments;backdrop.clear(); } else if(command == "nobox") flash_box = false;
     else if(command == "mouse") {
       if(arguments.starts_with('=')) arguments = trim(arguments.substr(1));
       cursor_style = static_cast<uint16_t>(number(arguments));
-    } else if(command == "display") displayed = true; // Its optional trailing name is not consumed by native display.
+    } else if(command == "display") displayed = true;                          // Its optional trailing name is not consumed by native display.
     else if(command == "clickbox") {
       std::array<int16_t,4> bounds;
       for(auto &bound : bounds) {

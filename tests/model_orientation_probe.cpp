@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -14,9 +15,8 @@ int main(int const argc, char const *const argv[]) try {
     part.rotation_mode = static_cast<uint8_t>(mode);
     auto const angles{tfx::world::model_orientation(actor,part,static_cast<tfx::math::angle>(heading),static_cast<tfx::world::part_orientation>(orientation))};
     std::array<unsigned int,4> const result{angles.x,angles.y,angles.z,mode ? mode : 1};
-    if(fixture.is_open()) { for(auto const value : result) { unsigned int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native SSD orientation mismatch at " + std::to_string(cases)}; } }
-    else { for(auto const value : result) std::cout << value << ' ';std::cout << '\n'; }
+    if(fixture.is_open()) { for(auto const value : result) { unsigned int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native SSD orientation mismatch at " + std::to_string(cases)}; } } else { for(auto const value : result) std::cout << value << ' ';std::cout << '\n'; }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

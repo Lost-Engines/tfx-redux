@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -9,9 +10,8 @@ int main(int const argc, char const *const argv[]) try {
   auto &input{argc == 2 ? fixture : std::cin};unsigned int cases{0};int32_t initial;int16_t movement;
   while(input >> initial >> movement) {
     tfx::render::horizon_phase phase{initial};phase.advance(movement);
-    if(argc == 2) { int32_t expected;if(!(input >> expected) || expected != phase.packed_state()) throw std::runtime_error{"native horizon phase mismatch at case " + std::to_string(cases)}; }
-    else std::cout << phase.packed_state() << '\n';
+    if(argc == 2) { int32_t expected;if(!(input >> expected) || expected != phase.packed_state()) throw std::runtime_error{"native horizon phase mismatch at case " + std::to_string(cases)}; } else std::cout << phase.packed_state() << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

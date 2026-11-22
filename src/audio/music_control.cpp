@@ -4,7 +4,9 @@
 namespace tfx::audio {
 namespace {
 
-bool sound_blaster(uint8_t const device) { return device == 1 || device == 3 || device == 4; }
+bool sound_blaster(uint8_t const device) {
+  return device == 1 || device == 3 || device == 4;
+}
 bool transient_allowed(music_control_state const &state, music_control_context const &context) {
   return !state.resume_cue && !context.inhibited && !context.collision && !context.aircraft_disabled;
 }
@@ -37,7 +39,7 @@ std::optional<music_selection> select_fm(music_control_state &state, music_contr
   if(cue != 12 && !context.enabled) return {};
   music_selection selection;
   switch(cue) {
-  case 0: return selection; // Start the resident resource at order zero.
+  case 0: return selection;                                                    // Start the resident resource at order zero.
   case 1: case 5: selection.resource_index = 19;break;
   case 3: selection.resource_index = 20;break;
   case 6: selection.resource_index = 18;selection.order = 8;break;
@@ -77,7 +79,7 @@ std::optional<music_selection> select_flight_music(music_control_state &state,
   if(context.cd_playing || context.sound_device == 2 || context.preselected) return {};
   if(context.mode != music_mode::soundblaster_cd && context.mode != music_mode::lapc && context.mode != music_mode::fm && context.mode != music_mode::sound_canvas) return {};
   auto result{context.mode == music_mode::lapc ? select_lapc(state,context,cue) : select_fm(state,context,cue)};
-  if(result) state.last_cue = cue; // Retain the requested cue, even when FM substitutes engine audio.
+  if(result) state.last_cue = cue;                                             // Retain the requested cue, even when FM substitutes engine audio.
   return result;
 }
 

@@ -1,8 +1,8 @@
 #include "arming_screen.h"
 #include <algorithm>
 #include <utility>
-#include "render/view_settings.h"
 #include "presentation/cursor.h"
+#include "render/view_settings.h"
 
 namespace tfx::presentation {
 
@@ -60,7 +60,9 @@ void arming_screen::draw(vec2<int16_t> const &position, vec2<int16_t> const &mov
   if(mode != arming_mode::mission_incomplete && mode != arming_mode::confirm_return) preview.draw_cursor(expanded ? detail_renderer : renderer,controls.state(),position);
   if(expanded) composed = detail_renderer.output;
 }
-void arming_screen::press(uint8_t const scan) { key = scan; }
+void arming_screen::press(uint8_t const scan) {
+  key = scan;
+}
 bool arming_screen::rotating() const {
   return controls.state().mode == arming_mode::rotating;
 }
@@ -80,14 +82,20 @@ bool arming_screen::advance(vec2<int16_t> const &position, vec2<int16_t> const &
   if(controls.state().mode == arming_mode::complete || cancelled()) leaving = true;
   return false;
 }
-bool arming_screen::cancelled() const { return controls.state().mode == arming_mode::cancelled; }
+bool arming_screen::cancelled() const {
+  return controls.state().mode == arming_mode::cancelled;
+}
 void arming_screen::resize(vec2<int> const &size) {
   if(resolution == size) return;
   resolution = vec2<int>{size};
   detail_renderer.output.resize(size);
   detail_renderer.clipping = render::raster_clip::viewport({0,0},{size.x - 1,size.y - 1});
 }
-render::framebuffer const &arming_screen::image() const { return resolution == vec2<int>{render::screen_width,render::screen_height} ? renderer.output : composed; }
-render::palette arming_screen::colours() const { return render::decode_palette(fade_palette(palette,fade_level,40)); }
+render::framebuffer const &arming_screen::image() const {
+  return resolution == vec2<int>{render::screen_width,render::screen_height} ? renderer.output : composed;
+}
+render::palette arming_screen::colours() const {
+  return render::decode_palette(fade_palette(palette,fade_level,40));
+}
 
 } // namespace tfx::presentation

@@ -19,7 +19,9 @@ armament::armament(flight::player_aircraft const aircraft, std::span<definition 
   if(cursor != 0) throw std::runtime_error{"unterminated pylon selection ring"};
 }
 
-weapon_role armament::selected_role() const { return selected < 0 ? cannon_role : role(static_cast<unsigned int>(selected)); }
+weapon_role armament::selected_role() const {
+  return selected < 0 ? cannon_role : role(static_cast<unsigned int>(selected));
+}
 
 flight::loadout armament::flight_stores(std::span<vec3d const,flight::store_slots> const mounts) const {
   flight::loadout result;
@@ -57,8 +59,9 @@ bool armament::can_fit(unsigned int const slot, weapon_id const weapon) const {
     blocked_by_slots_0_and_7,0,0,blocked_by_slots_3_4_8_9,blocked_by_slots_3_4_8_9,
     0,0,blocked_by_slots_0_and_7,blocked_by_slots_3_4_8_9,blocked_by_slots_3_4_8_9,
   };
-  for(unsigned int other{0}; other != flight::store_slots; ++other)
+  for(unsigned int other{0}; other != flight::store_slots; ++other) {
     if((conflicts[slot] & (1u << other)) && pylons[other].visible) return false;
+  }
   return true;
 }
 void armament::assign(unsigned int const slot, std::optional<weapon_id> const weapon) {
@@ -159,9 +162,9 @@ std::optional<release> armament::fire(store_context const &context, std::span<ve
     .mount{static_cast<uint8_t>(slot)},
     .jettisoned{context.jettisoned},
   };
-  if(emit) emit(shot); // Construction observes the current pylon before post-release selection changes it.
+  if(emit) emit(shot);                                                         // Construction observes the current pylon before post-release selection changes it.
   last_released = selected;
-  if(!context.unlimited) --pylons[slot].count; // Byte underflow is retained: eligibility belongs to the caller.
+  if(!context.unlimited) --pylons[slot].count;                                 // Byte underflow is retained: eligibility belongs to the caller.
   if(!pylons[slot].count && pylons[slot].weapon != std::to_underlying(weapon_id::jp233)) pylons[slot].visible = false;
   if(!context.unlimited) {
     selection = select(role(slot),false);

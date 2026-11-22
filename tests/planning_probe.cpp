@@ -1,13 +1,13 @@
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include "planning/document.h"
 #include "planning/map_view.h"
 #include "planning/notes.h"
 #include "planning/review.h"
-#include "resources/executable_tables.h"
 #include "resources/archive.h"
 #include "resources/compiled_panel.h"
+#include "resources/executable_tables.h"
 
 int main(int const argc, char const *const argv[]) try {
   if(argc == 3 && std::string_view{argv[2]} == "--panel") {
@@ -58,7 +58,7 @@ int main(int const argc, char const *const argv[]) try {
         }
         review.advance(2);
       }
-      if(!review.finished() || std::ranges::any_of(review.image().pixels,[](uint8_t const value) { return value != 0; })) throw std::runtime_error{"review fade did not finish on a cleared screen"};
+      if(!review.finished() || std::ranges::any_of(review.image().pixels,[](uint8_t const value){ return value != 0; })) throw std::runtime_error{"review fade did not finish on a cleared screen"};
       for(auto const &colour : review.colours()) for(unsigned int channel{0}; channel != 3; ++channel) std::cout.put(static_cast<char>(colour[channel]));
     }
     return EXIT_SUCCESS;
@@ -159,7 +159,7 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(argc != 2) throw std::runtime_error{"planning_probe DATA_DIRECTORY"};
   tfx::resources::archive const game{tfx::resources::find_game_archive(argv[1])};
-  auto const string{[](std::string_view const text) {
+  auto const string{[](std::string_view const text){
     char constexpr digits[]{"0123456789abcdef"};
     for(uint8_t const byte : text) std::cout << digits[byte >> 4] << digits[byte & 15];
     std::cout << '|';

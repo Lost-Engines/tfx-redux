@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <format>
 #include <fstream>
 #include <iostream>
@@ -62,7 +63,7 @@ int main(int const argc, char const *const argv[]) try {
   uint64_t frames{0};
   double peak{0};
   double energy{0};
-  auto const render{[&](uint64_t count) {
+  auto const render{[&](uint64_t count){
     while(count) {
       auto const size{static_cast<unsigned int>(std::min<uint64_t>(count,samples.size() / 2))};
       auto const buffer{std::span{samples}.first(size * 2u)};
@@ -91,5 +92,5 @@ int main(int const argc, char const *const argv[]) try {
   render(sample_rate * 2u);
   output.close();
   std::cout << std::format("TFX_RENDER {{\"frames\":{},\"boundary_frame\":{},\"ticks\":{},\"rendered_ticks\":{},\"state_trace_fnv64\":\"{:016x}\",\"raw_peak\":{:.12g},\"rms\":{:.12g},\"sample_rate\":{},\"song_volume\":75}}\n",frames,native_end,boundary,boundary - (policy == "exclude"),hash,peak,static_cast<double>(std::sqrt(energy / (static_cast<double>(frames) * 2))),sample_rate);
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

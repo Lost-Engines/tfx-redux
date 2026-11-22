@@ -2,8 +2,8 @@
 
 #include <array>
 #include <string>
-#include "resources/media.h"
 #include "cockpit/viewport_layout.h"
+#include "resources/media.h"
 
 namespace tfx::cockpit {
 

@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -6,7 +7,7 @@
 int main(int const argc, char const *const argv[]) try {
   if(argc != 2) throw std::runtime_error{"expected original START.EXE"};
   std::vector<uint8_t> output;
-  tfx::audio::osl_fm_driver driver{tfx::resources::read_file(argv[1]),[&](tfx::audio::opl_write const command) { output.push_back(command.address);output.push_back(command.value); }};
+  tfx::audio::osl_fm_driver driver{tfx::resources::read_file(argv[1]),[&](tfx::audio::opl_write const command){ output.push_back(command.address);output.push_back(command.value); }};
   unsigned int operation,channel,first,second,bend,note,volume,extra;
   while(std::cin >> operation >> channel >> first >> second >> bend >> note >> volume >> extra) {
     tfx::audio::osl_channel state{
@@ -40,5 +41,5 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const byte : output) std::cout << ' ' << static_cast<unsigned int>(byte);
     std::cout << '\n';
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

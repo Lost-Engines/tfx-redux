@@ -1,7 +1,7 @@
 #include "model_queue.h"
-#include <utility>
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 
 namespace tfx::render {
 
@@ -13,11 +13,21 @@ model_slot_state model_slot_metadata::queued(model_slot const slot, model_render
 model_slot_state model_slot_metadata::immediate(model_slot const slot, uint8_t const scale, vec3<math::angle> const &angles) {
   auto &state{slots.at(slot)};state.scale = scale;state.angles = vec3<math::angle>{angles};return state;
 }
-void model_slot_metadata::restore(model_slot const slot, model_slot_state const &state) { slots.at(slot) = state; }
+void model_slot_metadata::restore(model_slot const slot, model_slot_state const &state) {
+  slots.at(slot) = state;
+}
 
-void model_queue::clear() { count = 0;current = 0;sorted = false; }
-unsigned int model_queue::size() const { return count; }
-std::span<model_queue_entry const> model_queue::pending() const { return std::span{entries}.first(count); }
+void model_queue::clear() {
+  count = 0;
+  current = 0;
+  sorted = false;
+}
+unsigned int model_queue::size() const {
+  return count;
+}
+std::span<model_queue_entry const> model_queue::pending() const {
+  return std::span{entries}.first(count);
+}
 void model_queue::restore(std::span<model_queue_entry const> const source) {
   if(source.size() > model_queue_capacity) throw std::runtime_error{"recorded model queue exceeds its native capacity"};
   for(auto const &entry : source) if(entry.slot >= source.size()) throw std::runtime_error{"recorded model queue refers to an absent slot"};
@@ -25,7 +35,9 @@ void model_queue::restore(std::span<model_queue_entry const> const source) {
   std::copy(source.begin(),source.end(),entries.begin());
   current = static_cast<model_slot>(std::min(count,model_queue_capacity - 1));
 }
-model_slot model_queue::scratch_slot() const { return current; }
+model_slot model_queue::scratch_slot() const {
+  return current;
+}
 
 void model_queue::insertion_sort() {
   for(unsigned int i{1}; i < count; ++i) {

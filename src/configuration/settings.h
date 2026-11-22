@@ -21,7 +21,7 @@ struct realism {
 };
 struct settings {
   flight::control_source control{flight::control_source::keyboard};
-  flight::control_source preferred_control{flight::control_source::keyboard}; // Startup CONTROL, restored when leaving Arcade.
+  flight::control_source preferred_control{flight::control_source::keyboard};  // Startup CONTROL, restored when leaving Arcade.
   simulation::flight_model model{simulation::flight_model::arcade};
   realism effects{};
   float joystick_scale{512};

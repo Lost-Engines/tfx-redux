@@ -23,7 +23,7 @@ void rudder_keys(aerodynamic_control_state &state, aerodynamic_control_context c
   } else state.keyboard_rudder = decay ? static_cast<double>(static_cast<calculation>(state.keyboard_rudder) * rudder_retention) : 0;
 }
 int mouse_axis(int value, int const dead_zone) {
-  if(value < dead_zone && value > -dead_zone) value = 0;
+  if(value < dead_zone && value > - dead_zone) value = 0;
   if(value > 0) value -= dead_zone;
   if(value < 0) value += dead_zone;
   return value;

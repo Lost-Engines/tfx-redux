@@ -14,7 +14,7 @@ private:
 public:
   arming_keys(window &owner, presentation::arming_screen &screen) : owner{owner}, host{owner.get()}, screen{screen} {
     glfwSetWindowUserPointer(host,this);
-    owner.set_key_callback([](GLFWwindow *const host, int const key, int const, int const action, int const) {
+    owner.set_key_callback([](GLFWwindow *const host, int const key, int const, int const action, int const){
       if(action != GLFW_PRESS) return;
       auto &controls{*static_cast<arming_keys*>(glfwGetWindowUserPointer(host))};
       controls.screen.press(key == GLFW_KEY_ESCAPE ? 1 : key == GLFW_KEY_Y ? 0x15 : key == GLFW_KEY_N ? 0x31 : key == GLFW_KEY_ENTER ? 0x1c : 0);
@@ -38,7 +38,9 @@ arming_result arm_mission(window &window, resources::archive const &game, resour
     weapons::armament &inventory;
     weapons::pylon_inventory original;
     bool restore{true};
-    ~restore_inventory() { if(restore) inventory.pylons = original; }
+    ~restore_inventory() {
+      if(restore) inventory.pylons = original;
+    }
   } previous{
     .inventory{inventory},
     .original{inventory.pylons},

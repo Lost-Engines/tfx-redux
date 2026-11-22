@@ -1,10 +1,10 @@
-#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string_view>
+#include "fixture_check.h"
 #include "resources/executable_tables.h"
 #include "weapons/cannon.h"
 

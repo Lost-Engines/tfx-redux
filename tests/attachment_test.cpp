@@ -14,13 +14,13 @@ void require(bool const value, char const *const message) {
 tfx::models::shape program(std::initializer_list<uint16_t> const words) {
   // An independent, synthetic disk program with one detail entry.
   std::vector<uint8_t> bytes(48);
-  auto const word{[&](unsigned int const at, uint16_t const value) {
+  auto const word{[&](unsigned int const at, uint16_t const value){
     bytes.at(at) = static_cast<uint8_t>(value >> 8);
     bytes.at(at + 1) = static_cast<uint8_t>(value);
   }};
   word(2,32767);
   word(34,14);
-  auto const emit{[&](uint16_t const value) {
+  auto const emit{[&](uint16_t const value){
     bytes.push_back(static_cast<uint8_t>(value >> 8));
     bytes.push_back(static_cast<uint8_t>(value));
   }};

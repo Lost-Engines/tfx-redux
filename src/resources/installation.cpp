@@ -34,7 +34,7 @@ std::filesystem::path default_game_directory() {
 }
 
 std::filesystem::path select_game_archive(std::optional<std::filesystem::path> const &requested, std::optional<std::filesystem::path> const &media) {
-  auto const prepared{[&](std::filesystem::path const &directory) {
+  auto const prepared{[&](std::filesystem::path const &directory){
     bool const installed{std::filesystem::is_regular_file(directory / "DID.DAT") || std::filesystem::is_regular_file(directory / "did.dat")};
     auto const managed{directory / "cd" / "tfx.cue"};
     if(std::filesystem::is_regular_file(managed)) install_reference_cd(managed,directory);

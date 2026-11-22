@@ -19,7 +19,7 @@ std::string text(variables const &values, std::string_view const name) {
 pilot_panel::pilot_panel(resources::archive const &game, fonts const &fonts, pilot_assets const &assets,
   program const &schema, variables &state, pilot_store const &store) : font_data{fonts}, assets{assets}, schema{schema}, state{state}, store{store},
   dialogue{resources::decode_screen(game.read("iff/raw/com_blk3.lbm"))}, slots_image{resources::decode_screen(game.read("iff/raw/com_enrl.lbm"))}, records{store.list(schema)} {
-  auto const read_palette{[&](std::string_view const name, dac_palette &target) {
+  auto const read_palette{[&](std::string_view const name, dac_palette &target){
     auto const bytes{game.read(name)};
     std::ranges::copy(std::span{bytes}.subspan(4,target.size()),target.begin());
   }};
@@ -47,8 +47,7 @@ void pilot_panel::finish() {
 void pilot_panel::choose_slot() {
   destination = selected;
   if(current == page::load_slots) {
-    if(!records[selected]) { fixed_slot = true;begin_names(); }
-    else if(number(records[selected]->values,"status") != 0) current = page::discard;
+    if(!records[selected]) { fixed_slot = true;begin_names(); } else if(number(records[selected]->values,"status") != 0) current = page::discard;
     else { loaded = records[selected];finish(); }
   } else if(records[selected] && number(records[selected]->values,"status") == 0) current = page::overwrite;
   else finish();

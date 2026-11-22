@@ -10,8 +10,12 @@ runtime::runtime(program const &program, variables &variables, location const en
   cursor = entry;
 }
 
-std::optional<location> runtime::position() const { return cursor; }
-unsigned int runtime::call_depth() const { return static_cast<unsigned int>(callers.size()); }
+std::optional<location> runtime::position() const {
+  return cursor;
+}
+unsigned int runtime::call_depth() const {
+  return static_cast<unsigned int>(callers.size());
+}
 statement const *runtime::current() const {
   return cursor ? &source.functions[cursor->function].statements[cursor->statement] : nullptr;
 }

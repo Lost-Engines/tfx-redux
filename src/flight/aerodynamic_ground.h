@@ -8,7 +8,7 @@ enum class aerodynamic_arrestor_phase : uint16_t { free, engaged, stopped };
 
 struct aerodynamic_ground_parameters {
   aerodynamic_contact_parameters contact{};
-  std::array<vec3d,6> offsets{}; // Nose, left/right main gear, then three body points.
+  std::array<vec3d,6> offsets{};                                               // Nose, left/right main gear, then three body points.
   vec3d hook_offset{0,0,0};
   double maximum_gear_speed{0};
   double arrestor_stiffness{0};

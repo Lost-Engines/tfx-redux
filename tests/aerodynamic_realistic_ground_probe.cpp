@@ -1,7 +1,8 @@
 #include <bit>
-#include <utility>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <utility>
 #include <vector>
 #include "flight/aerodynamic_realistic_ground.h"
 
@@ -115,5 +116,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no Realistic aerodynamic ground cases"};
   if(argc == 2) std::cout << cases << " native Realistic aerodynamic ground fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

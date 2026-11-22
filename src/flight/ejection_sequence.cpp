@@ -12,9 +12,15 @@ int32_t truncate(double const value) {
 } // anonymous namespace
 
 ejection_sequence::ejection_sequence(ejection_state initial) : state{std::move(initial)} {}
-ejection_state const &ejection_sequence::value() const { return state; }
-void ejection_sequence::reset() { state = {}; }
-void ejection_sequence::request() { state.stage = ejection_stage::requested; }
+ejection_state const &ejection_sequence::value() const {
+  return state;
+}
+void ejection_sequence::reset() {
+  state = {};
+}
+void ejection_sequence::request() {
+  state.stage = ejection_stage::requested;
+}
 escape_result ejection_sequence::escape(vec3<int32_t> const &position, vec3<math::angle> const &angles, int32_t const speed, bool const confirmed) {
   escape_result result;
   if(state.stage != ejection_stage::cockpit) { result.end_flight = true;return result; }
@@ -58,7 +64,9 @@ escape_result ejection_sequence::escape(vec3<int32_t> const &position, vec3<math
   result.fixed_camera.emplace(std::move(camera));
   return result;
 }
-void ejection_sequence::collision(int16_t const collision) { state.pilot.collision = collision; }
+void ejection_sequence::collision(int16_t const collision) {
+  state.pilot.collision = collision;
+}
 pilot_update ejection_sequence::advance_pilot(pilot_context const &context) {
   return flight::advance_pilot(state.pilot,context);
 }

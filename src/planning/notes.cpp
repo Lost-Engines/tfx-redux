@@ -9,12 +9,14 @@ uint16_t key(uint8_t const waypoint, uint8_t const route) {
 }
 } // anonymous namespace
 
-notes::notes(std::string_view const source) { append(source); }
+notes::notes(std::string_view const source) {
+  append(source);
+}
 void notes::append(std::string_view const source) {
   // Native 0xaac40 removes CR and NUL before indexing ESC-terminated blocks.
   std::string compact;
   for(char const value : source) if(value != '\r' && value != '\0') compact += value;
-  std::size_t at{0};
+  size_t at{0};
   unsigned int constexpr maximum_notes{500};
   for(unsigned int index{0}; index != maximum_notes && at < compact.size(); ++index) {
     auto const end{compact.find('\x1b',at)};
@@ -23,8 +25,8 @@ void notes::append(std::string_view const source) {
     // The indexing scanner stops at a blank line (returning zero without advancing),
     // whereas the later widget-header scanner skips it. Retained mission 829 has
     // blank lines after ESC: its notes 4 and 6 consequently replace key zero.
-    std::size_t index_at{0};
-    auto const index_number{[&]() -> uint8_t {
+    size_t index_at{0};
+    auto const index_number{[&]()->uint8_t {
       if(index_at < block.size() && block[index_at] == '\n') return 0;
       while(index_at < block.size() && (block[index_at] < '0' || block[index_at] > '9') && block[index_at] != '\n') ++index_at;
       uint32_t value{0};
@@ -49,7 +51,7 @@ annotation const *notes::find(uint8_t const waypoint, uint8_t const route) const
   // is replaced later; eager widget decoding would incorrectly reject the file.
   std::string_view const block{found->second};
   std::array<uint8_t,6> fields{};
-  std::size_t number{0};
+  size_t number{0};
   for(auto &field : fields) {
     while(number < block.size() && (block[number] < '0' || block[number] > '9')) ++number;
     if(number == block.size()) throw std::runtime_error{"Incomplete planner annotation header"};
@@ -81,8 +83,9 @@ void draw_annotation(render::framebuffer &image, presentation::widget_font const
   int const width{std::min<int>(note.size.x,78 - note.position.x) * 8 + 16};
   int const height{std::min<int>(note.size.y,48 - note.position.y) * 8 + 16};
   int const right{x + width}, bottom{y + height};
-  for(int row{std::max(0,y + 8)}; row <= std::min(render::screen_height - 1,bottom - 9); ++row)
+  for(int row{std::max(0,y + 8)}; row <= std::min(render::screen_height - 1,bottom - 9); ++row) {
     for(int column{std::max(0,x + 8)}; column <= std::min(render::screen_width - 1,right - 9); ++column) image.pixels[row * render::screen_width + column] = 246;
+  }
   for(int const inset : {7,6}) {
     int const left{x + inset}, top{y + inset}, r{right - inset - 1}, b{bottom - inset - 1};
     presentation::draw_line(image,{left,top},{r,top},253);

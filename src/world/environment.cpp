@@ -41,8 +41,7 @@ mission::mission(resources::archive const &game, std::string const &source_name)
       fields >> value;
       if(value < std::to_underlying(player_aircraft::eurofighter) || value > std::to_underlying(player_aircraft::raptor)) throw std::runtime_error{"invalid player craft in " + name};
       aircraft = static_cast<player_aircraft>(value);
-    }
-    else if(key == "start") {
+    } else if(key == "start") {
       std::string position;
       std::getline(fields, position);
       std::ranges::replace(position, ',', ' ');
@@ -50,7 +49,7 @@ mission::mission(resources::archive const &game, std::string const &source_name)
       std::string altitude;
       if(!(coordinates >> start.position.x >> altitude >> start.position.z)) throw std::runtime_error{"invalid player start in " + name};
       start.landed = altitude == "landed";
-      if(!start.landed) start.position.y = std::stoi(altitude);                   // numeric Y is already signed native world height, not positive altitude
+      if(!start.landed) start.position.y = std::stoi(altitude);                // numeric Y is already signed native world height, not positive altitude
     }
     std::string word;
     while(fields >> word) if(lower(word) == "text") in_text = true;

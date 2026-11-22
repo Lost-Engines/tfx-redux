@@ -11,7 +11,9 @@ float constexpr metres_per_fixed_speed{.4762499928474426f};
 int constexpr feet_per_ground_step{8};
 int16_t constexpr carrier_height_limit{-10};
 
-calculation wide(double const value) { return value; }
+calculation wide(double const value) {
+  return value;
+}
 calculation normalised(int32_t const value) {
   return wide(math::signed_word(static_cast<uint16_t>(value))) * normalised_word;
 }

@@ -13,7 +13,7 @@ int main(int const argc, char const *const argv[]) try {
     auto const aircraft{static_cast<tfx::flight::player_aircraft>(selected + 1)};
     tfx::weapons::armament inventory{aircraft,tables.weapons,tables.arming};
     tfx::presentation::arming_screen screen{game,tables,inventory,aircraft,0,incomplete ? tfx::presentation::arming_entry::mission_incomplete : tfx::presentation::arming_entry::normal};
-    auto const output{[&] {
+    auto const output{[&]{
       auto const &pixels{screen.image().pixels};
       std::cout.write(reinterpret_cast<char const*>(pixels.data()),pixels.size());
     }};
@@ -28,7 +28,7 @@ int main(int const argc, char const *const argv[]) try {
   } else if(std::string_view{argv[2]} == "fades") {
     tfx::weapons::armament inventory{tfx::flight::player_aircraft::eurofighter,tables.weapons,tables.arming};
     tfx::presentation::arming_screen screen{game,tables,inventory,tfx::flight::player_aircraft::eurofighter,0};
-    auto const output{[&] {
+    auto const output{[&]{
       for(auto const &colour : screen.colours()) std::cout.write(reinterpret_cast<char const*>(colour.data()),3);
     }};
     output();
@@ -61,7 +61,7 @@ int main(int const argc, char const *const argv[]) try {
       tfx::presentation::arming_screen screen{game,tables,inventory,aircraft,0};
       for(unsigned int frame{0}; frame != 120; ++frame) screen.advance({210,190},{0,0},0);
       if(std::string_view{argv[2]} == "flow") {
-        auto const move{[&](vec2<int16_t> const &point, uint8_t const buttons = 0) { screen.advance(point,{0,0},buttons); }};
+        auto const move{[&](vec2<int16_t> const &point, uint8_t const buttons = 0){ screen.advance(point,{0,0},buttons); }};
         if(plane == 1) { move({308,86},1);move({308,86},1);move({308,86}); }
         move({250,30},1);move({250,30});
         vec2<int16_t> const mount{plane == 0 ? int16_t{214} : plane == 1 ? int16_t{171} : int16_t{205},plane == 0 ? int16_t{166} : plane == 1 ? int16_t{130} : int16_t{109}};

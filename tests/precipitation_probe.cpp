@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -20,11 +21,10 @@ int main(int const argc, char const *const argv[]) try {
         .speed{speed},
       })};
       int32_t const value{count ? *count : 65536};
-      if(argc == 3) { int32_t expected;if(!(input >> expected) || expected != value) throw std::runtime_error{"native rain gate mismatch at case " + std::to_string(cases)}; }
-      else std::cout << value << '\n';
+      if(argc == 3) { int32_t expected;if(!(input >> expected) || expected != value) throw std::runtime_error{"native rain gate mismatch at case " + std::to_string(cases)}; } else std::cout << value << '\n';
       ++cases;
     }
-    return cases ? 0 : 1;
+    return cases ? EXIT_SUCCESS : EXIT_FAILURE;
   }
   bool const pixels{argc == 2 && std::string_view{argv[1]} == "--pixels"};
   std::ifstream fixture;if(argc == 2 && !pixels) fixture.open(argv[1]);
@@ -63,5 +63,5 @@ int main(int const argc, char const *const argv[]) try {
     if(!input) throw std::runtime_error{"incomplete precipitation input"};
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

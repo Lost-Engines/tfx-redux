@@ -1,13 +1,13 @@
 #pragma once
 
-#include "flight/aerodynamic_ground.h"
 #include "flight/aerodynamic_controls.h"
+#include "flight/aerodynamic_ground.h"
 
 namespace tfx::flight {
 
 struct aerodynamic_realistic_ground_state {
   aerodynamic_ground_state ground{};
-  vec3d wheel_penetration{0,0,0}; // Nose, left main, right main.
+  vec3d wheel_penetration{0,0,0};                                              // Nose, left main, right main.
   double roll_angle{0};
   double pitch_angle{0};
   double commanded_roll_rate{0};

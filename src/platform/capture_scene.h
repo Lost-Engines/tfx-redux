@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <optional>
 #include <vector>
-#include "missions/initialisation.h"
 #include "cockpit/view_control.h"
+#include "missions/initialisation.h"
 #include "render/camera.h"
 
 namespace tfx::platform {
@@ -27,7 +27,7 @@ struct capture_scene {
   std::optional<flight::player_aircraft> aircraft;
   std::optional<float> speed;
   cockpit::view_mode view{cockpit::view_mode::virtual_cockpit};
-  vec2d look{0,0}; // Degrees right/down relative to the native pilot camera.
+  vec2d look{0,0};                                                             // Degrees right/down relative to the native pilot camera.
   std::optional<render::camera> camera;
   std::string hud{"default"};
   std::optional<vec3<unsigned int>> displays;
@@ -40,4 +40,4 @@ struct capture_scene {
   void initialise(missions::setup &setup) const;
 };
 } // namespace tfx::platform
-#endif
+#endif // NDEBUG

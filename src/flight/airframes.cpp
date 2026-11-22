@@ -1,5 +1,5 @@
-#include "airframes.h"
 #include "aerodynamic_airframes.h"
+#include "airframes.h"
 #include <cmath>
 #include <optional>
 #include <stdexcept>
@@ -98,7 +98,7 @@ struct gear_drag_fields {
 };
 double gear_drag(resources::binary_view const &source, gear_drag_fields const &fields) {
   using calculation = double;
-  auto const value{[&](unsigned int const field) { return constant(source,field); }};
+  auto const value{[&](unsigned int const field){ return constant(source,field); }};
   calculation const pi{value(0x579c)};
   calculation const main{pi * value(fields.main_multiplier) * value(fields.main_radius) * value(fields.scale) * value(fields.main_radius) * value(fields.scale)};
   calculation const nose{pi * value(fields.nose_multiplier) * value(fields.nose_radius) * value(fields.scale) * value(fields.nose_radius) * value(fields.scale)};
@@ -177,8 +177,8 @@ std::array<aerodynamic_airframe,3> load_aerodynamic_airframes(std::span<uint8_t 
     profile.stores_and_mounts = stores[aircraft];
     preset_literals const literals{source,starts[aircraft],ends[aircraft]};
     auto const &angles{angular[aircraft]};
-    auto const value{[&](unsigned int const field) { return constant(source,field); }};
-    auto const angle{[&](unsigned int const degrees) { return static_cast<double>(static_cast<double>(value(0x579c)) * value(degrees) * value(angles.inverse_degrees)); }};
+    auto const value{[&](unsigned int const field){ return constant(source,field); }};
+    auto const angle{[&](unsigned int const degrees){ return static_cast<double>(static_cast<double>(value(0x579c)) * value(degrees) * value(angles.inverse_degrees)); }};
     auto &p{profile.surfaces};
     p.wing_area = literals.number(0x147a0);
     p.wing_span = literals.number(0x14218);

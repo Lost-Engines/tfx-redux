@@ -19,9 +19,15 @@ palette_lighting::palette_lighting(std::array<dac_palette,altitude_palette_count
   // Native startup forces the base palette's first RGB triple to black.
   for(unsigned int channel{0}; channel != 3; ++channel) banks[0][channel] = current[channel] = 0;
 }
-palette_lighting_state const &palette_lighting::value() const { return state; }
-dac_palette const &palette_lighting::colours() const { return current; }
-void palette_lighting::flash(uint8_t const level) { state.flash = level; }
+palette_lighting_state const &palette_lighting::value() const {
+  return state;
+}
+dac_palette const &palette_lighting::colours() const {
+  return current;
+}
+void palette_lighting::flash(uint8_t const level) {
+  state.flash = level;
+}
 void palette_lighting::blend(dac_palette const &from, dac_palette const &to, int16_t const level) {
   // Native 0x72ccc skips the magenta source sentinel, leaving existing bytes.
   for(unsigned int index{0}; index != 256; ++index) {

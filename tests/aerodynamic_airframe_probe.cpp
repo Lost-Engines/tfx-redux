@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string_view>
@@ -7,7 +8,7 @@
 namespace {
 
 void profile(tfx::flight::aerodynamic_airframe const &frame) {
-  auto const number{[](double const value) { std::cout << std::bit_cast<uint64_t>(value) << ' '; }};
+  auto const number{[](double const value){ std::cout << std::bit_cast<uint64_t>(value) << ' '; }};
   auto const &load{frame.stores_and_mounts};
   for(auto const value : {load.stores.moment_a,load.stores.moment_b,load.stores.fuel_capacity}) number(value);
   for(auto const &position : load.mounts) for(auto const value : position) number(value);
@@ -43,7 +44,7 @@ int main(int const argc, char const *const argv[]) try {
   if(std::string_view{argv[1]} != "--calibration") {
     if(argc != 2) throw std::runtime_error{"expected TFX.DAT"};
     for(auto const &frame : tfx::flight::load_aerodynamic_airframes(tfx::resources::read_file(argv[1]))) profile(frame);
-    return 0;
+    return EXIT_SUCCESS;
   }
   std::ifstream fixture;
   if(argc == 3) fixture.open(argv[2]);
@@ -70,5 +71,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no aerodynamic calibration cases"};
   if(argc == 3) std::cout << cases << " native aerodynamic calibration fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

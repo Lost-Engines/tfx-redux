@@ -5,17 +5,43 @@
 
 namespace {
 
-void require(bool const condition, char const *const message) { if(!condition) throw std::runtime_error{message}; }
+void require(bool const condition, char const *const message) {
+  if(!condition) throw std::runtime_error{message};
+}
 struct graph_writer {
   tfx::resources::bytes bytes;
-  void byte(unsigned int const value) { bytes.push_back(static_cast<uint8_t>(value)); }
-  void word(unsigned int const value) { byte(value);byte(value >> 8); }
-  void dword(uint32_t const value) { word(value);word(value >> 16); }
-  void zeros(unsigned int const count) { for(unsigned int i{0}; i != count; ++i) byte(0); }
-  void text(std::string const &text, unsigned int const width) { for(unsigned int i{0}; i != width; ++i) byte(i < text.size() ? static_cast<uint8_t>(text[i]) : 0); }
-  void function(std::string const &name, unsigned int const count) { zeros(12);word(count);text(name,11); }
-  void node(unsigned int const kind) { byte(kind);zeros(12); }
-  void assign(unsigned int const operation, uint32_t const value) { node(10);dword(0);byte(operation);dword(value); }
+  void byte(unsigned int const value) {
+    bytes.push_back(static_cast<uint8_t>(value));
+  }
+  void word(unsigned int const value) {
+    byte(value);
+    byte(value >> 8);
+  }
+  void dword(uint32_t const value) {
+    word(value);
+    word(value >> 16);
+  }
+  void zeros(unsigned int const count) {
+    for(unsigned int i{0}; i != count; ++i) byte(0);
+  }
+  void text(std::string const &text, unsigned int const width) {
+    for(unsigned int i{0}; i != width; ++i) byte(i < text.size() ? static_cast<uint8_t>(text[i]) : 0);
+  }
+  void function(std::string const &name, unsigned int const count) {
+    zeros(12);
+    word(count);
+    text(name,11);
+  }
+  void node(unsigned int const kind) {
+    byte(kind);
+    zeros(12);
+  }
+  void assign(unsigned int const operation, uint32_t const value) {
+    node(10);
+    dword(0);
+    byte(operation);
+    dword(value);
+  }
 };
 
 } // anonymous namespace

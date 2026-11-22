@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -19,10 +20,8 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const slot : order) values.push_back(payload.at(slot));
     uint64_t hash{14695981039346656037ull};
     for(auto const value : values) for(unsigned int byte{0}; byte != 4; ++byte) hash = (hash ^ static_cast<uint8_t>(value >> (byte * 8))) * 1099511628211;
-    if(full) { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
-    else if(fixture.is_open()) { uint64_t expected;if(!(input >> expected) || hash != expected) throw std::runtime_error{"native model queue mismatch at case " + std::to_string(cases)}; }
-    else std::cout << hash << '\n';
+    if(full) { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; } else if(fixture.is_open()) { uint64_t expected;if(!(input >> expected) || hash != expected) throw std::runtime_error{"native model queue mismatch at case " + std::to_string(cases)}; } else std::cout << hash << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

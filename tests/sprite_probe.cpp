@@ -1,8 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
-#include "render/sprites.h"
 #include "render/software_renderer.h"
+#include "render/sprites.h"
 #include "resources/archive.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -18,7 +18,7 @@ int main(int const argc, char const *const argv[]) try {
   while(std::cin >> kind) {
     tfx::render::framebuffer image, coverage;
     image.pixels.fill(99);
-    auto const bounds{[&] {
+    auto const bounds{[&]{
       vec2<int> minimum, maximum;
       std::cin >> minimum.x >> minimum.y >> maximum.x >> maximum.y;
       return tfx::render::raster_clip::viewport(minimum,maximum);

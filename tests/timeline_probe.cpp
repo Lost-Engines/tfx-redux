@@ -34,7 +34,7 @@ uint64_t run(std::istream &input, bool const emit) {
   tfx::missions::timeline state{source};
   state.reset(elapsed);
   uint64_t digest{14695981039346656037ULL};
-  auto const word{[&](uint32_t const value) {
+  auto const word{[&](uint32_t const value){
     if(emit) std::cout << value << ' ';
     for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((value >> shift) & 255)) * 1099511628211ULL;
   }};

@@ -1,11 +1,15 @@
 #include "model_metrics.h"
-#include "colour_remap.h"
 #include <utility>
+#include "colour_remap.h"
 
 namespace tfx::render {
 namespace {
-int32_t wrap(uint32_t const value) { return std::bit_cast<int32_t>(value); }
-int32_t magnitude(int32_t const value) { return value < 0 ? wrap(0u - static_cast<uint32_t>(value)) : value; }
+int32_t wrap(uint32_t const value) {
+  return std::bit_cast<int32_t>(value);
+}
+int32_t magnitude(int32_t const value) {
+  return value < 0 ? wrap(0u - static_cast<uint32_t>(value)) : value;
+}
 }
 
 model_metrics measure_model(vec3<int32_t> const &camera_origin, int16_t const sort_bias) {

@@ -1,11 +1,11 @@
 #include "model_raster.h"
+#include <algorithm>
+#include <cmath>
+#include <limits>
 #include "model_projection.h"
 #include "near_clip.h"
 #include "pattern_raster.h"
 #include "presentation/drawing.h"
-#include <algorithm>
-#include <cmath>
-#include <limits>
 
 namespace tfx::render {
 namespace {
@@ -13,7 +13,7 @@ namespace {
 int constexpr circle_radius_limit{100};
 // The original 4,950 row extents are precisely midpoint-circle octants.
 // Generate their integer construction rather than embedding executable data.
-constexpr auto circle_rows{[]{
+auto constexpr circle_rows{[]{
   std::array<std::array<uint8_t,circle_radius_limit>,circle_radius_limit> rows{};
   for(int radius{1}; radius != circle_radius_limit; ++radius) {
     int x{0},y{radius},decision{1 - radius};

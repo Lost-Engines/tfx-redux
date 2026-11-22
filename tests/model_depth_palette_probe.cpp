@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -10,9 +11,9 @@ namespace {
 unsigned int constexpr face_count{7}, vertices_per_face{4};
 std::vector<uint8_t> program(bool const nested, bool const fixed, uint16_t const threshold, std::array<uint16_t,3> const &colours, std::array<uint16_t,face_count * vertices_per_face> const &depths) {
   std::vector<uint8_t> source(50);
-  auto const store{[&](unsigned int const at,uint16_t const value) { source.at(at) = static_cast<uint8_t>(value >> 8);source.at(at + 1) = static_cast<uint8_t>(value); }};
-  auto const emit{[&](std::initializer_list<uint16_t> const words) { for(auto const value : words) { source.push_back(static_cast<uint8_t>(value >> 8));source.push_back(static_cast<uint8_t>(value)); } }};
-  auto const link{[&](unsigned int const field) { store(field,static_cast<uint16_t>(source.size() - field)); }};
+  auto const store{[&](unsigned int const at,uint16_t const value){ source.at(at) = static_cast<uint8_t>(value >> 8);source.at(at + 1) = static_cast<uint8_t>(value); }};
+  auto const emit{[&](std::initializer_list<uint16_t> const words){ for(auto const value : words) { source.push_back(static_cast<uint8_t>(value >> 8));source.push_back(static_cast<uint8_t>(value)); } }};
+  auto const link{[&](unsigned int const field){ store(field,static_cast<uint16_t>(source.size() - field)); }};
   store(2,32767);store(34,14);store(48,65535);emit({48,1});
   for(unsigned int face{0}; face != face_count; ++face) {
     int const x{static_cast<int>(face % 3) * 3000 - 4000},y{static_cast<int>(face / 3) * 2400 - 3000};
@@ -32,7 +33,7 @@ std::vector<uint8_t> program(bool const nested, bool const fixed, uint16_t const
   emit({0,65535});
   return source;
 }
-}
+} // anonymous namespace
 int main(int const argc, char const *const argv[]) try {
   bool pixels{false};std::ifstream fixture;
   for(int i{1}; i != argc; ++i) if(std::string_view{argv[i]} == "--pixels") pixels = true;else { fixture.open(argv[i]);if(!fixture) throw std::runtime_error{"cannot open face palette fixture"}; }
@@ -66,9 +67,8 @@ int main(int const argc, char const *const argv[]) try {
     }
     uint64_t hash{14695981039346656037ull};for(auto const value : output.pixels) hash = (hash ^ value) * 1099511628211;
     if(pixels) std::cout.write(reinterpret_cast<char const*>(output.pixels.data()),output.pixels.size());
-    else if(fixture.is_open()) { uint64_t expected;if(!defined || !(input >> expected) || hash != expected) throw std::runtime_error{"native depth palette mismatch at " + std::to_string(cases)}; }
-    else std::cout << hash << ' ' << defined << '\n';
+    else if(fixture.is_open()) { uint64_t expected;if(!defined || !(input >> expected) || hash != expected) throw std::runtime_error{"native depth palette mismatch at " + std::to_string(cases)}; } else std::cout << hash << ' ' << defined << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

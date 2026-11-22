@@ -1,7 +1,7 @@
-#include "aerodynamic_rotation_internal.h"
 #include <bit>
 #include <cmath>
 #include <limits>
+#include "aerodynamic_rotation_internal.h"
 
 namespace tfx::flight {
 namespace {

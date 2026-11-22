@@ -4,8 +4,8 @@
 #include <optional>
 #include <string>
 #include <variant>
-#include "resources/binary.h"
 #include "math/native.h"
+#include "resources/binary.h"
 
 namespace tfx::presentation {
 

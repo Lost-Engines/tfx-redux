@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -11,9 +12,8 @@ int main(int const argc, char const *const argv[]) try {
     auto const result{tfx::render::intersect_textured_near_plane(outside,inside,outside_uv,inside_uv)};
     auto const projected{tfx::render::project_near_plane(result.position,wide ? tfx::render::aperture::missile_nose : tfx::render::aperture::normal,{160,100})};
     std::array<int64_t,6> const values{result.position.x,result.position.y,result.uv_q7.x,result.uv_q7.y,projected.x,projected.y};
-    if(fixture.is_open()) { for(auto const value : values) { int64_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native texture near-clip mismatch at " + std::to_string(cases)}; } }
-    else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
+    if(fixture.is_open()) { for(auto const value : values) { int64_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native texture near-clip mismatch at " + std::to_string(cases)}; } } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

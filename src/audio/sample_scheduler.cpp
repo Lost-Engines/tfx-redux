@@ -36,9 +36,17 @@ sample_request sample_scheduler::submit(sample_priority const priority, std::spa
   state.priority = level;
   return result;
 }
-void sample_scheduler::complete() { state.active = false; }
-void sample_scheduler::enable(bool const enabled) { state.enabled = enabled; }
-sample_scheduler_state const &sample_scheduler::value() const { return state; }
-std::span<int16_t const> sample_scheduler::remaining() const { return cooldown; }
+void sample_scheduler::complete() {
+  state.active = false;
+}
+void sample_scheduler::enable(bool const enabled) {
+  state.enabled = enabled;
+}
+sample_scheduler_state const &sample_scheduler::value() const {
+  return state;
+}
+std::span<int16_t const> sample_scheduler::remaining() const {
+  return cooldown;
+}
 
 } // namespace tfx::audio

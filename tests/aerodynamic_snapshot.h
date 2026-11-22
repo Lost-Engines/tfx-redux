@@ -14,8 +14,8 @@ inline tfx::flight::aerodynamic_model aerodynamic_test_model(unsigned int const 
 // Every group follows named owners; native offsets are in the reference tool.
 inline std::vector<uint64_t> aerodynamic_snapshot(tfx::flight::aerodynamic_flight const &s, tfx::flight::damage_state const &damage, tfx::math::random_state const &random) {
   std::vector<uint64_t> values;
-  auto const number{[&](double const value) { values.push_back(std::bit_cast<uint64_t>(value)); }};
-  auto const vector{[&](auto const &value) { for(auto const component : value) number(component); }};
+  auto const number{[&](double const value){ values.push_back(std::bit_cast<uint64_t>(value)); }};
+  auto const vector{[&](auto const &value){ for(auto const component : value) number(component); }};
   auto const &m{s.response.motion};
   for(auto const *value : {&m.pose.metres_ned,&m.velocity_ned,&m.acceleration_ned,&m.ground_velocity_body,&m.air_velocity_body,&m.angular_rate}) vector(*value);
   vector(m.angular_acceleration); vector(m.rotation_remainder); number(m.yaw_step_radians);

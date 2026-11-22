@@ -12,7 +12,7 @@ int main(int const argc, char const *const argv[]) try {
   char command{0};
   while(input >> command) {
     uint64_t digest{14695981039346656037ULL};
-    auto const word{[&](auto const value) { for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL; }};
+    auto const word{[&](auto const value){ for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL; }};
     if(command == 'K') {
       unsigned int key{0},shift{0},buttons{0},caption{0},revealing{0},visible{0},characters{0},skipped{0},quit{0};
       input >> key >> shift >> buttons >> caption >> revealing >> visible >> characters >> skipped >> quit;
@@ -48,8 +48,7 @@ int main(int const argc, char const *const argv[]) try {
       for(unsigned int index{0}; index != source.size(); ++index) source[index] = static_cast<uint8_t>(index % 64);
       for(auto const value : tfx::presentation::fade_palette(source,level,stages)) word(value);
     } else throw std::runtime_error{"unknown presentation timing operation"};
-    if(argc == 2) { uint64_t expected{0};if(!(input >> expected) || digest != expected) throw std::runtime_error{"presentation timing differs from original"}; }
-    else std::cout << digest << '\n';
+    if(argc == 2) { uint64_t expected{0};if(!(input >> expected) || digest != expected) throw std::runtime_error{"presentation timing differs from original"}; } else std::cout << digest << '\n';
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

@@ -11,9 +11,15 @@ namespace {
 int constexpr input_horizon{55}, waypoint_near_distance{32000};
 unsigned int constexpr vm_budget{1024};
 uint16_t constexpr suppress_steering{1}, new_wait{4};
-int32_t wrap(int64_t const value) { return std::bit_cast<int32_t>(static_cast<uint32_t>(value)); }
-int16_t word(int const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t absolute(int32_t const value) { return value < 0 ? wrap(-static_cast<int64_t>(value)) : value; }
+int32_t wrap(int64_t const value) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(value));
+}
+int16_t word(int const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t absolute(int32_t const value) {
+  return value < 0 ? wrap(-static_cast<int64_t>(value)) : value;
+}
 void push(surface_state &state, uint8_t const mode) {
   if(!(state.actions >> 24)) state.actions = (state.actions << 8) | mode;
 }
@@ -67,7 +73,7 @@ surface_state create_surface(initial_actor const &actor, program const &source) 
 std::vector<surface_request> advance_surface(surface_state &state, profile const &profile, std::function<void(surface_request const&)> emitted) {
   /// Native 0x7c2bc executes one AI tick; live target/weapon requests remain explicit outputs
   std::vector<surface_request> requests;
-  auto const emit{[&](surface_request request) {
+  auto const emit{[&](surface_request request){
     requests.push_back(std::move(request));
     if(emitted) emitted(requests.back());
   }};
@@ -136,7 +142,7 @@ std::vector<surface_request> advance_surface(surface_state &state, profile const
         state.cursor += 19;
         break;
       case command::reserved_7: code.slice(state.cursor,11); state.cursor += 11; break;
-      default: return requests;                                               // native dispatcher returns -1 without advancing unsupported commands, including END
+      default: return requests;                                                // native dispatcher returns -1 without advancing unsupported commands, including END
       }
     }
     if(!ready) throw std::runtime_error{"surface route does not yield within its instruction budget"};

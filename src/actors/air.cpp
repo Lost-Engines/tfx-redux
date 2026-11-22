@@ -303,12 +303,12 @@ bool air_runtime::combat_action(unsigned int const index, unsigned int const act
     .model{world.model},
     .turn_envelope{envelope},
   };
-  auto const replace{[&](air_action const next) { actor.actions = (actor.actions & ~255u) | std::to_underlying(next); }};
-  auto const cruise_turn{[&](int16_t const heading) {
+  auto const replace{[&](air_action const next){ actor.actions = (actor.actions & ~255u) | std::to_underlying(next); }};
+  auto const cruise_turn{[&](int16_t const heading){
     command_turn(state,actor.performance,heading,context);
     command_speed(state,actor.performance,static_cast<int32_t>(cruise_speed(state,actor.performance,envelope)) << speed_fraction_bits);
   }};
-  auto const choose{[&](unsigned int const category, bool const replace_action = false) {
+  auto const choose{[&](unsigned int const category, bool const replace_action = false){
     select_manoeuvre(actor,category);
     if(!actor.manoeuvre) return false;
     if(replace_action) replace(air_action::align_manoeuvre);
@@ -430,7 +430,7 @@ bool air_runtime::combat_action(unsigned int const index, unsigned int const act
       uint16_t flags{world.combat_flags};
       bool const close{distance < actor.combat.gun_range * fixed_units_per_foot};
       flags |= close ? 16 : 32;
-      auto const classify{[](int16_t const angle) {
+      auto const classify{[](int16_t const angle){
         if(angle == -32768) return 2u;
         int const magnitude{std::abs(static_cast<int>(angle))};
         return magnitude < nose_capture_angle ? 1u : magnitude > tail_capture_angle ? 2u : 0u;
@@ -513,11 +513,11 @@ void air_runtime::advance_actor(unsigned int const index, air_context const &wor
     .model{world.model},
     .turn_envelope{envelope},
   };
-  auto const emit{[&](auto data) {
+  auto const emit{[&](auto data){
     requests.emplace(index,std::move(data));
   }};
-  auto const visual{[&](unsigned int const entry) { emit(air_scenery_event{.entry{entry}}); }};
-  auto const launch{[&](vec3<int32_t> const &target, uint16_t const weapon) {
+  auto const visual{[&](unsigned int const entry){ emit(air_scenery_event{.entry{entry}}); }};
+  auto const launch{[&](vec3<int32_t> const &target, uint16_t const weapon){
     int const jitter{std::clamp(static_cast<int>(math::signed_word(random.next())),-182,182)};
     emit(air_weapon{
       .position{vec3<int32_t>{pose.position}},
@@ -567,16 +567,16 @@ void air_runtime::advance_actor(unsigned int const index, air_context const &wor
       resources::binary_view const code{bytes};
       auto const pc{actor.location.address};
       auto const opcode{static_cast<command>(code.byte(pc))};
-      auto const operand{[&](unsigned int const n) { return code.le16(pc + 1 + n * 2); }};
-      auto const branch{[&](int const amount) {
+      auto const operand{[&](unsigned int const n){ return code.le16(pc + 1 + n * 2); }};
+      auto const branch{[&](int const amount){
         int64_t const target{static_cast<int64_t>(actor.location.address) + amount};
         if(target < 0 || static_cast<uint64_t>(target) >= bytes.size()) throw std::runtime_error{"air waypoint branch leaves its program"};
         actor.location.address = static_cast<unsigned int>(target);
       }};
-      auto const store{[&](unsigned int const address, int32_t const value) {
+      auto const store{[&](unsigned int const address, int32_t const value){
         for(unsigned int byte{0}; byte != 4; ++byte) bytes.at(address + byte) = static_cast<uint8_t>(static_cast<uint32_t>(value) >> (byte * 8));
       }};
-      auto const destination{[&](unsigned int const first) {
+      auto const destination{[&](unsigned int const first){
         auto result{cell_position(math::signed_word(operand(first)),math::signed_word(operand(first + 1)),pose.position.y)};
         if(pose.formation) result = formation_position(result,pose.angles.y,pose.formation);
         return result;
@@ -596,8 +596,7 @@ void air_runtime::advance_actor(unsigned int const index, air_context const &wor
           int32_t const height{wrap(static_cast<int64_t>(formation[pose.formation].height) - static_cast<int64_t>(operand(0)) * fixed_units_per_foot)};
           int16_t const target_pitch{altitude_pitch(state,actor.performance,height)};
           int16_t const error{word(target_pitch - pose.angles.x)};
-          if(error != -32768 && std::abs(static_cast<int>(error)) < 91) { state.angular_rate.x = 0; pose.angles.x = static_cast<math::angle>(pose.angles.x + error); }
-          else {
+          if(error != -32768 && std::abs(static_cast<int>(error)) < 91) { state.angular_rate.x = 0; pose.angles.x = static_cast<math::angle>(pose.angles.x + error); } else {
             int const maximum{maximum_turn_rate(state,actor.performance,context)};
             state.angular_rate.x = static_cast<int16_t>(std::clamp(error / air_control_horizon,-maximum,maximum));
           }

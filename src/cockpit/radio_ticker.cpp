@@ -22,7 +22,9 @@ void radio_ticker::replay() {
   // Native 0x81268 can replay the last message after its first pass finishes.
   if(history) { complete = false;cursor = 0; }
 }
-void radio_ticker::stop() { complete = true; }
+void radio_ticker::stop() {
+  complete = true;
+}
 radio_status radio_ticker::status() const {
   return {
     .cursor{cursor},

@@ -1,12 +1,12 @@
-#include "fixture_check.h"
 #include <bit>
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <sstream>
-#include <string>
 #include <stdexcept>
+#include <string>
+#include "fixture_check.h"
 #include "flight/arcade.h"
 
 namespace {

@@ -17,7 +17,7 @@ public:
   void short_message(uint32_t packed) override;
   void sysex(std::span<uint8_t const> message) override;
   void render(std::span<float> stereo) override;
-  void silence(); // Preserve the game's custom patches and system setup.
+  void silence();                                                              // Preserve the game's custom patches and system setup.
 };
 
 } // namespace tfx::audio

@@ -1,8 +1,8 @@
 #include "runtime.h"
-#include "cannon_prediction.h"
-#include "impact_prediction.h"
 #include <stdexcept>
 #include <utility>
+#include "cannon_prediction.h"
+#include "impact_prediction.h"
 
 namespace tfx::weapons {
 
@@ -130,7 +130,9 @@ active_projectile const *runtime::first_targeting_player() const {
   return nullptr;
 }
 
-warning_state const &runtime::player_warnings() const { return warnings; }
+warning_state const &runtime::player_warnings() const {
+  return warnings;
+}
 
 void runtime::finish_frame() {
   // Expired stage timers alone wait for the next motion pass. Only the spent
@@ -145,7 +147,9 @@ void runtime::finish_frame() {
 void runtime::advance(simulation::timer_ticks const elapsed, math::random_state &random, bool const tfx_effects) {
   struct substep_guard {
     std::optional<simulation::timer_ticks> &value;
-    ~substep_guard() { value.reset(); }
+    ~substep_guard() {
+      value.reset();
+    }
   } clear_substep{
     .value{substep},
   };
@@ -173,7 +177,7 @@ void runtime::advance(simulation::timer_ticks const elapsed, math::random_state 
           if(found != active.end()) context.target = found->second->state.position;
         }
         auto const result{advance_motion(shot.state,definitions[shot.state.weapon],context,random,{
-          .release{[&](child_release const &child) {
+          .release{[&](child_release const &child){
             launch({
               .weapon{child.weapon},
               .position{vec3<int32_t>{child.position}},

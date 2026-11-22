@@ -24,9 +24,9 @@ program::program(std::span<uint8_t const> const source) {
   // Native saved-graph layout: linked-list pointers are saved editor bookkeeping, not executable addresses.
   resources::binary_view const view{source};
   unsigned int at{0};
-  auto const take{[&](unsigned int const length) { auto const data{view.slice(at,length)};at += length;return data; }};
-  auto const word{[&] { auto const data{take(2)};return resources::binary_view{data}.le16(0); }};
-  auto const text{[&] {
+  auto const take{[&](unsigned int const length){ auto const data{view.slice(at,length)};at += length;return data; }};
+  auto const word{[&]{ auto const data{take(2)};return resources::binary_view{data}.le16(0); }};
+  auto const text{[&]{
     resources::binary_view const header{take(16)};
     auto const content{take(header.le16(10))};
     return text_block{
@@ -162,7 +162,7 @@ void assign(assignment const &assignment, program const &source, presentation::v
   case assignment_operation::set: state[name] = assignment.value; break;
   case assignment_operation::add: state[name] = before + assignment.value; break;
   case assignment_operation::subtract: state[name] = before - assignment.value; break;
-  default: break; // Native 0xb28b8 ignores unknown operation bytes.
+  default: break;                                                              // Native 0xb28b8 ignores unknown operation bytes.
   }
 }
 

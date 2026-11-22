@@ -50,7 +50,7 @@ struct player_loss_context {
   bool collision;
   simulation::timer_ticks elapsed;
   bool invulnerable{false};
-  int32_t height{0}; // World-integer down coordinate; airborne values are negative.
+  int32_t height{0};                                                           // World-integer down coordinate; airborne values are negative.
   bool pilot_active{false};
   bool contact_explosion{false};
 };
@@ -85,7 +85,7 @@ public:
   bool beyond_airspace{false};
   bool resolved{false};
   bool ended{false};
-  bool force_landed_return{false}; // Native countdown return sets landed and reported speed zero before the final draw.
+  bool force_landed_return{false};                                             // Native countdown return sets landed and reported speed zero before the final draw.
   bool critical_loss{false};
   bool player_ejected{false};
   bool impact_started{false};

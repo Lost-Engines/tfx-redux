@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include "audio/music_player.h"
 #include "audio/osl_fm_driver.h"
@@ -9,11 +10,16 @@ private:
   uint64_t frame{0};
   tfx::audio::osl_fm_driver callbacks;
 public:
-  explicit fm_device(std::span<uint8_t const> const launcher) : callbacks{launcher,[this](tfx::audio::opl_write const value) {
+  explicit fm_device(std::span<uint8_t const> const launcher) : callbacks{launcher,[this](tfx::audio::opl_write const value){
     std::cout << frame << " 2 " << static_cast<unsigned int>(value.address) << ' ' << static_cast<unsigned int>(value.value) << '\n';
   }} {}
-  tfx::audio::osl_device_driver &driver() override { return callbacks; }
-  void render(std::span<float> const stereo) override { frame += stereo.size() / 2;std::ranges::fill(stereo,0); }
+  tfx::audio::osl_device_driver &driver() override {
+    return callbacks;
+  }
+  void render(std::span<float> const stereo) override {
+    frame += stereo.size() / 2;
+    std::ranges::fill(stereo,0);
+  }
 };
 class receiver final : public tfx::audio::midi_receiver {
 private:
@@ -24,11 +30,19 @@ private:
     std::cout << '\n';
   }
 public:
-  void short_message(uint32_t const packed) override { std::array<uint8_t,3> const bytes{static_cast<uint8_t>(packed),static_cast<uint8_t>(packed >> 8),static_cast<uint8_t>(packed >> 16)};message(bytes); }
-  void sysex(std::span<uint8_t const> const bytes) override { message(bytes); }
-  void render(std::span<float> const stereo) override { frame += stereo.size() / 2;std::ranges::fill(stereo,0); }
+  void short_message(uint32_t const packed) override {
+    std::array<uint8_t,3> const bytes{static_cast<uint8_t>(packed),static_cast<uint8_t>(packed >> 8),static_cast<uint8_t>(packed >> 16)};
+    message(bytes);
+  }
+  void sysex(std::span<uint8_t const> const bytes) override {
+    message(bytes);
+  }
+  void render(std::span<float> const stereo) override {
+    frame += stereo.size() / 2;
+    std::ranges::fill(stereo,0);
+  }
 };
-} // namespace
+} // anonymous namespace
 
 int main(int const argc, char const *const argv[]) try {
   if(argc != 4 && argc != 5) throw std::runtime_error{"expected START.EXE DID.DAT lapc|scc|fm|lapc-effects [CYCLES]"};
@@ -74,7 +88,7 @@ int main(int const argc, char const *const argv[]) try {
       }
       player.end_flight();
     }
-    return 0;
+    return EXIT_SUCCESS;
   }
   std::array<float,960> pcm;
   for(unsigned int cycle{0}; cycle != cycles; ++cycle) {
@@ -101,5 +115,5 @@ int main(int const argc, char const *const argv[]) try {
     }
     player.end_flight();
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

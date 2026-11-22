@@ -4,7 +4,7 @@
 
 namespace tfx::flight {
 
-inline constexpr int32_t ground_service_reward{10000};
+inline int32_t constexpr ground_service_reward{10000};
 struct ground_service_context {
   bool landed;
   int32_t speed;

@@ -74,7 +74,7 @@ hud_effects hud::draw(render::software_renderer &renderer, hud_selection &select
   mfd_state instruments{state.instruments};
   instruments.systems[std::to_underlying(flight::aircraft_system::fuel)] = fuel == fuel_warning::none ? flight::system_condition::active : fuel == fuel_warning::low ? flight::system_condition::intermittent : flight::system_condition::failed;
   std::array<std::vector<vec3<int32_t>>,4> positions;
-  auto const copy_positions{[&](unsigned int const group, auto const contacts) {
+  auto const copy_positions{[&](unsigned int const group, auto const contacts){
     for(auto const &contact : contacts) positions[group].emplace_back(contact.position_q8);
   }};
   copy_positions(0,state.contacts.enemy_aircraft);
@@ -97,10 +97,10 @@ hud_effects hud::draw(render::software_renderer &renderer, hud_selection &select
     .offset{vec2<int16_t>{offset}},
   };
   selection.normalise();
-  auto const outer{[&](display_side const side, unsigned int const selected) {
+  auto const outer{[&](display_side const side, unsigned int const selected){
     unsigned int const normalized{selected < 9 ? selected : 0};
     auto &last_page{last_outer_pages[std::to_underlying(side)]};
-    if(normalized != last_page) redraw_phase = 3; // Native dispatchers request a three-page refresh.
+    if(normalized != last_page) redraw_phase = 3;                              // Native dispatchers request a three-page refresh.
     last_page = static_cast<uint8_t>(normalized);
     auto const page{outer_page(side,normalized)};
     if(page == display_page::moving_map) map.draw(renderer,map_inputs,{213,133},{264,167},coverage);

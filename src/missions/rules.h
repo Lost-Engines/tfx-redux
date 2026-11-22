@@ -59,7 +59,7 @@ struct return_value {
 struct statement;
 struct conditional {
   condition test;
-  bool braced;                                                                // native skip cleanup depends on the authored opening brace
+  bool braced;                                                                 // native skip cleanup depends on the authored opening brace
   std::vector<statement> when_true;
   std::vector<statement> when_false;
 };

@@ -18,9 +18,15 @@ sample_bank::sample_bank(std::span<sample_definition const> const source, resour
     buffers.push_back(std::move(pcm));
   }
 }
-std::span<sample_descriptor const> sample_bank::scheduling() const { return descriptors; }
-std::span<sample_definition const> sample_bank::entries() const { return definitions; }
-std::span<uint8_t const> sample_bank::pcm(unsigned int const index) const { return buffers.at(index); }
+std::span<sample_descriptor const> sample_bank::scheduling() const {
+  return descriptors;
+}
+std::span<sample_definition const> sample_bank::entries() const {
+  return definitions;
+}
+std::span<uint8_t const> sample_bank::pcm(unsigned int const index) const {
+  return buffers.at(index);
+}
 uint16_t sound_blaster_period(uint16_t const rate) {
   if(!rate) throw std::invalid_argument{"Sound Blaster rate must not be zero"};
   uint8_t const time_constant{static_cast<uint8_t>(256 - 1'000'000 / rate)};

@@ -1,16 +1,20 @@
 #include "horizon.h"
-#include "integer_polygon.h"
 #include <algorithm>
 #include <array>
 #include <bit>
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
 #include <utility>
+#include "integer_polygon.h"
 
 namespace tfx::render {
 namespace {
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t wrap(uint32_t const value) { return std::bit_cast<int32_t>(value); }
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t wrap(uint32_t const value) {
+  return std::bit_cast<int32_t>(value);
+}
 
 struct horizon_projection {
   vec2<int32_t> horizontal;
@@ -67,7 +71,7 @@ public:
     reverse = word(roll + 0x6000) < 0;
   }
   vec2<int16_t> project(int const y, int const z) const {
-    auto const product{[&](vec2<int32_t> const &row) {
+    auto const product{[&](vec2<int32_t> const &row){
       return wrap(static_cast<uint32_t>(y) * static_cast<uint32_t>(row.x) + static_cast<uint32_t>(z) * static_cast<uint32_t>(row.y));
     }};
     int32_t const depth{std::max(16,product(projection.depth) >> 16)};
@@ -115,7 +119,9 @@ public:
       emit(colour,points);
     }
   }
-  std::vector<horizon_surface> finish() { return std::move(surfaces); }
+  std::vector<horizon_surface> finish() {
+    return std::move(surfaces);
+  }
 };
 
 } // anonymous namespace
@@ -273,11 +279,11 @@ void paint_horizon(framebuffer &output, camera const &view, int16_t const ground
     std::array<int,64> edges{};
     unsigned int count{0};
     edges[count++] = left;edges[count++] = right;
-    auto const boundary{[&](double const x) {
+    auto const boundary{[&](double const x){
       if(std::isfinite(x) && x > left && x < right) edges[count++] = std::clamp(static_cast<int>(std::ceil(x - .5)),left,right);
     }};
     if(dx.y != 0) boundary(-row.y / dx.y);
-    auto const cone{[&](double const horizontal_weight, double const vertical_weight) {
+    auto const cone{[&](double const horizontal_weight, double const vertical_weight){
       double const a{horizontal_weight * (dx.x * dx.x + dx.z * dx.z) - vertical_weight * dx.y * dx.y};
       double const b{2 * (horizontal_weight * (row.x * dx.x + row.z * dx.z) - vertical_weight * row.y * dx.y)};
       double const c{horizontal_weight * (row.x * row.x + row.z * row.z) - vertical_weight * row.y * row.y};

@@ -1,4 +1,5 @@
 #include <charconv>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -19,7 +20,7 @@ tfx::resources::bytes decode_hex(std::string_view const hex) {
   }
   return result;
 }
-}
+} // anonymous namespace
 int main(int const argc, char const *const argv[]) try {
   bool pixels{false},viewport{false};std::ifstream fixture;
   for(int i{1}; i != argc; ++i) if(std::string_view{argv[i]} == "--pixels") pixels = true;else if(std::string_view{argv[i]} == "--viewport") viewport = true;else { fixture.open(argv[i]);if(!fixture) throw std::runtime_error{"cannot open model-frame fixture"}; }
@@ -42,7 +43,7 @@ int main(int const argc, char const *const argv[]) try {
       .projection_shift{tfx::render::projection_shift(view.opening)},
     });
     context.distance = distance;context.status = status;
-    context.face_visibility = [&](std::span<tfx::models::model_vertex const> const vertices,tfx::models::facing_test const purpose) { return tfx::render::model_facing(vertices,view,purpose); };
+    context.face_visibility = [&](std::span<tfx::models::model_vertex const> const vertices,tfx::models::facing_test const purpose){ return tfx::render::model_facing(vertices,view,purpose); };
     auto const geometry{tfx::models::interpret(shape,context)};
     if(!geometry.warnings.empty()) throw std::runtime_error{"model frame emitted a runtime warning"};
     tfx::render::colour_map object;std::array<tfx::render::colour_map,tfx::render::colour_map_count> rows;
@@ -58,9 +59,8 @@ int main(int const argc, char const *const argv[]) try {
     }
     uint64_t hash{14695981039346656037ull};for(auto const value : output.pixels) hash = (hash ^ value) * 1099511628211;
     if(pixels) std::cout.write(reinterpret_cast<char const*>(output.pixels.data()),output.pixels.size());
-    else if(fixture.is_open()) { uint64_t expected;unsigned int expected_seed;if(!defined || !(input >> expected >> expected_seed) || hash != expected || random != expected_seed) throw std::runtime_error{"native model-frame mismatch at " + std::to_string(cases)}; }
-    else std::cout << hash << ' ' << random << ' ' << defined << '\n';
+    else if(fixture.is_open()) { uint64_t expected;unsigned int expected_seed;if(!defined || !(input >> expected >> expected_seed) || hash != expected || random != expected_seed) throw std::runtime_error{"native model-frame mismatch at " + std::to_string(cases)}; } else std::cout << hash << ' ' << random << ' ' << defined << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

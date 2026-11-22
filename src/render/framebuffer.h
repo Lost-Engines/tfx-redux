@@ -26,15 +26,17 @@ static_assert(sizeof(rgba_pixel) == 4);
 class pixel_buffer : public std::vector<uint8_t> {
 public:
   explicit pixel_buffer(size_t count = screen_width * screen_height) : std::vector<uint8_t>(count) {}
-  void fill(uint8_t colour) { std::ranges::fill(*this,colour); }
+  void fill(uint8_t colour) {
+    std::ranges::fill(*this,colour);
+  }
 };
 
 struct framebuffer {
   vec2<int> size{screen_width,screen_height};
   pixel_buffer pixels{static_cast<size_t>(size.x) * static_cast<size_t>(size.y)};
   std::vector<uint8_t> coverage{};
-  std::vector<uint8_t> hud_coverage{}; // Optional antialiased additive HUD light.
-  cockpit::vector_hud *hud_capture{nullptr}; // Scoped, non-owning drawing sink.
+  std::vector<uint8_t> hud_coverage{};                                         // Optional antialiased additive HUD light.
+  cockpit::vector_hud *hud_capture{nullptr};                                   // Scoped, non-owning drawing sink.
   static size_t pixel_count(vec2<int> const &dimensions);
   void resize(vec2<int> const &dimensions);
   void track_writes();

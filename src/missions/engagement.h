@@ -2,8 +2,8 @@
 
 #include <variant>
 #include <vector>
-#include "flight/aircraft.h"
 #include "math/native.h"
+#include "flight/aircraft.h"
 
 namespace tfx::missions {
 

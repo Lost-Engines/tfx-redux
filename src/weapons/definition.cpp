@@ -28,7 +28,7 @@ flight_stage callback(uint32_t const address) {
 std::vector<definition> load_definitions(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
   unsigned int constexpr data_file{973476}, records{data_file + 0x809c}, record_bytes{48}, code_file{0x70aa4};
-  auto const name{[&](uint32_t const address) {
+  auto const name{[&](uint32_t const address){
     std::string text;
     for(unsigned int index{0}; index != 32; ++index) {
       auto const byte{source.byte(data_file + address + index)};

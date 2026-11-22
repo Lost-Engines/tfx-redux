@@ -30,7 +30,7 @@ public:
     auto const newline{source.find('\n')};
     std::string result{source.substr(0,newline)};
     source.remove_prefix(newline == std::string_view::npos ? source.size() : newline + 1);
-    std::erase(result,'\r'); // Native 0xa7c88 ignores carriage returns throughout each line.
+    std::erase(result,'\r');                                                   // Native 0xa7c88 ignores carriage returns throughout each line.
     return result;
   }
   std::string rest() const {

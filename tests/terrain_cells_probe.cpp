@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -14,13 +15,14 @@ int main(int const argc, char const *const argv[]) try {
   while(input >> x >> z >> width >> height) {
     uint64_t hash{14695981039346656037ull};
     unsigned int count{0};
-    tfx::world::visit_terrain_cells({x,z},static_cast<int16_t>(width),[&](auto const &cell) {
+    tfx::world::visit_terrain_cells({x,z},static_cast<int16_t>(width),[&](auto const &cell){
       ++count;
       uint32_t const source{cell.source.x * tfx::world::map_height + tfx::world::map_height - 1 - cell.source.y};
       int32_t const px{tfx::math::signed_word(static_cast<uint16_t>((static_cast<uint32_t>(cell.world_cell.x) * 2u + 1u) << 10))};
       int32_t const pz{tfx::math::signed_word(static_cast<uint16_t>((static_cast<uint32_t>(cell.world_cell.y) * 2u + 1u) << 10))};
-      for(uint32_t const value : {source,static_cast<uint32_t>(px),static_cast<uint32_t>(tfx::math::signed_word(static_cast<uint16_t>(height))),static_cast<uint32_t>(pz)})
+      for(uint32_t const value : {source,static_cast<uint32_t>(px),static_cast<uint32_t>(tfx::math::signed_word(static_cast<uint16_t>(height))),static_cast<uint32_t>(pz)}) {
         for(unsigned int shift{0}; shift != 32; shift += 8) hash = (hash ^ static_cast<uint8_t>(value >> shift)) * 1099511628211ull;
+      }
     });
     if(argc == 2) {
       unsigned int expected_count;
@@ -30,4 +32,4 @@ int main(int const argc, char const *const argv[]) try {
     ++cases;
   }
   if(!cases) throw std::runtime_error{"no terrain cell cases"};
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

@@ -25,7 +25,7 @@ private:
   unsigned int selected{0}, name_field{0}, ramp{0};
   bool entering{true}, fixed_slot{false}, slot_background{false};
   std::optional<unsigned int> destination;
-  static constexpr std::array<std::string_view,3> name_variables{"firstname","pilotname","callsign"};
+  static std::array<std::string_view,3> constexpr name_variables{"firstname","pilotname","callsign"};
   void begin_names();
   void open_slots(bool load);
   void choose_slot();

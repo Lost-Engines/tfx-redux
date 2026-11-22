@@ -1,25 +1,25 @@
 #pragma once
 
+#include "platform/window.h"
 #include "actors/air.h"
 #include "audio/runtime.h"
 #include "cockpit/tactical_map.h"
-#include "flight/cheat.h"
-#include "missions/rules.h"
-#include "missions/initialisation.h"
+#include "configuration/graphics.h"
 #include "configuration/settings.h"
-#include "platform/window.h"
-#include "resources/archive.h"
-#include "resources/executable_tables.h"
-#include "simulation/timing.h"
-#include "world/flak.h"
-#include "world/animation.h"
-#include "sensors/air.h"
-#include "world/sky.h"
+#include "flight/cheat.h"
+#include "missions/initialisation.h"
+#include "missions/rules.h"
 #include "render/horizon.h"
 #include "render/precipitation.h"
 #include "render/view_settings.h"
-#include "configuration/graphics.h"
+#include "resources/archive.h"
+#include "resources/executable_tables.h"
+#include "sensors/air.h"
+#include "simulation/timing.h"
 #include "weapons/loadout.h"
+#include "world/animation.h"
+#include "world/flak.h"
+#include "world/sky.h"
 
 namespace tfx::platform {
 
@@ -55,10 +55,10 @@ struct flight_options {
   audio::runtime *sound{nullptr};
   bool inspect{false};
   render::view_settings video{};
-  configuration::graphics_settings *graphics{nullptr}; // Shared across campaign missions.
+  configuration::graphics_settings *graphics{nullptr};                         // Shared across campaign missions.
 #ifndef NDEBUG
   std::optional<std::filesystem::path> capture_recipe{};
-#endif
+#endif // NDEBUG
 };
 enum class flight_result { finished, quit, enrol, cancelled };
 // FINISH resumes the authored campaign; the settings dialog can return to enrolment.

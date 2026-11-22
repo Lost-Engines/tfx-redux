@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -61,5 +62,5 @@ int main(int const argc, char const *const argv[]) try {
   }
 } catch(std::exception const &error) {
   std::cerr << error.what() << '\n';
-  return 1;
+  return EXIT_FAILURE;
 }

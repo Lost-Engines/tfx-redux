@@ -1,8 +1,9 @@
 #include <bit>
+#include <cstdlib>
 #include <iostream>
 #include "flight/aerodynamic_wind.h"
-#include "world/environment.h"
 #include "render/precipitation.h"
+#include "world/environment.h"
 
 int main(int const argc, char const *const argv[]) try {
   if(argc < 2 || argc > 3) throw std::runtime_error{"weather probe requires original installation"};
@@ -39,4 +40,4 @@ int main(int const argc, char const *const argv[]) try {
     }
     std::cout << ' ' << random.low << ' ' << random.high << '\n';
   }
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

@@ -15,7 +15,7 @@ compiled_overlay::compiled_overlay(std::span<uint8_t const> const bytes) {
   unsigned int table{0};
   if(movable) {
     if(source.le32(0) != 0xe8 || source.byte(4) || source.le16(0x36) != 0xc381 || source.le16(0x4b) != 0xbb66 || source.le16(0x4f) != 0xb966 || source.byte(0x53) != 0xb4) throw std::runtime_error{"unknown compiled canopy header"};
-    table = source.le32(0x38) + 5; // Position-independent CALL/POP supplies the five-byte origin.
+    table = source.le32(0x38) + 5;                                             // Position-independent CALL/POP supplies the five-byte origin.
     auto const bx{source.le16(0x4d)}, cx{source.le16(0x51)};
     registers[3] = static_cast<uint8_t>(bx);registers[7] = static_cast<uint8_t>(bx >> 8);
     registers[1] = static_cast<uint8_t>(cx);registers[5] = static_cast<uint8_t>(cx >> 8);

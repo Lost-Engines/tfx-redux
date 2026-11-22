@@ -1,4 +1,3 @@
-#include "fixture_check.h"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -7,6 +6,7 @@
 #include <stdexcept>
 #include <string_view>
 #include "actors/air_motion.h"
+#include "fixture_check.h"
 #include "resources/archive.h"
 #include "resources/executable_tables.h"
 
@@ -39,7 +39,7 @@ uint64_t sample(std::istream &input, tfx::actors::air_performance const &perform
   default: throw std::runtime_error{"unknown air motion probe action"};
   }
   uint64_t digest{14695981039346656037ULL};
-  auto const word{[&](int32_t const value) {
+  auto const word{[&](int32_t const value){
     if(emit) std::cout << value << ' ';
     for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
   }};

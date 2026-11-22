@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include <utility>
 #include "missions/recovery.h"
@@ -18,5 +19,5 @@ int main(int const argc, char const *const argv[]) try {
     auto const result{maps.resolve(previous,context)};
     std::cout << std::to_underlying(result.outcome) << ' ' << std::to_underlying(result.status) << ' ' << result.safe << '\n';
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

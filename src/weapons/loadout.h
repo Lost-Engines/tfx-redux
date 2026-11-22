@@ -48,7 +48,7 @@ private:
   uint8_t category(unsigned int slot) const;
 
 public:
-  pylon_inventory pylons{}; // Last entry is the native cannon selection sentinel.
+  pylon_inventory pylons{};                                                    // Last entry is the native cannon selection sentinel.
   int16_t selected{0};
   int16_t last_released{no_pylon};
   bool guns{true};

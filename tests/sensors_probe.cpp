@@ -84,14 +84,13 @@ int main(int const argc, char const *const argv[]) try {
         .elapsed{static_cast<uint16_t>(ticks)},
         .guns{(flags & 16) != 0},
         .sensor_suppressed{(flags & 32) != 0},
-        .project{[&](auto const&) { return vec2<int16_t>{static_cast<int16_t>(project_x),static_cast<int16_t>(project_y)}; }},
+        .project{[&](auto const&){ return vec2<int16_t>{static_cast<int16_t>(project_x),static_cast<int16_t>(project_y)}; }},
       });
       values = {contacts.selected.has_value(),state.tracking.has_value(),state.guidance.has_value(),state.reticle.x,state.reticle.y,state.projected.x,state.projected.y,state.lock_ticks,state.acquisition_ticks,state.too_close};
     } else throw std::runtime_error{"unknown sensor operation"};
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(check) { uint64_t expected{0}; if(!(input >> expected) || expected != digest) throw std::runtime_error{"native radar or seeker state differs"}; }
-    else { for(auto const value : values) std::cout << value << ' '; std::cout << '\n'; }
+    if(check) { uint64_t expected{0}; if(!(input >> expected) || expected != digest) throw std::runtime_error{"native radar or seeker state differs"}; } else { for(auto const value : values) std::cout << value << ' '; std::cout << '\n'; }
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

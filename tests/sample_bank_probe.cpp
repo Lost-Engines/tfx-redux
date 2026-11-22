@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -7,8 +8,8 @@
 namespace {
 tfx::resources::archive fixture() {
   tfx::resources::bytes bytes(4);
-  auto const word{[&](uint16_t const v) { bytes.push_back(static_cast<uint8_t>(v));bytes.push_back(static_cast<uint8_t>(v >> 8)); }};
-  auto const dword{[&](uint32_t const v) { word(static_cast<uint16_t>(v));word(static_cast<uint16_t>(v >> 16)); }};
+  auto const word{[&](uint16_t const v){ bytes.push_back(static_cast<uint8_t>(v));bytes.push_back(static_cast<uint8_t>(v >> 8)); }};
+  auto const dword{[&](uint32_t const v){ word(static_cast<uint16_t>(v));word(static_cast<uint16_t>(v >> 16)); }};
   std::array<tfx::resources::bytes,3> const pcm{{{0,128,255,1,254},{64,192,127},{255,255,0,0}}};
   std::array<unsigned int,3> offsets{};
   for(unsigned int i{0}; i != pcm.size(); ++i) { offsets[i] = static_cast<unsigned int>(bytes.size());bytes.insert(bytes.end(),pcm[i].begin(),pcm[i].end()); }
@@ -52,11 +53,11 @@ void verify() {
 } // anonymous namespace
 
 int main(int const argc, char const *const argv[]) try {
-  if(argc == 1) { verify();std::cout << "PCM sample holds and callback boundaries agree\n";return 0; }
+  if(argc == 1) { verify();std::cout << "PCM sample holds and callback boundaries agree\n";return EXIT_SUCCESS; }
   if(argc == 2 && std::string_view{argv[1]} == "--rates") {
     unsigned int rate;
     while(std::cin >> rate) std::cout << tfx::audio::sound_blaster_period(static_cast<uint16_t>(rate)) << '\n';
-    return 0;
+    return EXIT_SUCCESS;
   }
   if(argc != 2) throw std::runtime_error{"expected [DATA_DIRECTORY|--rates]"};
   std::filesystem::path const directory{argv[1]};
@@ -73,5 +74,5 @@ int main(int const argc, char const *const argv[]) try {
       << ' ' << d.qsound_parameters.increment << ' ' << std::bit_cast<int16_t>(d.qsound_parameters.movement_enable);
     std::cout << ' ' << s.available << ' ' << s.samples << ' ' << hash << '\n';
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

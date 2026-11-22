@@ -72,7 +72,7 @@ resource_id archive::hash_name(std::string_view const name) const {
 
 std::optional<std::filesystem::path> archive::loose_file(std::string_view const name) const {
   if(!directory) return {};
-  auto const lower{[](std::string value) {
+  auto const lower{[](std::string value){
     for(auto &byte : value) byte = static_cast<char>(std::tolower(static_cast<unsigned char>(byte)));
     return value;
   }};

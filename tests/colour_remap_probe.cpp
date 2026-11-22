@@ -1,10 +1,11 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
+#include "render/camera.h"
 #include "render/colour_remap.h"
 #include "render/point_projection.h"
-#include "render/camera.h"
 #include "world/assets.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -15,7 +16,7 @@ int main(int const argc, char const *const argv[]) try {
       auto const &colours{assets.model_colours(static_cast<uint8_t>(row))};
       std::cout.write(reinterpret_cast<char const*>(colours.data()),colours.size());
     }
-    return 0;
+    return EXIT_SUCCESS;
   }
   if(argc >= 2 && std::string_view{argv[1]} == "--placement") {
     std::ifstream fixture;if(argc == 3) fixture.open(argv[2]);
@@ -28,20 +29,18 @@ int main(int const argc, char const *const argv[]) try {
       auto const projection{tfx::render::original_camera(camera,matrix,{159,99}).projector()};
       auto const raw{fixed ? projection.camera_fixed(point) : projection.camera_integer(point)};
       int32_t const values[]{raw.x,raw.y,raw.z,tfx::render::distance_colour_row(raw.z)};
-      if(argc == 3) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native placed-model colour row mismatch at case " + std::to_string(cases)}; } }
-      else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
+      if(argc == 3) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native placed-model colour row mismatch at case " + std::to_string(cases)}; } } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
       ++cases;
     }
-    return cases ? 0 : 1;
+    return cases ? EXIT_SUCCESS : EXIT_FAILURE;
   }
   std::ifstream fixture;if(argc == 2) fixture.open(argv[1]);
   if(argc > 2 || (argc == 2 && !fixture)) throw std::runtime_error{"expected [FILE] or --assets DATA_DIRECTORY"};
   auto &input{argc == 2 ? fixture : std::cin};unsigned int cases{0};int32_t depth;
   while(input >> depth) {
     unsigned int const row{tfx::render::distance_colour_row(depth)};
-    if(argc == 2) { unsigned int expected;if(!(input >> expected) || expected != row) throw std::runtime_error{"native model colour row mismatch at case " + std::to_string(cases)}; }
-    else std::cout << row << '\n';
+    if(argc == 2) { unsigned int expected;if(!(input >> expected) || expected != row) throw std::runtime_error{"native model colour row mismatch at case " + std::to_string(cases)}; } else std::cout << row << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

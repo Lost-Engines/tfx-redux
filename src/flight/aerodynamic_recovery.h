@@ -6,7 +6,7 @@
 namespace tfx::flight {
 
 struct aerodynamic_recovery_state {
-  uint16_t configuration{1}; // Native control configuration (landing also owns codes).
+  uint16_t configuration{1};                                                   // Native control configuration (landing also owns codes).
   uint16_t saved_configuration{0};
   uint16_t saved_mode{0};
   bool saved_enabled{false};

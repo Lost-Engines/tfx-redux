@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-
 #include "flight/aerodynamic.h"
 
 namespace tfx::flight {

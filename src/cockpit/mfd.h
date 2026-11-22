@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cockpit/instrument_assets.h"
 #include "cockpit/control_state.h"
+#include "cockpit/instrument_assets.h"
 #include "flight/damage.h"
 #include "render/software_renderer.h"
 #include "resources/archive.h"
@@ -17,10 +17,10 @@ struct mfd_state {
   flight::player_aircraft aircraft{flight::player_aircraft::eurofighter};
   std::array<flight::system_condition,flight::aircraft_system_count> systems{};
   int32_t speed{0};
-  float height{0}; // Original down-positive floating world Y, before the feet conversion.
+  float height{0};                                                             // Original down-positive floating world Y, before the feet conversion.
   math::angle heading{0};
   double fuel{0};
-  int16_t fuel_gauge{0}; // Fuel scaled to 0..9999 across the four drawn cells.
+  int16_t fuel_gauge{0};                                                       // Fuel scaled to 0..9999 across the four drawn cells.
   int16_t smoothed_fuel_burn{0};
   float throttle{0};
   std::array<double,2> engine_load{};

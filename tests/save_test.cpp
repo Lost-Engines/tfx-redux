@@ -4,13 +4,15 @@
 #include "presentation/save.h"
 
 namespace {
-void require(bool const condition, char const *const message) { if(!condition) throw std::runtime_error{message}; }
+void require(bool const condition, char const *const message) {
+  if(!condition) throw std::runtime_error{message};
+}
 tfx::presentation::program schema() {
   tfx::resources::bytes bytes;
-  auto const byte{[&](unsigned int const value) { bytes.push_back(static_cast<uint8_t>(value)); }};
-  auto const word{[&](unsigned int const value) { byte(value);byte(value >> 8); }};
-  auto const zeros{[&](unsigned int const count) { for(unsigned int index{0}; index != count; ++index) byte(0); }};
-  auto const string{[&](std::string_view const value, unsigned int const count) { for(unsigned int index{0}; index != count; ++index) byte(index < value.size() ? static_cast<uint8_t>(value[index]) : 0); }};
+  auto const byte{[&](unsigned int const value){ bytes.push_back(static_cast<uint8_t>(value)); }};
+  auto const word{[&](unsigned int const value){ byte(value);byte(value >> 8); }};
+  auto const zeros{[&](unsigned int const count){ for(unsigned int index{0}; index != count; ++index) byte(0); }};
+  auto const string{[&](std::string_view const value, unsigned int const count){ for(unsigned int index{0}; index != count; ++index) byte(index < value.size() ? static_cast<uint8_t>(value[index]) : 0); }};
   word(2);zeros(8);byte(1);string("pilotname",21);zeros(9);string("score",21);
   word(1);zeros(12);word(1);string("main",11);byte(7);zeros(12);
   return tfx::presentation::program{bytes};

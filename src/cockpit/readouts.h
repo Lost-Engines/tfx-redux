@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cockpit/instrument_assets.h"
 #include "cockpit/control_state.h"
+#include "cockpit/instrument_assets.h"
 #include "flight/aircraft.h"
 #include "render/software_renderer.h"
 #include "resources/archive.h"

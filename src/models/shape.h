@@ -79,7 +79,7 @@ enum class facing_test { branch, polygon };
 struct shape_camera {
   mat3<int32_t> basis;
   vec3<int32_t> origin;
-  unsigned int projection_shift{8}; // Normal 256-pixel focal length; the missile-nose aperture uses 9.
+  unsigned int projection_shift{8};                                            // Normal 256-pixel focal length; the missile-nose aperture uses 9.
 };
 
 struct shape_context {
@@ -102,7 +102,7 @@ struct shape_geometry {
   std::vector<primitive> primitives;
   std::set<std::string> warnings;
   unsigned int steps{0};
-  bool projection_aborted{false}; // Native divide recovery returns from this model, retaining earlier draws.
+  bool projection_aborted{false};                                              // Native divide recovery returns from this model, retaining earlier draws.
 };
 
 bool condition(uint16_t opcode, uint16_t operand, uint8_t state, int16_t distance, uint16_t status);

@@ -30,7 +30,7 @@ void music_player::stop_locked() {
 void music_player::replace_locked(uint8_t const index) {
   stop_locked();
   auto const files{catalogue.files(device->driver().device_type())};
-  if(index >= files.size()) return; // Native missing filename/resource result.
+  if(index >= files.size()) return;                                            // Native missing filename/resource result.
   if(game.contains(files[index])) resource = sequencer.load(game.read(files[index]));
 }
 void music_player::configure(music_mode const mode, uint8_t const sound_device, lapc_order_profiles const &orders) {
@@ -80,7 +80,11 @@ void music_player::begin_flight(flight_audio_state const &state) {
   replace_locked(selected);control.last_cue = 0;
   cue_locked(0);
 }
-void music_player::end_flight() { std::lock_guard lock{mutex};stop_locked();flight_active = false; }
+void music_player::end_flight() {
+  std::lock_guard lock{mutex};
+  stop_locked();
+  flight_active = false;
+}
 void music_player::update_flight(flight_audio_state const &state) {
   std::lock_guard lock{mutex};
   if(!flight_active) return;
@@ -90,7 +94,10 @@ void music_player::update_flight(flight_audio_state const &state) {
   if(update.stop_and_release) stop_locked();
   if(update.selection) apply_locked(*update.selection);
 }
-void music_player::cue(uint8_t const value) { std::lock_guard lock{mutex};if(flight_active) cue_locked(value); }
+void music_player::cue(uint8_t const value) {
+  std::lock_guard lock{mutex};
+  if(flight_active) cue_locked(value);
+}
 void music_player::effect(lapc_effect_cue const cue) {
   std::lock_guard lock{mutex};
   if(!flight_active || context.sound_device != 2 || !resource) return;
@@ -115,7 +122,11 @@ void music_player::select(int16_t const requested) {
   replace_locked(index);control.last_cue = 0;control.resume_cue = 0;
   if(enabled && resource) playing = sequencer.play(*resource);
 }
-void music_player::stop() { std::lock_guard lock{mutex};stop_locked();flight_active = false; }
+void music_player::stop() {
+  std::lock_guard lock{mutex};
+  stop_locked();
+  flight_active = false;
+}
 void music_player::enable(bool const value) {
   std::lock_guard lock{mutex};
   if(enabled == value) return;
@@ -139,7 +150,10 @@ void music_player::enable(bool const value) {
     stop_playing_locked();
   }
 }
-bool music_player::is_enabled() const { std::lock_guard lock{mutex};return enabled; }
+bool music_player::is_enabled() const {
+  std::lock_guard lock{mutex};
+  return enabled;
+}
 void music_player::render(std::span<float> const stereo) {
   if(stereo.size() % 2) throw std::invalid_argument{"music output requires complete stereo frames"};
   std::lock_guard lock{mutex};

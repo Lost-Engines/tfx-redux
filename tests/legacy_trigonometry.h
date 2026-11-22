@@ -1,21 +1,21 @@
 #pragma once
 
 // Historical comparison for the benchmark only. Never included by game code.
-#include "math/native.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <numbers>
+#include "math/native.h"
 
 namespace tfx::test_reference {
 using math::angle;
-inline constexpr unsigned angle_steps=1024;
+inline unsigned constexpr angle_steps=1024;
 inline std::array<int16_t, angle_steps> const &sine_table() {
   /// Reconstruct the original integer sine samples mathematically, including the negative-peak quirk
   static auto const table{[]{
     std::array<int16_t, angle_steps> result;
     for(unsigned int i{0}; i != angle_steps; ++i) result[i] = static_cast<int16_t>(std::sin(i * 2 * std::numbers::pi / angle_steps) * 32767);
-    result[angle_steps * 3 / 4] = -32766;                                         // native table differs from trunc(sin * 32767) at this one entry
+    result[angle_steps * 3 / 4] = -32766;                                      // native table differs from trunc(sin * 32767) at this one entry
     return result;
   }()};
   return table;

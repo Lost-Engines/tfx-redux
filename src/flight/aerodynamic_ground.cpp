@@ -1,6 +1,6 @@
-#include "aerodynamic_ground_internal.h"
 #include <cmath>
 #include <utility>
+#include "aerodynamic_ground_internal.h"
 
 namespace tfx::flight {
 namespace {
@@ -13,18 +13,22 @@ double constexpr maximum_stopping_speed{4}, minimum_stopping_speed{-4};
 double constexpr gravity{9.81}, cockpit_bump_multiplier{1.2};
 int constexpr feet_per_ground_step{8};
 
-calculation wide(double const value) { return value; }
+calculation wide(double const value) {
+  return value;
+}
 vec3d to_ned(aerodynamic_basis const &basis, vec3d const &body) {
   vec3d result;
-  for(unsigned int axis{0}; axis != 3; ++axis)
+  for(unsigned int axis{0}; axis != 3; ++axis) {
     result[axis] = static_cast<double>(wide(basis.right[axis]) * body.y + wide(basis.forward[axis]) * body.x + wide(basis.down[axis]) * body.z);
+  }
   return result;
 }
 vec3d to_body(aerodynamic_basis const &basis, vec3d const &ned) {
   vec3d result;
   unsigned int axis{0};
-  for(auto const *direction : {&basis.forward,&basis.right,&basis.down})
+  for(auto const *direction : {&basis.forward,&basis.right,&basis.down}) {
     result[axis++] = static_cast<double>(wide(direction->y) * ned.y + wide(direction->x) * ned.x + wide(direction->z) * ned.z);
+  }
   return result;
 }
 

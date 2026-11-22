@@ -55,7 +55,7 @@ public:
   unsigned int spawn(flak_event const &event);
   flak_record const &record(unsigned int slot) const;
   auto active_slots() const {
-    return std::views::iota(0u,count) | std::views::transform([this](unsigned int const index) { return (next + count - index) % flak_capacity; });
+    return std::views::iota(0u,count) | std::views::transform([this](unsigned int const index){ return (next + count - index) % flak_capacity; });
   }
 };
 

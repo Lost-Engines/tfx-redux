@@ -18,15 +18,15 @@ std::vector<uint8_t> program(bool const percentage = false) {
   result[1] = 1;
   result[5] = 1;
   result[8] = 8;
-  auto const word{[&](unsigned int const at, uint16_t const value) {
+  auto const word{[&](unsigned int const at, uint16_t const value){
     result.at(at) = static_cast<uint8_t>(value);
     result.at(at + 1) = static_cast<uint8_t>(value >> 8);
   }};
-  auto const entry{[&](unsigned int const index) {
+  auto const entry{[&](unsigned int const index){
     unsigned int const field{10 + index * 2};
     word(field,static_cast<uint16_t>((result.size() - field) / 2));
   }};
-  auto const emit{[&](std::initializer_list<uint16_t> const words) {
+  auto const emit{[&](std::initializer_list<uint16_t> const words){
     for(auto const value : words) {
       result.push_back(static_cast<uint8_t>(value));
       result.push_back(static_cast<uint8_t>(value >> 8));
@@ -92,7 +92,7 @@ int main() try {
   tfx::world::instance reporting{reporting_source};
   unsigned int notifications{0};
   context.impact_damage = 10;
-  context.damage_response = [&](int const percentage) {
+  context.damage_response = [&](int const percentage){
     require(percentage == 100,"damage callback did not see the current cumulative percentage");
     ++notifications;
     reporting.execute(5);

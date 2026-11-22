@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include "math/attitude.h"
-#include "resources/binary.h"
 #include "render/model_queue.h"
+#include "resources/binary.h"
 
 namespace tfx::recording {
 

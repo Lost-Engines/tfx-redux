@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -8,7 +9,7 @@
 
 int main() try {
   for(unsigned int const rate : {44100u,48000u}) {
-    auto const render{[&](bool const fragmented) {
+    auto const render{[&](bool const fragmented){
       tfx::audio::fm_synth synth{rate};
       for(auto const address : {0x20u,0x23u}) synth.write({
         .address{static_cast<uint8_t>(address)},
@@ -38,7 +39,7 @@ int main() try {
     }};
     auto const whole{render(false)}, fragmented{render(true)};
     if(whole != fragmented) throw std::runtime_error{"FM callback partition changed PCM"};
-    if(std::ranges::none_of(whole,[](float const value) { return std::abs(value) > .001f; })) throw std::runtime_error{"FM fixture produced silence"};
+    if(std::ranges::none_of(whole,[](float const value){ return std::abs(value) > .001f; })) throw std::runtime_error{"FM fixture produced silence"};
     for(unsigned int frame{0}; frame != rate; ++frame) {
       if(!std::isfinite(whole[frame * 2u]) || whole[frame * 2u] != whole[frame * 2u + 1u]) throw std::runtime_error{"FM output lost finite dual-mono samples"};
     }
@@ -46,5 +47,5 @@ int main() try {
   std::cout << "FM initialization and native/resampled PCM agree across callback partitions\n";
 } catch(std::exception const &error) {
   std::cerr << error.what() << '\n';
-  return 1;
+  return EXIT_FAILURE;
 }

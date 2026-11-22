@@ -6,7 +6,7 @@
 
 namespace tfx::render {
 
-inline constexpr uint8_t display_page_count{3};
+inline uint8_t constexpr display_page_count{3};
 
 // The original display rotates through three retained 320x200 VGA pages.
 // Pixels outside a painter's coverage survive until that page is reused.

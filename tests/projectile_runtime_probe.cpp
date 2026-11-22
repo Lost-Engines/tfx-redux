@@ -1,8 +1,8 @@
 #include <cstdlib>
 #include <iostream>
+#include <ranges>
 #include <stdexcept>
 #include <utility>
-#include <ranges>
 #include "resources/executable_tables.h"
 #include "weapons/runtime.h"
 
@@ -23,10 +23,10 @@ int main(int const argc, char const *const argv[]) try {
     bool const countermeasures{(dispenser >= 2 && dispenser <= 3) || (dispenser >= 6 && dispenser <= 8)};
     auto const target_pool{dispenser >= 6 && dispenser <= 8 ? tfx::weapons::actor_pool::player : tfx::weapons::actor_pool::aircraft};
     tfx::weapons::runtime state{tables.weapons,{
-      .mount_state{[] { return tfx::weapons::launch_mount{.angles{0,12000,0},.selected{4}}; }},
-      .actor_position{[](tfx::weapons::actor_identity) { return vec3<int32_t>{1000000,-300000,1000000}; }},
-      .designation_position{[&] { return vec3<int32_t>{designation}; }},
-      .motion_inputs{[](tfx::weapons::active_projectile const &shot,uint16_t const ticks) {
+      .mount_state{[]{ return tfx::weapons::launch_mount{.angles{0,12000,0},.selected{4}}; }},
+      .actor_position{[](tfx::weapons::actor_identity){ return vec3<int32_t>{1000000,-300000,1000000}; }},
+      .designation_position{[&]{ return vec3<int32_t>{designation}; }},
+      .motion_inputs{[](tfx::weapons::active_projectile const &shot,uint16_t const ticks){
         return tfx::weapons::motion_context{
           .elapsed{ticks},
           .target{0,0,0},
@@ -37,17 +37,17 @@ int main(int const argc, char const *const argv[]) try {
           .target_is_player{shot.target.actor && shot.target.actor->pool == tfx::weapons::actor_pool::player},
         };
       }},
-      .reset_visual{[&](unsigned int const weapon, bool const secondary) { events.insert(events.end(),{0,static_cast<int32_t>(weapon),secondary}); }},
-      .launched{[&](tfx::weapons::active_projectile const &shot) { events.insert(events.end(),{1,static_cast<int32_t>(shot.id)}); }},
-      .target_cleared{[&](tfx::weapons::active_projectile const &shot) { events.insert(events.end(),{2,static_cast<int32_t>(shot.id)}); }},
-      .contacts{[&](tfx::weapons::active_projectile &shot,uint16_t const ticks) {
+      .reset_visual{[&](unsigned int const weapon, bool const secondary){ events.insert(events.end(),{0,static_cast<int32_t>(weapon),secondary}); }},
+      .launched{[&](tfx::weapons::active_projectile const &shot){ events.insert(events.end(),{1,static_cast<int32_t>(shot.id)}); }},
+      .target_cleared{[&](tfx::weapons::active_projectile const &shot){ events.insert(events.end(),{2,static_cast<int32_t>(shot.id)}); }},
+      .contacts{[&](tfx::weapons::active_projectile &shot,uint16_t const ticks){
         events.insert(events.end(),{3,static_cast<int32_t>(shot.id),ticks});
         if(frame_tail && (frame_index + shot.id) % 7 == 0) shot.spent = true;
       }},
     },capacity};
     tfx::math::random_state random;
     tfx::weapons::active_projectile const *warning{nullptr};
-    auto const launch_batch{[&] {
+    auto const launch_batch{[&]{
       for(unsigned int index{0}; index != (dispenser == 1 ? 3u : 27u); ++index) state.launch({
         .weapon{dispenser == 1 ? index == 0 ? 15u : index == 1 ? 16u : 0u : index},
         .position{1000000,-300000,1000000},
@@ -75,7 +75,7 @@ int main(int const argc, char const *const argv[]) try {
       state.advance(static_cast<uint16_t>(elapsed),random,false);
       if(frame_tail) state.finish_frame();
       uint64_t digest{14695981039346656037ULL};
-      auto const word{[&](auto const value) {
+      auto const word{[&](auto const value){
         for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
       }};
       word(state.projectiles().size());

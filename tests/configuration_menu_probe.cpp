@@ -1,6 +1,7 @@
 #include <bit>
-#include <utility>
+#include <cstdlib>
 #include <iostream>
+#include <utility>
 #include "presentation/configuration_menu.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -43,4 +44,4 @@ int main(int const argc, char const *const argv[]) try {
     menu.draw(image);
     std::cout.write(reinterpret_cast<char const*>(image.pixels.data()),image.pixels.size());
   }
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

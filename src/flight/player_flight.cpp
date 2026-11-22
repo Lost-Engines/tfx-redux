@@ -1,8 +1,8 @@
 #include "player_flight.h"
 #include <utility>
+#include "flight/gear_controls.h"
 #include "flight/player_frame.h"
 #include "flight/player_shared.h"
-#include "flight/gear_controls.h"
 
 namespace tfx::flight {
 namespace {
@@ -64,7 +64,7 @@ void player_flight::initialise(aerodynamic_airframe const &aircraft, loadout con
 
 void player_flight::select_model(aerodynamic_model const model) {
   if(physical.model == model) return;
-  if(!simple_body) basic.ground.body = basic.flight.orientation; // Native shared body matrix also receives Arcade exports.
+  if(!simple_body) basic.ground.body = basic.flight.orientation;               // Native shared body matrix also receives Arcade exports.
   physical.model = model;
   physical.autopilot.recovery.model_reset_requested = true;
   basic.first_update = true;
@@ -105,7 +105,7 @@ player_flight_events player_flight::advance(damage_state &damage, math::random_s
     physical.chute_cutaway = view.brake_chute_cut_away = true;
     events.model_entries.push_back(16);
   }
-  physical.seconds = context.physics.seconds; // The outer timer writes this even for a basic callback.
+  physical.seconds = context.physics.seconds;                                  // The outer timer writes this even for a basic callback.
   update_aerodynamic_engine_faults(physical.powerplant,random);
   damage.systems[std::to_underlying(aircraft_system::left_engine)] = physical.powerplant.engine_condition[0];
   damage.systems[std::to_underlying(aircraft_system::right_engine)] = physical.powerplant.engine_condition[1];
@@ -165,7 +165,7 @@ player_flight_events player_flight::advance(damage_state &damage, math::random_s
       });
       if(events.landing.clear_basic_speed) {
         view.speed_mach = 0;
-        basic.reported_speed = 0; // Native 0x13440, distinct from the target-Mach cache at 0x133cc.
+        basic.reported_speed = 0;                                              // Native 0x13440, distinct from the target-Mach cache at 0x133cc.
       }
       physical_callback = true;
       break;
@@ -182,7 +182,7 @@ player_flight_events player_flight::advance(damage_state &damage, math::random_s
       break;
     }
     case player_callback::disabled_aircraft:
-      basic.displayed_g_load = 0; // Native disabled-callback tail 0x8e7fd.
+      basic.displayed_g_load = 0;                                              // Native disabled-callback tail 0x8e7fd.
       if(physical.model == aerodynamic_model::arcade) advance_disabled(view,context.basic_controls,engine_conditions,context.elapsed,ground);
       else {
         basic.gear.condition = gear_condition;

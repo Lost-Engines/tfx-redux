@@ -16,15 +16,14 @@ std::array<unsigned int,37> constexpr number_samples{
 bool append_number(std::vector<unsigned int> &sequence, unsigned int number) {
   unsigned int constexpr hundred{100}, twenty{20}, thirty{30}, ten{10};
   unsigned int const hundreds{number / hundred};
-  if(hundreds >= number_samples.size()) return false; // Outside the original lookup's defined storage.
+  if(hundreds >= number_samples.size()) return false;                          // Outside the original lookup's defined storage.
   if(hundreds) {
     sequence.push_back(number_samples[hundreds]);sequence.push_back(hundred_sample);
     number %= hundred;
     if(!number) return true;
   }
   if(number <= twenty) sequence.push_back(zero_sample + number);
-  else if(number < thirty) { sequence.push_back(twenty_sample);sequence.push_back(zero_sample + number - twenty); }
-  else {
+  else if(number < thirty) { sequence.push_back(twenty_sample);sequence.push_back(zero_sample + number - twenty); } else {
     sequence.push_back(thirty_sample + number / ten - thirty / ten);
     if(number % ten) sequence.push_back(zero_sample + number % ten);
   }

@@ -18,7 +18,7 @@ struct aerodynamic_pilot_key_events {
   std::optional<aerodynamic_pilot_notice> notice{};
   autopilot_external_status external_status{autopilot_external_status::unchanged}; // Native external "autopilo" on/off request.
   aerodynamic_recovery_result recovery{};
-  bool motion_reset{false}; // Native reset also updates the current timestep to 0.01 seconds.
+  bool motion_reset{false};                                                    // Native reset also updates the current timestep to 0.01 seconds.
 };
 
 // Native 6/5/7/8/9/0/A handlers. Held-arrow target changes belong to the device

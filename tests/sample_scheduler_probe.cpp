@@ -1,4 +1,5 @@
 #include <array>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -38,11 +39,10 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const id : request.sequence) values.push_back(id);
     for(auto const remaining : scheduler->remaining()) values.push_back(remaining);
     for(auto const value : values) {
-      if(argc == 2) { int64_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"sample scheduler mismatch at case " + std::to_string(cases)}; }
-      else std::cout << value << ' ';
+      if(argc == 2) { int64_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"sample scheduler mismatch at case " + std::to_string(cases)}; } else std::cout << value << ' ';
     }
     if(argc != 2) std::cout << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

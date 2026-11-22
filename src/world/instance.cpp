@@ -68,7 +68,9 @@ void instance::apply_contact_damage(uint16_t const damage) {
   if(math::signed_word(health) <= 0) destroyed = true;
 }
 
-int16_t instance::bounding_radius() const { return source.bounding_radius; }
+int16_t instance::bounding_radius() const {
+  return source.bounding_radius;
+}
 
 int16_t instance::type() const {
   // Native 0xb7a3c distinguishes an untyped SSD from type zero.
@@ -86,7 +88,7 @@ std::vector<vec3<int16_t>> instance::damage_centres() const {
     auto const opcode{static_cast<instruction>(view.le16(at))};
     if(opcode != instruction::damage_box_once && opcode != instruction::damage_box_stages) break;
     view.slice(at + 2,12);
-    auto const middle{[&](unsigned int const axis) { return static_cast<int16_t>((static_cast<int>(view.signed_le16(at + 2 + axis * 2)) + view.signed_le16(at + 8 + axis * 2)) / 2); }};
+    auto const middle{[&](unsigned int const axis){ return static_cast<int16_t>((static_cast<int>(view.signed_le16(at + 2 + axis * 2)) + view.signed_le16(at + 8 + axis * 2)) / 2); }};
     result.emplace_back(middle(0),middle(1),middle(2));
     at += opcode == instruction::damage_box_once ? 18 : 20;
   }
@@ -129,7 +131,7 @@ instance_result instance::animate(instance_context const &context) {
 void instance::interpret(unsigned int at, instance_context &context, instance_result &result, unsigned int &budget, unsigned int const depth, bool &install_streams) {
   if(depth > maximum_call_depth) throw std::runtime_error{"SSD helper nesting exceeds limit"};
   resources::binary_view const view{source.bytecode};
-  auto const field{[&](unsigned int const address, uint16_t const word) {
+  auto const field{[&](unsigned int const address, uint16_t const word){
     int64_t const target{static_cast<int64_t>(address) + math::signed_word(word) * 2};
     if(target < 0 || static_cast<uint64_t>(target) >= source.bytecode.size()) throw std::runtime_error{"SSD branch leaves its program"};
     return static_cast<unsigned int>(target);
@@ -139,25 +141,25 @@ void instance::interpret(unsigned int at, instance_context &context, instance_re
     auto const opcode{static_cast<instruction>(view.le16(at))};
     unsigned int const args{at + 2}, count{instruction_operands(std::to_underlying(opcode),source.bytecode,args)};
     view.slice(args,count * 2);
-    auto const a{[&](unsigned int const index) { return view.le16(args + index * 2); }};
-    auto const branch{[&](unsigned int const index) { return field(args + index * 2,a(index)); }};
-    auto const call{[&](unsigned int const address) { interpret(address,context,result,budget,depth + 1,install_streams); }};
-    auto const hit{[&](bool const diagonal = false) {
+    auto const a{[&](unsigned int const index){ return view.le16(args + index * 2); }};
+    auto const branch{[&](unsigned int const index){ return field(args + index * 2,a(index)); }};
+    auto const call{[&](unsigned int const address){ interpret(address,context,result,budget,depth + 1,install_streams); }};
+    auto const hit{[&](bool const diagonal = false){
       return intersects({
         .minimum{math::signed_word(a(0)),math::signed_word(a(1)),math::signed_word(a(2))},
         .maximum{math::signed_word(a(3)),math::signed_word(a(4)),math::signed_word(a(5))},
       },context.movement,diagonal);
     }};
-    auto const collision{[&] {
+    auto const collision{[&]{
       ++result.collisions;
       if(context.collision_response) { context.collision_response(impact_damage); modified = true; }
     }};
-    auto const damage{[&](uint16_t &lives) {
+    auto const damage{[&](uint16_t &lives){
       modified = true;
       lives = static_cast<uint16_t>(lives - context.impact_damage);
       collision();
     }};
-    auto const request{[&] {
+    auto const request{[&]{
       scene_request value{
         .opcode{std::to_underlying(opcode)},
         .arguments{},

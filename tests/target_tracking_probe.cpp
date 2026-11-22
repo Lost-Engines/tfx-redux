@@ -47,7 +47,7 @@ int main(int const argc, char const *const argv[]) try {
       std::cin >> initial.enabled >> initial.carrier >> initial.beacon >> initial.cell.x >> initial.cell.y >> initial.port.offset.x >> initial.port.offset.y >> initial.port.heading >> initial.beacon_position.x >> initial.beacon_position.y >> initial.bearing.x >> initial.bearing.y >> initial.correction.x >> initial.correction.y >> initial.pitch_error >> height;
       initial.height = static_cast<tfx::flight::approach_height>(height);
       landing.emplace(std::move(initial));
-      if(landing->value().enabled && mode == 0) state.landing.emplace(landing->advance(state.flight.position,false,[&](auto const&) {
+      if(landing->value().enabled && mode == 0) state.landing.emplace(landing->advance(state.flight.position,false,[&](auto const&){
         return tfx::flight::landing_projection{
           .valid{ground != 0},
           .point{vec2<int16_t>{ground_point}},

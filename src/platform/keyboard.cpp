@@ -39,4 +39,4 @@ uint8_t make_code(int const key) {
   default: return 0;
   }
 }
-}
+} // namespace tfx::platform

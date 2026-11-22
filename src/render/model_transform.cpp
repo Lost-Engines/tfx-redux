@@ -33,7 +33,9 @@ model_transform::model_transform(mat3<int32_t> const &view, vec3<math::angle> co
   }
   basis = math::compose_model_basis(view,body);
 }
-mat3<int32_t> const &model_transform::matrix() const { return basis; }
+mat3<int32_t> const &model_transform::matrix() const {
+  return basis;
+}
 vec3d model_transform::point(vec3d const &position, double const projection_scale) const {
   double const multiplier{2 / projection_scale};
   auto const raw{position * multiplier};

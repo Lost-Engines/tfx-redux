@@ -25,7 +25,9 @@ fm_synth::fm_synth(unsigned int const sample_rate) : state{std::make_unique<impl
   state->chip.Setup(44100);
 }
 fm_synth::~fm_synth() = default;
-void fm_synth::write(opl_write const command) { state->chip.WriteReg(command.address,command.value); }
+void fm_synth::write(opl_write const command) {
+  state->chip.WriteReg(command.address,command.value);
+}
 void fm_synth::render(std::span<float> const stereo) {
   if(stereo.size() % 2) throw std::invalid_argument{"FM output requires complete stereo frames"};
   // Keep the same reference DOSBox rate and causal sample conversion used by

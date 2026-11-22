@@ -29,7 +29,7 @@ public:
   effect_record const &record(effect_slot slot) const;
   auto active_slots() const {
     // Native 0x7b144 appends to an oldest-first chain. Full pools reuse its head.
-    return std::views::iota(0u,count) | std::views::transform([this](unsigned int const index) { return (next + count - index) % effect_capacity; });
+    return std::views::iota(0u,count) | std::views::transform([this](unsigned int const index){ return (next + count - index) % effect_capacity; });
   }
 };
 

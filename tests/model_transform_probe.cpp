@@ -1,17 +1,18 @@
-#include "fixture_check.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
+#include "fixture_check.h"
 #include "models/shape.h"
 #include "render/integer_model_polygon.h"
-#include "render/model_transform.h"
 #include "render/model_raster.h"
+#include "render/model_transform.h"
 
 std::vector<uint8_t> model(std::array<vec3<int16_t>,3> const &vertices, uint16_t const scale, bool const shaded, bool const effects, bool const line_only) {
   std::vector<uint8_t> source(50);
-  auto const store{[&](unsigned int const at,uint16_t const value) { source.at(at) = static_cast<uint8_t>(value >> 8);source.at(at + 1) = static_cast<uint8_t>(value); }};
-  auto const emit{[&](std::initializer_list<uint16_t> const words) { for(auto const value : words) { source.push_back(static_cast<uint8_t>(value >> 8));source.push_back(static_cast<uint8_t>(value)); } }};
+  auto const store{[&](unsigned int const at,uint16_t const value){ source.at(at) = static_cast<uint8_t>(value >> 8);source.at(at + 1) = static_cast<uint8_t>(value); }};
+  auto const emit{[&](std::initializer_list<uint16_t> const words){ for(auto const value : words) { source.push_back(static_cast<uint8_t>(value >> 8));source.push_back(static_cast<uint8_t>(value)); } }};
   store(0,32768);store(2,32767);store(34,14);store(48,65535);emit({48,scale});
   for(unsigned int i{0}; i != vertices.size(); ++i) emit({98,static_cast<uint16_t>(i),static_cast<uint16_t>(vertices[i].x),static_cast<uint16_t>(vertices[i].y),static_cast<uint16_t>(vertices[i].z)});
   emit({97,3,0});
@@ -44,7 +45,7 @@ int main(int const argc, char const *const argv[]) try {
     auto view{tfx::render::original_camera({0,0,0},matrix,{160,100},wide ? tfx::render::aperture::missile_nose : tfx::render::aperture::normal)};
     view.far_distance = 100000;
     tfx::render::model_transform const transform{matrix,angles,tfx::render::scale_model_cache(origin,static_cast<uint8_t>(draw_scale)),shadow ? tfx::render::model_surface::ground_shadow : tfx::render::model_surface::body};
-    auto const camera_vertices{[&](std::span<tfx::models::model_vertex const> const source) {
+    auto const camera_vertices{[&](std::span<tfx::models::model_vertex const> const source){
       std::vector<tfx::models::model_vertex> result;
       for(auto const &vertex : source) result.push_back({
         .position{vec3d{vertex.position}},
@@ -60,7 +61,7 @@ int main(int const argc, char const *const argv[]) try {
       .origin{tfx::render::scale_model_cache(origin,static_cast<uint8_t>(draw_scale))},
       .projection_shift{tfx::render::projection_shift(view.opening)},
     });
-    context.face_visibility = [&](std::span<tfx::models::model_vertex const> const source,tfx::models::facing_test const purpose) { return tfx::render::model_facing(camera_vertices(source),view,purpose); };
+    context.face_visibility = [&](std::span<tfx::models::model_vertex const> const source,tfx::models::facing_test const purpose){ return tfx::render::model_facing(camera_vertices(source),view,purpose); };
     auto const geometry{tfx::models::interpret(shape,context)};
     if(!geometry.warnings.empty()) throw std::runtime_error{"transformed model emitted warnings"};
     tfx::render::framebuffer output;output.pixels.fill(99);
@@ -87,5 +88,5 @@ int main(int const argc, char const *const argv[]) try {
     } else { for(auto const value : transform.matrix().data) std::cout << value << ' ';std::cout << hash;if(!defined) std::cout << " overflow";std::cout << '\n'; }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

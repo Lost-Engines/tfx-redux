@@ -59,7 +59,7 @@ bool review::advance(uint8_t const buttons) {
     compose();
     return stage == review_phase::complete;
   }
-  extent += 2; // Original 0xaceb4 advances two pixels per display flip.
+  extent += 2;                                                                 // Original 0xaceb4 advances two pixels per display flip.
   display = map.image();
   map.route(display,points);
   if(!map.extend(display,points,extent)) {
@@ -77,12 +77,18 @@ review_status review::status() const {
     .extent{extent},
   };
 }
-bool review::finished() const { return stage == review_phase::complete; }
-render::framebuffer const &review::image() const { return display; }
+bool review::finished() const {
+  return stage == review_phase::complete;
+}
+render::framebuffer const &review::image() const {
+  return display;
+}
 render::palette review::colours() const {
   unsigned int const level{stage == review_phase::complete ? 0u : fade_level};
   return render::decode_palette(presentation::fade_palette(map.palette(),level,40));
 }
-document const &review::source() const { return plan; }
+document const &review::source() const {
+  return plan;
+}
 
 } // namespace tfx::planning

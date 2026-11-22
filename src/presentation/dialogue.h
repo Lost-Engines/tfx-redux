@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-
 #include "presentation/widget_font.h"
 
 namespace tfx::presentation {

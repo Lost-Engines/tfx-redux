@@ -1,22 +1,23 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
-#include "world/instance.h"
 #include <utility>
 #include <vector>
 #include "world/effects.h"
+#include "world/instance.h"
 
 int main(int const argc, char const *const argv[]) try {
   if(argc == 2 && std::string_view{argv[1]} == "--request-order") {
     std::vector<uint8_t> raw(16);
     raw[0] = 2;raw[8] = 3;
-    auto const entry{[&](unsigned int const index) {
+    auto const entry{[&](unsigned int const index){
       auto const field{10 + index * 2};
       auto const offset{static_cast<uint16_t>((raw.size() - field) / 2)};
       raw[field] = static_cast<uint8_t>(offset);raw[field + 1] = static_cast<uint8_t>(offset >> 8);
     }};
-    auto const emit{[&](std::initializer_list<uint16_t> words) {
+    auto const emit{[&](std::initializer_list<uint16_t> words){
       for(auto const word : words) { raw.push_back(static_cast<uint8_t>(word));raw.push_back(static_cast<uint8_t>(word >> 8)); }
     }};
     entry(0);emit({11,0,0,0});
@@ -25,7 +26,7 @@ int main(int const argc, char const *const argv[]) try {
     tfx::world::definition const definition{raw,std::span<std::string const>{}};
     tfx::world::instance state{definition};
     std::vector<unsigned int> observations;
-    auto const output{[&](tfx::world::scene_request const &request) {
+    auto const output{[&](tfx::world::scene_request const &request){
       observations.push_back(state.custom.at(0));observations.push_back(request.opcode);
       observations.insert(observations.end(),request.arguments.begin(),request.arguments.end());
     }};
@@ -36,7 +37,7 @@ int main(int const argc, char const *const argv[]) try {
     if(observations != expected || state.custom.at(0) != 33) throw std::runtime_error{"SSD request delivery was deferred or reordered"};
     for(auto const value : observations) std::cout << value << ' ';
     std::cout << '\n';
-    return 0;
+    return EXIT_SUCCESS;
   }
   if(argc >= 2 && std::string_view{argv[1]} == "--place") {
     std::ifstream fixture;
@@ -50,13 +51,12 @@ int main(int const argc, char const *const argv[]) try {
       auto const point{tfx::world::place_instance_point(local,origin,static_cast<tfx::math::angle>(heading))};
       std::array<int,5> const values{point.x,point.y,point.z,static_cast<int>(kind),tfx::world::instance_point_distance(local,origin,static_cast<tfx::math::angle>(heading),vec3<int16_t>{reference})};
       for(auto const value : values) {
-        if(argc == 3) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"effect placement mismatch at case " + std::to_string(cases)}; }
-        else std::cout << value << ' ';
+        if(argc == 3) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"effect placement mismatch at case " + std::to_string(cases)}; } else std::cout << value << ' ';
       }
       if(argc != 3) std::cout << '\n';
       ++cases;
     }
-    return cases ? 0 : 1;
+    return cases ? EXIT_SUCCESS : EXIT_FAILURE;
   }
   std::ifstream fixture;
   if(argc == 2) fixture.open(argv[1]);
@@ -86,9 +86,8 @@ int main(int const argc, char const *const argv[]) try {
     values.insert(values.end(),events.begin(),events.end());
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(argc == 2) { uint64_t expected;if(!(input >> expected) || expected != digest) throw std::runtime_error{"effect pool mismatch at case " + std::to_string(cases)}; }
-    else std::cout << digest << '\n';
+    if(argc == 2) { uint64_t expected;if(!(input >> expected) || expected != digest) throw std::runtime_error{"effect pool mismatch at case " + std::to_string(cases)}; } else std::cout << digest << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

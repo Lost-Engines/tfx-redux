@@ -16,7 +16,7 @@ void score_player::draw() {
     auto const number{std::to_string(entry.score)};
     auto const name{entry.firstname + " -" + entry.callsign + "- " + entry.surname};
     int const y{61 + static_cast<int>(row) * 9};
-    auto const item{[&](std::string const &label, int const x) {
+    auto const item{[&](std::string const &label, int const x){
       if(selected == row) font_data.draw(text,6,{x + 1,y + 1},label,0,&coverage);
       uint8_t const colour{static_cast<uint8_t>(selected == row ? 144 + assets.highlight[pulse] : 55)};
       font_data.draw(text,6,{x,y},label,colour,&coverage);

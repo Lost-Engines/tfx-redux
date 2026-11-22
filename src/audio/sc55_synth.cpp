@@ -1,6 +1,6 @@
 #include "audio/sc55_synth.h"
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <mutex>
 #include <stdexcept>
@@ -75,7 +75,9 @@ void sc55_synth::short_message(uint32_t const packed) {
   unsigned int const length{status >= 0xf8 || status == 0xf6 || status == 0xf7 ? 1u : kind == 0xc0 || kind == 0xd0 || status == 0xf1 || status == 0xf3 ? 2u : 3u};
   state->synth.PostMIDI(std::span{bytes}.first(length));
 }
-void sc55_synth::sysex(std::span<uint8_t const> const message) { state->synth.PostMIDI(message); }
+void sc55_synth::sysex(std::span<uint8_t const> const message) {
+  state->synth.PostMIDI(message);
+}
 
 void sc55_synth::render(std::span<float> const stereo) {
   if(stereo.size() % 2) throw std::invalid_argument{"Sound Canvas output requires complete stereo frames"};

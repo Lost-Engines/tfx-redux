@@ -7,7 +7,9 @@ void display_pages::reset() {
   current = first_page;
   previous_offset_y = -1;
 }
-void display_pages::begin_frame(framebuffer &target) const { target = (*pages)[current]; }
+void display_pages::begin_frame(framebuffer &target) const {
+  target = (*pages)[current];
+}
 void display_pages::finish_frame(framebuffer const &target) {
   (*pages)[current] = target;
   current = (current + 1) % display_page_count;

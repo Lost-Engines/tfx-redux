@@ -24,7 +24,7 @@ struct aerodynamic_surface_parameters {
   double chute_area{0};
   double zero_pitch_moment{0};
   double chute_pitch_arm{0};
-  vec2d air_brake_moment_arm{0,0}; // Original sin(alpha), cos(alpha) terms.
+  vec2d air_brake_moment_arm{0,0};                                             // Original sin(alpha), cos(alpha) terms.
   double maximum_aileron_angle{0};
   double maximum_elevator_angle{0};
 };

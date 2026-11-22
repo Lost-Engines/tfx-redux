@@ -18,9 +18,17 @@ osl_scc_driver::osl_scc_driver(std::span<uint8_t const> const launcher, midi_byt
     .rhythm{source.byte(driver + 0x400 + index * 4)}
   };
 }
-osl_device osl_scc_driver::device_type() const { return osl_device::sound_canvas; }
-void osl_scc_driver::byte(uint8_t const value) { output(value); }
-void osl_scc_driver::message(uint8_t const status, uint8_t const first, uint8_t const second) { byte(status);byte(first);byte(second); }
+osl_device osl_scc_driver::device_type() const {
+  return osl_device::sound_canvas;
+}
+void osl_scc_driver::byte(uint8_t const value) {
+  output(value);
+}
+void osl_scc_driver::message(uint8_t const status, uint8_t const first, uint8_t const second) {
+  byte(status);
+  byte(first);
+  byte(second);
+}
 void osl_scc_driver::sysex(unsigned int position) {
   for(unsigned int index{0}; index != 5; ++index) byte(parameters.at(position++));
   unsigned int count{parameters.at(position++) + 3u};
@@ -56,30 +64,45 @@ void osl_scc_driver::instrument(unsigned int const index, std::span<uint8_t cons
 }
 void osl_scc_driver::program(unsigned int const channel, uint8_t const value) {
   auto const &patch{patches.at(value)};
-  if(patch.rhythm == 1) { parameters[0x219] = static_cast<uint8_t>(channel | 16);sysex(0x212); }
-  else {
+  if(patch.rhythm == 1) { parameters[0x219] = static_cast<uint8_t>(channel | 16);sysex(0x212); } else {
     parameters[0x223] = static_cast<uint8_t>(channel | 16);sysex(0x21c);
     message(static_cast<uint8_t>(0xb0 + channel),0,patch.bank);
   }
   byte(static_cast<uint8_t>(0xc0 + channel));byte(patch.program);
 }
-void osl_scc_driver::bend(unsigned int const channel, uint16_t const value) { message(static_cast<uint8_t>(0xe0 + channel),value & 127,(value >> 7) & 127); }
+void osl_scc_driver::bend(unsigned int const channel, uint16_t const value) {
+  message(static_cast<uint8_t>(0xe0 + channel),value & 127,(value >> 7) & 127);
+}
 void osl_scc_driver::note(osl_channel &state, unsigned int const channel, uint8_t const value, uint8_t const velocity) {
   if(!value) return;
   if(state.pitch_bend != 0x2000) { state.pitch_bend = 0x2000;bend(channel,state.pitch_bend); }
   silence(channel);state.previous_note = value;message(static_cast<uint8_t>(0x90 + channel),value,velocity);
 }
-void osl_scc_driver::extra_note(osl_channel const &, unsigned int const channel, uint8_t const value) { if(value) message(static_cast<uint8_t>(0x90 + channel),value,127); }
-void osl_scc_driver::silence(unsigned int const channel) { message(static_cast<uint8_t>(0xb0 + channel),123,0); }
-void osl_scc_driver::pan(unsigned int const channel, uint8_t const value) { message(static_cast<uint8_t>(0xb0 + channel),10,value); }
+void osl_scc_driver::extra_note(osl_channel const &, unsigned int const channel, uint8_t const value) {
+  if(value) message(static_cast<uint8_t>(0x90 + channel),value,127);
+}
+void osl_scc_driver::silence(unsigned int const channel) {
+  message(static_cast<uint8_t>(0xb0 + channel),123,0);
+}
+void osl_scc_driver::pan(unsigned int const channel, uint8_t const value) {
+  message(static_cast<uint8_t>(0xb0 + channel),10,value);
+}
 void osl_scc_driver::volume(osl_channel &state, unsigned int const channel, uint8_t const value) {
   if(state.sent_volume == value) return;
   state.sent_volume = value;message(static_cast<uint8_t>(0xb0 + channel),7,value);
 }
-void osl_scc_driver::pitch(osl_channel const &state, unsigned int const channel) { bend(channel,state.pitch_bend); }
-void osl_scc_driver::modulation(unsigned int const channel, uint8_t const value) { message(static_cast<uint8_t>(0xb0 + channel),1,static_cast<uint8_t>((value & 15) * 8)); }
+void osl_scc_driver::pitch(osl_channel const &state, unsigned int const channel) {
+  bend(channel,state.pitch_bend);
+}
+void osl_scc_driver::modulation(unsigned int const channel, uint8_t const value) {
+  message(static_cast<uint8_t>(0xb0 + channel),1,static_cast<uint8_t>((value & 15) * 8));
+}
 void osl_scc_driver::reverb(std::array<uint8_t,3> const &) {}
-void osl_scc_driver::effect_parameter(uint8_t const address, uint8_t const value) { parameters[0x7b8] = address;parameters[0x7b9] = value;sysex(0x7b0); }
+void osl_scc_driver::effect_parameter(uint8_t const address, uint8_t const value) {
+  parameters[0x7b8] = address;
+  parameters[0x7b9] = value;
+  sysex(0x7b0);
+}
 void osl_scc_driver::reset_effects(unsigned int const channel) {
   message(static_cast<uint8_t>(0xb0 | channel),91,0);message(static_cast<uint8_t>(0xb0 | channel),93,0);
   std::array<uint8_t,7> constexpr values{7,2,5,127,127,127,0};
@@ -90,7 +113,9 @@ void osl_scc_driver::nrpn(unsigned int const channel, uint16_t const parameter, 
   message(status,99,static_cast<uint8_t>(parameter >> 8));message(status,98,static_cast<uint8_t>(parameter));
   message(status,6,value);message(status,38,17);
 }
-void osl_scc_driver::reset_nrpn(unsigned int const channel) { for(auto const value : {0x108,0x109,0x10a,0x120,0x121,0x163,0x164,0x166}) nrpn(channel,static_cast<uint16_t>(value),64); }
+void osl_scc_driver::reset_nrpn(unsigned int const channel) {
+  for(auto const value : {0x108,0x109,0x10a,0x120,0x121,0x163,0x164,0x166}) nrpn(channel,static_cast<uint16_t>(value),64);
+}
 void osl_scc_driver::extension(osl_channel const &state, unsigned int const channel) {
   auto const command{state.cell.effect & 127};
   auto const argument{state.cell.argument};

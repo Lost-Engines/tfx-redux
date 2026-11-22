@@ -1,11 +1,12 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
-#include "weapons/definition.h"
-#include "weapons/projectile.h"
 #include <utility>
 #include <vector>
+#include "weapons/definition.h"
+#include "weapons/projectile.h"
 #include "world/impact.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -23,12 +24,12 @@ int main(int const argc, char const *const argv[]) try {
       } else std::cout << query << '\n';
       ++cases;
     }
-    return cases ? 0 : 1;
+    return cases ? EXIT_SUCCESS : EXIT_FAILURE;
   }
   if(argc == 3 && std::string_view{argv[1]} == "--definitions") {
     auto const definitions{tfx::weapons::load_definitions(tfx::resources::read_file(argv[2]))};
     for(unsigned int index{0}; index != definitions.size(); ++index) std::cout << index << ' ' << static_cast<unsigned int>(definitions[index].category) << ' ' << definitions[index].impact_effects << '\n';
-    return 0;
+    return EXIT_SUCCESS;
   }
   std::ifstream fixture;
   if(argc == 2) fixture.open(argv[1]);
@@ -57,11 +58,10 @@ int main(int const argc, char const *const argv[]) try {
     std::vector<int> values{appearance,spent,static_cast<int>(events.size())};
     values.insert(values.end(),events.begin(),events.end());
     for(auto const value : values) {
-      if(argc == 2) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"projectile impact mismatch at case " + std::to_string(cases)}; }
-      else std::cout << value << ' ';
+      if(argc == 2) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"projectile impact mismatch at case " + std::to_string(cases)}; } else std::cout << value << ' ';
     }
     if(argc != 2) std::cout << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

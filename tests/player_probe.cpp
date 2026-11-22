@@ -1,8 +1,8 @@
 #include <cstdlib>
 #include <iostream>
+#include "presentation/player.h"
 #include "resources/archive.h"
 #include "resources/executable_tables.h"
-#include "presentation/player.h"
 
 int main(int const argc, char const *const argv[]) try {
   bool const corpus{argc == 3 && std::string_view{argv[1]} == "--corpus"};
@@ -32,7 +32,7 @@ int main(int const argc, char const *const argv[]) try {
           if(language != "english" && (!clip->text || clip->text->text.find('^') == std::string::npos)) continue;
           tfx::presentation::scene_input input;
           tfx::presentation::sequence_controls sequence;
-          tfx::presentation::scene_player player{node.kind,*clip,media,tables.presentation_fonts(),variables,[&](std::string_view const filename) {
+          tfx::presentation::scene_player player{node.kind,*clip,media,tables.presentation_fonts(),variables,[&](std::string_view const filename){
             auto const content{game.read(language + "/" + std::string{filename})};return std::string{content.begin(),content.end()};
           },current,tables.text_palette,{0,0},input};
           bool done{false};
@@ -59,7 +59,7 @@ int main(int const argc, char const *const argv[]) try {
     auto const media{statement.kind == tfx::presentation::node_kind::text ? tfx::resources::bytes{} : game.read("iff/raw/" + clip.resource + ".lbm")};
     tfx::presentation::scene_input input;
     tfx::presentation::sequence_controls sequence;
-    tfx::presentation::scene_player player{statement.kind,clip,media,tables.presentation_fonts(),variables,[&](std::string_view const filename) {
+    tfx::presentation::scene_player player{statement.kind,clip,media,tables.presentation_fonts(),variables,[&](std::string_view const filename){
       auto const content{game.read("english/" + std::string{filename})};return std::string{content.begin(),content.end()};
     },current,tables.text_palette,{0,0},input};
     // Fade steps are verified independently; leave the fast text clock stationary during the ramp.

@@ -24,7 +24,7 @@ void write_bytes(std::filesystem::path const &path, std::span<uint8_t const> con
 pilot_assets::pilot_assets(std::span<uint8_t const> const executable) {
   resources::binary_view const view{executable};
   unsigned int constexpr data{973476};
-  auto const string{[&](unsigned int const address) {
+  auto const string{[&](unsigned int const address){
     std::string result;
     for(unsigned int index{0}; index != 256; ++index) {
       auto const byte{view.byte(data + address + index)};

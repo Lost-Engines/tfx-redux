@@ -1,8 +1,9 @@
+#include <cstdlib>
 #include <iostream>
-#include "flight/aerodynamic_launch.h"
-#include "cockpit/initialisation.h"
-#include "weapons/definition.h"
 #include "aerodynamic_autopilot_snapshot.h"
+#include "cockpit/initialisation.h"
+#include "flight/aerodynamic_launch.h"
+#include "weapons/definition.h"
 
 int main(int const argc, char const *const argv[]) try {
   if(argc != 2 && argc != 3) throw std::runtime_error{"expected TFX.DAT"};
@@ -51,5 +52,5 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const value : aerodynamic_autopilot_snapshot(state.autopilot)) std::cout << value << ' ';
     std::cout << state.cold_start << ' ' << static_cast<unsigned int>(state.autopilot.saved_air_brake) << '\n';
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

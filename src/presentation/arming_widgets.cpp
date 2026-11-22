@@ -1,6 +1,6 @@
 #include "arming_widgets.h"
-#include <cstdio>
 #include <algorithm>
+#include <cstdio>
 #include <stdexcept>
 #include <utility>
 

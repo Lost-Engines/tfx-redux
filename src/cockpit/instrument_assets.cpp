@@ -7,7 +7,7 @@ namespace tfx::cockpit {
 instrument_assets::instrument_assets(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
   unsigned int constexpr data{973476};
-  auto const string{[&](unsigned int const address) {
+  auto const string{[&](unsigned int const address){
     std::string result;
     for(unsigned int index{0}; index != 256; ++index) {
       auto const byte{source.byte(data + address + index)};
@@ -16,13 +16,13 @@ instrument_assets::instrument_assets(std::span<uint8_t const> const executable) 
     }
     throw std::runtime_error{"unterminated original instrument string"};
   }};
-  auto const resource{[&](unsigned int const address) {
+  auto const resource{[&](unsigned int const address){
     auto name{string(address)};
     std::ranges::replace(name,'\\','/');
     if(name.starts_with('/')) name.erase(0,1);
     return name;
   }};
-  auto const real{[&](unsigned int const address) {
+  auto const real{[&](unsigned int const address){
     return std::bit_cast<double>(static_cast<uint64_t>(source.le32(data + address)) | (static_cast<uint64_t>(source.le32(data + address + 4)) << 32));
   }};
   for(unsigned int index{0}; index != character_map.size(); ++index) character_map[index] = source.byte(data + 0x7688 + index);
@@ -56,7 +56,7 @@ instrument_assets::instrument_assets(std::span<uint8_t const> const executable) 
   std::array<unsigned int,2> constexpr alert_vertices{0x6fbe,0x6f12}, alert_segments{0x702e,0x6f72};
   for(unsigned int alert{0}; alert != hud_alert_shapes.size(); ++alert) {
     for(unsigned int entry{alert_segments[alert]}; source.signed_le16(data + entry) != -1; entry += 4) {
-      auto const point{[&](unsigned int const field) {
+      auto const point{[&](unsigned int const field){
         auto const index{source.le16(data + entry + field)};
         return vec2<int16_t>{source.signed_le16(data + alert_vertices[alert] + index * 4),source.signed_le16(data + alert_vertices[alert] + index * 4 + 2)};
       }};

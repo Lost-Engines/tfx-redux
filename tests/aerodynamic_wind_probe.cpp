@@ -1,10 +1,11 @@
-#include "numeric_fixture.h"
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string_view>
 #include <vector>
 #include "flight/aerodynamic_wind.h"
+#include "numeric_fixture.h"
 
 namespace {
 
@@ -21,7 +22,7 @@ int main(int const argc, char const *const argv[]) try {
       for(auto const value : {p.direction_wobble_scale,p.surface_speed,p.upper_speed,p.upper_direction_degrees,p.legacy_gust_period,p.legacy_gust_range}) std::cout << std::bit_cast<uint64_t>(value) << ' ';
       std::cout << '\n';
     }
-    return 0;
+    return EXIT_SUCCESS;
   }
   std::ifstream fixture;
   if(argc == 2) fixture.open(argv[1]);
@@ -68,5 +69,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no aerodynamic wind cases"};
   if(argc == 2) std::cout << cases << " native aerodynamic wind fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

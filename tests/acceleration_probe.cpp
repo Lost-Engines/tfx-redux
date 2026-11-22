@@ -3,8 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-#include "simulation/acceleration.h"
 #include "cockpit/radio_ticker.h"
+#include "simulation/acceleration.h"
 
 auto main(int const argc, char const *const argv[])->int try {
   std::ifstream fixture;

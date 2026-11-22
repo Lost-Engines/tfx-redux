@@ -81,7 +81,7 @@ uint16_t cruise_speed(air_state const &state, air_performance const &performance
 }
 
 void command_speed(air_state &state, air_performance const &performance, int32_t const requested) {
-  auto const fixed{[](uint16_t const value) { return std::bit_cast<int32_t>(static_cast<uint32_t>(value) << speed_fraction_bits); }};
+  auto const fixed{[](uint16_t const value){ return std::bit_cast<int32_t>(static_cast<uint32_t>(value) << speed_fraction_bits); }};
   auto const minimum{fixed(performance.minimum_speed)}, maximum{fixed(performance.maximum_speed)};
   // Native 0x75274 has a defined first-match order even when an incompatible profile supplies inverted bounds.
   auto const target{requested <= minimum ? minimum : requested >= maximum ? maximum : requested};

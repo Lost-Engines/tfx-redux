@@ -29,8 +29,8 @@ struct image_pcm {
     file{track.file,std::ios::binary}, offset{uint64_t{track.file_sector} * track.sector_bytes},
     length{uint64_t{track.sectors} * track.sector_bytes} {
     if(!file || length > UINT32_MAX - header.size()) throw std::runtime_error{"cannot stream CD audio track"};
-    auto const text{[&](unsigned int at, std::string_view value) { std::copy(value.begin(),value.end(),header.begin() + at); }};
-    auto const word{[&](unsigned int at, uint32_t value, unsigned int bytes) {
+    auto const text{[&](unsigned int at, std::string_view value){ std::copy(value.begin(),value.end(),header.begin() + at); }};
+    auto const word{[&](unsigned int at, uint32_t value, unsigned int bytes){
       for(unsigned int i{0}; i != bytes; ++i) header[at + i] = static_cast<uint8_t>(value >> (i * 8));
     }};
     // A virtual WAV header lets the same streaming decoder/resampler consume
@@ -103,12 +103,12 @@ private:
     // Prime before publishing the new voice. The device callback never reads
     // files, seeks, initialises codecs or waits for a decoding thread to finish.
     while(ma_pcm_rb_available_write(&ring) >= decode_frames && fill()) {}
-    worker = std::jthread{[this](std::stop_token stop) {
+    worker = std::jthread{[this](std::stop_token stop){
       try {
         for(;;) {
           {
             std::unique_lock lock{mutex};
-            changed.wait(lock,stop,[&] { return ended || ma_pcm_rb_available_write(&ring) >= decode_frames; });
+            changed.wait(lock,stop,[&]{ return ended || ma_pcm_rb_available_write(&ring) >= decode_frames; });
             if(stop.stop_requested() || ended) return;
           }
           if(!fill()) return;
@@ -175,14 +175,14 @@ std::string lowercase(std::string value) {
 std::optional<unsigned int> track_number(std::filesystem::path const &path) {
   auto name{lowercase(path.stem().string())};
   if(name.starts_with("track")) name.erase(0,5);
-  std::erase_if(name,[](char c) { return c == ' ' || c == '-' || c == '_'; });
+  std::erase_if(name,[](char c){ return c == ' ' || c == '-' || c == '_'; });
   unsigned int number{0};
   auto const parsed{std::from_chars(name.data(),name.data() + name.size(),number)};
   if(parsed.ec != std::errc{} || parsed.ptr != name.data() + name.size() || !number || number > 99) return {};
   return number;
 }
 
-} // namespace
+} // anonymous namespace
 
 struct cd_player::implementation {
   std::optional<resources::cd_image> image;
@@ -213,7 +213,7 @@ cd_player::~cd_player() = default;
 bool cd_player::contains(unsigned int number) const {
   if(!state->image) return state->files.contains(number);
   auto const tracks{state->image->tracks()};
-  return std::ranges::any_of(tracks,[&](auto const &track) { return track.number == number && track.audio; });
+  return std::ranges::any_of(tracks,[&](auto const &track){ return track.number == number && track.audio; });
 }
 bool cd_player::play(unsigned int number) {
   stop();

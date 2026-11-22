@@ -17,22 +17,22 @@ screen_overlay decode_planner_panel(std::span<uint8_t const> const executable) {
   uint8_t repeat{0}, enabled_planes{15};
   bool mask_port{false};
   screen_overlay result;
-  auto const low_ink{[&](uint8_t const value) { ink = (ink & ~uint32_t{255}) | value; }};
-  auto const write{[&](unsigned int const at, uint8_t const value) {
+  auto const low_ink{[&](uint8_t const value){ ink = (ink & ~uint32_t{255}) | value; }};
+  auto const write{[&](unsigned int const at, uint8_t const value){
     if(at >= plane_pixels) throw std::runtime_error{"compiled panel writes outside its image"};
     for(unsigned int plane{0}; plane != 4; ++plane) if(enabled_planes & (1u << plane)) {
       result.image.write(at * 4 + plane,value);
       result.coverage.pixels[at * 4 + plane] = 255;
     }
   }};
-  auto const run{[&](unsigned int const bytes) {
+  auto const run{[&](unsigned int const bytes){
     for(unsigned int channel{0}; channel != bytes; ++channel) write(pixel++,static_cast<uint8_t>(ink >> (channel * 8)));
   }};
   unsigned int constexpr paint_budget{65536};
   for(unsigned int step{0}; step != paint_budget && cursor < paint_end; ++step) {
     unsigned int const operation{cursor};
     switch(source.byte(cursor++)) {
-    case 0x8b: // Start the stream at its framebuffer origin (EDI = EBP).
+    case 0x8b:                                                                 // Start the stream at its framebuffer origin (EDI = EBP).
       if(source.byte(cursor++) != 0xfd) throw std::runtime_error{"unknown compiled panel origin"};
       pixel = 0;
       break;
@@ -41,7 +41,7 @@ screen_overlay decode_planner_panel(std::span<uint8_t const> const executable) {
       count = 0;
       break;
     case 0xb0: low_ink(source.byte(cursor++));break;
-    case 0x8a: // Duplicate the low ink byte into the second byte for a word run.
+    case 0x8a:                                                                 // Duplicate the low ink byte into the second byte for a word run.
       if(source.byte(cursor++) != 0xe0) throw std::runtime_error{"unknown compiled panel ink copy"};
       ink = (ink & ~uint32_t{0xff00}) | ((ink & 255) << 8);
       break;
@@ -51,7 +51,7 @@ screen_overlay decode_planner_panel(std::span<uint8_t const> const executable) {
     case 0xb3: repeat = source.byte(cursor++);break;
     case 0xb8: ink = source.le32(cursor);cursor += 4;break;
     case 0xb9: count = source.le32(cursor);cursor += 4;break;
-    case 0xbb: // Fixed auxiliary value from the compiled painter; no output dependency.
+    case 0xbb:                                                                 // Fixed auxiliary value from the compiled painter; no output dependency.
       if(source.le32(cursor) != 1) throw std::runtime_error{"unknown compiled panel auxiliary value"};
       cursor += 4;
       break;
@@ -111,7 +111,7 @@ screen_overlay decode_planner_panel(std::span<uint8_t const> const executable) {
         if(enabled_planes > 15) throw std::runtime_error{"compiled panel has an invalid VGA plane mask"};
       } else if(source.byte(masks++) != 2) throw std::runtime_error{"compiled panel selects an unknown VGA register"};
       break;
-    case 0x5d: case 0x5f: case 0x5e: break; // End of the fixed artwork routine.
+    case 0x5d: case 0x5f: case 0x5e: break;                                    // End of the fixed artwork routine.
     case 0xc3:
       if(cursor != paint_end) throw std::runtime_error{"compiled panel ended before its declared extent"};
       return result;
@@ -148,9 +148,9 @@ std::array<uint8_t,256 * 3> planner_artwork::colours(std::span<uint8_t const> co
   return result;
 }
 std::string const &planner_artwork::region(std::string_view const world) const {
-  auto const upper{[](char const value) { return value >= 'a' && value <= 'z' ? static_cast<char>(value - ('a' - 'A')) : value; }};
+  auto const upper{[](char const value){ return value >= 'a' && value <= 'z' ? static_cast<char>(value - ('a' - 'A')) : value; }};
   for(unsigned int index{1}; index != region_names.size(); ++index) {
-    if(world.size() >= 3 && std::ranges::equal(world.substr(0,3),std::string_view{region_names[index]}.substr(0,3),[&](char const a, char const b) { return upper(a) == upper(b); })) return region_names[index];
+    if(world.size() >= 3 && std::ranges::equal(world.substr(0,3),std::string_view{region_names[index]}.substr(0,3),[&](char const a, char const b){ return upper(a) == upper(b); })) return region_names[index];
   }
   return region_names.front();
 }

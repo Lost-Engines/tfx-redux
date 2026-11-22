@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -34,7 +35,7 @@ int main(int const argc, char const *const argv[]) try {
     scene.show_actor(slot[kind],false);
   }
   int phase{-1};unsigned int emitted{0},queued{0},drawn{0};
-  scene.set_effect_sink([&](tfx::world::effect_record const &request) {
+  scene.set_effect_sink([&](tfx::world::effect_record const &request){
     ++emitted;
     std::cout << phase << ' ' << std::to_underlying(request.kind) << ' ' << request.position.x << ' ' << request.position.y << ' ' << request.position.z << '\n';
     auto const slot{effects.spawn(vec3<int32_t>{request.position},request.kind)};
@@ -45,8 +46,8 @@ int main(int const argc, char const *const argv[]) try {
   auto const camera{tfx::render::inspection_camera(origin + vec3d{0,-500,-1500},0,0)};
   vec3<int32_t> const camera_origin{camera.position};
   for(phase = 0; phase != static_cast<int>(animation_frames); ++phase) {
-    scene.advance(8); // One native animation advance, with bounded retained backlog.
-    scene.draw(renderer,camera,1,[&] {
+    scene.advance(8);                                                          // One native animation advance, with bounded retained backlog.
+    scene.draw(renderer,camera,1,[&]{
       for(auto const slot : effects.active_slots()) {
         ++queued;
         auto const &effect{effects.record(slot)};
@@ -57,4 +58,4 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!emitted || !queued || !drawn) throw std::runtime_error{"authored scenery effect did not reach its same-frame draw queue"};
   std::cerr << "Controlled factory scene: " << emitted << " authored effects, " << queued << " queued pool instances, " << drawn << " drawn primitives over " << animation_frames << " frames\n";
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

@@ -13,6 +13,8 @@ auto cheat_code::press(cheat_key const key, bool const right_shift)->bool {
   }
   return true;
 }
-auto cheat_code::value() const->cheat_state const& { return state; }
+auto cheat_code::value() const->cheat_state const& {
+  return state;
+}
 
 } // namespace tfx::flight

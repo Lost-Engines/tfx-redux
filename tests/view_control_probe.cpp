@@ -33,7 +33,7 @@ int main() {
       views.press(static_cast<view_key>(key),context);
     }
     auto const &state{views.value()};
-    auto const put{[](auto const value) { std::cout << static_cast<int32_t>(value) << ' '; }};
+    auto const put{[](auto const value){ std::cout << static_cast<int32_t>(value) << ' '; }};
     put(state.current);put(state.previous);put(state.written);put(state.read);
     for(auto const view : state.queue) put(view);
     put(state.offset.x);put(state.offset.y);put(state.pending_offset.x);put(state.pending_offset.y);put(state.saved_offset.x);put(state.saved_offset.y);

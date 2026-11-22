@@ -66,10 +66,18 @@ void unpack(std::span<uint8_t const> const source, std::span<uint8_t> const targ
 
 } // anonymous namespace
 
-video_recorder::video_recorder() { output.exceptions(std::ios::badbit | std::ios::failbit); }
-video_recorder::~video_recorder() { try { finish(); } catch(...) {} }
-bool video_recorder::active() const { return output.is_open(); }
-uint64_t video_recorder::frame_count() const { return frames; }
+video_recorder::video_recorder() {
+  output.exceptions(std::ios::badbit | std::ios::failbit);
+}
+video_recorder::~video_recorder() {
+  try { finish(); } catch(...) {}
+}
+bool video_recorder::active() const {
+  return output.is_open();
+}
+uint64_t video_recorder::frame_count() const {
+  return frames;
+}
 void video_recorder::begin(std::filesystem::path const &path) {
   finish();output.clear();frames = 0;previous.clear();previous_size = {0,0};
   output.open(path,std::ios::binary | std::ios::trunc);
@@ -80,7 +88,7 @@ void video_recorder::append(render::framebuffer const &image, render::dac_palett
   if(!active()) throw std::runtime_error{"Redux video recorder is not open"};
   if(image.pixels.size() != render::framebuffer::pixel_count(image.size)) throw std::invalid_argument{"recorded image dimensions do not match its pixels"};
   if(duration.count() <= 0 || duration > maximum_frame_duration) throw std::invalid_argument{"invalid Redux video frame duration"};
-  if(!image.hud_coverage.empty() && image.hud_coverage.size()!=image.pixels.size()) throw std::invalid_argument{"recorded HUD dimensions do not match its pixels"};
+  if(!image.hud_coverage.empty() && image.hud_coverage.size() != image.pixels.size()) throw std::invalid_argument{"recorded HUD dimensions do not match its pixels"};
   auto compressed{pack(image.pixels)};
   auto method{encoding::pixels};
   if(previous_size == image.size) {
@@ -92,7 +100,7 @@ void video_recorder::append(render::framebuffer const &image, render::dac_palett
   std::array<uint8_t,frame_header_bytes> header{};
   store(header,0,static_cast<unsigned int>(image.size.x),4);store(header,4,static_cast<unsigned int>(image.size.y),4);
   store(header,8,static_cast<uint64_t>(duration.count()),8);store(header,16,compressed.size(),4);header[20] = std::to_underlying(method);
-  header[21]=!image.hud_coverage.empty();
+  header[21] = !image.hud_coverage.empty();
   write(output,header);write(output,palette);write(output,compressed);
   if(!image.hud_coverage.empty()) {
     auto const optical{pack(image.hud_coverage)};
@@ -119,12 +127,14 @@ video_playback::video_playback(std::filesystem::path const &path) {
   if(length < header_bytes) throw std::runtime_error{"truncated Redux video header"};
   input.seekg(0);
   std::array<uint8_t,header_bytes> header{};read(input,header);
-  version=static_cast<uint32_t>(load(header,8,4));
-  if(!std::ranges::equal(std::span{header}.first(signature.size()),signature) || (version!=1 && version!=format_version) || load(header,12,4) != 0) throw std::runtime_error{"unsupported Redux video header"};
+  version = static_cast<uint32_t>(load(header,8,4));
+  if(!std::ranges::equal(std::span{header}.first(signature.size()),signature) || (version != 1 && version != format_version) || load(header,12,4) != 0) throw std::runtime_error{"unsupported Redux video header"};
   frames = remaining = load(header,16,8);bytes_remaining = static_cast<uint64_t>(length) - header_bytes;
   if(frames > bytes_remaining / (frame_header_bytes + palette_bytes + 1) || (!frames && bytes_remaining)) throw std::runtime_error{"invalid Redux video frame count"};
 }
-uint64_t video_playback::frame_count() const { return frames; }
+uint64_t video_playback::frame_count() const {
+  return frames;
+}
 std::optional<video_frame> video_playback::next() {
   if(!remaining) return {};
   if(bytes_remaining < frame_header_bytes + palette_bytes) throw std::runtime_error{"truncated Redux video frame"};
@@ -136,7 +146,7 @@ std::optional<video_frame> video_playback::next() {
   auto const duration{load(header,8,8)}, count{load(header,16,4)};
   if(!duration || duration > static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(maximum_frame_duration).count()) || count > pixels + (pixels + 127) / 128 || count > bytes_remaining - frame_header_bytes - palette_bytes) throw std::runtime_error{"invalid Redux video frame length"};
   auto const method{static_cast<encoding>(header[20])};
-  if((method != encoding::pixels && method != encoding::difference) || (version==1 ? load(header,21,3)!=0 : header[21]>1 || load(header,22,2)!=0) || (method == encoding::difference && (remaining == frames || previous.size != size))) throw std::runtime_error{"invalid Redux video frame encoding"};
+  if((method != encoding::pixels && method != encoding::difference) || (version == 1 ? load(header,21,3) != 0 : header[21] > 1 || load(header,22,2) != 0) || (method == encoding::difference && (remaining == frames || previous.size != size))) throw std::runtime_error{"invalid Redux video frame encoding"};
   video_frame result{
     .image{},
     .palette{},
@@ -146,14 +156,14 @@ std::optional<video_frame> video_playback::next() {
   std::vector<uint8_t> compressed(static_cast<size_t>(count));read(input,compressed);unpack(compressed,result.image.pixels);
   if(method == encoding::difference) for(size_t at{0}; at != pixels; ++at) result.image.pixels[at] ^= previous.pixels[at];
   bytes_remaining -= frame_header_bytes + palette_bytes + count;
-  if(version>=2 && header[21]) {
-    if(bytes_remaining<4) throw std::runtime_error{"truncated Redux optical layer"};
-    std::array<uint8_t,4> length{};read(input,length);bytes_remaining-=4;
+  if(version >= 2 && header[21]) {
+    if(bytes_remaining < 4) throw std::runtime_error{"truncated Redux optical layer"};
+    std::array<uint8_t,4> length{};read(input,length);bytes_remaining -= 4;
     auto const optical_count{load(length,0,4)};
-    if(!optical_count || optical_count>pixels+(pixels+127)/128 || optical_count>bytes_remaining) throw std::runtime_error{"invalid Redux optical layer length"};
+    if(!optical_count || optical_count > pixels + (pixels + 127) / 128 || optical_count > bytes_remaining) throw std::runtime_error{"invalid Redux optical layer length"};
     compressed.resize(static_cast<size_t>(optical_count));read(input,compressed);
     result.image.hud_coverage.resize(pixels);unpack(compressed,result.image.hud_coverage);
-    bytes_remaining-=optical_count;
+    bytes_remaining -= optical_count;
   }
   previous = result.image;--remaining;
   if(!remaining && bytes_remaining) throw std::runtime_error{"trailing data after Redux video frames"};

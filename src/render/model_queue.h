@@ -2,8 +2,8 @@
 
 #include <array>
 #include <cstdint>
-#include <vector>
 #include <span>
+#include <vector>
 #include "math/attitude.h"
 
 namespace tfx::render {

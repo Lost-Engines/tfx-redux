@@ -16,7 +16,7 @@ target_binding bind_target(vec3<int32_t> const &position,
   };
   unsigned int constexpr actor_cell_shift{world::cell_shift + actors::position_fraction_bits};
   uint32_t constexpr half_cell{uint32_t{1} << (actor_cell_shift - 1)};
-  auto const centre{[](int16_t const value) {
+  auto const centre{[](int16_t const value){
     return std::bit_cast<int32_t>((static_cast<uint32_t>(value) << actor_cell_shift) + half_cell);
   }};
   // Actor searches truncate cells to signed words; terrain retains dwords.
@@ -24,7 +24,7 @@ target_binding bind_target(vec3<int32_t> const &position,
     centre(math::signed_word(static_cast<uint16_t>(cell.x))),
     centre(math::signed_word(static_cast<uint16_t>(cell.y))),
   };
-  auto const matches{[&](vec3<int32_t> const &candidate) {
+  auto const matches{[&](vec3<int32_t> const &candidate){
     return candidate.x == point.x && candidate.z == point.y;
   }};
   for(unsigned int index{0}; index != fixed.size(); ++index)

@@ -8,7 +8,7 @@ namespace tfx::platform {
 auto save_screenshot(std::filesystem::path const &directory,
     render::framebuffer const &image, render::dac_palette const &colours)->std::filesystem::path {
   unsigned int number{0};
-  auto filename{[&] { return directory / std::format("GRAB_{:02}.LBM",number); }};
+  auto filename{[&]{ return directory / std::format("GRAB_{:02}.LBM",number); }};
   auto path{filename()};
   while(std::filesystem::exists(path)) { ++number;path = filename(); }
   auto const encoded{render::encode_ilbm(image,colours)};

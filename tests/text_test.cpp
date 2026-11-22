@@ -5,7 +5,9 @@
 
 namespace {
 
-void require(bool const condition, char const *const message) { if(!condition) throw std::runtime_error{message}; }
+void require(bool const condition, char const *const message) {
+  if(!condition) throw std::runtime_error{message};
+}
 template<typename function> void rejects(function const &action) {
   try { action(); } catch(std::runtime_error const&) { return; }
   throw std::runtime_error{"invalid text was accepted"};
@@ -35,11 +37,11 @@ int main() try {
   text = tfx::presentation::prepare_text(block,state,fonts);
   require(text.lines.size() == 2 && text.lines[1].text == "C","bare native CR must retain its two-byte skip");
   block.text = "discard^note.txt trailing";
-  text = tfx::presentation::prepare_text(block,state,fonts,[](std::string_view const name) { require(name == "note.txt","external filename boundary differs");return std::string{"hello\n"}; });
+  text = tfx::presentation::prepare_text(block,state,fonts,[](std::string_view const name){ require(name == "note.txt","external filename boundary differs");return std::string{"hello\n"}; });
   require(text.lines.size() == 1 && text.lines[0].text == "HELLO","external text must replace the preceding block");
-  block.text = "%missing";rejects([&] { tfx::presentation::prepare_text(block,state,fonts); });
-  block.text = std::string(80,'A');rejects([&] { tfx::presentation::prepare_text(block,state,fonts); });
-  block.text = "^self";rejects([&] { tfx::presentation::prepare_text(block,state,fonts,[](std::string_view) { return std::string{"^self"}; }); });
+  block.text = "%missing";rejects([&]{ tfx::presentation::prepare_text(block,state,fonts); });
+  block.text = std::string(80,'A');rejects([&]{ tfx::presentation::prepare_text(block,state,fonts); });
+  block.text = "^self";rejects([&]{ tfx::presentation::prepare_text(block,state,fonts,[](std::string_view){ return std::string{"^self"}; }); });
   block.text = "A A";block.alignment = tfx::presentation::text_alignment::left;block.position = {2,3};
   text = tfx::presentation::prepare_text(block,state,fonts);
   tfx::render::framebuffer output,coverage;output.pixels.fill(99);

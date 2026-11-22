@@ -1,8 +1,8 @@
 #pragma once
 
 #include "cockpit/instrument_assets.h"
-#include "render/clipping.h"
 #include "render/camera.h"
+#include "render/clipping.h"
 
 namespace tfx::cockpit {
 
@@ -34,9 +34,9 @@ public:
   // window with a small border; the optical axis falls below its centre.
   // Aiming projection must use this same origin/focal length, so resizing the
   // layout never moves the horizon or world-space target cues off their rays.
-  static constexpr double glass_focal_distance{450};
-  static constexpr vec2d glass_origin{160,76};
-  static constexpr std::array<vec3d,6> glass_vertices{{
+  static double constexpr glass_focal_distance{450};
+  static vec2d constexpr glass_origin{160,76};
+  static std::array<vec3d,6> constexpr glass_vertices{{
     {-.1375,-.13,.5025},{.1375,-.13,.5025},{.15,-.12,.515},
     {.1825,.0525,.6625},{-.1825,.0525,.6625},{-.15,-.12,.515},
   }};
@@ -55,8 +55,12 @@ class capture_hud {
   render::framebuffer &image;
   vector_hud *previous;
 public:
-  capture_hud(render::framebuffer &image, vector_hud *sink) : image{image}, previous{image.hud_capture} { image.hud_capture=sink; }
-  ~capture_hud() { image.hud_capture=previous; }
+  capture_hud(render::framebuffer &image, vector_hud *sink) : image{image}, previous{image.hud_capture} {
+    image.hud_capture = sink;
+  }
+  ~capture_hud() {
+    image.hud_capture = previous;
+  }
   capture_hud(capture_hud const&)=delete;
   capture_hud &operator=(capture_hud const&)=delete;
 };

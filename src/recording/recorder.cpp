@@ -13,10 +13,18 @@ uint32_t position(std::ofstream &output) {
 }
 }
 
-recorder::recorder() { output.exceptions(std::ios::badbit | std::ios::failbit); }
-recorder::~recorder() { try { finish(); } catch(...) {} }
-bool recorder::active() const { return output.is_open(); }
-uint16_t recorder::frame_count() const { return frames; }
+recorder::recorder() {
+  output.exceptions(std::ios::badbit | std::ios::failbit);
+}
+recorder::~recorder() {
+  try { finish(); } catch(...) {}
+}
+bool recorder::active() const {
+  return output.is_open();
+}
+uint16_t recorder::frame_count() const {
+  return frames;
+}
 void recorder::begin(std::filesystem::path const &path) {
   finish();output.clear();
   dictionary = {};handles.clear();frames = 0;

@@ -12,8 +12,12 @@ osl_resource::osl_resource(resources::bytes source) : bytes{std::move(source)} {
   if(device() != osl_device::fm && device() != osl_device::lapc && device() != osl_device::sound_canvas) throw std::runtime_error{"unsupported OSL device"};
   data.slice(0x48,song_count() * 4u + 2u);
 }
-osl_device osl_resource::device() const { return static_cast<osl_device>(bytes[7]); }
-unsigned int osl_resource::song_count() const { return resources::binary_view{bytes}.le16(0x26); }
+osl_device osl_resource::device() const {
+  return static_cast<osl_device>(bytes[7]);
+}
+unsigned int osl_resource::song_count() const {
+  return resources::binary_view{bytes}.le16(0x26);
+}
 osl_song osl_resource::song(unsigned int const index) const {
   if(index >= song_count()) throw std::out_of_range{"OSL song index"};
   auto const offset{resources::binary_view{bytes}.le32(0x48 + index * 4)};
@@ -23,7 +27,9 @@ osl_song osl_resource::song(unsigned int const index) const {
     .offset{offset},
   };
 }
-unsigned int osl_resource::instrument_count() const { return resources::binary_view{bytes}.le16(0x48 + song_count() * 4); }
+unsigned int osl_resource::instrument_count() const {
+  return resources::binary_view{bytes}.le16(0x48 + song_count() * 4);
+}
 std::span<uint8_t const> osl_resource::instrument(unsigned int const index) const {
   if(index >= instrument_count()) throw std::out_of_range{"OSL instrument index"};
   resources::binary_view const data{bytes};
@@ -57,13 +63,27 @@ std::span<uint8_t const> osl_resource::instrument_parameters(unsigned int const 
   // is nonzero. The zero-count form still returns the original record base.
   return data.subspan(resources::binary_view{data}.le16(0) ? 6u : 0u);
 }
-unsigned int osl_song::channels() const { return resources::binary_view{resource}.le16(offset + 0x12); }
-unsigned int osl_song::order_count() const { return resources::binary_view{resource}.le16(offset + 0x14); }
-unsigned int osl_song::loop_order() const { return resources::binary_view{resource}.le16(offset + 0x10); }
-unsigned int osl_song::pattern_count() const { return resources::binary_view{resource}.le16(offset + 0x4e); }
-uint16_t osl_song::clock_rate() const { return resources::binary_view{resource}.le16(offset + 0x2a); }
-uint8_t osl_song::speed() const { return resources::binary_view{resource}.byte(offset + 0x2c); }
-uint8_t osl_song::transpose() const { return resources::binary_view{resource}.byte(offset + 0x2e); }
+unsigned int osl_song::channels() const {
+  return resources::binary_view{resource}.le16(offset + 0x12);
+}
+unsigned int osl_song::order_count() const {
+  return resources::binary_view{resource}.le16(offset + 0x14);
+}
+unsigned int osl_song::loop_order() const {
+  return resources::binary_view{resource}.le16(offset + 0x10);
+}
+unsigned int osl_song::pattern_count() const {
+  return resources::binary_view{resource}.le16(offset + 0x4e);
+}
+uint16_t osl_song::clock_rate() const {
+  return resources::binary_view{resource}.le16(offset + 0x2a);
+}
+uint8_t osl_song::speed() const {
+  return resources::binary_view{resource}.byte(offset + 0x2c);
+}
+uint8_t osl_song::transpose() const {
+  return resources::binary_view{resource}.byte(offset + 0x2e);
+}
 uint8_t osl_song::channel_volume(unsigned int const channel) const {
   if(channel >= osl_channels) throw std::out_of_range{"OSL channel index"};
   return resources::binary_view{resource}.byte(offset + 0x16 + channel);
@@ -88,13 +108,17 @@ osl_pattern osl_song::pattern(unsigned int const index) const {
   };
 }
 osl_pattern_reader::osl_pattern_reader(osl_pattern const pattern) : pattern{pattern} {}
-unsigned int osl_pattern_reader::offset() const { return position; }
-unsigned int osl_pattern_reader::rows_read() const { return row; }
+unsigned int osl_pattern_reader::offset() const {
+  return position;
+}
+unsigned int osl_pattern_reader::rows_read() const {
+  return row;
+}
 osl_row osl_pattern_reader::next(unsigned int const channels) {
   if(channels > osl_channels || pattern.stored_channels > osl_channels) throw std::runtime_error{"OSL pattern exceeds sixteen channels"};
   if(row == pattern.rows) throw std::out_of_range{"OSL pattern row"};
   resources::binary_view const data{pattern.bytes};
-  auto const byte{[&] { return data.byte(position++); }};
+  auto const byte{[&]{ return data.byte(position++); }};
   osl_row result{};
   if(!(pattern.flags & 0x8000)) {
     for(auto &cell : result) {

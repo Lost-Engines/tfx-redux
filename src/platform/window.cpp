@@ -87,8 +87,8 @@ window::window(unsigned int const scale, vec2<int> const &size, bool const follo
   glEnable(GL_TEXTURE_2D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
   wheel_offsets.emplace(handle.get(),vec2d{0,0});
-  glfwSetScrollCallback(handle.get(),[](GLFWwindow *target, double x, double y) {
-    if(auto entry{wheel_offsets.find(target)}; entry!=wheel_offsets.end()) entry->second += vec2d{x,y};
+  glfwSetScrollCallback(handle.get(),[](GLFWwindow *target, double x, double y){
+    if(auto entry{wheel_offsets.find(target)}; entry != wheel_offsets.end()) entry->second += vec2d{x,y};
   });
   window_instances.emplace(handle.get(),this);
   glfwSetKeyCallback(handle.get(),dispatch_key);
@@ -108,7 +108,9 @@ GLFWwindow *window::get() const {
 bool window::focused() const {
   return glfwGetWindowAttrib(handle.get(),GLFW_FOCUSED) == GLFW_TRUE;
 }
-vec2d window::take_scroll() { return std::exchange(wheel_offsets.at(handle.get()),vec2d{0,0}); }
+vec2d window::take_scroll() {
+  return std::exchange(wheel_offsets.at(handle.get()),vec2d{0,0});
+}
 GLFWkeyfun window::set_key_callback(GLFWkeyfun const callback) {
   return std::exchange(key_callback,callback);
 }
@@ -160,8 +162,9 @@ void window::set_fullscreen(bool const enabled) {
       if(overlap > best_overlap) { monitor = monitors[i];best_overlap = overlap; }
     }
   }
-  if(monitor) if(auto const *mode{glfwGetVideoMode(monitor)})
+  if(monitor) if(auto const *mode{glfwGetVideoMode(monitor)}) {
     glfwSetWindowMonitor(host,monitor,0,0,mode->width,mode->height,mode->refreshRate);
+  }
 }
 bool window::poll() {
   glfwPollEvents();
@@ -200,14 +203,14 @@ vec2<int> const &window::resolution() const {
 }
 void window::configure(vec2<int> const &size, bool const automatic, std::optional<unsigned int> const scale) {
   render::framebuffer::pixel_count(size);
-  if(scale && *scale>16) throw std::invalid_argument{"window scale must be 0..16"};
-  render_size=vec2<int>{size};follow_window=automatic;
+  if(scale && *scale > 16) throw std::invalid_argument{"window scale must be 0..16"};
+  render_size = vec2<int>{size};follow_window = automatic;
   if(!scale || glfwGetWindowMonitor(handle.get())) return;
   if(*scale) {
     glfwRestoreWindow(handle.get());
     auto const base{automatic ? vec2<int>{render::screen_width,render::screen_height} : vec2<int>{size}};
-    glfwSetWindowSize(handle.get(),base.x*static_cast<int>(*scale),base.y*static_cast<int>(*scale));
-  } else if(glfwGetPlatform()==GLFW_PLATFORM_WAYLAND) {
+    glfwSetWindowSize(handle.get(),base.x * static_cast<int>(*scale),base.y * static_cast<int>(*scale));
+  } else if(glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
     // The compositor chooses the work area and monitor; Wayland does not
     // expose window positions. Automatic rendering follows its size event.
     glfwMaximizeWindow(handle.get());
@@ -215,17 +218,17 @@ void window::configure(vec2<int> const &size, bool const automatic, std::optiona
     glfwRestoreWindow(handle.get());
     int x{0},y{0},width{0},height{0};glfwGetWindowPos(handle.get(),&x,&y);glfwGetWindowSize(handle.get(),&width,&height);
     auto *monitor{glfwGetPrimaryMonitor()};int count{0};auto **monitors{glfwGetMonitors(&count)};
-    for(int i=0;i<count;++i) {
+    for(int i=0;i < count;++i) {
       int mx{0},my{0},mw{0},mh{0};glfwGetMonitorWorkarea(monitors[i],&mx,&my,&mw,&mh);
-      if(x+width/2>=mx && x+width/2<mx+mw && y+height/2>=my && y+height/2<my+mh) {monitor=monitors[i];break;}
+      if(x + width / 2 >= mx && x + width / 2 < mx + mw && y + height / 2 >= my && y + height / 2 < my + mh) {monitor = monitors[i];break;}
     }
     if(!monitor) return;
     int left{0},top{0},right{0},bottom{0};glfwGetMonitorWorkarea(monitor,&x,&y,&width,&height);
     glfwGetWindowFrameSize(handle.get(),&left,&top,&right,&bottom);
-    width=std::max(1,width-left-right);height=std::max(1,height-top-bottom);
+    width = std::max(1,width - left - right);height = std::max(1,height - top - bottom);
     auto const fitted{automatic ? display_area{{0,0},{width,height}} : viewport(width,height,size)};
     glfwSetWindowSize(handle.get(),fitted.size.x,fitted.size.y);
-    glfwSetWindowPos(handle.get(),x+left+fitted.position.x,y+top+fitted.position.y);
+    glfwSetWindowPos(handle.get(),x + left + fitted.position.x,y + top + fitted.position.y);
   }
 }
 void window::present_frame(render::framebuffer const &image, render::palette const &colours) {

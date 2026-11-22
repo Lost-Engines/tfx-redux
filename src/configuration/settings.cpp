@@ -10,7 +10,9 @@ namespace tfx::configuration {
 namespace {
 
 
-bool space(char const value) { return value == ' ' || value == '\t' || value == '\r' || value == '\n' || value == '\v' || value == '\f'; }
+bool space(char const value) {
+  return value == ' ' || value == '\t' || value == '\r' || value == '\n' || value == '\v' || value == '\f';
+}
 std::string_view skip_space(std::string_view value) {
   while(!value.empty() && space(value.front())) value.remove_prefix(1);
   return value;
@@ -27,7 +29,9 @@ std::optional<int32_t> scan_integer(std::string_view &value) {
   }
   return std::bit_cast<int32_t>(negative ? 0u - number : number);
 }
-int32_t integer(std::string_view value) { return scan_integer(value).value_or(0); }
+int32_t integer(std::string_view value) {
+  return scan_integer(value).value_or(0);
+}
 settings fallback() {
   settings state;
   state.detail = 0;
@@ -96,7 +100,7 @@ settings parse(std::string_view const text) {
     if(end == std::string_view::npos) break;
     remaining.remove_prefix(end + 1);
   }
-  if(state.sound_effects == 1 && state.music == 0) state.music = 1; // Native coupled SB driver selection.
+  if(state.sound_effects == 1 && state.music == 0) state.music = 1;            // Native coupled SB driver selection.
   return state;
 }
 

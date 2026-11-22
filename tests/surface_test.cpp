@@ -1,4 +1,3 @@
-#include "fixture_check.h"
 #include <array>
 #include <cstdlib>
 #include <fstream>
@@ -6,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include "actors/surface.h"
+#include "fixture_check.h"
 
 namespace {
 

@@ -1,8 +1,8 @@
 #pragma once
 
+#include "models/shape.h"
 #include "render/camera.h"
 #include "render/colour_remap.h"
-#include "models/shape.h"
 
 namespace tfx::render {
 

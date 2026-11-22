@@ -1,11 +1,11 @@
 #include "rounded_model_polygon.h"
+#include <bit>
 #include "render/integer_model_polygon.h"
 #include "render/integer_polygon.h"
-#include "render/pattern_raster.h"
-#include "render/rounded_curve.h"
 #include "render/model_projection.h"
 #include "render/near_clip.h"
-#include <bit>
+#include "render/pattern_raster.h"
+#include "render/rounded_curve.h"
 
 namespace tfx::render {
 namespace {
@@ -13,7 +13,7 @@ namespace {
 bool rounded_facing(std::span<vec2<int16_t> const> const screen) {
   // BC660/BCA58 use dword differences except for the final Y difference,
   // which is subtracted as a word before sign extension.
-  auto const &a{screen[0]},&b{screen[1]},&c{screen[2]};
+  auto const &a{screen[0]}, &b{screen[1]}, &c{screen[2]};
   int32_t const y1{b.y - a.y},x2{c.x - a.x},x1{b.x - a.x};
   int32_t const y2{math::signed_word(static_cast<uint16_t>(c.y - a.y))};
   return std::bit_cast<int32_t>(static_cast<uint32_t>(x1) * static_cast<uint32_t>(y2) - static_cast<uint32_t>(y1) * static_cast<uint32_t>(x2)) >= 0;
@@ -34,7 +34,7 @@ bool rounded_model_polygon(framebuffer &output, std::span<models::model_vertex c
       screen[i] = *projected;
     }
     if(!rounded_facing(screen)) return true;
-    auto const &a{screen[0]},&b{screen[1]},&c{screen[2]};
+    auto const &a{screen[0]}, &b{screen[1]}, &c{screen[2]};
     auto const curve{rounded_arc<3>(vec2<int32_t>{a},vec2<int32_t>{b},vec2<int32_t>{c})};
     std::array<vec2<int16_t>,curve.size()> points;
     for(unsigned int i{0}; i != points.size(); ++i) points[i] = vec2<int16_t>{curve[i]};
@@ -58,7 +58,7 @@ bool rounded_model_polygon(framebuffer &output, std::span<models::model_vertex c
     vec3<int32_t> sum;
     for(unsigned int axis{0}; axis != 3; ++axis) sum[axis] = std::bit_cast<int32_t>(static_cast<uint32_t>(camera[i][axis]) + static_cast<uint32_t>(camera[(i + 1) % 4][axis]));
     int32_t const depth{sum.z >> 16};
-    if(!depth) return false; // The original dword IDIV does not complete.
+    if(!depth) return false;                                                   // The original dword IDIV does not complete.
     for(unsigned int axis{0}; axis != 2; ++axis) {
       // BC89F retains its normal-aperture shift even in missile-nose view;
       // unlike B9434, its two immediates are not patched by the wide setter.

@@ -14,7 +14,7 @@ struct aerodynamic_recovery_trigger_context {
 };
 struct aerodynamic_recovery_trigger_result {
   aerodynamic_recovery_result recovery{};
-  bool descent_warning{false}; // Native sound 0x3d and the vector PULL UP HUD shape at 0x6f12.
+  bool descent_warning{false};                                                 // Native sound 0x3d and the vector PULL UP HUD shape at 0x6f12.
 };
 
 // Native 0x991e9..0x992f8: predict crossing zero physical height from current

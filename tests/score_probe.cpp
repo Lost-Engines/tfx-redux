@@ -1,13 +1,13 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include "presentation/scores.h"
 #include "presentation/score_player.h"
+#include "presentation/scores.h"
 #include "resources/archive.h"
 
 namespace {
 tfx::resources::bytes unhex(std::string_view const text) {
-  auto const digit{[](char const value) { return static_cast<unsigned int>(value <= '9' ? value - '0' : value - 'a' + 10); }};
+  auto const digit{[](char const value){ return static_cast<unsigned int>(value <= '9' ? value - '0' : value - 'a' + 10); }};
   tfx::resources::bytes result;
   for(unsigned int at{0}; at < text.size(); at += 2) result.push_back(static_cast<uint8_t>(digit(text[at]) * 16 + digit(text[at + 1])));
   return result;

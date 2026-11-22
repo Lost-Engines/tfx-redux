@@ -1,19 +1,19 @@
 #include "presentations.h"
+#include <algorithm>
+#include <bit>
+#include <charconv>
+#include <cmath>
+#include <iostream>
+#include <stdexcept>
 #include "platform/keyboard.h"
 #include "presentation/frontend.h"
 #include "presentation/menu_player.h"
-#include <bit>
-#include <charconv>
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-#include <stdexcept>
 
 namespace tfx::platform {
 namespace {
 presentation::scene_counters counters(double const seconds) {
   double constexpr pit_hz{1193182}, bios_divisor{65536}, text_divisor{21845};
-  auto const wrapped{[](double const value) { return static_cast<uint32_t>(std::fmod(std::floor(value),4294967296.0)); }};
+  auto const wrapped{[](double const value){ return static_cast<uint32_t>(std::fmod(std::floor(value),4294967296.0)); }};
   return {
     .bios{wrapped(seconds * pit_hz / bios_divisor)},
     .text{wrapped(seconds * pit_hz / text_divisor)},
@@ -69,7 +69,7 @@ bool show_loading_screen(window &window, resources::archive const &game) {
 void play_game(resources::archive const &game, resources::executable_tables const &tables,
   std::filesystem::path const &save_directory, std::string const &language, bool const skip_intro,
   flight_options const &options) {
-  presentation::frontend frontend{game,tables,save_directory,language,skip_intro,[&](presentation::audio_request const &request) {
+  presentation::frontend frontend{game,tables,save_directory,language,skip_intro,[&](presentation::audio_request const &request){
     if(!options.sound) return;
     if(request.device == 0) {
       if(request.operation == 0) options.sound->select_music(request.index);
@@ -81,7 +81,7 @@ void play_game(resources::archive const &game, resources::executable_tables cons
   }};
   frontend_keys controls{frontend,{}};
   bool finished{false};
-  auto const step{[&](double const elapsed, std::optional<vec2<int16_t>> const &position, window *const window) {
+  auto const step{[&](double const elapsed, std::optional<vec2<int16_t>> const &position, window *const window){
     auto const *action{frontend.advance(counters(elapsed),controls.input,position)};
     if(!action) return;
     if(action->kind == presentation::node_kind::quit) { finished = true;return; }
@@ -162,7 +162,7 @@ void play_presentation(resources::archive const &game, resources::executable_tab
   render::framebuffer display;
   render::palette colours;
   bool finished{false};
-  auto const open_menu{[&](std::string const &resource, double const elapsed) {
+  auto const open_menu{[&](std::string const &resource, double const elapsed){
     auto const bytes{game.read("lev/" + resource + ".opt")};
     presentation::menu_program script{std::string_view{reinterpret_cast<char const*>(bytes.data()),bytes.size()}};
     auto const media{game.read(script.animation.empty() ? "iff/raw/" + script.backdrop : "anim/" + script.animation + ".256")};
@@ -172,7 +172,7 @@ void play_presentation(resources::archive const &game, resources::executable_tab
   else session = std::make_unique<presentation::session>(game,tables.presentation_fonts(),tables.text_palette,state,name,function,language);
   scene_keys controls;
   unsigned int frames{0};
-  auto const step{[&](double const elapsed, std::optional<vec2<int16_t>> const &position) {
+  auto const step{[&](double const elapsed, std::optional<vec2<int16_t>> const &position){
     if(menu) {
       bool const done{menu->advance(counters(elapsed).bios,position ? *position : vec2<int16_t>{0,0},controls.input.mouse_buttons & 1,position.has_value())};
       display = menu->image();

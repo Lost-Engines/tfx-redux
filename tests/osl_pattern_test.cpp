@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include "audio/osl_resource.h"
@@ -18,7 +19,7 @@ int main(int const argc, char const *const argv[]) try {
       .rows{static_cast<uint16_t>(flags & (flags & 0x8000 ? 0xfff : 0x7fff))},
       .stored_channels{static_cast<uint16_t>(stored)},
     }};
-    auto const byte{[&](uint8_t const value) { hash = (hash ^ value) * 1099511628211ull; }};
+    auto const byte{[&](uint8_t const value){ hash = (hash ^ value) * 1099511628211ull; }};
     for(unsigned int row{0}; row != (flags & (flags & 0x8000 ? 0xfffu : 0x7fffu)); ++row) {
       auto const cells{reader.next(channels)};
       for(unsigned int channel{0}; channel != channels; ++channel) {
@@ -32,5 +33,5 @@ int main(int const argc, char const *const argv[]) try {
     ++cases;
   }
   if(!cases || !input.eof()) throw std::runtime_error{"invalid native pattern fixture"};
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

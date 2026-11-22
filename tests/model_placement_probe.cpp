@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -17,9 +18,8 @@ int main(int const argc, char const *const argv[]) try {
     input >> origin.x >> origin.y >> origin.z >> anchor.x >> anchor.y >> anchor.z >> heading >> radius;
     auto const result{tfx::world::place_model_part(view,origin,anchor,heading,static_cast<tfx::world::part_position>(placement),radius)};
     int32_t const values[]{result.position.x,result.position.y,result.position.z,result.camera_origin.x,result.camera_origin.y,result.camera_origin.z,result.visible};
-    if(fixture.is_open()) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native model placement mismatch at case " + std::to_string(cases)}; } }
-    else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
+    if(fixture.is_open()) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native model placement mismatch at case " + std::to_string(cases)}; } } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

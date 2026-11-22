@@ -5,7 +5,9 @@
 
 namespace tfx::presentation {
 namespace {
-unsigned int stages(uint8_t const mode) { return mode == 1 ? 40u : mode == 2 ? 80u : 0u; }
+unsigned int stages(uint8_t const mode) {
+  return mode == 1 ? 40u : mode == 2 ? 80u : 0u;
+}
 dac_palette media_palette(std::span<uint8_t const> const media) {
   resources::binary_view const view{media};
   dac_palette result;
@@ -94,10 +96,20 @@ bool scene_player::advance(scene_counters const counters, scene_input &input, se
   return phase == playback_phase::complete;
 }
 
-render::framebuffer const &scene_player::image() const { return display; }
-dac_palette const &scene_player::palette() const { return displayed_colours; }
-render::palette scene_player::colours() const { return render::decode_palette(displayed_colours); }
-playback_phase scene_player::stage() const { return phase; }
-uint16_t scene_player::visible_characters() const { return reveal ? reveal->state().visible : source.text && source.text->reveal ? 0 : caption.characters; }
+render::framebuffer const &scene_player::image() const {
+  return display;
+}
+dac_palette const &scene_player::palette() const {
+  return displayed_colours;
+}
+render::palette scene_player::colours() const {
+  return render::decode_palette(displayed_colours);
+}
+playback_phase scene_player::stage() const {
+  return phase;
+}
+uint16_t scene_player::visible_characters() const {
+  return reveal ? reveal->state().visible : source.text && source.text->reveal ? 0 : caption.characters;
+}
 
 } // namespace tfx::presentation

@@ -6,7 +6,9 @@ namespace {
 using calculation = double;
 uint16_t constexpr waypoint_mode{0}, heading_mode{1}, track_mode{2}, autothrottle_mode{3}, recovery_mode{4};
 float constexpr feet_per_world_unit{8}, metres_per_foot{.30480000376701355f};
-double captured_height(float const height) { return static_cast<double>(static_cast<calculation>(height) * feet_per_world_unit * metres_per_foot); }
+double captured_height(float const height) {
+  return static_cast<double>(static_cast<calculation>(height) * feet_per_world_unit * metres_per_foot);
+}
 } // anonymous namespace
 
 aerodynamic_pilot_key_events press_aerodynamic_pilot_key(aerodynamic_flight &state, damage_state &damage, bool &stick_pressure, aerodynamic_pilot_key const key, aerodynamic_pilot_key_context const &context) {

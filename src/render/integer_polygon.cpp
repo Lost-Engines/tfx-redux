@@ -1,24 +1,30 @@
 #include "integer_polygon.h"
-#include "integer_texture_polygon.h"
 #include <algorithm>
 #include <bit>
 #include <cstdlib>
 #include <optional>
 #include <ranges>
-#include <vector>
 #include <utility>
+#include <vector>
+#include "integer_texture_polygon.h"
 
 namespace tfx::render {
 namespace {
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t wrap(uint32_t const value) { return std::bit_cast<int32_t>(value); }
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t wrap(uint32_t const value) {
+  return std::bit_cast<int32_t>(value);
+}
 struct raster_vertex {
   vec2<int16_t> position;
   uint16_t shade_q8{0};
   vec2<uint16_t> uv_q7{0,0};
 };
 using vertex_list = std::vector<raster_vertex>;
-int reciprocal(int const height) { return height == 1 ? 32767 : 32768 / height; }
+int reciprocal(int const height) {
+  return height == 1 ? 32767 : 32768 / height;
+}
 int32_t edge_initial(uint16_t const start, int32_t const step, int const difference, int const height) {
   return wrap((static_cast<uint32_t>(start) << 16) + 32768u + (difference >= height ? static_cast<uint32_t>(step >> 1) : 0u));
 }
@@ -118,9 +124,15 @@ public:
   explicit edge_walker(edge_chain const &chain) : source{chain} {
     start();
   }
-  int x() const { return index == source.segments.size() ? source.final_x : position >> 16; }
-  uint16_t shade() const { return index == source.segments.size() ? source.final_shade : static_cast<uint16_t>(shade_position >> 16); }
-  vec2<uint16_t> uv() const { return index == source.segments.size() ? vec2<uint16_t>{source.final_uv} : vec2<uint16_t>{static_cast<uint16_t>(uv_position.x >> 16),static_cast<uint16_t>(uv_position.y >> 16)}; }
+  int x() const {
+    return index == source.segments.size() ? source.final_x : position >> 16;
+  }
+  uint16_t shade() const {
+    return index == source.segments.size() ? source.final_shade : static_cast<uint16_t>(shade_position >> 16);
+  }
+  vec2<uint16_t> uv() const {
+    return index == source.segments.size() ? vec2<uint16_t>{source.final_uv} : vec2<uint16_t>{static_cast<uint16_t>(uv_position.x >> 16),static_cast<uint16_t>(uv_position.y >> 16)};
+  }
   void advance() {
     if(index == source.segments.size()) return;
     if(++row == source.segments[index].rows) {
@@ -147,7 +159,9 @@ public:
     uint32_t const integer{value & 65535};
     advance();value = (value & 0xffff0000u) | integer;
   }
-  uint8_t colour() const { return static_cast<uint8_t>(value); }
+  uint8_t colour() const {
+    return static_cast<uint8_t>(value);
+  }
   void advance() {
     if(descending) {
       uint64_t const amount{static_cast<uint64_t>(step) + carry};
@@ -228,7 +242,7 @@ std::vector<polygon_span> integer_polygon_spans(std::span<vec2<int16_t> const> c
     .shade_q8{0},
   });
   std::vector<polygon_span> result;
-  raster(std::move(vertices),minimum,maximum,[&](int const y, edge_walker const &left, edge_walker const &right) {
+  raster(std::move(vertices),minimum,maximum,[&](int const y, edge_walker const &left, edge_walker const &right){
     result.push_back({
       .row{static_cast<int16_t>(y)},
       .left{static_cast<int16_t>(left.x())},
@@ -251,7 +265,7 @@ void integer_gouraud_polygon(framebuffer &output, std::span<indexed_vertex const
     uint16_t right_shade;
   };
   std::vector<shaded_scanline> spans;spans.reserve(screen_height);
-  raster(std::move(source),minimum,maximum,[&](int const y, edge_walker const &left, edge_walker const &right) {
+  raster(std::move(source),minimum,maximum,[&](int const y, edge_walker const &left, edge_walker const &right){
     spans.push_back({
       .row{y},
       .left{left.x()},
@@ -284,7 +298,7 @@ void integer_texture_polygon(framebuffer &output, std::span<textured_vertex cons
     vec2<uint16_t> right_uv_q7;
   };
   std::vector<texture_span> spans;spans.reserve(screen_height);
-  raster(std::move(source),minimum,maximum,[&](int const y, edge_walker const &left, edge_walker const &right) {
+  raster(std::move(source),minimum,maximum,[&](int const y, edge_walker const &left, edge_walker const &right){
     spans.push_back({
       .row{y},
       .left{left.x()},

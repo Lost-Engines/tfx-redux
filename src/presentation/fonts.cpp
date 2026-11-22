@@ -79,8 +79,9 @@ std::array<proportional_layout,font_count> constexpr layouts{{
 fonts::fonts(std::span<uint8_t const> const executable) {
   resources::binary_view const view{executable};
   // C1378's fixed driver font is distinct from the ten presentation styles.
-  for(unsigned int row{0}; row != driver_rows; ++row) for(unsigned int code{0}; code != driver_characters; ++code)
+  for(unsigned int row{0}; row != driver_rows; ++row) for(unsigned int code{0}; code != driver_characters; ++code) {
     driver[row][code] = view.byte(code_file + 0x509e5 + row * driver_characters + code);
+  }
   std::array<unsigned int,font_count> constexpr line_heights{13,9,6,16,12,7,7,18,9,7}, trims{2,0,0,0,0,0,0,2,1,1};
   for(unsigned int style{0}; style != font_count; ++style) {
     auto &font{styles[style]};
@@ -129,8 +130,12 @@ fonts::fonts(std::span<uint8_t const> const executable) {
   }
 }
 
-font_glyph const &fonts::glyph(font_id const style, unsigned char const character) const { return styles.at(style).glyphs[character]; }
-unsigned int fonts::line_height(font_id const style) const { return styles.at(style).line_height; }
+font_glyph const &fonts::glyph(font_id const style, unsigned char const character) const {
+  return styles.at(style).glyphs[character];
+}
+unsigned int fonts::line_height(font_id const style) const {
+  return styles.at(style).line_height;
+}
 int32_t fonts::measure(font_id const style, std::string_view const text) const {
   auto const &font{styles.at(style)};
   uint32_t width{0};

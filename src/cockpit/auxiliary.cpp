@@ -9,12 +9,14 @@ namespace tfx::cockpit {
 auxiliary_lamps::auxiliary_lamps(instrument_assets const &source, resources::archive const &game) : assets{source} {
   for(unsigned int bank{0}; bank != banks.size(); ++bank) banks[bank] = resources::decode_sprites(game.read(assets.auxiliary_banks[bank]));
 }
-auxiliary_animation const &auxiliary_lamps::state() const { return animation; }
+auxiliary_animation const &auxiliary_lamps::state() const {
+  return animation;
+}
 
 void auxiliary_lamps::draw(render::framebuffer &target, auxiliary_state const &state, render::framebuffer *const coverage, render::raster_clip const &clip) {
   // Native 0x8046c..0x806b3, with the afterburner painter at 0x7e288.
   if(state.afterburner_pips > assets.afterburner_pips.size()) throw std::runtime_error{"too many native afterburner indicator pips"};
-  auto const sprite{[&](unsigned int const bank, unsigned int const frame, vec2<int> const &position) {
+  auto const sprite{[&](unsigned int const bank, unsigned int const frame, vec2<int> const &position){
     render::draw_sprite(target,banks.at(bank).at(frame),{static_cast<uint16_t>(position.x + state.offset.x),static_cast<uint16_t>(position.y + state.offset.y)},coverage,clip);
   }};
   unsigned int constexpr refresh_frames{3};

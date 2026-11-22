@@ -1,5 +1,6 @@
-#include <iostream>
 #include <array>
+#include <cstdlib>
+#include <iostream>
 #include <span>
 #include <vector>
 #include "audio/music_clock.h"
@@ -32,5 +33,5 @@ int main() try {
       if(a[index] != (cycles * rate + tfx::simulation::pit_input_hz - 1) / tfx::simulation::pit_input_hz) throw std::runtime_error{"music IRQ sample phase drifted"};
     }
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

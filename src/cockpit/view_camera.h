@@ -15,8 +15,8 @@ struct view_camera_context {
   vec3<int32_t> position_q8{0,0,0};
   vec3f position_f32{0,0,0};
   vec3<math::angle> angles{0,0,0};
-  math::attitude basis{}; // Current renderer basis; Simple can offset it from physics.
-  math::attitude const *body_basis{nullptr}; // Optional physics basis, borrowed for this update.
+  math::attitude basis{};                                                      // Current renderer basis; Simple can offset it from physics.
+  math::attitude const *body_basis{nullptr};                                   // Optional physics basis, borrowed for this update.
   simulation::timer_ticks elapsed{0};
   uint16_t pan{0};
   int16_t ground_height{0};

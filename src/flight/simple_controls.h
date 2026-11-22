@@ -7,7 +7,7 @@
 namespace tfx::flight {
 
 struct simple_control_state {
-  vec3f angular_rate{0,0,0}; // Pitch, heading and roll in the native angle units.
+  vec3f angular_rate{0,0,0};                                                   // Pitch, heading and roll in the native angle units.
   float negative_pitch_limit{0};
   float positive_pitch_limit{0};
   float roll_limit{0};
@@ -27,7 +27,7 @@ struct simple_control_context {
   bool landed{false};
   bool low_speed_ground_contact{false};
   bool pitch_inhibited{false};
-  bool alt{false}; // Native raw-key table scan code 0x38 enables rudder steering.
+  bool alt{false};                                                             // Native raw-key table scan code 0x38 enables rudder steering.
 };
 
 // Native 0x8cfa0; returns the effective direction keys set by joystick thresholding.

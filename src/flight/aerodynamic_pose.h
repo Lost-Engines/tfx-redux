@@ -1,7 +1,7 @@
 #pragma once
 
-#include "flight/aircraft.h"
 #include "math/attitude.h"
+#include "flight/aircraft.h"
 
 namespace tfx::flight {
 

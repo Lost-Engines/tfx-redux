@@ -14,10 +14,10 @@ void external_display::draw(render::software_renderer &renderer, external_view_s
     renderer.output.write(pixel,static_cast<uint8_t>((renderer.output.pixels[pixel] & 15) | 128));
     if(coverage) coverage->pixels[pixel] = 255;
   }
-  auto const paint{[&](int const x, int const y, uint8_t const colour) { renderer.output.write(static_cast<unsigned int>(y * render::screen_width + x),colour); }};
+  auto const paint{[&](int const x, int const y, uint8_t const colour){ renderer.output.write(static_cast<unsigned int>(y * render::screen_width + x),colour); }};
   for(int x{0}; x != render::screen_width; ++x) { paint(x,panel_top,2);paint(x,panel_bottom,5); }
   for(int y{panel_top + 1}; y != panel_bottom; ++y) { paint(0,y,2);paint(render::screen_width - 1,y,5); }
-  auto const text{[&](int const x, std::string const &message) {
+  auto const text{[&](int const x, std::string const &message){
     presentation::font_id constexpr fixed_font{1};
     fonts.draw(renderer.output,fixed_font,{x + 1,label_row + 1},message,143,coverage);
     fonts.draw(renderer.output,fixed_font,{x,label_row},message,15,coverage);

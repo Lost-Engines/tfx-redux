@@ -1,11 +1,11 @@
 #include "hud_text.h"
+#include <algorithm>
+#include <limits>
+#include <utility>
 #include "cockpit/format.h"
 #include "presentation/drawing.h"
 #include "render/markers.h"
 #include "render/sprites.h"
-#include <algorithm>
-#include <limits>
-#include <utility>
 
 namespace tfx::cockpit {
 hud_text::hud_text(instrument_assets const &source) : assets{source} {
@@ -15,21 +15,21 @@ void hud_text::draw_aerodynamic(render::software_renderer &renderer, aerodynamic
   // These are the original double literals, including its approximate pi.
   double constexpr degrees_per_half_turn{180}, native_pi{3.14159}, zero_alpha_row{60};
   double constexpr feet_per_metre{3.281};
-  auto const word{[](int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }};
-  auto const truncate{[](double const value) {
+  auto const word{[](int32_t const value){ return math::signed_word(static_cast<uint16_t>(value)); }};
+  auto const truncate{[](double const value){
     if(!std::isfinite(value) || value < std::numeric_limits<int32_t>::min() || value >= 2147483648.0) return std::numeric_limits<int32_t>::min();
     return static_cast<int32_t>(value);
   }};
-  auto const mask{[&](instrument_mask const shape, vec2<int> const &position) {
+  auto const mask{[&](instrument_mask const shape, vec2<int> const &position){
     render::draw_monochrome(renderer.output,assets.masks[std::to_underlying(shape)],{word(position.x + offset.x),word(position.y + offset.y)},6,coverage,renderer.clipping);
   }};
-  auto const line{[&](vec2<int> const &from, vec2<int> const &to) {
+  auto const line{[&](vec2<int> const &from, vec2<int> const &to){
     vec2<int> const a{word(from.x + offset.x),word(from.y + offset.y)}, b{word(to.x + offset.x),word(to.y + offset.y)};
     vec2<int> const low{0,2 + offset.y}, high{319,144 + offset.y};
     presentation::draw_clipped_line(renderer.output,vec2<int>{a},vec2<int>{b},low,high,6);
     if(coverage) presentation::draw_clipped_line(*coverage,vec2<int>{a},vec2<int>{b},low,high,255);
   }};
-  auto const point{[&](vec2<int> const &position) {
+  auto const point{[&](vec2<int> const &position){
     render::draw_marker(renderer.output,{static_cast<uint16_t>(position.x + offset.x),static_cast<uint16_t>(position.y + offset.y)},6,render::marker_kind::pixel,coverage);
   }};
   mask(instrument_mask::angle_of_attack_scale,{83,10});
@@ -50,12 +50,12 @@ void hud_text::draw_aerodynamic(render::software_renderer &renderer, aerodynamic
 }
 void hud_text::draw_values(render::software_renderer &renderer, hud_text_state const &state, render::framebuffer *const coverage) const {
   uint8_t constexpr colour{6};
-  auto const text{[&](vec2<int> const &local, std::string const &message) {
+  auto const text{[&](vec2<int> const &local, std::string const &message){
     int const x{math::signed_word(static_cast<uint16_t>(local.x + state.offset.x))};
     int const y{math::signed_word(static_cast<uint16_t>(local.y + state.offset.y))};
     renderer.text(x,y,message,colour,coverage);
   }};
-  auto const right{[&](vec2<int> const &edge, std::string const &message) {
+  auto const right{[&](vec2<int> const &edge, std::string const &message){
     text({math::signed_word(static_cast<uint16_t>(edge.x - renderer.text_width(message))),edge.y},message);
   }};
   // Native 0x7f8e0: every formatted product crosses its original double store.
@@ -70,7 +70,7 @@ void hud_text::draw_values(render::software_renderer &renderer, hud_text_state c
 }
 void hud_text::draw_messages(render::software_renderer &renderer, hud_text_state const &state, render::framebuffer *const coverage) const {
   uint8_t constexpr colour{6};
-  auto const text{[&](vec2<int> const &local, std::string const &message) {
+  auto const text{[&](vec2<int> const &local, std::string const &message){
     int const x{math::signed_word(static_cast<uint16_t>(local.x + state.offset.x))};
     int const y{math::signed_word(static_cast<uint16_t>(local.y + state.offset.y))};
     renderer.text(x,y,message,colour,coverage);

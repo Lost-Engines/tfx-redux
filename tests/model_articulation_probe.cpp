@@ -1,8 +1,9 @@
-#include "fixture_check.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
+#include "fixture_check.h"
 #include "models/shape.h"
 #include "render/integer_model_polygon.h"
 #include "render/model_transform.h"
@@ -10,10 +11,22 @@
 namespace {
 struct program_builder {
   std::vector<uint8_t> bytes{std::vector<uint8_t>(50)};
-  program_builder() { store(0,32768);store(2,32767);store(34,14);store(48,65535); }
-  void store(unsigned int const at, uint16_t const value) { bytes.at(at) = static_cast<uint8_t>(value >> 8);bytes.at(at + 1) = static_cast<uint8_t>(value); }
-  void emit(std::initializer_list<uint16_t> const words) { for(auto const value : words) { bytes.push_back(static_cast<uint8_t>(value >> 8));bytes.push_back(static_cast<uint8_t>(value)); } }
-  void vertex(unsigned int const slot, vec3<int16_t> const &v) { emit({98,static_cast<uint16_t>(slot),static_cast<uint16_t>(v.x),static_cast<uint16_t>(v.y),static_cast<uint16_t>(v.z)}); }
+  program_builder() {
+    store(0,32768);
+    store(2,32767);
+    store(34,14);
+    store(48,65535);
+  }
+  void store(unsigned int const at, uint16_t const value) {
+    bytes.at(at) = static_cast<uint8_t>(value >> 8);
+    bytes.at(at + 1) = static_cast<uint8_t>(value);
+  }
+  void emit(std::initializer_list<uint16_t> const words) {
+    for(auto const value : words) { bytes.push_back(static_cast<uint8_t>(value >> 8));bytes.push_back(static_cast<uint8_t>(value)); }
+  }
+  void vertex(unsigned int const slot, vec3<int16_t> const &v) {
+    emit({98,static_cast<uint16_t>(slot),static_cast<uint16_t>(v.x),static_cast<uint16_t>(v.y),static_cast<uint16_t>(v.z)});
+  }
   unsigned int call(bool const rotated, unsigned int const slot, vec3<tfx::math::angle> const &angles) {
     if(rotated) emit({73,angles.x,angles.y,angles.z,0,0,0,0,0,0,static_cast<uint16_t>(slot),0});
     else emit({45,static_cast<uint16_t>(slot),0});
@@ -22,13 +35,12 @@ struct program_builder {
   void triangle(unsigned int const first, unsigned int const colour, std::array<vec3<int16_t>,3> const &v, bool const delta) {
     vertex(first,v[0]);
     for(unsigned int i{1}; i != 3; ++i) {
-      if(delta) { auto const d{vec3<int32_t>{v[i]} - vec3<int32_t>{v[i - 1]}};emit({99,static_cast<uint16_t>(d.x),static_cast<uint16_t>(d.y),static_cast<uint16_t>(d.z)}); }
-      else vertex(first + i,v[i]);
+      if(delta) { auto const d{vec3<int32_t>{v[i]} - vec3<int32_t>{v[i - 1]}};emit({99,static_cast<uint16_t>(d.x),static_cast<uint16_t>(d.y),static_cast<uint16_t>(d.z)}); } else vertex(first + i,v[i]);
     }
     emit({97,3,static_cast<uint16_t>(first),2,static_cast<uint16_t>(colour),static_cast<uint16_t>(first),static_cast<uint16_t>(first + 1),static_cast<uint16_t>(first + 2)});
   }
 };
-}
+} // anonymous namespace
 
 int main(int const argc, char const *const argv[]) try {
   bool pixels{false};std::ifstream fixture;
@@ -79,5 +91,5 @@ int main(int const argc, char const *const argv[]) try {
     } else { for(auto const value : positions) std::cout << value << ' ';std::cout << hash;if(!defined) std::cout << " overflow";std::cout << '\n'; }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

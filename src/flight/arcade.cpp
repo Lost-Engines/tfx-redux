@@ -1,6 +1,4 @@
 #include "arcade.h"
-#include "gear_controls.h"
-#include "world/environment.h"
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -8,6 +6,8 @@
 #include <limits>
 #include <stdexcept>
 #include <utility>
+#include "gear_controls.h"
+#include "world/environment.h"
 
 namespace tfx::flight {
 namespace {
@@ -170,15 +170,14 @@ void throttle(arcade_state &state, flight_controls const &controls, vec2<system_
     state.target_speed = static_cast<float>((static_cast<calculation>(state.throttle) - 0.6) * span * 2.5 + state.minimum_speed);
     if(model.afterburner_stages) state.target_speed = static_cast<float>(static_cast<calculation>(state.target_speed) + (static_cast<calculation>(state.maximum_speed) - span) * state.afterburner / model.afterburner_stages);
   } else state.target_speed = 0;
-  if(disabled) state.target_speed = 0.5f; // Native 0x8ca91 fixes the requested Mach after loss/ejection.
+  if(disabled) state.target_speed = 0.5f;                                      // Native 0x8ca91 fixes the requested Mach after loss/ejection.
   if(gear_drag) state.target_speed = static_cast<float>(static_cast<calculation>(state.target_speed) * 0.95f);
   if(state.air_brake) state.target_speed = static_cast<float>(static_cast<calculation>(state.target_speed) * 0.8f);
   // Native 8CADA reads the indicators, while throttle input and fuel use the
   // engine factors. The outer frame normalizes these indicators afterwards.
   bool const left_off{engine_conditions.x == system_condition::normal};
   bool const right_off{engine_conditions.y == system_condition::normal};
-  if(left_off && right_off) { state.target_speed = 0; state.arrested = false; }
-  else if(left_off || right_off) state.target_speed = static_cast<float>(static_cast<calculation>(state.target_speed) * 0.5f);
+  if(left_off && right_off) { state.target_speed = 0; state.arrested = false; } else if(left_off || right_off) state.target_speed = static_cast<float>(static_cast<calculation>(state.target_speed) * 0.5f);
   float response{arcade ? speed_response : simple_speed_response};
   if((state.landed && state.wheel_brake) || state.brake_chute) { state.target_speed = 0; response = brake_response; }
   if(state.arrested) { state.target_speed = 0; response = arrested_response; }
@@ -218,7 +217,9 @@ void filter_control(float &target, float &current, int16_t const delta, uint16_t
 
 } // anonymous namespace
 
-basic_aircraft_parameters const &basic_parameters(player_aircraft const aircraft) { return parameters(aircraft); }
+basic_aircraft_parameters const &basic_parameters(player_aircraft const aircraft) {
+  return parameters(aircraft);
+}
 void update_basic_speed(arcade_state &state, flight_controls const &controls, vec2<system_condition> const &engine_conditions, simulation::timer_ticks const elapsed, bool const arcade, bool const gear_drag) {
   throttle(state,controls,engine_conditions,elapsed,false,arcade,gear_drag);
 }
@@ -275,12 +276,11 @@ void update_basic_disabled(arcade_state &state, flight_controls const &controls,
       if(state.normalisation_counter & 31) state.orientation.normalise();
       ++state.normalisation_counter;
       auto const &forward{state.orientation.forward};
-      auto const moved{[&](float const value, int32_t const direction) { return static_cast<float>(static_cast<calculation>(direction) * normalised_word * elapsed * state.movement_per_tick + value); }};
+      auto const moved{[&](float const value, int32_t const direction){ return static_cast<float>(static_cast<calculation>(direction) * normalised_word * elapsed * state.movement_per_tick + value); }};
       state.position = vec3f{moved(state.position.x,forward.x),moved(state.position.y,forward.y),moved(state.position.z,forward.z)};
       state.position.y = static_cast<float>(static_cast<calculation>(elapsed) * state.movement_per_tick * 0.125f + state.position.y);
     }
-    if(ground.present && state.position.y >= ground.height) { state.position.y = ground.height; state.collision = 2; }
-    else if(state.position.y >= 0) { state.position.y = 0; state.collision = 1; }
+    if(ground.present && state.position.y >= ground.height) { state.position.y = ground.height; state.collision = 2; } else if(state.position.y >= 0) { state.position.y = 0; state.collision = 1; }
   } else state.orientation = {};
   state.integer_position = vec3<int32_t>{integer(state.position.x),integer(state.position.y),integer(state.position.z)};
   state.angles = state.orientation.angles();

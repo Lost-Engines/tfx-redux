@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -22,9 +23,8 @@ int main(int const argc, char const *const argv[]) try {
     }
     auto const branch{tfx::render::model_facing(vertices,view,tfx::models::facing_test::branch)};
     if(!branch) throw std::runtime_error{"unhandled model-facing branch at case " + std::to_string(cases)};
-    if(argc == 2) { bool expected;if(!(input >> expected) || expected != *branch) throw std::runtime_error{"native model-facing branch mismatch at case " + std::to_string(cases)}; }
-    else std::cout << *branch << '\n';
+    if(argc == 2) { bool expected;if(!(input >> expected) || expected != *branch) throw std::runtime_error{"native model-facing branch mismatch at case " + std::to_string(cases)}; } else std::cout << *branch << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

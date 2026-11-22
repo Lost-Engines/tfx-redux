@@ -4,8 +4,12 @@
 namespace tfx::actors {
 namespace {
 
-int32_t subtract(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int32_t magnitude(int32_t const value) { return value < 0 ? subtract(0,value) : value; }
+int32_t subtract(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int32_t magnitude(int32_t const value) {
+  return value < 0 ? subtract(0,value) : value;
+}
 
 } // anonymous namespace
 

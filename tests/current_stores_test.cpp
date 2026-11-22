@@ -8,7 +8,7 @@ namespace {
 auto require(bool const condition, char const *const message)->void {
   if(!condition) throw std::runtime_error{message};
 }
-} // namespace
+} // anonymous namespace
 
 int main() try {
   using tfx::weapons::weapon_id;

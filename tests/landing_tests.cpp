@@ -1,9 +1,10 @@
-#include "fixture_check.h"
 #include <array>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
+#include "fixture_check.h"
 #include "flight/landing.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -20,7 +21,7 @@ int main(int const argc, char const *const argv[]) try {
     tfx::flight::landing_projection projection;
     input >> player.x >> player.y >> player.z >> speed >> projection.valid >> projection.point.x >> projection.point.y >> offset.x >> offset.y;
     vec3<int32_t> projected;
-    auto const cue{controller.advance(player,speed,[&](auto const &point) {
+    auto const cue{controller.advance(player,speed,[&](auto const &point){
       for(unsigned int axis{0}; axis != 3; ++axis) projected[axis] = tfx::math::signed_word(static_cast<uint16_t>(point[axis]));
       return projection;
     })};
@@ -33,4 +34,4 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!count) throw std::runtime_error{"empty native ILS fixture"};
   std::cout << count << " original ILS state fixtures passed\n";
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

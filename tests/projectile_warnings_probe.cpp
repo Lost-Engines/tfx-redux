@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -23,7 +24,7 @@ int main(int const argc, char const *const argv[]) try {
     };
     tfx::weapons::begin_warning_step(state,static_cast<uint16_t>(elapsed));
     std::vector<int> events;
-    auto const output{[&](tfx::weapons::projectile_warning const &warning) {
+    auto const output{[&](tfx::weapons::projectile_warning const &warning){
       if(warning.music) events.insert(events.end(),{0,9});
       events.insert(events.end(),{1,2,static_cast<int>(warning.sample)});
     }};
@@ -58,15 +59,15 @@ int main(int const argc, char const *const argv[]) try {
         });
       }
       tfx::weapons::runtime projectiles{definitions,{
-        .actor_position{[](tfx::weapons::actor_identity) { return vec3<int32_t>{0,-25600,0}; }},
-        .motion_inputs{[&](tfx::weapons::active_projectile const&,uint16_t const ticks) {
+        .actor_position{[](tfx::weapons::actor_identity){ return vec3<int32_t>{0,-25600,0}; }},
+        .motion_inputs{[&](tfx::weapons::active_projectile const&,uint16_t const ticks){
           return tfx::weapons::motion_context{
             .elapsed{ticks},
             .target{0,0,0},
             .player_ejected{inhibited != 0},
           };
         }},
-        .player_distance{[&](tfx::weapons::active_projectile const &shot) { return threats[shot.state.weapon].distance; }},
+        .player_distance{[&](tfx::weapons::active_projectile const &shot){ return threats[shot.state.weapon].distance; }},
         .warning{output},
       }};
       for(unsigned int index{count}; index--;) projectiles.launch({
@@ -87,11 +88,10 @@ int main(int const argc, char const *const argv[]) try {
     std::vector<int> values{state.cooldown,state.incoming,random.low,random.high,static_cast<int>(events.size())};
     values.insert(values.end(),events.begin(),events.end());
     for(auto const value : values) {
-      if(argc == 2 && !population) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"projectile warning mismatch at case " + std::to_string(cases)}; }
-      else std::cout << value << ' ';
+      if(argc == 2 && !population) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"projectile warning mismatch at case " + std::to_string(cases)}; } else std::cout << value << ' ';
     }
     if(argc != 2 || population) std::cout << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

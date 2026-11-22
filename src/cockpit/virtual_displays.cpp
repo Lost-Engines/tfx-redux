@@ -7,25 +7,26 @@ namespace tfx::cockpit {
 void virtual_displays::add(unsigned int const page, render::texture_patch const &patch) {
   auto &regions{patches.at(page)};
   regions.push_back(patch);
-  int const left{std::max(0,static_cast<int>(std::floor(patch.minimum.x+std::min(0.,patch.left_shift))))};
-  int const right{std::min(256,static_cast<int>(std::ceil(patch.maximum.x+std::max(0.,patch.right_shift))))};
-  for(int y=std::max(0,static_cast<int>(std::floor(patch.minimum.y))); y<std::min(192,static_cast<int>(std::ceil(patch.maximum.y))); ++y)
-    for(int x=left; x<right; ++x) cells[page][static_cast<size_t>(y*256+x)]=static_cast<uint8_t>(regions.size());
+  int const left{std::max(0,static_cast<int>(std::floor(patch.minimum.x + std::min(0.,patch.left_shift))))};
+  int const right{std::min(256,static_cast<int>(std::ceil(patch.maximum.x + std::max(0.,patch.right_shift))))};
+  for(int y=std::max(0,static_cast<int>(std::floor(patch.minimum.y))); y < std::min(192,static_cast<int>(std::ceil(patch.maximum.y))); ++y) {
+    for(int x=left; x < right; ++x) cells[page][static_cast<size_t>(y * 256 + x)] = static_cast<uint8_t>(regions.size());
+  }
 }
 virtual_displays::virtual_displays(instrument_assets const &instruments) {
-  for(auto &page : cells) page.resize(256*192);
-  auto const display{[&](unsigned int screen, vec2d minimum, vec2d maximum, unsigned int page, double left=0, double right=0) {
-    add(page,{vec2d{minimum},vec2d{maximum},vec2d{instruments.display_origins[screen]},vec2d{instruments.display_sizes[screen]}+vec2d{1,1},left,right});
+  for(auto &page : cells) page.resize(256 * 192);
+  auto const display{[&](unsigned int screen, vec2d minimum, vec2d maximum, unsigned int page, double left=0, double right=0){
+    add(page,{vec2d{minimum},vec2d{maximum},vec2d{instruments.display_origins[screen]},vec2d{instruments.display_sizes[screen]} + vec2d{1,1},left,right});
   }};
   // global_2 is the port half; global_1 is starboard. The outer screens have
   // shallow bevels. Their source pixels are no longer resized to atlas texels.
   display(0,{53,126},{111,161},1,2,0);
   display(2,{51,126},{109,161},0,0,-2);
   auto const centre{vec2d{instruments.display_origins[1]}};
-  auto const size{vec2d{instruments.display_sizes[1]}+vec2d{1,1}};
-  double const seam{size.x*28/58};
+  auto const size{vec2d{instruments.display_sizes[1]} + vec2d{1,1}};
+  double const seam{size.x * 28 / 58};
   add(1,{{132,144},{160,187},vec2d{centre},{seam,size.y}});
-  add(0,{{0,144},{30,187},centre+vec2d{seam,0},{size.x-seam,size.y}});
+  add(0,{{0,144},{30,187},centre + vec2d{seam,0},{size.x - seam,size.y}});
 
   // Top annunciators: GEAR/AUTO, brakes/hook, stall, damage, engine fire,
   // permission-to-fire, tracked-weapon and threat lamps. Include their idle

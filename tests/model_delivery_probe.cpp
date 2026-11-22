@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -22,7 +23,7 @@ int main(int const argc, char const *const argv[]) try {
   while(input >> count) {
     tfx::render::model_queue queue;tfx::render::model_slot_metadata metadata;std::array<payload,tfx::render::model_queue_capacity> records;
     std::vector<uint32_t> values,events;std::array<uint32_t,2> parameters{};
-    auto const paint{[&](payload &item,tfx::render::model_render_path const path,bool const immediate) {
+    auto const paint{[&](payload &item,tfx::render::model_render_path const path,bool const immediate){
       if(!immediate) parameters = item.parameters;
       item.cache = tfx::render::scale_model_cache(item.cache,item.scale);
       unsigned int const tag{path == tfx::render::model_render_path::ground_shadow ? 2u : path == tfx::render::model_render_path::unrotated || (immediate && !item.angles.x && !item.angles.y && !item.angles.z) ? 0u : 1u};
@@ -51,10 +52,8 @@ int main(int const argc, char const *const argv[]) try {
     for(auto const slot : queue.draw_order()) paint(records[slot],records[slot].path,false);
     values.push_back(static_cast<uint32_t>(events.size() / 12));values.insert(values.end(),events.begin(),events.end());
     uint64_t hash{14695981039346656037ull};for(auto const value : values) for(unsigned int byte{0}; byte != 4; ++byte) hash = (hash ^ static_cast<uint8_t>(value >> (byte * 8))) * 1099511628211;
-    if(full) { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
-    else if(fixture.is_open()) { uint64_t expected;if(!(input >> expected) || hash != expected) throw std::runtime_error{"native mixed model delivery mismatch at " + std::to_string(cases)}; }
-    else std::cout << hash << '\n';
+    if(full) { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; } else if(fixture.is_open()) { uint64_t expected;if(!(input >> expected) || hash != expected) throw std::runtime_error{"native mixed model delivery mismatch at " + std::to_string(cases)}; } else std::cout << hash << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

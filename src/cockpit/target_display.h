@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cockpit/instrument_assets.h"
 #include "math/attitude.h"
+#include "cockpit/instrument_assets.h"
 #include "render/software_renderer.h"
 
 namespace tfx::cockpit {

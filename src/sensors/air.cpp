@@ -8,10 +8,18 @@ namespace {
 
 int16_t constexpr initial_lock_ticks{500};
 
-int32_t subtract(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int32_t magnitude(int32_t const value) { return value < 0 ? subtract(0,value) : value; }
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-vec3<int32_t> integer_position(air_contact const &contact) { return {contact.position.x >> actors::position_fraction_bits,contact.position.y >> actors::position_fraction_bits,contact.position.z >> actors::position_fraction_bits}; }
+int32_t subtract(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int32_t magnitude(int32_t const value) {
+  return value < 0 ? subtract(0,value) : value;
+}
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+vec3<int32_t> integer_position(air_contact const &contact) {
+  return {contact.position.x >> actors::position_fraction_bits,contact.position.y >> actors::position_fraction_bits,contact.position.z >> actors::position_fraction_bits};
+}
 
 } // anonymous namespace
 
@@ -62,15 +70,14 @@ void air_contacts::next() {
   unsigned int const start{initial ? 0u : static_cast<unsigned int>(cursor)};
   unsigned int index{initial ? 0u : (start + 1) % contact_capacity};
   while(!slots[index] && index != start) index = (index + 1) % contact_capacity;
-  if(slots[index]) { selected = slots[index]; cursor = static_cast<int16_t>(index); }
-  else {
+  if(slots[index]) { selected = slots[index]; cursor = static_cast<int16_t>(index); } else {
     cursor = -1;
     if(!initial) selected.reset();
   }
 }
 
 unsigned int air_contacts::count() const {
-  return static_cast<unsigned int>(std::ranges::count_if(slots,[](auto const &slot) { return slot.has_value(); }));
+  return static_cast<unsigned int>(std::ranges::count_if(slots,[](auto const &slot){ return slot.has_value(); }));
 }
 
 void air_lock::begin_mission(vec2<int16_t> const &projection_origin) {

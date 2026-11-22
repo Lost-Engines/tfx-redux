@@ -32,8 +32,7 @@ int main(int const argc, char const *const argv[]) try {
     values.push_back(effects.force_collision ? 1 : collision);
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(check) { uint64_t expected{0};if(!(input >> expected) || expected != digest) throw std::runtime_error{"native player-loss transition differs"}; }
-    else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
+    if(check) { uint64_t expected{0};if(!(input >> expected) || expected != digest) throw std::runtime_error{"native player-loss transition differs"}; } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

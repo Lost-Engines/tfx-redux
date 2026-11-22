@@ -1,12 +1,18 @@
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include "resources/archive.h"
 
 namespace {
 struct temporary_directory {
   std::filesystem::path path{std::filesystem::temp_directory_path() / ("tfx-resource-files-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()))};
-  temporary_directory() { if(!std::filesystem::create_directory(path)) throw std::runtime_error{"cannot create private resource fixture directory"}; }
-  ~temporary_directory() { std::error_code error;std::filesystem::remove_all(path,error); }
+  temporary_directory() {
+    if(!std::filesystem::create_directory(path)) throw std::runtime_error{"cannot create private resource fixture directory"};
+  }
+  ~temporary_directory() {
+    std::error_code error;
+    std::filesystem::remove_all(path,error);
+  }
 };
 void write(std::filesystem::path const &path, std::span<uint8_t const> const bytes) {
   std::ofstream output{path,std::ios::binary};
@@ -16,8 +22,8 @@ void write(std::filesystem::path const &path, std::span<uint8_t const> const byt
 int main() try {
   temporary_directory directory;
   tfx::resources::bytes bytes(4);
-  auto const word{[&](uint16_t const value) { bytes.push_back(static_cast<uint8_t>(value));bytes.push_back(static_cast<uint8_t>(value >> 8)); }};
-  auto const dword{[&](uint32_t const value) { word(static_cast<uint16_t>(value));word(static_cast<uint16_t>(value >> 16)); }};
+  auto const word{[&](uint16_t const value){ bytes.push_back(static_cast<uint8_t>(value));bytes.push_back(static_cast<uint8_t>(value >> 8)); }};
+  auto const dword{[&](uint32_t const value){ word(static_cast<uint16_t>(value));word(static_cast<uint16_t>(value >> 16)); }};
   tfx::resources::bytes const archived{'a','r','c','h','i','v','e'};
   bytes.insert(bytes.end(),archived.begin(),archived.end());
   auto const index{static_cast<uint32_t>(bytes.size())};
@@ -36,5 +42,5 @@ int main() try {
   if(files.contains("../DID.DAT") || files.contains("missing.sam")) throw std::runtime_error{"missing resource unexpectedly exists"};
   tfx::resources::archive const memory_only{bytes};
   if(memory_only.contains("tunes/intro.rld ")) throw std::runtime_error{"in-memory archive acquired an unrelated filesystem"};
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

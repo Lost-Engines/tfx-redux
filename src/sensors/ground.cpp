@@ -7,9 +7,15 @@
 namespace tfx::sensors {
 namespace {
 
-int16_t word(int32_t const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-int32_t add(int32_t const first, int32_t const second) { return std::bit_cast<int32_t>(static_cast<uint32_t>(first) + static_cast<uint32_t>(second)); }
-bool available(surface_contact const &contact) { return !(contact.flags & (std::to_underlying(actors::surface_flag::destroyed) | std::to_underlying(actors::surface_flag::retired))); }
+int16_t word(int32_t const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+int32_t add(int32_t const first, int32_t const second) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(first) + static_cast<uint32_t>(second));
+}
+bool available(surface_contact const &contact) {
+  return !(contact.flags & (std::to_underlying(actors::surface_flag::destroyed) | std::to_underlying(actors::surface_flag::retired)));
+}
 
 } // anonymous namespace
 
@@ -22,7 +28,7 @@ cruise_target acquire_cruise_target(vec3<int32_t> const &player, vec2<int32_t> c
     .reticle_q8{offscreen,offscreen},
     .projected{offscreen,offscreen},
   };
-  auto const magnitude{[](int32_t const value) {
+  auto const magnitude{[](int32_t const value){
     return value < 0 ? std::bit_cast<int32_t>(0u - static_cast<uint32_t>(value)) : value;
   }};
   int32_t const dx{add(player.x,std::bit_cast<int32_t>(0u - static_cast<uint32_t>(destination_q8.x >> actors::position_fraction_bits)))};

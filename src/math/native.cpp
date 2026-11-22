@@ -7,15 +7,15 @@ namespace tfx::math {
 
 vec2<angle> bearing(vec3<int32_t> const &from, vec3<int32_t> const &to) {
   // Retain wrapped world differences and Chebyshev pitch distance; bearings use full-word atan2.
-  auto const delta{[](int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }};
-  auto const magnitude{[&](int32_t const value) { return value < 0 ? delta(0,value) : value; }};
+  auto const delta{[](int32_t const a, int32_t const b){ return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }};
+  auto const magnitude{[&](int32_t const value){ return value < 0 ? delta(0,value) : value; }};
   int32_t const x{delta(to.x,from.x)}, y{delta(to.y,from.y)}, z{delta(to.z,from.z)};
   return {direction_angle(y,std::max(magnitude(x),magnitude(z))),direction_angle(x,z)};
 }
 
 int32_t distance_estimate(vec3<int32_t> const &from, vec3<int32_t> const &to) {
   // Native 0x7d208: largest absolute component plus one quarter of the other two, with dword wrapping.
-  auto const magnitude{[](uint32_t const value) { return std::bit_cast<int32_t>(std::bit_cast<int32_t>(value) < 0 ? 0u - value : value); }};
+  auto const magnitude{[](uint32_t const value){ return std::bit_cast<int32_t>(std::bit_cast<int32_t>(value) < 0 ? 0u - value : value); }};
   vec3<int32_t> const offset{magnitude(static_cast<uint32_t>(from.x) - static_cast<uint32_t>(to.x)),magnitude(static_cast<uint32_t>(from.y) - static_cast<uint32_t>(to.y)),magnitude(static_cast<uint32_t>(from.z) - static_cast<uint32_t>(to.z))};
   int32_t const longest{std::max({offset.x,offset.y,offset.z})};
   uint32_t const remainder{static_cast<uint32_t>(offset.x) + static_cast<uint32_t>(offset.y) + static_cast<uint32_t>(offset.z) - static_cast<uint32_t>(longest)};
@@ -40,7 +40,7 @@ void advance_position(vec3<int32_t> &position, vec3<angle> const &angles, int32_
 
 int16_t distance_word(vec3<int16_t> const &offset) {
   /// Native 0xcbe94 / 0xd14b4: floor of the unsigned squared magnitude, returned in a signed word.
-  auto const square{[](int32_t const value) { return static_cast<uint32_t>(value * value); }};
+  auto const square{[](int32_t const value){ return static_cast<uint32_t>(value * value); }};
   auto const squared{square(offset.x) + square(offset.y) + square(offset.z)};
   return signed_word(static_cast<uint16_t>(std::sqrt(static_cast<double>(squared))));
 }
@@ -94,7 +94,7 @@ mat3<int32_t> view_rotation_words(vec3<angle> const &angles) {
   auto const sine{sine_q15}, cosine{cosine_q15};
   int const pitch{angles.x}, yaw{angles.y}, roll{angles.z};
   auto const sp{sine(pitch)}, s{sine(yaw + roll)}, t{sine(yaw - roll)}, c{cosine(yaw + roll)}, d{cosine(yaw - roll)};
-  auto const multiply{[](int32_t const a, int32_t const b) { return (a * b) >> matrix_fraction_bits; }};
+  auto const multiply{[](int32_t const a, int32_t const b){ return (a * b) >> matrix_fraction_bits; }};
   // This setter stores rows, unlike the component generator's column-major output.
   mat3<int32_t> matrix;
   matrix.data = {
@@ -117,10 +117,10 @@ vec3<int32_t> orbit_offset_q16(vec2<angle> const &angles, int32_t const distance
   int const pitch{angles.x}, yaw{angles.y};
   // Keep the original signed Q16 orbit coordinates, without the table-mask
   // complement that added an unwanted one-sample offset at every angle.
-  auto const product{[](int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) * static_cast<uint32_t>(b)); }};
+  auto const product{[](int32_t const a, int32_t const b){ return std::bit_cast<int32_t>(static_cast<uint32_t>(a) * static_cast<uint32_t>(b)); }};
   int const reverse_pitch{-pitch}, reverse_yaw{-yaw};
   int32_t const horizontal{product(cosine(reverse_pitch),distance) >> matrix_fraction_bits};
-  auto const doubled{[&](int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(0u - static_cast<uint32_t>(product(a,b)) * 2u); }};
+  auto const doubled{[&](int32_t const a, int32_t const b){ return std::bit_cast<int32_t>(0u - static_cast<uint32_t>(product(a,b)) * 2u); }};
   return {doubled(sine(reverse_yaw),horizontal),doubled(sine(reverse_pitch),distance),doubled(cosine(reverse_yaw),horizontal)};
 }
 

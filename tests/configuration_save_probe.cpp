@@ -1,5 +1,6 @@
 #include <bit>
 #include <charconv>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -54,9 +55,8 @@ int main(int const argc, char const *const argv[]) try {
       .recovery{static_cast<uint8_t>(recovery)},
     };
     auto const actual{encode(tfx::configuration::update_preferences(decode(std::string_view{line}.substr(first + 1,last == std::string::npos ? last : last - first - 1)),state))};
-    if(argc == 2) { if(last == std::string::npos || line.substr(last + 1) != actual) throw std::runtime_error{"preference mismatch at case " + std::to_string(cases)}; }
-    else std::cout << actual << '\n';
+    if(argc == 2) { if(last == std::string::npos || line.substr(last + 1) != actual) throw std::runtime_error{"preference mismatch at case " + std::to_string(cases)}; } else std::cout << actual << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

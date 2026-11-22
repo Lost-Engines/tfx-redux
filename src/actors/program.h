@@ -63,7 +63,7 @@ struct initial_actor {
   vec3<int32_t> position;
   vec3<math::angle> angles;
   int32_t speed;
-  uint16_t flags; // Native air word or surface byte; use the corresponding actor-kind enum.
+  uint16_t flags;                                                              // Native air word or surface byte; use the corresponding actor-kind enum.
   uint8_t leader{255};
   uint8_t formation{0};
 };

@@ -1,4 +1,5 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -61,7 +62,7 @@ int main(int const argc, char const *const argv[]) try {
     };
     tfx::flight::initialise_aerodynamic_motion(state,frame,stores,context);
     std::vector<uint64_t> values;
-    auto const number{[&](double const value) { values.push_back(std::bit_cast<uint64_t>(value)); }};
+    auto const number{[&](double const value){ values.push_back(std::bit_cast<uint64_t>(value)); }};
     for(auto const *vector : {&state.motion.pose.metres_ned,&state.motion.velocity_ned,&state.motion.acceleration_ned,&state.motion.ground_velocity_body,&state.motion.angular_rate}) for(auto const value : *vector) number(value);
     for(auto const value : state.motion.angular_acceleration) number(value);
     for(auto const value : state.engine_factor) number(value);
@@ -84,5 +85,5 @@ int main(int const argc, char const *const argv[]) try {
   }
   if(!cases) throw std::runtime_error{"no aerodynamic start cases"};
   if(argc == 2) std::cout << cases << " native aerodynamic start fixtures agree\n";
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

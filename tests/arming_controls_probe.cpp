@@ -3,8 +3,8 @@
 #include <utility>
 #include "presentation/arming_controller.h"
 #include "presentation/arming_preview.h"
-#include "resources/executable_tables.h"
 #include "resources/archive.h"
+#include "resources/executable_tables.h"
 
 int main(int const argc, char const *const argv[]) try {
   if(argc < 2) throw std::runtime_error{"usage: arming_controls_probe DATA_DIRECTORY [--hits]"};
@@ -36,7 +36,7 @@ int main(int const argc, char const *const argv[]) try {
         int id{0};std::cin >> id;
         stores.assign(mount,id < 0 ? std::nullopt : std::optional{static_cast<tfx::weapons::weapon_id>(id)});
       }
-      auto const snapshot{[&] {
+      auto const snapshot{[&]{
         for(unsigned int mount{0}; mount != tfx::flight::store_slots; ++mount) {
           auto const &p{stores.pylons[mount]};
           std::cout << static_cast<unsigned int>(p.weapon) << ' ' << static_cast<unsigned int>(p.count) << ' ' << p.visible << ' ' << controller.previews()[mount] << ' ';

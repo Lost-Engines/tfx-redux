@@ -1,6 +1,6 @@
 #include "sprites.h"
-#include "cockpit/vector_hud.h"
 #include <algorithm>
+#include "cockpit/vector_hud.h"
 
 namespace tfx::render {
 

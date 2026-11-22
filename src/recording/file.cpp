@@ -9,10 +9,20 @@ namespace {
 class writer {
 public:
   resources::bytes bytes;
-  void byte(uint8_t const value) { bytes.push_back(value); }
-  void word(uint16_t const value) { byte(static_cast<uint8_t>(value));byte(static_cast<uint8_t>(value >> 8)); }
-  void dword(uint32_t const value) { word(static_cast<uint16_t>(value));word(static_cast<uint16_t>(value >> 16)); }
-  void raw(std::span<uint8_t const> const source) { bytes.insert(bytes.end(),source.begin(),source.end()); }
+  void byte(uint8_t const value) {
+    bytes.push_back(value);
+  }
+  void word(uint16_t const value) {
+    byte(static_cast<uint8_t>(value));
+    byte(static_cast<uint8_t>(value >> 8));
+  }
+  void dword(uint32_t const value) {
+    word(static_cast<uint16_t>(value));
+    word(static_cast<uint16_t>(value >> 16));
+  }
+  void raw(std::span<uint8_t const> const source) {
+    bytes.insert(bytes.end(),source.begin(),source.end());
+  }
   void patch_dword(unsigned int const at, uint32_t const value) {
     for(unsigned int index{0}; index != 4; ++index) bytes.at(at + index) = static_cast<uint8_t>(value >> (index * 8));
   }
@@ -49,10 +59,22 @@ public:
   auto raw(size_t const count)->std::span<uint8_t const> {
     auto const result{source.slice(position,count)};position += count;return result;
   }
-  uint8_t byte() { return raw(1).front(); }
-  uint16_t word() { auto const value{source.le16(position)};position += 2;return value; }
-  uint32_t dword() { auto const value{source.le32(position)};position += 4;return value; }
-  bool complete() const { return position == size; }
+  uint8_t byte() {
+    return raw(1).front();
+  }
+  uint16_t word() {
+    auto const value{source.le16(position)};
+    position += 2;
+    return value;
+  }
+  uint32_t dword() {
+    auto const value{source.le32(position)};
+    position += 4;
+    return value;
+  }
+  bool complete() const {
+    return position == size;
+  }
   resources::bytes packed(size_t const count, uint8_t const fill) {
     auto const size{word()};
     if(size > compression_buffer_bytes) throw std::runtime_error{"flight recording compressed block exceeds its native buffer"};
@@ -80,12 +102,12 @@ void write_frame(writer &output, frame const &source) {
   for(auto const &entry : source.order) output.word(static_cast<uint16_t>(entry.priority));
   for(auto const &entry : source.order) output.word(entry.slot);
   for(auto const &model : source.models) output.byte(std::to_underlying(model.kind));
-  auto const bytes{[&](auto const &field, uint8_t const fill) {
+  auto const bytes{[&](auto const &field, uint8_t const fill){
     writer block;for(auto const &model : source.models) block.byte(field(model));output.packed(block.bytes,fill);
   }};
-  bytes([](model const &model) { return model.initial_state; },0);
+  bytes([](model const &model){ return model.initial_state; },0);
   for(auto const &model : source.models) output.byte(model.colour_row);
-  bytes([](model const &model) { return model.scale; },1);
+  bytes([](model const &model){ return model.scale; },1);
   for(auto const &model : source.models) output.word(model.resource);
   for(unsigned int axis{0}; axis != 3; ++axis) {
     writer block;for(auto const &model : source.models) block.word(model.angles[axis]);output.packed(block.bytes,0);
@@ -127,9 +149,13 @@ frame read_frame(reader &source) {
   return result;
 }
 
-} // namespace
+} // anonymous namespace
 
-resources::bytes encode_frame(frame const &source) { writer output;write_frame(output,source);return std::move(output.bytes); }
+resources::bytes encode_frame(frame const &source) {
+  writer output;
+  write_frame(output,source);
+  return std::move(output.bytes);
+}
 
 resources::bytes encode(file const &source) {
   if(source.frames.size() > std::numeric_limits<uint16_t>::max()) throw std::runtime_error{"flight recording exceeds its native frame counter"};

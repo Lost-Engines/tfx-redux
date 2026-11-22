@@ -1,9 +1,9 @@
-#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include "math/native.h"
+#include "fixture_check.h"
 
 int main(int const argc, char const *const argv[]) try {
   std::ifstream fixture;

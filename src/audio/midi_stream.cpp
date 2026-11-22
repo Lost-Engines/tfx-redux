@@ -3,8 +3,13 @@
 
 namespace tfx::audio {
 
-midi_stream::midi_stream(midi_receiver &receiver) : receiver{receiver} { system.reserve(256); }
-void midi_stream::reset() { system.clear();status = count = 0; }
+midi_stream::midi_stream(midi_receiver &receiver) : receiver{receiver} {
+  system.reserve(256);
+}
+void midi_stream::reset() {
+  system.clear();
+  status = count = 0;
+}
 void midi_stream::byte(uint8_t const value) {
   // MIDI real-time bytes can interrupt either kind of message without losing
   // its running status or partially collected payload.
@@ -22,9 +27,7 @@ void midi_stream::byte(uint8_t const value) {
   if(value & 128) {
     count = 0;
     status = value;
-    if(value == 0xf0) { system.push_back(value);status = 0; }
-    else if(value == 0xf6 || value == 0xf7) { receiver.short_message(value);status = 0; }
-    else if(value == 0xf4 || value == 0xf5) status = 0;
+    if(value == 0xf0) { system.push_back(value);status = 0; } else if(value == 0xf6 || value == 0xf7) { receiver.short_message(value);status = 0; } else if(value == 0xf4 || value == 0xf5) status = 0;
     return;
   }
   if(!status) return;

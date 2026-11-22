@@ -1,5 +1,5 @@
-#include "audio/sample_bank.h"
 #include <limits>
+#include "audio/sample_bank.h"
 
 namespace tfx::audio {
 
@@ -27,7 +27,7 @@ std::vector<sample_definition> load_sample_definitions(std::span<uint8_t const> 
         .increment{source.signed_le16(data_file + effect + 2)},
         .movement_enable{source.le16(data_file + effect + 4)},
       } : sample_pan{
-        .position{centred_qsound_phase}, // Native null-definition fallback is the centre position.
+        .position{centred_qsound_phase},                                       // Native null-definition fallback is the centre position.
         .increment{},
         .movement_enable{},
       }},

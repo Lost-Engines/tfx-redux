@@ -3,8 +3,8 @@
 #include <array>
 #include <string_view>
 #include "missions/progress.h"
-#include "resources/archive.h"
 #include "render/framebuffer.h"
+#include "resources/archive.h"
 
 namespace tfx::missions {
 

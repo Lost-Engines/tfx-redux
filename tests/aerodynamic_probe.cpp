@@ -1,11 +1,12 @@
 #include <bit>
+#include <cstdlib>
 #include <iostream>
 #include <string_view>
-#include "flight/aerodynamic_step.h"
-#include "aerodynamic_snapshot.h"
 #include "aerodynamic_autopilot_snapshot.h"
-#include "automatic_landing_capture.h"
 #include "aerodynamic_pilot_keys_capture.h"
+#include "aerodynamic_snapshot.h"
+#include "automatic_landing_capture.h"
+#include "flight/aerodynamic_step.h"
 #include "weapons/definition.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -167,5 +168,5 @@ int main(int const argc, char const *const argv[]) try {
       }
     }
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n'; return EXIT_FAILURE; }

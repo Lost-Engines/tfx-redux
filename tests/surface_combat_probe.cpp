@@ -1,8 +1,8 @@
-#include "fixture_check.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include "actors/surface_combat.h"
+#include "fixture_check.h"
 
 int main(int const argc, char const *const argv[]) try {
   std::ifstream fixture;
@@ -58,8 +58,8 @@ int main(int const argc, char const *const argv[]) try {
       for(unsigned int i{0}; i < hex.size(); i += 2) state.commands.push_back(static_cast<uint8_t>(std::stoul(hex.substr(i,2),nullptr,16)));
     }
     uint64_t digest{14695981039346656037ULL};
-    auto const add{[&](auto const value) { for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL; }};
-    auto const emit{[&](tfx::weapons::release const &shot) {
+    auto const add{[&](auto const value){ for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL; }};
+    auto const emit{[&](tfx::weapons::release const &shot){
       add(shot.weapon);
       for(auto const value : {shot.position.x,shot.position.y,shot.position.z}) add(value);
       for(auto const value : {shot.angles.x,shot.angles.y,shot.angles.z}) add(value);
@@ -76,7 +76,7 @@ int main(int const argc, char const *const argv[]) try {
         .aircraft_targets{targets},
       },random);
       else if(command == 'R') {
-        tfx::actors::advance_surface(state,profile,[&](tfx::actors::surface_request const &request) {
+        tfx::actors::advance_surface(state,profile,[&](tfx::actors::surface_request const &request){
           if(request.kind == tfx::actors::surface_request_kind::nearby_targets) {
             auto shots{tfx::actors::engage_surface_targets(state,profile,{
               .owner{0},
@@ -99,8 +99,7 @@ int main(int const argc, char const *const argv[]) try {
       add(random.low);add(random.high);add(state.player_shots);add(launches.size());
       for(auto const &shot : launches) emit(shot);
     }
-    if(argc == 2) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"surface combat differs from original"}; }
-    else std::cout << digest << '\n';
+    if(argc == 2) { if(!tfx::test::fixture_matches(input,digest)) throw std::runtime_error{"surface combat differs from original"}; } else std::cout << digest << '\n';
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

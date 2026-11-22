@@ -1,8 +1,8 @@
 #include "integer_model_texture.h"
+#include <cmath>
 #include "integer_texture_polygon.h"
 #include "model_projection.h"
 #include "near_clip.h"
-#include <cmath>
 
 namespace tfx::render {
 

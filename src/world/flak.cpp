@@ -5,9 +5,15 @@
 
 namespace tfx::world {
 namespace {
-int32_t add(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) + static_cast<uint32_t>(b)); }
-int32_t subtract(int32_t const a, int32_t const b) { return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int32_t absolute(int32_t const value) { return value < 0 ? subtract(0,value) : value; }
+int32_t add(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) + static_cast<uint32_t>(b));
+}
+int32_t subtract(int32_t const a, int32_t const b) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int32_t absolute(int32_t const value) {
+  return value < 0 ? subtract(0,value) : value;
+}
 }
 
 std::optional<flak_event> advance_flak(flak_state &state, flak_context const &context) {
@@ -16,7 +22,7 @@ std::optional<flak_event> advance_flak(flak_state &state, flak_context const &co
   if(context.regions.empty() || context.player.y < highest_flak_y || context.player.y > lowest_flak_y || (context.cloud_layer && context.layer_y > context.player.y)) return std::nullopt;
   if(state.delay) state.delay = math::signed_word(static_cast<uint16_t>(state.delay - 1));
   if(state.delay) return std::nullopt;
-  auto const region{std::ranges::find_if(context.regions,[&](missions::flak_region const &area) {
+  auto const region{std::ranges::find_if(context.regions,[&](missions::flak_region const &area){
     return area.first.x <= context.player.x && area.last.x >= context.player.x && area.first.y <= context.player.z && area.last.y >= context.player.z;
   })};
   if(region == context.regions.end()) return std::nullopt;
@@ -50,7 +56,10 @@ bool flak_visible(flak_state const &state, vec3<int32_t> const &player) {
   int32_t constexpr maximum_separation{32767};
   return std::max(absolute(subtract(state.centre.x,player.x)),absolute(subtract(state.centre.y,player.z))) <= maximum_separation;
 }
-void flak_pool::reset() { next = flak_capacity - 1;count = 0; }
+void flak_pool::reset() {
+  next = flak_capacity - 1;
+  count = 0;
+}
 unsigned int flak_pool::spawn(flak_event const &event) {
   if(event.model >= flak_night_models) throw std::out_of_range{"unknown night flak model"};
   unsigned int const slot{next};
@@ -62,6 +71,8 @@ unsigned int flak_pool::spawn(flak_event const &event) {
   if(count != flak_capacity) ++count;
   return slot;
 }
-flak_record const &flak_pool::record(unsigned int const slot) const { return records.at(slot); }
+flak_record const &flak_pool::record(unsigned int const slot) const {
+  return records.at(slot);
+}
 
 } // namespace tfx::world

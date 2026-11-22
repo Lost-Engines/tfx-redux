@@ -20,7 +20,9 @@ effect_slot effect_pool::spawn(vec3<int32_t> const &position, effect_kind const 
   if(count != effect_capacity) ++count;
   return slot;
 }
-effect_record const &effect_pool::record(effect_slot const slot) const { return records.at(slot); }
+effect_record const &effect_pool::record(effect_slot const slot) const {
+  return records.at(slot);
+}
 
 
 vec3<int32_t> effect_position(vec3<int16_t> const &position, vec3<int32_t> const &reference) {

@@ -1,18 +1,28 @@
 #include "view_camera.h"
-#include "render/continuous_pose.h"
 #include <algorithm>
 #include <bit>
 #include <utility>
+#include "render/continuous_pose.h"
 
 namespace tfx::cockpit {
 namespace {
-int32_t wrap(uint32_t const value) { return std::bit_cast<int32_t>(value); }
-int32_t add(int32_t const a, int32_t const b) { return wrap(static_cast<uint32_t>(a) + static_cast<uint32_t>(b)); }
-int32_t subtract(int32_t const a, int32_t const b) { return wrap(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int16_t word(int const value) { return math::signed_word(static_cast<uint16_t>(value)); }
-math::angle negative(math::angle const value) { return static_cast<math::angle>(-value); }
+int32_t wrap(uint32_t const value) {
+  return std::bit_cast<int32_t>(value);
+}
+int32_t add(int32_t const a, int32_t const b) {
+  return wrap(static_cast<uint32_t>(a) + static_cast<uint32_t>(b));
+}
+int32_t subtract(int32_t const a, int32_t const b) {
+  return wrap(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int16_t word(int const value) {
+  return math::signed_word(static_cast<uint16_t>(value));
+}
+math::angle negative(math::angle const value) {
+  return static_cast<math::angle>(-value);
+}
 math::attitude product(math::attitude const &a, math::attitude const &b) {
-  auto const transform{[&](vec3<int32_t> const &column) {
+  auto const transform{[&](vec3<int32_t> const &column){
     auto const sum{vec3<int64_t>{a.right} * column.x + vec3<int64_t>{a.down} * column.y + vec3<int64_t>{a.forward} * column.z};
     return vec3<int32_t>{word(wrap(static_cast<uint32_t>(sum.x)) >> 15),word(wrap(static_cast<uint32_t>(sum.y)) >> 15),word(wrap(static_cast<uint32_t>(sum.z)) >> 15)};
   }};
@@ -33,12 +43,16 @@ render::camera view_pose::camera(vec2d const &projection_origin) const {
   for(unsigned int axis{0}; axis != 3; ++axis) result.position[axis] = anchor[axis] + subtract(position_q16[axis],wrap(static_cast<uint32_t>(anchor[axis]) << 16)) / 65536.0;
   return result;
 }
-view_camera::view_camera(view_motion_state initial) : state{std::move(initial)}, display_angles{render::angle_radians(state.smoothed_angles)}, display_basis{render::continuous_rotation(display_angles)}, display_offset{vec3d{state.offset_q16}/65536} {}
-view_motion_state const &view_camera::value() const { return state; }
-view_pose const &view_camera::last_pose() const { return pose; }
+view_camera::view_camera(view_motion_state initial) : state{std::move(initial)}, display_angles{render::angle_radians(state.smoothed_angles)}, display_basis{render::continuous_rotation(display_angles)}, display_offset{vec3d{state.offset_q16} / 65536} {}
+view_motion_state const &view_camera::value() const {
+  return state;
+}
+view_pose const &view_camera::last_pose() const {
+  return pose;
+}
 render::camera view_camera::display_camera(vec2d const &projection_origin) const {
   auto result{render::continuous_camera(pose.camera(projection_origin),display_basis)};
-  if(display_position)result.position=vec3d{*display_position};
+  if(display_position)result.position = vec3d{*display_position};
   return result;
 }
 void view_camera::set_angles(vec3<math::angle> const &angles) {
@@ -47,8 +61,8 @@ void view_camera::set_angles(vec3<math::angle> const &angles) {
   pose.horizon_angles.emplace(angles.x,angles.z);
   pose.horizon_camera_y = math::signed_word(static_cast<uint16_t>(pose.position_q16.y >> 16));
   pose.matrix = math::view_rotation_words(angles);
-  display_angles=-render::angle_radians(angles);
-  display_basis=render::continuous_rotation(display_angles);
+  display_angles = -render::angle_radians(angles);
+  display_basis = render::continuous_rotation(display_angles);
 }
 void view_camera::player_origin(view_camera_context const &context) {
   pose.anchor = vec3<int32_t>{context.position};
@@ -95,13 +109,13 @@ void view_camera::select_head_height() {
 bool view_camera::compose(view_control &views, view_camera_context const &context, bool const chase) {
   auto const &world{context.basis};
   auto const precise_world{render::continuous_basis(world)};
-  double const roll{chase ? render::angle_radians(static_cast<math::angle>(state.orbit_roll)) : -render::continuous_angles(precise_world).z/16};
-  auto const target{precise_world*render::continuous_basis(views.state.orbit)*render::continuous_rotation(vec3d{0,0,roll})};
+  double const roll{chase ? render::angle_radians(static_cast<math::angle>(state.orbit_roll)) : -render::continuous_angles(precise_world).z / 16};
+  auto const target{precise_world * render::continuous_basis(views.state.orbit) * render::continuous_rotation(vec3d{0,0,roll})};
   auto const following{render::follow_angles(display_angles,render::continuous_angles(target),chase ? .125 : .25,!chase && views.state.tracking_roll)};
-  auto const head_offset{precise_world*vec3d{state.head}/8};
-  auto const setback{target*vec3d{0,0,-views.state.distance/2.0}};
-  if(views.state.recenter)display_offset=chase ? setback-head_offset : vec3d{0,0,0};
-  else display_offset=display_offset.lerp(chase ? .125 : .25,setback+head_offset);
+  auto const head_offset{precise_world * vec3d{state.head} / 8};
+  auto const setback{target * vec3d{0,0,-views.state.distance / 2.0}};
+  if(views.state.recenter)display_offset = chase ? setback - head_offset : vec3d{0,0,0};
+  else display_offset = display_offset.lerp(chase ? .125 : .25,setback + head_offset);
   auto combined{product(world,views.state.orbit)};
   if(chase) combined.rotate(math::rotation_axis::roll,static_cast<math::angle>(state.orbit_roll));
   else combined.rotate(math::rotation_axis::roll,static_cast<math::angle>((-math::signed_word(context.angles.z)) >> 4));
@@ -141,10 +155,10 @@ bool view_camera::compose(view_control &views, view_camera_context const &contex
   set_angles({negative(state.smoothed_angles.x),negative(state.smoothed_angles.y),negative(state.smoothed_angles.z)});
   // Preserve the native pose/state above for gameplay and reference checks;
   // the visible camera keeps sub-phase angles through the same follow filter.
-  display_angles=vec3d{following};
-  display_basis=render::continuous_rotation(display_angles);
-  display_position=vec3d{context.position_q8}/256+display_offset;
-  if(chase)display_position->y=std::min(display_position->y,context.ground_height-5.0);
+  display_angles = vec3d{following};
+  display_basis = render::continuous_rotation(display_angles);
+  display_position = vec3d{context.position_q8} / 256 + display_offset;
+  if(chase)display_position->y = std::min(display_position->y,context.ground_height - 5.0);
   // Native 0x9095c chooses the internal canopy/side model only while the
   // eye remains within 0xa000 Q16 units of the player anchor.
   bool near{!chase};
@@ -152,13 +166,15 @@ bool view_camera::compose(view_control &views, view_camera_context const &contex
   pose.player_model_entry = (near ? (state.heading > -0x2000 && state.heading < 0x2000 ? 19u : 20u) : 21u) + context.refuel_phase;
   return clamped;
 }
-void view_camera::initialise_ground_reference(vec3<int32_t> const &position) { state.ground_reference = vec3<int32_t>{position}; }
+void view_camera::initialise_ground_reference(vec3<int32_t> const &position) {
+  state.ground_reference = vec3<int32_t>{position};
+}
 void view_camera::advance_ground_reference(view_camera_context const &context, bool const inhibited) {
   pose.ground_motion.reset();
-  if(inhibited) return; // Native 0x92969 excludes view 4 and retains its reference.
+  if(inhibited) return;                                                        // Native 0x92969 excludes view 4 and retains its reference.
   int32_t const x{word(static_cast<uint32_t>(state.ground_reference.x) - static_cast<uint32_t>(context.position.x))};
   int32_t const z{word(static_cast<uint32_t>(state.ground_reference.z) - static_cast<uint32_t>(context.position.z))};
-  auto const transformed{[&](vec3<int32_t> const &axis) {
+  auto const transformed{[&](vec3<int32_t> const &axis){
     uint32_t const product{static_cast<uint32_t>(word(axis.x)) * static_cast<uint32_t>(x) + static_cast<uint32_t>(word(axis.z)) * static_cast<uint32_t>(z)};
     return math::signed_word(static_cast<uint16_t>(wrap(product) >> math::matrix_fraction_bits));
   }};
@@ -175,24 +191,24 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
   pose.model_source = player_model_source::fixed;
   pose.ground_motion.reset();
   state.pan = context.pan;
-  auto const tracking_angles{[&] {
+  auto const tracking_angles{[&]{
     if(!context.tracking_target_q8) return vec2<math::angle>{0,0};
     vec3<int32_t> const origin{wrap(static_cast<uint32_t>(context.position.x) << 8),wrap(static_cast<uint32_t>(context.position.y) << 8),wrap(static_cast<uint32_t>(context.position.z) << 8)};
     auto const bearing{math::bearing(origin,*context.tracking_target_q8)};
     return vec2<math::angle>{static_cast<math::angle>(-bearing.x - 1 - 0x800),static_cast<math::angle>(-bearing.y - 1)};
   }};
-  auto const resume_tracking{[&] {
+  auto const resume_tracking{[&]{
     int const roll{math::signed_word(context.angles.z)};
     if(control.tracking_complete == 1 && context.tracking_target_q8 && roll < 0x2a00 && roll >= -0x2a00) views.enqueue(view_mode::target_tracking,context.speed);
   }};
-  auto const head_pose{[&] { compose(views,context,false); }};
-  auto const transpose{[&] { return control.orbit.transposed(); }};
+  auto const head_pose{[&]{ compose(views,context,false); }};
+  auto const transpose{[&]{ return control.orbit.transposed(); }};
   switch(control.current) {
   case view_mode::cockpit:
     player_origin(context);
     set_angles({negative(context.angles.x),negative(context.angles.y),negative(context.angles.z)});
-    display_basis=render::continuous_basis(context.basis);
-    display_angles=render::continuous_angles(display_basis);
+    display_basis = render::continuous_basis(context.basis);
+    display_angles = render::continuous_angles(display_basis);
     views.ready();
     break;
   case view_mode::full_forward: {
@@ -201,8 +217,8 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     // Native 0xb96dc uses the current basis directly, preserving its stored precision.
     auto const &basis{context.basis};
     pose.matrix.data = {basis.right.x,basis.right.y,basis.right.z,basis.down.x,basis.down.y,basis.down.z,basis.forward.x,basis.forward.y,basis.forward.z};
-    display_basis=render::continuous_basis(basis);
-    display_angles=render::continuous_angles(display_basis);
+    display_basis = render::continuous_basis(basis);
+    display_angles = render::continuous_angles(display_basis);
     views.ready();
     break;
   }
@@ -320,12 +336,12 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
   case view_mode::fly_past: {
     auto const precise{render::continuous_bearing(vec3d{control.fixed_position},vec3d{context.position_f32})};
     auto following{render::follow_angles(display_angles,precise,.5,false)};
-    following.z=display_angles.z*.75;
+    following.z = display_angles.z * .75;
     auto const bearing{math::bearing(control.fixed_position,context.position)};
     for(unsigned int axis{0}; axis != 2; ++axis) state.smoothed_angles[axis] = static_cast<math::angle>(state.smoothed_angles[axis] + (word(bearing[axis] - state.smoothed_angles[axis]) >> 1));
     state.smoothed_angles.z = static_cast<math::angle>(state.smoothed_angles.z + ((-math::signed_word(state.smoothed_angles.z)) >> 2));
     set_angles({negative(state.smoothed_angles.x),negative(state.smoothed_angles.y),negative(state.smoothed_angles.z)});
-    display_angles=vec3d{following};display_basis=render::continuous_rotation(display_angles);
+    display_angles = vec3d{following};display_basis = render::continuous_rotation(display_angles);
     pose.anchor = vec3<int32_t>{control.fixed_position};
     for(unsigned int axis{0}; axis != 3; ++axis) pose.position_q16[axis] = wrap(std::rotl(static_cast<uint32_t>(control.fixed_position[axis]),16));
     pose.player_model_entry = 21u + context.refuel_phase;
@@ -335,7 +351,7 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
       views.enqueue(view_mode::chase,context.speed);
       views.ready();
       for(unsigned int axis{0}; axis != 3; ++axis) state.offset_q16[axis] = wrap(static_cast<uint32_t>(subtract(control.fixed_position[axis],context.position[axis])) << 16);
-      display_offset=vec3d{control.fixed_position}-vec3d{context.position_q8}/256;
+      display_offset = vec3d{control.fixed_position} - vec3d{context.position_q8} / 256;
       control.orbit = math::attitude{};
       control.distance = 40;
     }
@@ -379,7 +395,7 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
         state.offset_q16[axis] = add(state.offset_q16[axis],delta / 5);
       }
     }
-    bool const recentered{control.recenter!=0};
+    bool const recentered{control.recenter != 0};
     control.recenter = 0;
     state.smoothed_angles = combined.angles();
     for(unsigned int axis{0}; axis != 3; ++axis) {
@@ -387,10 +403,10 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
       pose.position_q16[axis] = add(wrap(static_cast<uint32_t>(state.last_missile.position_q8[axis]) << 8),state.offset_q16[axis]);
     }
     set_angles({negative(state.smoothed_angles.x),negative(state.smoothed_angles.y),negative(state.smoothed_angles.z)});
-    display_basis=render::continuous_rotation(state.last_missile.angles)*render::continuous_basis(control.orbit)*render::continuous_rotation(vec3d{0,0,render::angle_radians(static_cast<math::angle>(state.orbit_roll))});
-    display_angles=render::continuous_angles(display_basis);
-    display_offset=recentered ? vec3d{0,0,0} : display_offset.lerp(.2,display_basis*vec3d{0,0,-control.distance/2.0});
-    display_position=vec3d{state.last_missile.position_q8}/256+display_offset;
+    display_basis = render::continuous_rotation(state.last_missile.angles) * render::continuous_basis(control.orbit) * render::continuous_rotation(vec3d{0,0,render::angle_radians(static_cast<math::angle>(state.orbit_roll))});
+    display_angles = render::continuous_angles(display_basis);
+    display_offset = recentered ? vec3d{0,0,0} : display_offset.lerp(.2,display_basis * vec3d{0,0,-control.distance / 2.0});
+    display_position = vec3d{state.last_missile.position_q8} / 256 + display_offset;
     pose.player_model_entry = 21u + context.refuel_phase;
     pose.model_source = player_model_source::integer;
     break;
@@ -437,10 +453,10 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     state.smoothed_angles.x = angles.x;
     state.smoothed_angles.y = angles.y;
     set_angles({negative(angles.x),negative(angles.y),0});
-    display_angles=render::continuous_angles(render::continuous_basis(control.orbit));display_angles.z=0;
-    display_basis=render::continuous_rotation(display_angles);
-    display_offset=display_offset.lerp(.5,render::continuous_basis(control.orbit)*vec3d{0,0,-control.distance/2.0});
-    display_position=vec3d{target}/256+display_offset;
+    display_angles = render::continuous_angles(render::continuous_basis(control.orbit));display_angles.z = 0;
+    display_basis = render::continuous_rotation(display_angles);
+    display_offset = display_offset.lerp(.5,render::continuous_basis(control.orbit) * vec3d{0,0,-control.distance / 2.0});
+    display_position = vec3d{target} / 256 + display_offset;
     pose.player_model_entry = 21u + context.refuel_phase;
     pose.model_source = player_model_source::integer;
     break;
@@ -458,7 +474,7 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     if(horizontal > 0x400) state.pan |= 1;
     if((state.pan & 3) != 3) {
       int const vertical{math::signed_word(angles.x) + math::signed_word(target.x)};
-      if(vertical < -0x400 && vertical > -0x4000) state.pan |= 4;
+      if(vertical < -0x400 && vertical > - 0x4000) state.pan |= 4;
       if(vertical > 0x400 && vertical < 0x4000) state.pan |= 8;
     }
     pan_head(views,state.pan,true);
@@ -483,10 +499,10 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     for(unsigned int axis{0}; axis != 3; ++axis) pose.position_q16[axis] = add(pose.position_q16[axis],offset[axis]);
     set_angles({angles.x,angles.y,0});
     if(context.tracking_target_q8) {
-      display_angles=render::continuous_bearing(vec3d{context.position_q8},vec3d{*context.tracking_target_q8})+vec3d{render::angle_radians(0x801),render::angle_radians(1),0};
-      display_basis=render::continuous_rotation(display_angles);
+      display_angles = render::continuous_bearing(vec3d{context.position_q8},vec3d{*context.tracking_target_q8}) + vec3d{render::angle_radians(0x801),render::angle_radians(1),0};
+      display_basis = render::continuous_rotation(display_angles);
     }
-    display_position=vec3d{context.position_q8}/256+display_basis*vec3d{0,0,-static_cast<double>(control.distance>>1)};
+    display_position = vec3d{context.position_q8} / 256 + display_basis * vec3d{0,0,-static_cast<double>(control.distance >> 1)};
     pose.player_model_entry = 21u + context.refuel_phase;
     views.ready();
     pose.horizon_camera_y = previous_projection_y;
@@ -498,7 +514,7 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     auto basis{context.body_basis ? *context.body_basis : context.basis};
     int32_t constexpr level_near_ground{-80};
     if(context.position.y >= level_near_ground) basis.align_down({0,1,0});
-    auto const precise{render::continuous_basis(basis)*render::continuous_rotation(vec3<math::angle>{0,0x6000,0})*render::continuous_rotation(vec3<math::angle>{0x0aaa,0,0})};
+    auto const precise{render::continuous_basis(basis) * render::continuous_rotation(vec3<math::angle>{0,0x6000,0}) * render::continuous_rotation(vec3<math::angle>{0x0aaa,0,0})};
     basis.rotate(math::rotation_axis::heading,0x6000);
     basis.rotate(math::rotation_axis::pitch,0x0aaa);
     state.smoothed_angles = basis.angles();
@@ -510,8 +526,8 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
       pose.position_q16[axis] = wrap(static_cast<uint32_t>(coordinate) << 8);
     }
     set_angles({negative(state.smoothed_angles.x),negative(state.smoothed_angles.y),negative(state.smoothed_angles.z)});
-    display_basis=mat3d{precise};display_angles=render::continuous_angles(display_basis);
-    display_position=vec3d{context.position_f32}+display_basis*vec3d{0,0,-12};
+    display_basis = mat3d{precise};display_angles = render::continuous_angles(display_basis);
+    display_position = vec3d{context.position_f32} + display_basis * vec3d{0,0,-12};
     pose.player_model_entry = 21u + context.refuel_phase;
     pose.horizon_camera_y = previous_projection_y;
     break;
@@ -522,9 +538,9 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     auto const offset{math::orbit_offset_q16({negative(context.angles.x),negative(context.angles.y)},60)};
     for(unsigned int axis{0}; axis != 3; ++axis) pose.position_q16[axis] = add(pose.position_q16[axis],offset[axis]);
     set_angles({negative(context.angles.x),negative(context.angles.y),0});
-    display_angles=render::continuous_angles(render::continuous_basis(context.basis));display_angles.z=0;
-    display_basis=render::continuous_rotation(display_angles);
-    display_position=vec3d{context.position_q8}/256+display_basis*vec3d{0,0,-60};
+    display_angles = render::continuous_angles(render::continuous_basis(context.basis));display_angles.z = 0;
+    display_basis = render::continuous_rotation(display_angles);
+    display_position = vec3d{context.position_q8} / 256 + display_basis * vec3d{0,0,-60};
     pose.player_model_entry = 21u + context.refuel_phase;
     pose.horizon_camera_y = previous_projection_y;
     break;
@@ -545,7 +561,7 @@ bool view_camera::advance(view_control &views, view_camera_context const &contex
     auto const offset{math::orbit_offset_q16({0xe000,0},control.target_distance >> 1)};
     for(unsigned int axis{0}; axis != 3; ++axis) pose.position_q16[axis] = add(wrap(static_cast<uint32_t>(target[axis]) << 8),offset[axis]);
     set_angles({0xe000,0,0});
-    display_position=vec3d{target}/256+display_basis*vec3d{0,0,-static_cast<double>(control.target_distance>>1)};
+    display_position = vec3d{target} / 256 + display_basis * vec3d{0,0,-static_cast<double>(control.target_distance >> 1)};
     pose.player_model_entry = 21u + context.refuel_phase;
     views.ready();
     pose.horizon_camera_y = previous_projection_y;

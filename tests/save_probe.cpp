@@ -17,8 +17,7 @@ int main(int const argc, char const *const argv[]) try {
       state = tfx::presentation::decode_save(program,input);
     } else {
       for(auto const &variable : program.variables) {
-        if(variable.text) { std::string text;std::cin >> text;state.values[variable.name] = text == "-" ? std::string{} : text; }
-        else { uint32_t value{0};std::cin >> value;state.values[variable.name] = value; }
+        if(variable.text) { std::string text;std::cin >> text;state.values[variable.name] = text == "-" ? std::string{} : text; } else { uint32_t value{0};std::cin >> value;state.values[variable.name] = value; }
       }
       for(unsigned int index{static_cast<unsigned int>(program.variables.size())}; index != tfx::presentation::saved_variable_slots; ++index) { uint32_t value{0};std::cin >> value;state.reserved.push_back(value); }
       unsigned int count{0};std::cin >> count;

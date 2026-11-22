@@ -1,10 +1,11 @@
 #include <bit>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include "world/trails.h"
 #include "weapons/projectile.h"
+#include "world/trails.h"
 
 int main(int const argc, char const *const argv[]) try {
   std::ifstream fixture;
@@ -31,15 +32,14 @@ int main(int const argc, char const *const argv[]) try {
         auto const middle{segment->midpoint()};
         values.insert(values.end(),{segment->length,middle.x,middle.y,middle.z});
         if(visible) {
-          auto const output{[&](vec3<int32_t> const &p) { events.insert(events.end(),{p.x,p.y,p.z}); }};
+          auto const output{[&](vec3<int32_t> const &p){ events.insert(events.end(),{p.x,p.y,p.z}); }};
           tfx::world::emit_trail(*segment,output);
         }
       }
       values.push_back(static_cast<int64_t>(events.size() / 3));
       values.insert(values.end(),events.begin(),events.end());
     } else {
-      if(command == 'R') { pool.reset();dead.fill(false); }
-      else if(command == 'P') {
+      if(command == 'R') { pool.reset();dead.fill(false); } else if(command == 'P') {
         unsigned int enabled;vec3<int32_t> p;
         input >> enabled >> p.x >> p.y >> p.z;
         if(enabled) {
@@ -54,10 +54,10 @@ int main(int const argc, char const *const argv[]) try {
         for(unsigned int i{0}; i != count; ++i) { unsigned int slot;input >> slot;dead.at(slot) = true; }
         for(auto const slot : pool.active_slots()) {
           auto const world{tfx::world::trail_position(pool.record(slot).position_q8,reference)};
-          auto const encoded{[&](double const value) { return std::bit_cast<int32_t>(static_cast<uint32_t>(static_cast<int64_t>(value * 65536))); }};
+          auto const encoded{[&](double const value){ return std::bit_cast<int32_t>(static_cast<uint32_t>(static_cast<int64_t>(value * 65536))); }};
           events.insert(events.end(),{1,slot,encoded(world.x),encoded(world.y),encoded(world.z)});
         }
-        auto const destroyed{[&](tfx::world::trail_slot const slot) { return dead.at(slot); }};
+        auto const destroyed{[&](tfx::world::trail_slot const slot){ return dead.at(slot); }};
         pool.clean(reference,destroyed);
       } else throw std::runtime_error{"unknown trail probe command"};
       for(auto const slot : pool.active_slots()) {
@@ -71,9 +71,8 @@ int main(int const argc, char const *const argv[]) try {
     if(!input) throw std::runtime_error{"incomplete trail probe input"};
     uint64_t digest{14695981039346656037ULL};
     for(auto const value : values) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
-    if(argc == 2) { uint64_t expected;if(!(input >> expected) || expected != digest) throw std::runtime_error{"native trail mismatch at case " + std::to_string(cases)}; }
-    else std::cout << digest << '\n';
+    if(argc == 2) { uint64_t expected;if(!(input >> expected) || expected != digest) throw std::runtime_error{"native trail mismatch at case " + std::to_string(cases)}; } else std::cout << digest << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

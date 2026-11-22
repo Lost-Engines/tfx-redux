@@ -2,11 +2,11 @@
 #include <algorithm>
 #include <utility>
 #include "render/integer_model_polygon.h"
-#include "render/view_settings.h"
-#include "render/model_transform.h"
 #include "render/model_metrics.h"
-#include "world/model_placement.h"
+#include "render/model_transform.h"
+#include "render/view_settings.h"
 #include "world/model_orientation.h"
+#include "world/model_placement.h"
 
 namespace tfx::presentation {
 namespace {
@@ -81,7 +81,9 @@ void arming_preview::advance() {
   // Arming explicitly holds native AAC90 at one: these streams advance per model draw.
   aircraft.animate();
 }
-uint8_t arming_preview::bay_position() const { return aircraft.parts.front().parameters[1]; }
+uint8_t arming_preview::bay_position() const {
+  return aircraft.parts.front().parameters[1];
+}
 void arming_preview::shape(render::software_renderer &renderer, models::shape const &program, render::camera const &view,
   vec3<int32_t> const &origin, vec3<math::angle> const &angles, std::span<uint8_t const> const parameters,
   std::span<models::shape const *const> const attachments) {
@@ -107,12 +109,12 @@ void arming_preview::shape(render::software_renderer &renderer, models::shape co
     .projection_shift{render::projection_shift(view.opening)},
   });
   context.attachments = attachments;
-  context.project = [&](vec3d const &vertex, double const scale) {
+  context.project = [&](vec3d const &vertex, double const scale){
     auto point{vec3d{vertex}};
     if(std::abs(point.z) < view.near_distance * scale) point.z = std::copysign(view.near_distance * scale,point.z);
     return view.project(point,scale);
   };
-  context.face_visibility = [&view](std::span<models::model_vertex const> const vertices, models::facing_test const purpose) {
+  context.face_visibility = [&view](std::span<models::model_vertex const> const vertices, models::facing_test const purpose){
     return render::model_facing(vertices,view,purpose);
   };
   auto const geometry{models::interpret(program,context)};
@@ -152,7 +154,7 @@ void arming_preview::draw_models(render::software_renderer &renderer, arming_sta
     else if(store.visible && store.weapon != weapons::empty_pylon) attachments[slot] = &resources.shape(definitions[store.weapon].carried);
   }
   auto const view{aircraft_view(state)};
-  clipped(renderer,[&] { object(renderer,aircraft,view,aircraft_position,{0,0,0},attachments); });
+  clipped(renderer,[&]{ object(renderer,aircraft,view,aircraft_position,{0,0,0},attachments); });
   thumbnail_rotation = static_cast<math::angle>(thumbnail_rotation + 512);
   for(unsigned int row{0}; row != assets.rows.size(); ++row) {
     auto const &bounds{assets.rows[row]};
@@ -167,10 +169,10 @@ void arming_preview::draw_cursor(render::software_renderer &renderer, arming_sta
   if(state.mode == arming_mode::placing && state.selected) {
     auto const weapon{std::to_underlying(*state.selected)};
     auto const view{aircraft_view(state)};
-    clipped(renderer,[&] { shape(renderer,resources.shape(definitions[weapon].carried),view,view.projector().camera_fixed(vec3<int32_t>{cursor_point(pointer,state)} * 65536),{0,0,weapon_rotations[weapon]},{}); });
+    clipped(renderer,[&]{ shape(renderer,resources.shape(definitions[weapon].carried),view,view.projector().camera_fixed(vec3<int32_t>{cursor_point(pointer,state)} * 65536),{0,0,weapon_rotations[weapon]},{}); });
   } else if(state.mode == arming_mode::clearing) {
     auto const view{aircraft_view(state)};
-    clipped(renderer,[&] { shape(renderer,resources.shape(assets.empty_model),view,view.projector().camera_fixed(vec3<int32_t>{cursor_point(pointer,state)} * 65536),{0,0,0},{}); });
+    clipped(renderer,[&]{ shape(renderer,resources.shape(assets.empty_model),view,view.projector().camera_fixed(vec3<int32_t>{cursor_point(pointer,state)} * 65536),{0,0,0},{}); });
   } else if(state.mode == arming_mode::idle) {
     auto const miniature_view{render::orbit_camera({0,0x4000,0x2000},8000,vec2d{pointer})};
     object(renderer,miniature,miniature_view,{0,0,0},{0,0,static_cast<math::angle>(state.pulse << 8)});

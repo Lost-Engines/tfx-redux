@@ -18,8 +18,7 @@ int main(int const argc, char const *const argv[]) try {
       auto const &state{reveal.state()};
       for(uint32_t const value : {state.previous,static_cast<uint32_t>(state.visible),static_cast<uint32_t>(state.remainder),static_cast<uint32_t>(consumed)}) for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((value >> shift) & 255)) * 1099511628211ULL;
     }
-    if(argc == 2) { uint64_t expected{0};if(!(input >> expected) || digest != expected) throw std::runtime_error{"text reveal clock differs from original"}; }
-    else std::cout << digest << '\n';
+    if(argc == 2) { uint64_t expected{0};if(!(input >> expected) || digest != expected) throw std::runtime_error{"text reveal clock differs from original"}; } else std::cout << digest << '\n';
   }
   return EXIT_SUCCESS;
 } catch(std::exception const &error) {

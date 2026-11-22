@@ -25,8 +25,12 @@ double constexpr negative_clamped_bank{native_pi * -clamped_bank_degrees * inver
 double constexpr positive_roll_step{native_pi * maximum_roll_step_degrees * inverse_degrees};
 double constexpr negative_roll_step{native_pi * -maximum_roll_step_degrees * inverse_degrees};
 
-calculation wide(double const value) { return value; }
-calculation native_asin(calculation const x) { return std::atan2(x,std::sqrt(1.0 - x * x)); }
+calculation wide(double const value) {
+  return value;
+}
+calculation native_asin(calculation const x) {
+  return std::atan2(x,std::sqrt(1.0 - x * x));
+}
 calculation native_acos(calculation const x) {
   // Native 0xd254e subtracts asin from the actual extended half-pi constant.
   return std::numbers::pi_v<calculation> / 2 - native_asin(x);

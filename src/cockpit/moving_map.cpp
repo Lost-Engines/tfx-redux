@@ -12,7 +12,9 @@ moving_map::moving_map(resources::archive const &game, std::string const &name) 
   if(frames.size() != 1 || frames.front().size != vec2<unsigned int>{world::map_width,world::map_height}) throw std::runtime_error{"unexpected original moving-map dimensions"};
   schematic = std::move(frames.front());
 }
-map_animation const &moving_map::state() const { return animation; }
+map_animation const &moving_map::state() const {
+  return animation;
+}
 
 void moving_map::draw(render::software_renderer &renderer, map_state const &state, vec2<int> const &minimum, vec2<int> const &maximum, render::framebuffer *const coverage) {
   // Native 0x823d0 adds elapsed ticks per display draw and toggles at most once per call.
@@ -20,8 +22,7 @@ void moving_map::draw(render::software_renderer &renderer, map_state const &stat
   animation.ticks += state.elapsed;
   if(std::bit_cast<int32_t>(animation.ticks) > static_cast<int32_t>(blink_ticks)) {
     animation.ticks -= blink_ticks;
-    if(animation.target_colour == 11) { animation.target_colour = 15;animation.landing_colour = 6; }
-    else { animation.target_colour = 11;animation.landing_colour = 7; }
+    if(animation.target_colour == 11) { animation.target_colour = 15;animation.landing_colour = 6; } else { animation.target_colour = 11;animation.landing_colour = 7; }
   }
   vec2<int> const centre{minimum + (maximum - minimum) / 2};
   vec2<int> const low{minimum + vec2<int>{state.offset}}, high{maximum + vec2<int>{state.offset}};
@@ -48,7 +49,7 @@ void moving_map::draw(render::software_renderer &renderer, map_state const &stat
   };
   presentation::draw_clipped_line(renderer.output,vec2<int>{origin},vec2<int>{tip},{0,0},{render::screen_width - 1,render::screen_height - 1},15);
   if(coverage) presentation::draw_clipped_line(*coverage,vec2<int>{origin},vec2<int>{tip},{0,0},{render::screen_width - 1,render::screen_height - 1},255);
-  auto const marker{[&](vec3<int32_t> const &position, uint8_t const colour) {
+  auto const marker{[&](vec3<int32_t> const &position, uint8_t const colour){
     vec2<int> const pixel{position.x / world::cell_units - player_cell.x + origin.x,player_cell.y - position.z / world::cell_units + origin.y};
     // Native 0x82164 excludes the border and the final screen row.
     if(pixel.x <= low.x || pixel.x >= high.x || pixel.y <= low.y || pixel.y >= high.y || pixel.y < 0 || pixel.y >= render::screen_height - 1) return;
@@ -57,10 +58,10 @@ void moving_map::draw(render::software_renderer &renderer, map_state const &stat
     renderer.output.write(index,colour);
     if(coverage) coverage->pixels[index] = 255;
   }};
-  auto const aircraft{[&](std::span<vec3<int32_t> const> const contacts, uint8_t const colour) {
+  auto const aircraft{[&](std::span<vec3<int32_t> const> const contacts, uint8_t const colour){
     for(auto const &position : contacts) if((position.y >> 8) < -37) marker({position.x >> 8,position.y >> 8,position.z >> 8},colour);
   }};
-  auto const surface{[&](std::span<vec3<int32_t> const> const contacts, uint8_t const colour) {
+  auto const surface{[&](std::span<vec3<int32_t> const> const contacts, uint8_t const colour){
     for(auto const &position : contacts) marker({position.x >> 8,position.y >> 8,position.z >> 8},colour);
   }};
   if(!state.stealth) {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "resources/binary.h"
 #include "math/native.h"
+#include "resources/binary.h"
 
 namespace tfx::planning {
 

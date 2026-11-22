@@ -22,7 +22,9 @@ std::string string(resources::binary_view const &view, unsigned int const at, un
   }
   return result;
 }
-int32_t wrap(int64_t const value) { return std::bit_cast<int32_t>(static_cast<uint32_t>(value)); }
+int32_t wrap(int64_t const value) {
+  return std::bit_cast<int32_t>(static_cast<uint32_t>(value));
+}
 int32_t cell_position(int16_t const cell) {
   return wrap(static_cast<int64_t>(cell) * world::cell_units * position_unit + world::cell_units / 2 * position_unit);
 }

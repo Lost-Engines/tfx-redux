@@ -48,27 +48,27 @@ mfd::mfd(instrument_assets const &source, resources::archive const &game, std::s
 }
 void mfd::draw(render::software_renderer &renderer, display_side const side, display_page const page, mfd_state const &state, render::framebuffer *const coverage) const {
   auto const &origin{assets.display_origins[side == display_side::left ? 0 : 2]};
-  auto const point{[&](vec2<int> const &local) {
+  auto const point{[&](vec2<int> const &local){
     return vec2<int>{math::signed_word(static_cast<uint16_t>(local.x + origin.x + state.offset.x)),math::signed_word(static_cast<uint16_t>(local.y + origin.y + state.offset.y))};
   }};
-  auto const background{[&](unsigned int const frame) {
+  auto const background{[&](unsigned int const frame){
     auto const centre{point({28,18})};
     render::draw_sprite(renderer.output,backgrounds.at(frame),{static_cast<uint16_t>(centre.x),static_cast<uint16_t>(centre.y)},coverage,renderer.clipping);
   }};
-  auto const mask{[&](instrument_mask const shape, vec2<int> const &local, uint8_t const colour) {
+  auto const mask{[&](instrument_mask const shape, vec2<int> const &local, uint8_t const colour){
     auto const position{point(local)};
     render::draw_monochrome(renderer.output,assets.masks[std::to_underlying(shape)],{static_cast<uint16_t>(position.x),static_cast<uint16_t>(position.y)},colour,coverage,renderer.clipping);
   }};
-  auto const text{[&](vec2<int> const &local, std::string const &message, uint8_t const colour) {
+  auto const text{[&](vec2<int> const &local, std::string const &message, uint8_t const colour){
     auto const position{point(local)};
     renderer.text(position.x,position.y,message,colour,coverage);
   }};
-  auto const centred{[&](int const row, std::string const &message, uint8_t const colour) {
+  auto const centred{[&](int const row, std::string const &message, uint8_t const colour){
     int const width{math::signed_word(static_cast<uint16_t>(renderer.text_width(message)))};
     text({29 - (width >> 1),row},message,colour);
   }};
-  auto const status{[&](flight::aircraft_system const system) { return std::to_underlying(state.systems.at(std::to_underlying(system))); }};
-  auto const fill{[&](vec2<int> const &low, vec2<int> const &high, uint8_t const colour) {
+  auto const status{[&](flight::aircraft_system const system){ return std::to_underlying(state.systems.at(std::to_underlying(system))); }};
+  auto const fill{[&](vec2<int> const &low, vec2<int> const &high, uint8_t const colour){
     rectangle(renderer.output,point(low),point(high),colour,coverage);
   }};
   switch(page) {
@@ -78,7 +78,7 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
     auto const &inventory{*state.inventory};
     if(!inventory.guns && (inventory.selected < 0 || static_cast<unsigned int>(inventory.selected) >= inventory.pylons.size() || inventory.pylons[static_cast<unsigned int>(inventory.selected)].weapon >= weapons.size())) throw std::runtime_error{"stores display has no valid selected weapon"};
     unsigned int const aircraft{std::to_underlying(state.aircraft) - 1};
-    std::array<unsigned int,3> constexpr visible_mounts{10,4,8}; // Native arming completion 0x89680.
+    std::array<unsigned int,3> constexpr visible_mounts{10,4,8};               // Native arming completion 0x89680.
     for(unsigned int index{0}; index != visible_mounts.at(aircraft); ++index) {
       auto const slot{assets.store_order[aircraft][index]};
       auto const &pylon{inventory.pylons[slot]};
@@ -173,7 +173,7 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
       fill({2,13},{18,17},3);
     }
     if(state.aircraft != flight::player_aircraft::nighthawk) {
-      auto const pointer{[&](int const x, int const length, int const degrees) {
+      auto const pointer{[&](int const x, int const length, int const degrees){
         // Retain the original units and numerator wrapping, using all angle bits.
         int32_t const numerator{std::bit_cast<int32_t>(static_cast<uint32_t>(degrees) * 65536u)};
         auto const angle{static_cast<math::angle>(numerator / 360)};
@@ -183,7 +183,7 @@ void mfd::draw(render::software_renderer &renderer, display_side const side, dis
         presentation::draw_line(renderer.output,vec2<int>{from},to,6);
         if(coverage) presentation::draw_line(*coverage,vec2<int>{from},to,255);
       }};
-      auto const deflection{[&](double const value) { return math::signed_word(static_cast<uint16_t>(static_cast<int>(static_cast<double>(value) * assets.surface_scale))); }};
+      auto const deflection{[&](double const value){ return math::signed_word(static_cast<uint16_t>(static_cast<int>(static_cast<double>(value) * assets.surface_scale))); }};
       pointer(43,10,90 + deflection(state.controls.trailing_edge_flap));
       pointer(32,5,-90 - deflection(state.controls.leading_edge_flap));
       if(state.aircraft == flight::player_aircraft::raptor) {

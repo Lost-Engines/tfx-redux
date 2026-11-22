@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -16,9 +17,8 @@ int main(int const argc, char const *const argv[]) try {
     auto const result{tfx::world::place_model_shadow(view,origin,ground,radius)};
     std::vector<int32_t> values{result ? 1 : 0};
     if(result) { for(auto const component : {result->camera_origin.x,result->camera_origin.y,result->camera_origin.z,static_cast<int32_t>(result->visible)}) values.push_back(component); }
-    if(fixture.is_open()) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native shadow placement mismatch at " + std::to_string(cases)}; } }
-    else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
+    if(fixture.is_open()) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native shadow placement mismatch at " + std::to_string(cases)}; } } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

@@ -7,7 +7,7 @@ namespace {
 auto require(bool const condition, char const *const message)->void {
   if(!condition) throw std::runtime_error{message};
 }
-} // namespace
+} // anonymous namespace
 
 int main() try {
   tfx::flight::keyboard_state state;

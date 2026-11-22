@@ -12,7 +12,7 @@ model_placement place_model_part(render::point_projection const &view, vec3<int3
   if(placement == part_position::assembly_origin) return {
     .position{vec3<int16_t>{origin}},
     .camera_origin{view.camera_fixed(assembly_q16)},
-    .visible{true}, // Whole-assembly admission belongs to the caller.
+    .visible{true},                                                            // Whole-assembly admission belongs to the caller.
   };
   auto const point{place_instance_point(anchor,origin,heading)};
   auto const camera{placement == part_position::fixed_anchor ? view.camera_fixed(vec3<int32_t>{vec3<uint32_t>{point} * 65536u}) : view.camera_integer(vec3<int32_t>{point})};

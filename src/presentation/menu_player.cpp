@@ -19,16 +19,16 @@ void menu_player::compose(vec2<int16_t> const &position, bool const pointer_visi
   display = background;
   if(selected && source.flash_box) {
     auto const &choice{source.choices[*selected]};
-    auto const rectangle{[&](int const offset, uint8_t const colour) {
+    auto const rectangle{[&](int const offset, uint8_t const colour){
       int const left{choice.minimum.x + offset}, right{choice.maximum.x + offset}, top{choice.minimum.y + offset}, bottom{choice.maximum.y + offset};
-      auto const pixel{[&](int const x, int const y) {
+      auto const pixel{[&](int const x, int const y){
         if(x >= 0 && x < render::screen_width && y >= 0 && y < render::screen_height) display.write(static_cast<unsigned int>(y * render::screen_width + x),colour);
       }};
       for(int x{std::max(0,left)}; x <= std::min(render::screen_width - 1,right); ++x) { pixel(x,top);pixel(x,bottom); }
       for(int y{std::max(0,top)}; y <= std::min(render::screen_height - 1,bottom); ++y) { pixel(left,y);pixel(right,y); }
     }};
     rectangle(1,0);
-    uint8_t constexpr default_box_colour{15}; // No shipped script changes native boxcol.
+    uint8_t constexpr default_box_colour{15};                                  // No shipped script changes native boxcol.
     rectangle(0,default_box_colour);
   }
   if(pointer_visible) draw_pointer(display,selected || source.hit_test(position) ? pointer.active : pointer.idle,position);
@@ -66,7 +66,13 @@ bool menu_player::advance(bios_counter const counter, vec2<int16_t> const &posit
   compose(position,pointer_visible);
   return false;
 }
-render::framebuffer const &menu_player::image() const { return display; }
-render::palette menu_player::colours() const { return render::decode_palette(displayed_colours); }
-std::optional<unsigned int> menu_player::choice() const { return selected; }
+render::framebuffer const &menu_player::image() const {
+  return display;
+}
+render::palette menu_player::colours() const {
+  return render::decode_palette(displayed_colours);
+}
+std::optional<unsigned int> menu_player::choice() const {
+  return selected;
+}
 } // namespace tfx::presentation

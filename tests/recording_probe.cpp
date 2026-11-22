@@ -9,7 +9,7 @@ int main() try {
     tfx::recording::file input;
     unsigned int frames{0},resources{0};std::cin >> frames >> resources;
     input.frames.resize(frames);input.resources.resize(resources);
-    auto const byte{[] { unsigned int value{0};std::cin >> value;return static_cast<uint8_t>(value); }};
+    auto const byte{[]{ unsigned int value{0};std::cin >> value;return static_cast<uint8_t>(value); }};
     for(auto &frame : input.frames) {
       for(auto &value : frame.reserved) value = byte();
       for(unsigned int axis{0}; axis != 3; ++axis) std::cin >> frame.camera_angles[axis];

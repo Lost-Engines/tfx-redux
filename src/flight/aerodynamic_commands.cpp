@@ -11,7 +11,9 @@ double constexpr thrust_vector_degrees{20}, native_inverse_degrees{.005555555555
 double constexpr maximum_vector_angle{native_pi * thrust_vector_degrees * native_inverse_degrees};
 double constexpr vector_moment_multiplier{2}, pitch_rate_divisor{2}, roll_rate_multiplier{-2};
 
-calculation wide(double const value) { return value; }
+calculation wide(double const value) {
+  return value;
+}
 
 } // anonymous namespace
 

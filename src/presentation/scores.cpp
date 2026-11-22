@@ -14,7 +14,7 @@ void dword(resources::bytes &bytes, uint32_t const value) {
 score_assets::score_assets(std::span<uint8_t const> const executable) {
   resources::binary_view const view{executable};
   unsigned int constexpr data{973476};
-  auto const text{[&](unsigned int const address) {
+  auto const text{[&](unsigned int const address){
     auto const bytes{view.slice(data + address,score_name_bytes)};
     auto const end{std::ranges::find(bytes,uint8_t{0})};
     if(end == bytes.end()) throw std::runtime_error{"unterminated original high-score name"};
@@ -47,7 +47,7 @@ resources::bytes pack_scores(score_table const &scores) {
 score_table unpack_scores(std::span<uint8_t const> const source) {
   if(source.size() != score_payload_bytes) throw std::runtime_error{"high-score payload has the wrong size"};
   resources::binary_view const view{source};
-  auto const text{[&](unsigned int const at) {
+  auto const text{[&](unsigned int const at){
     auto const bytes{view.slice(at,score_name_bytes)};
     auto const end{std::ranges::find(bytes,uint8_t{0})};
     if(end == bytes.end()) throw std::runtime_error{"unterminated high-score name"};
@@ -91,7 +91,7 @@ std::optional<score_table> decode_scores(std::span<uint8_t const> const source) 
   catch(std::runtime_error const&) { return {}; }
 }
 std::optional<unsigned int> insert_score(score_table &scores, score_entry entry) {
-  auto const position{std::ranges::find_if(scores,[&](score_entry const &other) { return entry.score > other.score; })};
+  auto const position{std::ranges::find_if(scores,[&](score_entry const &other){ return entry.score > other.score; })};
   if(position == scores.end()) return {};
   std::move_backward(position,scores.end() - 1,scores.end());
   auto const index{static_cast<unsigned int>(position - scores.begin())};

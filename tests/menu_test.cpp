@@ -5,7 +5,9 @@
 #include "presentation/menu_player.h"
 
 namespace {
-void require(bool const condition, char const *const message) { if(!condition) throw std::runtime_error{message}; }
+void require(bool const condition, char const *const message) {
+  if(!condition) throw std::runtime_error{message};
+}
 }
 int main() try {
   tfx::presentation::menu_program const menu{R"(

@@ -72,15 +72,15 @@ bytes decode_animation_block(std::span<uint8_t const> const source) {
   uint16_t buffer{0};
   bytes output;
   unsigned int constexpr maximum_block_bytes{262144};
-  auto const byte{[&] { return view.byte(cursor++); }};
-  auto const bit{[&] {
+  auto const byte{[&]{ return view.byte(cursor++); }};
+  auto const bit{[&]{
     if(!remaining) { buffer = view.le16(cursor); cursor += 2; remaining = 16; }
     unsigned int const value{static_cast<unsigned int>(buffer) >> 15};
     buffer = static_cast<uint16_t>(buffer << 1);
     --remaining;
     return value;
   }};
-  auto const append{[&](uint8_t const value) {
+  auto const append{[&](uint8_t const value){
     if(output.size() == maximum_block_bytes) throw std::runtime_error{"animation block exceeds its decode limit"};
     output.push_back(value);
   }};
@@ -154,8 +154,12 @@ animation::animation(std::span<uint8_t const> const input) : source{input.begin(
   if(blocks.size() < game_frames || blocks.size() > game_frames + 2) throw std::runtime_error{"animation frame table does not match its declared count"};
 }
 
-unsigned int animation::block_count() const { return static_cast<unsigned int>(blocks.size()); }
-unsigned int animation::position() const { return cursor; }
+unsigned int animation::block_count() const {
+  return static_cast<unsigned int>(blocks.size());
+}
+unsigned int animation::position() const {
+  return cursor;
+}
 
 void animation::reset(render::framebuffer const *const background) {
   cursor = 0;
@@ -198,7 +202,7 @@ bool animation::advance() {
 
 void animation::repeat() {
   if(blocks.size() < 2) throw std::runtime_error{"animation has no repeat frame"};
-  cursor = 1; // Native repeats frame 2 onwards over the current planes, retaining the previous traversal.
+  cursor = 1;                                                                  // Native repeats frame 2 onwards over the current planes, retaining the previous traversal.
 }
 
 render::framebuffer animation::image() const {

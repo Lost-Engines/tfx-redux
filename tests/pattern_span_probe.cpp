@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -24,9 +25,8 @@ int main(int const argc, char const *const argv[]) try {
     tfx::render::pattern_polygon(output,state,spans,static_cast<uint8_t>(ink),mode);
     uint64_t hash{14695981039346656037ull};for(auto const value : output.pixels) hash = (hash ^ value) * 1099511628211;
     if(pixels) std::cout.write(reinterpret_cast<char const*>(output.pixels.data()),output.pixels.size());
-    else if(fixture.is_open()) { uint64_t expected;unsigned int expected_seed;if(!(input >> expected >> expected_seed) || hash != expected || state != expected_seed) throw std::runtime_error{"native pattern-span mismatch at " + std::to_string(cases)}; }
-    else std::cout << hash << ' ' << state << '\n';
+    else if(fixture.is_open()) { uint64_t expected;unsigned int expected_seed;if(!(input >> expected >> expected_seed) || hash != expected || state != expected_seed) throw std::runtime_error{"native pattern-span mismatch at " + std::to_string(cases)}; } else std::cout << hash << ' ' << state << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

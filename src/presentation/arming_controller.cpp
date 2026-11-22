@@ -8,9 +8,15 @@ arming_controller::arming_controller(weapons::armament &inventory, arming_assets
   for(unsigned int slot{0}; slot != flight::store_slots; ++slot) inventory.assign(slot,std::nullopt);
   if(entry == arming_entry::mission_incomplete) current.mode = arming_mode::mission_incomplete;
 }
-arming_controller::~arming_controller() { remove_previews(); }
-arming_state const &arming_controller::state() const { return current; }
-std::span<bool const> arming_controller::previews() const { return preview_slots; }
+arming_controller::~arming_controller() {
+  remove_previews();
+}
+arming_state const &arming_controller::state() const {
+  return current;
+}
+std::span<bool const> arming_controller::previews() const {
+  return preview_slots;
+}
 void arming_controller::remove_previews() {
   for(unsigned int slot{0}; slot != preview_slots.size(); ++slot) if(std::exchange(preview_slots[slot],false)) inventory.pylons[slot].visible = false;
 }
@@ -59,13 +65,10 @@ void arming_controller::finish(bool const escape) {
 void arming_controller::press(uint8_t const scan) {
   if(current.mode == arming_mode::complete || current.mode == arming_mode::cancelled) return;
   if(current.mode == arming_mode::confirm_return) {
-    if(scan == 0x15 || scan == 0x1c) { cancel();current.mode = arming_mode::cancelled; }
-    else if(scan == 1 || scan == 0x31) cancel();
+    if(scan == 0x15 || scan == 0x1c) { cancel();current.mode = arming_mode::cancelled; } else if(scan == 1 || scan == 0x31) cancel();
   } else if(scan == 1) {
     if(current.mode == arming_mode::placing || current.mode == arming_mode::clearing || current.mode == arming_mode::rotating || current.mode == arming_mode::overview || current.mode == arming_mode::unavailable) cancel();
-    else if(entry == arming_entry::preflight) { cancel();current.mode = arming_mode::cancelled; }
-    else if(entry == arming_entry::rearming || entry == arming_entry::mission_incomplete) { cancel();current.mode = arming_mode::confirm_return; }
-    else finish(true);
+    else if(entry == arming_entry::preflight) { cancel();current.mode = arming_mode::cancelled; } else if(entry == arming_entry::rearming || entry == arming_entry::mission_incomplete) { cancel();current.mode = arming_mode::confirm_return; } else finish(true);
   }
 }
 void arming_controller::advance(vec2<int16_t> const &position, vec2<int16_t> const &movement, uint8_t const buttons, std::optional<unsigned int> const picked) {

@@ -9,7 +9,7 @@ osl_fm_driver::osl_fm_driver(std::span<uint8_t const> const launcher, opl_sink o
   resources::binary_view const source{launcher};
   unsigned int constexpr driver{0x57b0};
   if(source.le16(driver) != 2) throw std::runtime_error{"unexpected OSL FM driver data"};
-  auto const copy{[&](unsigned int const offset, auto &destination) {
+  auto const copy{[&](unsigned int const offset, auto &destination){
     std::ranges::copy(source.slice(driver + offset,destination.size()),destination.begin());
   }};
   copy(0x1bc,reset_registers);
@@ -25,7 +25,9 @@ osl_fm_driver::osl_fm_driver(std::span<uint8_t const> const launcher, opl_sink o
   bend_tables.assign(tables.begin(),tables.end());
   for(unsigned int index{0}; index != voice_count; ++index) voices[index].keyed_frequency = source.byte(driver + 0x36c + index);
 }
-osl_device osl_fm_driver::device_type() const { return osl_device::fm; }
+osl_device osl_fm_driver::device_type() const {
+  return osl_device::fm;
+}
 void osl_fm_driver::write(unsigned int const address, uint8_t const value) { output({
   .address{static_cast<uint8_t>(address)},
   .value{value}
@@ -42,7 +44,9 @@ void osl_fm_driver::instrument(unsigned int const index, std::span<uint8_t const
   auto const patch{resources::binary_view{payload}.slice(0,16)};
   std::ranges::copy(patch,instruments[index].begin());
 }
-void osl_fm_driver::program(unsigned int const channel, uint8_t const value) { if(value < instrument_count) programs.at(channel) = value; }
+void osl_fm_driver::program(unsigned int const channel, uint8_t const value) {
+  if(value < instrument_count) programs.at(channel) = value;
+}
 void osl_fm_driver::program_voice(unsigned int const index) {
   auto const &patch{instruments[programs.at(voices[index].owner)]};
   auto const modulator{modulators[index]}, carrier{carriers[index]};
@@ -86,13 +90,9 @@ void osl_fm_driver::update_pitch(unsigned int const index) {
     auto const adjustment{static_cast<uint16_t>(delta + (fraction >> 4))};
     frequency = static_cast<uint16_t>(lower ? frequency - adjustment : frequency + adjustment);
     if(lower && frequency <= 0x157) {
-      if(frequency > 0xab) { frequency = static_cast<uint16_t>((frequency - 0xab) * 2 + 0x157);--octave; }
-      else if(frequency > 0x55) { frequency = static_cast<uint16_t>((frequency - 0x55) * 4 + 0x157);octave -= 2; }
-      else { frequency = static_cast<uint16_t>(static_cast<uint16_t>(frequency - 0x2a) * 8 + 0x157);octave -= 3; }
+      if(frequency > 0xab) { frequency = static_cast<uint16_t>((frequency - 0xab) * 2 + 0x157);--octave; } else if(frequency > 0x55) { frequency = static_cast<uint16_t>((frequency - 0x55) * 4 + 0x157);octave -= 2; } else { frequency = static_cast<uint16_t>(static_cast<uint16_t>(frequency - 0x2a) * 8 + 0x157);octave -= 3; }
     } else if(!lower && frequency >= 0x2ae) {
-      if(frequency < 0x55c) { frequency = static_cast<uint16_t>(((frequency - 0x2ae) >> 1) + 0x157);++octave; }
-      else if(frequency < 0xab8) { frequency = static_cast<uint16_t>(((frequency - 0x55c) >> 2) + 0x157);octave += 2; }
-      else { frequency = static_cast<uint16_t>(((frequency - 0xab8) >> 3) + 0x157);octave += 3; }
+      if(frequency < 0x55c) { frequency = static_cast<uint16_t>(((frequency - 0x2ae) >> 1) + 0x157);++octave; } else if(frequency < 0xab8) { frequency = static_cast<uint16_t>(((frequency - 0x55c) >> 2) + 0x157);octave += 2; } else { frequency = static_cast<uint16_t>(((frequency - 0xab8) >> 3) + 0x157);octave += 3; }
     }
   }
   write(0xa0 + index,static_cast<uint8_t>(frequency));
@@ -100,7 +100,7 @@ void osl_fm_driver::update_pitch(unsigned int const index) {
   write(0xb0 + index,voice.keyed_frequency);
 }
 void osl_fm_driver::start(unsigned int const channel, uint8_t const note, uint16_t const bend) {
-  auto const free{std::ranges::find_if(voices,[](auto const &voice) { return voice.owner == 255; })};
+  auto const free{std::ranges::find_if(voices,[](auto const &voice){ return voice.owner == 255; })};
   if(free == voices.end()) return;
   auto const index{static_cast<unsigned int>(free - voices.begin())};
   auto const frequency{note_frequencies[static_cast<uint8_t>(note - 12)]};
@@ -114,7 +114,9 @@ void osl_fm_driver::note(osl_channel &state, unsigned int const channel, uint8_t
   if(!value) return;
   state.pitch_bend = 0x2000;silence(channel);state.previous_note = value;start(channel,value,state.pitch_bend);
 }
-void osl_fm_driver::extra_note(osl_channel const &state, unsigned int const channel, uint8_t const value) { start(channel,value,state.pitch_bend); }
+void osl_fm_driver::extra_note(osl_channel const &state, unsigned int const channel, uint8_t const value) {
+  start(channel,value,state.pitch_bend);
+}
 void osl_fm_driver::silence(unsigned int const channel) {
   for(unsigned int index{0}; index != voices.size(); ++index) if(voices[index].owner == channel) {
     voices[index].owner = 255;voices[index].keyed_frequency &= 0xdf;write(0xb0 + index,voices[index].keyed_frequency);

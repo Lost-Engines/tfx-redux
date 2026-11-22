@@ -30,7 +30,7 @@ int main(int const argc, char const *const argv[]) try {
         .impact_damage{static_cast<uint16_t>(damage)},
         .status{static_cast<uint16_t>(status)},
         .distance{static_cast<int16_t>(distance)},
-        .anchor_distance{[distance](vec3d const&) { return static_cast<int16_t>(distance); }},
+        .anchor_distance{[distance](vec3d const&){ return static_cast<int16_t>(distance); }},
       };
       for(auto *point : {&context.movement.previous,&context.movement.current}) {
         int x{0},y{0},z{0};
@@ -38,7 +38,7 @@ int main(int const argc, char const *const argv[]) try {
         *point = vec3<int16_t>{static_cast<int16_t>(x),static_cast<int16_t>(y),static_cast<int16_t>(z)};
       }
       auto const result{animate ? state.animate(context) : state.execute(entry,context)};
-      auto const word{[](auto const value) { std::cout << static_cast<int>(value) << ' '; }};
+      auto const word{[](auto const value){ std::cout << static_cast<int>(value) << ' '; }};
       word(state.destroyed); word(state.modified); word(state.category); word(state.impact_damage); word(state.health);
       word(state.custom.size());
       for(auto const value : state.custom) word(value);

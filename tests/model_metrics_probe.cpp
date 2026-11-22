@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -21,14 +22,13 @@ int main(int const argc, char const *const argv[]) try {
     if(!corpus) {
       int16_t bias,minimum;unsigned int count;input >> bias >> minimum >> count;
       std::vector<uint8_t> bytes(48);
-      auto const store{[&](unsigned int const at,uint16_t const value) { bytes.at(at) = static_cast<uint8_t>(value >> 8);bytes.at(at + 1) = static_cast<uint8_t>(value); }};
-      auto const emit{[&](uint16_t const value) { bytes.push_back(static_cast<uint8_t>(value >> 8));bytes.push_back(static_cast<uint8_t>(value)); }};
+      auto const store{[&](unsigned int const at,uint16_t const value){ bytes.at(at) = static_cast<uint8_t>(value >> 8);bytes.at(at + 1) = static_cast<uint8_t>(value); }};
+      auto const emit{[&](uint16_t const value){ bytes.push_back(static_cast<uint8_t>(value >> 8));bytes.push_back(static_cast<uint8_t>(value)); }};
       store(0,static_cast<uint16_t>(minimum));store(16,static_cast<uint16_t>(bias));
       for(unsigned int i{0}; i != count; ++i) {
         unsigned int distance,kind,colour;input >> distance >> kind >> colour;
         unsigned int const field{34 + i * 2};store(2 + i * 2,static_cast<uint16_t>(distance));store(18 + i * 2,static_cast<uint16_t>(kind));store(field,static_cast<uint16_t>(bytes.size() - field));
-        if(kind <= 1) { emit(65535);emit(0);emit(65535); }
-        else emit(static_cast<uint16_t>(colour));
+        if(kind <= 1) { emit(65535);emit(0);emit(65535); } else emit(static_cast<uint16_t>(colour));
       }
       synthetic.emplace(bytes);
     } else if(!models.contains(id)) models.emplace(id,game->read(id));
@@ -36,9 +36,8 @@ int main(int const argc, char const *const argv[]) try {
     auto const metrics{tfx::render::measure_model(point,shape.sort_depth_bias)};
     auto const *detail{shape.detail_for_distance(metrics.distance)};
     int32_t const values[]{metrics.distance,metrics.order,metrics.colour_row,detail ? static_cast<int32_t>(detail - shape.details.data()) : -1,detail ? static_cast<int32_t>(detail->kind) : -1,detail ? static_cast<int32_t>(detail->offset) : -1,detail ? detail->colour : 0};
-    if(fixture.is_open()) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native model metric/detail mismatch at case " + std::to_string(cases)}; } }
-    else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
+    if(fixture.is_open()) { for(auto const value : values) { int32_t expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"native model metric/detail mismatch at case " + std::to_string(cases)}; } } else { for(auto const value : values) std::cout << value << ' ';std::cout << '\n'; }
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

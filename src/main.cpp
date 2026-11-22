@@ -15,13 +15,13 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "audio/runtime.h"
-#include "audio/sc55_synth.h"
 #include "platform/audio_output.h"
 #include "platform/flight.h"
-#include "configuration/graphics.h"
-#include "platform/recording.h"
 #include "platform/presentations.h"
+#include "platform/recording.h"
+#include "audio/runtime.h"
+#include "audio/sc55_synth.h"
+#include "configuration/graphics.h"
 #include "resources/installation.h"
 #include "world/environment.h"
 
@@ -63,7 +63,7 @@ auto main(int const argc, char const *const argv[])->int try {
   std::optional<std::filesystem::path> screenshot, replay;
 #ifndef NDEBUG
   std::optional<std::filesystem::path> capture_recipe;
-#endif
+#endif // NDEBUG
   for(int i{1}; i != argc; ++i) {
     std::string_view const argument{argv[i]};
     auto const equals{argument.find('=')};
@@ -148,8 +148,7 @@ auto main(int const argc, char const *const argv[])->int try {
       else if(selected == "on") selected_qsound = qsound_mode::on;
       else if(selected == "off") selected_qsound = qsound_mode::off;
       else throw std::runtime_error{"qsound must be auto, on or off"};
-    }
-    else if(key == "--cd-cue") cd_cue = value();
+    } else if(key == "--cd-cue") cd_cue = value();
     else if(key == "--cd-audio-dir") cd_audio_directory = value();
     else if(key == "--music") {
       auto const selected{value()};
@@ -157,16 +156,12 @@ auto main(int const argc, char const *const argv[])->int try {
       else if(selected == "soundblaster-cd" || selected == "cd") music_override = 1;
       else if(selected == "soundblaster-fm") music_override = 3;
       else if(selected == "roland-lapc") music_override = 2;
-      else if(selected == "roland-scc1a") { music_override = 4;canvas_model = tfx::audio::sound_canvas_model::scc1a; }
-      else if(selected == "roland-sc55") { music_override = 4;canvas_model = tfx::audio::sound_canvas_model::sc55; }
-      else throw std::runtime_error{"music must be none, soundblaster-cd, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55"};
-    }
-    else if(key == "--language") {
+      else if(selected == "roland-scc1a") { music_override = 4;canvas_model = tfx::audio::sound_canvas_model::scc1a; } else if(selected == "roland-sc55") { music_override = 4;canvas_model = tfx::audio::sound_canvas_model::sc55; } else throw std::runtime_error{"music must be none, soundblaster-cd, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55"};
+    } else if(key == "--language") {
       language = value();
       language_selected = true;
       if(std::ranges::find(language_names,language) == language_names.end()) throw std::runtime_error{"unknown TFX language: " + language};
-    }
-    else if(key == "--replay") replay = value();
+    } else if(key == "--replay") replay = value();
     else if(key == "--skip-intro") skip_intro = true;
     else if(key == "--fullscreen") fullscreen = true;
     else if(key == "--mission") {
@@ -193,8 +188,8 @@ auto main(int const argc, char const *const argv[])->int try {
       else throw std::runtime_error{"flight model must be arcade, simple, military-spec or realistic"};
     } else if(key == "--resolution" || key == "--scale" || key == "--fov" || key == "--draw-distance" || key == "--lod-scale") {
       using tfx::configuration::graphics_field;
-      auto const field{key=="--resolution" ? graphics_field::resolution : key=="--scale" ? graphics_field::window_scale
-        : key=="--fov" ? graphics_field::field_of_view : key=="--draw-distance" ? graphics_field::draw_distance : graphics_field::lod_scale};
+      auto const field{key == "--resolution" ? graphics_field::resolution : key == "--scale" ? graphics_field::window_scale
+        : key == "--fov" ? graphics_field::field_of_view : key == "--draw-distance" ? graphics_field::draw_distance : graphics_field::lod_scale};
       auto const text{value()};
       tfx::configuration::set_graphics_value(graphics,field,text);
       graphics_overrides.emplace_back(field,text);
@@ -230,16 +225,17 @@ auto main(int const argc, char const *const argv[])->int try {
     else throw std::runtime_error{"unrecognised option: " + std::string{key} + "; use --help"};
   }
 #ifndef NDEBUG
-  if(capture_recipe && (!direct_mission || !screenshot || inspect || flight_steps || flight_frames || !presentation.empty() || replay))
+  if(capture_recipe && (!direct_mission || !screenshot || inspect || flight_steps || flight_frames || !presentation.empty() || replay)) {
     throw std::runtime_error{"--capture-scene requires --mission and --screenshot; cannot combine with inspection, presentations, replay or flight stepping"};
-#endif
+  }
+#endif // NDEBUG
   if(cd_cue && cd_audio_directory) throw std::runtime_error{"choose either --cd-cue or --cd-audio-dir"};
   if(career_rules && !direct_mission) throw std::runtime_error{"--career-rules requires --mission"};
   auto const archive_path{tfx::resources::select_game_archive(data_directory,cd_cue)};
-  try { graphics=tfx::configuration::load_graphics(archive_path.parent_path()); }
+  try { graphics = tfx::configuration::load_graphics(archive_path.parent_path()); }
   catch(std::exception const &error) {
     std::cerr << "Graphics preferences unavailable: " << error.what() << "; using defaults.\n";
-    graphics={};
+    graphics = {};
   }
   for(auto const &[field,value] : graphics_overrides) tfx::configuration::set_graphics_value(graphics,field,value);
   auto preferences{tfx::configuration::load(archive_path.parent_path())};

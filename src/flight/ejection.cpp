@@ -102,7 +102,7 @@ pilot_update advance_pilot(pilot_motion &pilot, pilot_context const &context) {
       pilot.ended = true;
     }
     break;
-  default: break; // The original dispatcher also leaves unused phases untouched.
+  default: break;                                                              // The original dispatcher also leaves unused phases untouched.
   }
   // Native 0x8f198 retains its quit/collision ordering before ground placement.
   int16_t constexpr water_type{1};

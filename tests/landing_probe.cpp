@@ -1,5 +1,6 @@
 #include <array>
 #include <bit>
+#include <cstdlib>
 #include <iostream>
 #include <map>
 #include <string_view>
@@ -35,7 +36,7 @@ int main(int const argc, char const *const argv[]) try {
       tfx::flight::landing_projection projection;
       std::cin >> player.x >> player.y >> player.z >> speed >> projection.valid >> projection.point.x >> projection.point.y >> offset.x >> offset.y;
       vec3<int32_t> requested;
-      auto const cue{controller.advance(player,speed,[&](auto const &point) {
+      auto const cue{controller.advance(player,speed,[&](auto const &point){
         for(unsigned int axis{0}; axis != 3; ++axis) requested[axis] = tfx::math::signed_word(static_cast<uint16_t>(point[axis]));
         return projection;
       })};
@@ -67,7 +68,7 @@ int main(int const argc, char const *const argv[]) try {
         std::cin >> surface.position_q8.x >> surface.position_q8.y >> surface.position_q8.z >> surface.port.offset.x >> surface.port.offset.y >> surface.port.heading >> surface.destroyed >> flags >> side >> type;
         if(!(flags & 24) && side == 1 && type == 50) carriers.push_back(std::move(surface));
       }
-      auto const terrain{[&](vec2<int16_t> const &cell) -> std::optional<tfx::flight::landing_port> {
+      auto const terrain{[&](vec2<int16_t> const &cell)->std::optional<tfx::flight::landing_port> {
         auto const found{sites.find({cell.x,cell.y})};return found == sites.end() ? std::nullopt : std::optional{found->second};
       }};
       auto const result{std::string_view{argv[2]} == "destination" ? controller.select_runway(route,terrain,carriers) : controller.toggle(input,route,terrain,carriers)};
@@ -80,5 +81,5 @@ int main(int const argc, char const *const argv[]) try {
       std::cout << ' ' << result.messages.size();for(auto const message : result.messages) std::cout << ' ' << std::to_underlying(message);std::cout << '\n';
     } else throw std::runtime_error{"unknown landing probe mode"};
   }
-  return 0;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return EXIT_SUCCESS;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

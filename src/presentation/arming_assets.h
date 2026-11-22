@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include "math/native.h"
-#include "resources/binary.h"
 #include "flight/stores.h"
+#include "resources/binary.h"
 
 namespace tfx::presentation {
 

@@ -6,7 +6,7 @@
 namespace tfx::cockpit {
 
 struct aerodynamic_hud_state {
-  double angle_of_attack{0}; // Radians.
+  double angle_of_attack{0};                                                   // Radians.
   double down_metres_per_second{0};
 };
 struct hud_text_state {

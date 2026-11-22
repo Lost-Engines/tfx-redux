@@ -41,7 +41,7 @@ vec2d camera::project(vec3d const &point, double const projection_scale) const {
     // Camera-space coordinates enter the native loop as signed Q16. Restore
     // that grid after model-unit conversion; e.g. a 1/400 scale can otherwise
     // turn an exact depth of 29 into 28.999999999999996 before the integer divide.
-    auto const q16{[projection_scale](double const value) { return std::nearbyint(value / projection_scale * 65536); }};
+    auto const q16{[projection_scale](double const value){ return std::nearbyint(value / projection_scale * 65536); }};
     double const depth{std::floor(q16(point.z) / 65536)};
     double const divisor{static_cast<double>(1u << projection_shift(opening))};
     return projection_origin + vec2d{std::trunc(std::floor(q16(point.x) / divisor) / depth),std::trunc(std::floor(q16(point.y) / divisor) / depth)};
@@ -82,7 +82,7 @@ camera original_camera(vec3<int32_t> const &position_q16, mat3<int32_t> const &m
 
 camera continuous_camera(camera const &source, mat3d const &basis) {
   auto result{source};
-  result.right=basis*vec3d{1,0,0};result.down=basis*vec3d{0,1,0};result.forward=basis*vec3d{0,0,1};
+  result.right = basis * vec3d{1,0,0};result.down = basis * vec3d{0,1,0};result.forward = basis * vec3d{0,0,1};
   return result;
 }
 

@@ -2,8 +2,12 @@
 
 namespace tfx::flight {
 
-bool ground_service::supplied() const { return serviced; }
-void ground_service::reset() { serviced = true; }
+bool ground_service::supplied() const {
+  return serviced;
+}
+void ground_service::reset() {
+  serviced = true;
+}
 bool ground_service::begin_frame(ground_service_context const &context) {
   if(!context.landed || context.speed || serviced || context.resolved || context.crashed || context.disabled || context.violations) return false;
   serviced = true;

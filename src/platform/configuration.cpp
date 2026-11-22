@@ -1,7 +1,7 @@
 #include "configuration.h"
 #include <iostream>
-#include "configuration/save.h"
 #include "platform/keyboard.h"
+#include "configuration/save.h"
 #include "presentation/graphics_menu.h"
 
 namespace tfx::platform {
@@ -12,42 +12,42 @@ bool configure_graphics(window &window, resources::executable_tables const &tabl
   presentation::graphics_menu menu{tables.interface_font(),settings};
   auto *const host{window.get()};auto *const previous_input{glfwGetWindowUserPointer(host)};
   glfwSetWindowUserPointer(host,&menu);
-  auto const previous_key{window.set_key_callback([](GLFWwindow *host,int key,int,int action,int mods) {
-    if(action!=GLFW_PRESS && action!=GLFW_REPEAT) return;
+  auto const previous_key{window.set_key_callback([](GLFWwindow *host,int key,int,int action,int mods){
+    if(action != GLFW_PRESS && action != GLFW_REPEAT) return;
     using presentation::graphics_key;
     std::optional<graphics_key> selected;
     switch(key) {
-      case GLFW_KEY_ENTER:case GLFW_KEY_KP_ENTER:selected=graphics_key::enter;break;
-      case GLFW_KEY_ESCAPE:selected=graphics_key::escape;break;
-      case GLFW_KEY_BACKSPACE:selected=graphics_key::backspace;break;
-      case GLFW_KEY_DELETE:selected=graphics_key::erase;break;
-      case GLFW_KEY_TAB:selected=graphics_key::tab;break;
-      case GLFW_KEY_LEFT:selected=graphics_key::left;break;
-      case GLFW_KEY_RIGHT:selected=graphics_key::right;break;
-      case GLFW_KEY_UP:selected=graphics_key::up;break;
-      case GLFW_KEY_DOWN:selected=graphics_key::down;break;
+      case GLFW_KEY_ENTER:case GLFW_KEY_KP_ENTER:selected = graphics_key::enter;break;
+      case GLFW_KEY_ESCAPE:selected = graphics_key::escape;break;
+      case GLFW_KEY_BACKSPACE:selected = graphics_key::backspace;break;
+      case GLFW_KEY_DELETE:selected = graphics_key::erase;break;
+      case GLFW_KEY_TAB:selected = graphics_key::tab;break;
+      case GLFW_KEY_LEFT:selected = graphics_key::left;break;
+      case GLFW_KEY_RIGHT:selected = graphics_key::right;break;
+      case GLFW_KEY_UP:selected = graphics_key::up;break;
+      case GLFW_KEY_DOWN:selected = graphics_key::down;break;
     }
-    if(selected) static_cast<presentation::graphics_menu*>(glfwGetWindowUserPointer(host))->press(*selected,(mods&GLFW_MOD_SHIFT)!=0);
+    if(selected) static_cast<presentation::graphics_menu*>(glfwGetWindowUserPointer(host))->press(*selected,(mods & GLFW_MOD_SHIFT) != 0);
   })};
-  auto const previous_character{glfwSetCharCallback(host,[](GLFWwindow *host,unsigned int c) {
+  auto const previous_character{glfwSetCharCallback(host,[](GLFWwindow *host,unsigned int c){
     static_cast<presentation::graphics_menu*>(glfwGetWindowUserPointer(host))->character(c);
   })};
-  bool held{glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT)==GLFW_PRESS},applied{false};
+  bool held{glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS},applied{false};
   while(window.poll()) {
     if(!window.focused()) {glfwWaitEventsTimeout(.05);continue;}
-    bool const mouse{glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT)==GLFW_PRESS};
+    bool const mouse{glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS};
     if(mouse && !held) if(auto const pointer{window.cursor_position()}) menu.click(*pointer);
-    held=mouse;
-    if(menu.result()==presentation::graphics_action::cancel) break;
-    if(menu.result()==presentation::graphics_action::apply) {
+    held = mouse;
+    if(menu.result() == presentation::graphics_action::cancel) break;
+    if(menu.result() == presentation::graphics_action::apply) {
       try {
         auto const next{menu.value()};
         window.configure(next.video.resolution,next.video.automatic_resolution,menu.window_resize_requested() ? std::optional{next.window_scale} : std::nullopt);
-        settings=next;applied=true;
+        settings = next;applied = true;
         try {configuration::save_graphics(directory,settings);}
-        catch(std::exception const &e) {std::cerr<<"Graphics applied for this session, but could not save "<<configuration::graphics_filename<<": "<<e.what()<<'\n';}
+        catch(std::exception const &e) {std::cerr << "Graphics applied for this session, but could not save " << configuration::graphics_filename << ": " << e.what() << '\n';}
         break;
-      } catch(std::exception const &e) {std::cerr<<e.what()<<'\n';menu.failed("COULD NOT APPLY DISPLAY SETTINGS");}
+      } catch(std::exception const &e) {std::cerr << e.what() << '\n';menu.failed("COULD NOT APPLY DISPLAY SETTINGS");}
     }
     auto image{background};menu.draw(image);
     window.title("TFX Redux — Graphics");window.present(image.colourise(palette));glfwWaitEventsTimeout(.01);
@@ -55,7 +55,7 @@ bool configure_graphics(window &window, resources::executable_tables const &tabl
   glfwSetCharCallback(host,previous_character);window.set_key_callback(previous_key);glfwSetWindowUserPointer(host,previous_input);
   return applied;
 }
-} // namespace
+} // anonymous namespace
 
 presentation::configuration_action configure_flight(window &window, resources::executable_tables const &tables,
     configuration::settings &preferences, std::string &recording_name, std::filesystem::path const &directory,
@@ -76,9 +76,10 @@ presentation::configuration_action configure_flight(window &window, resources::e
   auto *const host{window.get()};
   auto *const previous_input{glfwGetWindowUserPointer(host)};
   glfwSetWindowUserPointer(host,&menu);
-  auto const previous_key{window.set_key_callback([](GLFWwindow *const window, int const key, int const, int const action, int const modifiers) {
-    if(action == GLFW_PRESS || action == GLFW_REPEAT)
+  auto const previous_key{window.set_key_callback([](GLFWwindow *const window, int const key, int const, int const action, int const modifiers){
+    if(action == GLFW_PRESS || action == GLFW_REPEAT) {
       static_cast<presentation::configuration_menu*>(glfwGetWindowUserPointer(window))->press(make_code(key),(modifiers & GLFW_MOD_SHIFT) != 0);
+    }
   })};
   glfwSetInputMode(host,GLFW_CURSOR,GLFW_CURSOR_NORMAL);
   auto result{presentation::configuration_action::quit};
@@ -95,9 +96,9 @@ presentation::configuration_action configure_flight(window &window, resources::e
       auto const action{menu.click(*pointer)};
       if(quit_prompt && menu.page() != presentation::configuration_page::confirm_quit) { result = presentation::configuration_action::resume;break; }
       if(action == presentation::configuration_action::graphics && graphics) {
-        if(configure_graphics(window,tables,*graphics,directory,background,palette)) {result=presentation::configuration_action::resume;break;}
-        mouse_held=glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT)==GLFW_PRESS;
-        escape_held=glfwGetKey(host,GLFW_KEY_ESCAPE)==GLFW_PRESS;
+        if(configure_graphics(window,tables,*graphics,directory,background,palette)) {result = presentation::configuration_action::resume;break;}
+        mouse_held = glfwGetMouseButton(host,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+        escape_held = glfwGetKey(host,GLFW_KEY_ESCAPE) == GLFW_PRESS;
         continue;
       }
       if(action != presentation::configuration_action::none) { result = action;break; }

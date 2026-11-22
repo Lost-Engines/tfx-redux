@@ -1,8 +1,8 @@
 #include "aerodynamic_contact.h"
 #include <algorithm>
 #include <bit>
-#include <utility>
 #include <cmath>
+#include <utility>
 
 namespace tfx::flight {
 namespace {
@@ -20,14 +20,17 @@ double constexpr low_speed_brake_gradient{.1}, body_friction{.1};
 int16_t constexpr minimum_downward_basis{2000};
 int constexpr feet_per_ground_step{8};
 
-calculation wide(double const value) { return value; }
+calculation wide(double const value) {
+  return value;
+}
 double negative(double const value) {
   return std::bit_cast<double>(std::bit_cast<uint64_t>(value) ^ (uint64_t{1} << 63));
 }
 vec3d to_ned(aerodynamic_basis const &basis, vec3d const &body) {
   vec3d result;
-  for(unsigned int axis{0}; axis != 3; ++axis)
+  for(unsigned int axis{0}; axis != 3; ++axis) {
     result[axis] = static_cast<double>(wide(basis.right[axis]) * body.y + wide(basis.forward[axis]) * body.x + wide(basis.down[axis]) * body.z);
+  }
   return result;
 }
 

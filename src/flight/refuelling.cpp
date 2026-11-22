@@ -8,10 +8,18 @@
 namespace tfx::flight {
 namespace {
 
-int32_t wrap(uint32_t const value) { return std::bit_cast<int32_t>(value); }
-int32_t add(int32_t const a, int32_t const b) { return wrap(static_cast<uint32_t>(a) + static_cast<uint32_t>(b)); }
-int32_t subtract(int32_t const a, int32_t const b) { return wrap(static_cast<uint32_t>(a) - static_cast<uint32_t>(b)); }
-int32_t magnitude(int32_t const value) { return value < 0 ? subtract(0,value) : value; }
+int32_t wrap(uint32_t const value) {
+  return std::bit_cast<int32_t>(value);
+}
+int32_t add(int32_t const a, int32_t const b) {
+  return wrap(static_cast<uint32_t>(a) + static_cast<uint32_t>(b));
+}
+int32_t subtract(int32_t const a, int32_t const b) {
+  return wrap(static_cast<uint32_t>(a) - static_cast<uint32_t>(b));
+}
+int32_t magnitude(int32_t const value) {
+  return value < 0 ? subtract(0,value) : value;
+}
 int32_t angle_difference(math::angle const a, math::angle const b) {
   // Native subtraction sign-extends each word separately, without angular wrap.
   return magnitude(math::signed_word(a) - math::signed_word(b));
@@ -40,7 +48,7 @@ std::optional<unsigned int> nearest(refuel_player const &player, refuel_registry
 refuel_assets::refuel_assets(std::span<uint8_t const> const executable) {
   resources::binary_view const source{executable};
   unsigned int constexpr data{0xedaa4}, player_ports{0x8c64}, tanker_ports{0x8c70};
-  auto const point{[&](unsigned int const table, unsigned int const index) {
+  auto const point{[&](unsigned int const table, unsigned int const index){
     auto const address{data + source.le32(data + table + index * 4)};
     return vec3<int16_t>{source.signed_le16(address),source.signed_le16(address + 2),source.signed_le16(address + 4)};
   }};
@@ -52,9 +60,15 @@ refuel_assets::refuel_assets(std::span<uint8_t const> const executable) {
   for(unsigned int at{data + 0x23e4}; source.byte(at); ++at) afterburner_message += static_cast<char>(source.byte(at));
 }
 refuelling::refuelling(refuel_assets const &source, refuel_state initial) : assets{source}, state{std::move(initial)} {}
-refuel_state const &refuelling::value() const { return state; }
-void refuelling::reset() { state = {}; }
-void refuelling::disengage() { state.enabled = false; }
+refuel_state const &refuelling::value() const {
+  return state;
+}
+void refuelling::reset() {
+  state = {};
+}
+void refuelling::disengage() {
+  state.enabled = false;
+}
 
 refuel_toggle refuelling::toggle(uint8_t const weapon_mode, bool const inhibited, bool const crashed, bool const ejected) {
   refuel_toggle result{

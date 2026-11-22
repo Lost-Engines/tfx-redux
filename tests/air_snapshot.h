@@ -10,7 +10,7 @@ namespace tfx::test {
 
 inline uint64_t air_snapshot(actors::program const &program, actors::air_runtime const &state, std::span<actors::air_request const> const requests, std::ostream *const output = nullptr, bool const combat = false) {
   uint64_t digest{14695981039346656037ULL};
-  auto const word{[&](auto const value) {
+  auto const word{[&](auto const value){
     if(output) *output << static_cast<int64_t>(value) << ' ';
     for(unsigned int shift{0}; shift != 32; shift += 8) digest = (digest ^ ((static_cast<uint32_t>(value) >> shift) & 255)) * 1099511628211ULL;
   }};
@@ -38,7 +38,7 @@ inline uint64_t air_snapshot(actors::program const &program, actors::air_runtime
   word(requests.size());
   for(auto const &request : requests) {
     word(request.actor); word(request.data.index());
-    std::visit([&](auto const &data) {
+    std::visit([&](auto const &data){
       using data_type = std::remove_cvref_t<decltype(data)>;
       if constexpr(std::is_same_v<data_type,tfx::actors::air_scenery_event>) word(data.entry);
       else if constexpr(std::is_same_v<data_type,tfx::actors::air_radio>) {

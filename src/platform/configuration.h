@@ -1,8 +1,8 @@
 #pragma once
 
+#include "platform/window.h"
 #include "audio/runtime.h"
 #include "configuration/graphics.h"
-#include "platform/window.h"
 #include "presentation/configuration_menu.h"
 #include "resources/executable_tables.h"
 

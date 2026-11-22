@@ -1,8 +1,8 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <span>
-#include <functional>
 #include "actors/program.h"
 #include "weapons/definition.h"
 
@@ -21,7 +21,7 @@ struct projectile {
   int32_t range;
   uint8_t weapon;
   bool secondary{false};
-  std::span<stage const> program{}; // Optional borrowed stage sequence, owned alongside the weapon definitions.
+  std::span<stage const> program{};                                            // Optional borrowed stage sequence, owned alongside the weapon definitions.
 };
 struct motion_context {
   uint16_t elapsed;

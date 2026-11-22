@@ -1,15 +1,15 @@
 #pragma once
 
-#include "fixture_check.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
 #include <concepts>
 #include <cstdint>
-#include <limits>
-#include <ostream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
+#include <ostream>
+#include "fixture_check.h"
 
 namespace tfx::test {
 
@@ -55,18 +55,22 @@ public:
     }
     return close(std::bit_cast<double>(bits),std::bit_cast<double>(expected));
   }
-  friend std::ostream &operator<<(std::ostream &out, numeric_fixture_value const value) { return out << value.bits; }
+  friend std::ostream &operator<<(std::ostream &out, numeric_fixture_value const value) {
+    return out << value.bits;
+  }
   friend bool fixture_matches(std::istream &input, numeric_fixture_value const actual) {
     fixture_expectation<uint64_t> const expected{input};
-    if(auto const path=std::getenv("TFX_NUMERIC_AUDIT"); path && actual.type != format::integer && actual.bits != expected.value)
+    if(auto const path=std::getenv("TFX_NUMERIC_AUDIT"); path && actual.type != format::integer && actual.bits != expected.value) {
       fixture_report(path) << expected.begin << ' ' << (actual.type == format::binary32 ? 32 : 64) << ' ' << expected.value << ' ' << actual.bits << '\n';
+    }
     bool const ok{actual.type == format::integer ? expected.matches(actual.bits) : actual.matches(expected.value)};
     if(!ok) {
       std::cerr << "Numeric fixture mismatch at byte " << expected.begin
                 << ": expected bits " << expected.value << ", actual bits " << actual.bits;
-      if(actual.type == format::binary64)
+      if(actual.type == format::binary64) {
         std::cerr << std::setprecision(17) << " (expected " << std::bit_cast<double>(expected.value)
                   << ", actual " << std::bit_cast<double>(actual.bits) << ')';
+      }
       std::cerr << '\n';
     }
     return ok;

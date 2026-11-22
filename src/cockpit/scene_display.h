@@ -11,13 +11,13 @@ struct scene_camera_state {
   vec3<math::angle> angles{0,0,0};
   vec2<math::angle> free_angles{0,0};
   std::optional<vec3<int32_t>> tracked_position_q8;
-  math::angle tracking_roll{0}; // The native bearing helper leaves this caller-local word unwritten.
+  math::angle tracking_roll{0};                                                // The native bearing helper leaves this caller-local word unwritten.
   vec3<int32_t> ground_target{0,0,0};
-  std::optional<vec2<int32_t>> height_bounds{}; // Mission-initialized limits; absent for prelaunch inspection.
+  std::optional<vec2<int32_t>> height_bounds{};                                // Mission-initialized limits; absent for prelaunch inspection.
 };
 struct scene_camera_request {
   vec3<int32_t> position;
-  vec3<math::angle> angles; // Native view-setter angles, rather than aircraft Euler angles.
+  vec3<math::angle> angles;                                                    // Native view-setter angles, rather than aircraft Euler angles.
   vec2<int> minimum;
   vec2<int> maximum;
   std::optional<vec3<int32_t>> tracked_position;

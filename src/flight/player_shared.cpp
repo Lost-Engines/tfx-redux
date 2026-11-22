@@ -12,8 +12,8 @@ void capture_shared_player(aerodynamic_flight &physical, simple_state const &bas
   physical.data.fixed_speed = view.fixed_speed;
   physical.response.g_load = basic.displayed_g_load;
   physical.data.mach = view.unrounded_speed_mach;
-  physical.data.angle_of_attack = basic.ground.indicated_speed; // Shared native scratch 0x14418.
-  physical.approach.flight_path_degrees = basic.ground.low_speed_reference; // Shared 0x14290.
+  physical.data.angle_of_attack = basic.ground.indicated_speed;                // Shared native scratch 0x14418.
+  physical.approach.flight_path_degrees = basic.ground.low_speed_reference;    // Shared 0x14290.
   physical.surfaces.stalled = view.recovering;
   physical.response.motion.collision = view.collision;
   physical.response.motion.integer_world_y = view.integer_position.y;

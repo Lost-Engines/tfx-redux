@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -34,9 +35,8 @@ int main(int const argc, char const *const argv[]) try {
       input >> collision >> present >> type >> surface >> water;
       value = std::to_underlying(tfx::world::select_crash_appearance(static_cast<int16_t>(collision),present ? std::optional{static_cast<int16_t>(type)} : std::nullopt,static_cast<tfx::world::impact_surface>(surface),water != 0));
     } else throw std::runtime_error{"unknown impact operation"};
-    if(argc == 2) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"impact mismatch at case " + std::to_string(cases)}; }
-    else std::cout << value << '\n';
+    if(argc == 2) { int expected;if(!(input >> expected) || value != expected) throw std::runtime_error{"impact mismatch at case " + std::to_string(cases)}; } else std::cout << value << '\n';
     ++cases;
   }
-  return cases ? 0 : 1;
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+  return cases ? EXIT_SUCCESS : EXIT_FAILURE;
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

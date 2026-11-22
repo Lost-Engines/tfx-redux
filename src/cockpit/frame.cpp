@@ -63,12 +63,24 @@ void frame::paint(render::framebuffer &target, unsigned int const view, vec2<int
 
 cockpit_position::cockpit_position(instrument_assets const &source, vec2<int16_t> const &initial) : assets{source}, offset{initial} {
 }
-vec2<int16_t> const &cockpit_position::value() const { return offset; }
-unsigned int cockpit_position::step_index() const { return step; }
-cockpit_motion cockpit_position::movement() const { return motion; }
-void cockpit_position::move_to(vec2<int16_t> const &position) { offset = vec2<int16_t>{position}; }
-void cockpit_position::raise() { motion = cockpit_motion::up; }
-void cockpit_position::lower() { motion = cockpit_motion::down; }
+vec2<int16_t> const &cockpit_position::value() const {
+  return offset;
+}
+unsigned int cockpit_position::step_index() const {
+  return step;
+}
+cockpit_motion cockpit_position::movement() const {
+  return motion;
+}
+void cockpit_position::move_to(vec2<int16_t> const &position) {
+  offset = vec2<int16_t>{position};
+}
+void cockpit_position::raise() {
+  motion = cockpit_motion::up;
+}
+void cockpit_position::lower() {
+  motion = cockpit_motion::down;
+}
 void cockpit_position::shake() {
   // Native 0x7d7e0 restores an interrupted shake before restarting its sequence.
   if(shake_origin.y != -1) offset = vec2<int16_t>{shake_origin};
@@ -76,7 +88,9 @@ void cockpit_position::shake() {
   shake_step = 0;
   motion = cockpit_motion::flak_shake;
 }
-void cockpit_position::bump() { motion = cockpit_motion::ground_bump; }
+void cockpit_position::bump() {
+  motion = cockpit_motion::ground_bump;
+}
 void cockpit_position::advance(int16_t const viewport_bottom, bool const forward_cockpit) {
   int16_t constexpr end_of_shake{26};
   if(motion == cockpit_motion::ground_bump) {
@@ -87,8 +101,7 @@ void cockpit_position::advance(int16_t const viewport_bottom, bool const forward
       assets.cockpit_bump_stop[0],assets.cockpit_bump_stop[1],assets.cockpit_bump_stop[2],
       static_cast<int16_t>(shake_step),shake_origin.x,shake_origin.y,
     };
-    if(stop.at(shake_step) == end_of_shake) { motion = cockpit_motion::idle;shake_step = 0; }
-    else offset.y = math::signed_word(static_cast<uint16_t>(offset.y - assets.cockpit_shake_steps.at(shake_step++)));
+    if(stop.at(shake_step) == end_of_shake) { motion = cockpit_motion::idle;shake_step = 0; } else offset.y = math::signed_word(static_cast<uint16_t>(offset.y - assets.cockpit_shake_steps.at(shake_step++)));
     return;
   }
   if(motion == cockpit_motion::flak_shake) {

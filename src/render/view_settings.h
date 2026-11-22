@@ -10,10 +10,10 @@ namespace tfx::render {
 
 struct view_settings {
   vec2<int> resolution{1280,800};
-  bool automatic_resolution{true}; // Windows follow framebuffer pixels unless --resolution was supplied.
-  double field_of_view{64.01076641616699}; // 2 atan(160 / 256), original horizontal FOV.
-  unsigned int draw_distance{16}; // Terrain cells; zero draws the complete map.
-  double lod_scale{.1}; // Zero holds the most detailed visual representation.
+  bool automatic_resolution{true};                                             // Windows follow framebuffer pixels unless --resolution was supplied.
+  double field_of_view{64.01076641616699};                                     // 2 atan(160 / 256), original horizontal FOV.
+  unsigned int draw_distance{16};                                              // Terrain cells; zero draws the complete map.
+  double lod_scale{.1};                                                        // Zero holds the most detailed visual representation.
 };
 
 struct interface_layout {
@@ -22,7 +22,9 @@ struct interface_layout {
   explicit interface_layout(vec2<int> const &size) :
     scale{std::min(size.x / static_cast<double>(screen_width),size.y / static_cast<double>(screen_height))},
     offset{(size.x - screen_width * scale) / 2,(size.y - screen_height * scale) / 2} {}
-  vec2d project(vec2d const &point) const { return offset + point * scale; }
+  vec2d project(vec2d const &point) const {
+    return offset + point * scale;
+  }
 };
 
 inline camera scene_camera(camera const &source, view_settings const &settings) {
@@ -73,24 +75,24 @@ struct interface_raster {
   std::array<int,screen_height + 1> rows;
   explicit interface_raster(vec2<int> const &size) {
     interface_layout const layout{size};
-    auto const map{[&](auto &bounds, int extent, double offset) {
+    auto const map{[&](auto &bounds, int extent, double offset){
       int pixel{0};
-      for(size_t source=0;source<bounds.size();++source) {
-        while(pixel<extent && std::floor((pixel-offset)/layout.scale)<static_cast<double>(source)) ++pixel;
-        bounds[source]=pixel;
+      for(size_t source=0;source < bounds.size();++source) {
+        while(pixel < extent && std::floor((pixel - offset) / layout.scale) < static_cast<double>(source)) ++pixel;
+        bounds[source] = pixel;
       }
     }};
     map(columns,size.x,layout.offset.x);map(rows,size.y,layout.offset.y);
   }
   template<class Paint> void covered_spans(std::span<uint8_t const> coverage, Paint const &paint) const {
-    for(int row=0;row<screen_height;++row) {
-      if(rows[row]==rows[row+1]) continue;
-      auto const *mask{coverage.data()+row*screen_width};
-      for(int column=0;column<screen_width;) {
-        while(column<screen_width && !mask[column]) ++column;
+    for(int row=0;row < screen_height;++row) {
+      if(rows[row] == rows[row + 1]) continue;
+      auto const *mask{coverage.data() + row * screen_width};
+      for(int column=0;column < screen_width;) {
+        while(column < screen_width && !mask[column]) ++column;
         int const first{column};
-        while(column<screen_width && mask[column]) ++column;
-        if(columns[first]<columns[column]) paint(row,first,column);
+        while(column < screen_width && mask[column]) ++column;
+        if(columns[first] < columns[column]) paint(row,first,column);
       }
     }
   }
@@ -99,13 +101,14 @@ struct interface_raster {
 inline framebuffer scale_image(framebuffer const &source, vec2<int> const &size) {
   framebuffer result;result.resize(size);
   interface_raster const mapping{size};
-  for(int row=0;row<screen_height;++row) {
-    int const first{mapping.rows[row]}, last{mapping.rows[row+1]};
-    if(first==last) continue;
-    auto *line{result.pixels.data()+first*size.x};
-    for(int column=0;column<screen_width;++column)
-      std::fill(line+mapping.columns[column],line+mapping.columns[column+1],source.pixels[static_cast<size_t>(row*screen_width+column)]);
-    for(int y=first+1;y<last;++y) std::copy_n(line,size.x,result.pixels.data()+y*size.x);
+  for(int row=0;row < screen_height;++row) {
+    int const first{mapping.rows[row]}, last{mapping.rows[row + 1]};
+    if(first == last) continue;
+    auto *line{result.pixels.data() + first * size.x};
+    for(int column=0;column < screen_width;++column) {
+      std::fill(line + mapping.columns[column],line + mapping.columns[column + 1],source.pixels[static_cast<size_t>(row * screen_width + column)]);
+    }
+    for(int y=first + 1;y < last;++y) std::copy_n(line,size.x,result.pixels.data() + y * size.x);
   }
   return result;
 }
@@ -116,14 +119,15 @@ inline void composite_interface(framebuffer &target, framebuffer const &source) 
   // Expand each covered source row once, then copy its runs to repeated rows.
   // Empty regions need no work proportional to the output resolution.
   std::vector<uint8_t> line(static_cast<size_t>(target.size.x));
-  mapping.covered_spans(source.coverage,[&](int row,int first,int last) {
+  mapping.covered_spans(source.coverage,[&](int row,int first,int last){
     int const left{mapping.columns[first]}, right{mapping.columns[last]};
-    for(int column=first;column<last;++column)
-      std::fill(line.data()+mapping.columns[column],line.data()+mapping.columns[column+1],source.pixels[static_cast<size_t>(row*screen_width+column)]);
-    for(int y=mapping.rows[row];y<mapping.rows[row+1];++y) {
-      auto const at{static_cast<size_t>(y*target.size.x+left)};
-      std::copy_n(line.data()+left,right-left,target.pixels.data()+at);
-      if(!target.hud_coverage.empty()) std::fill_n(target.hud_coverage.data()+at,right-left,uint8_t{0});
+    for(int column=first;column < last;++column) {
+      std::fill(line.data() + mapping.columns[column],line.data() + mapping.columns[column + 1],source.pixels[static_cast<size_t>(row * screen_width + column)]);
+    }
+    for(int y=mapping.rows[row];y < mapping.rows[row + 1];++y) {
+      auto const at{static_cast<size_t>(y * target.size.x + left)};
+      std::copy_n(line.data() + left,right - left,target.pixels.data() + at);
+      if(!target.hud_coverage.empty()) std::fill_n(target.hud_coverage.data() + at,right - left,uint8_t{0});
     }
   });
 }

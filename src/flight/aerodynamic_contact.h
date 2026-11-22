@@ -43,14 +43,14 @@ struct aerodynamic_contact_state {
 struct aerodynamic_contact_context {
   aerodynamic_basis basis{};
   aerodynamic_contact_kind kind{aerodynamic_contact_kind::body};
-  int16_t ground_elevation_steps{0}; // Original signed terrain height, in eight-foot steps.
+  int16_t ground_elevation_steps{0};                                           // Original signed terrain height, in eight-foot steps.
   int16_t body_downward_q15{0};
   double total_mass_kg{0};
   bool terrain_present{false};
   bool gear_damage_enabled{true};
   bool low_speed_ground_contact{false};
   bool precipitation{false};
-  bool rough_surface{false}; // Original ground-zone classification 2.
+  bool rough_surface{false};                                                   // Original ground-zone classification 2.
   bool wheel_brakes{false};
 };
 

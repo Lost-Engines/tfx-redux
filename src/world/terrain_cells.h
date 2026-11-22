@@ -5,7 +5,7 @@
 
 namespace tfx::world {
 
-int16_t constexpr terrain_neighbourhood_width{16}; // Native DATA 0xaac4 in ordinary TFX environments.
+int16_t constexpr terrain_neighbourhood_width{16};                             // Native DATA 0xaac4 in ordinary TFX environments.
 struct terrain_cell {
   vec2<unsigned int> source;
   vec2<int32_t> world_cell;
@@ -17,7 +17,7 @@ void visit_terrain_cells(vec2<int32_t> const &position, int16_t const width, Vis
   // Negative remainders add dimension - 1, retaining the original seam quirk.
   int const half{width >> 1};
   vec2<int32_t> const centre{position.x >> cell_shift,position.y >> cell_shift};
-  auto const wrap{[](int32_t const value, unsigned int const dimension) {
+  auto const wrap{[](int32_t const value, unsigned int const dimension){
     int32_t const remainder{value % static_cast<int32_t>(dimension)};
     return static_cast<unsigned int>(remainder < 0 ? remainder + static_cast<int32_t>(dimension) - 1 : remainder);
   }};

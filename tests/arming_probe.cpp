@@ -1,8 +1,8 @@
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
-#include "resources/executable_tables.h"
+#include <iostream>
 #include "resources/archive.h"
+#include "resources/executable_tables.h"
 #include "weapons/loadout.h"
 
 int main(int const argc, char const *const argv[]) try {
@@ -13,8 +13,9 @@ int main(int const argc, char const *const argv[]) try {
   tfx::weapons::arming_tables tables;
   if(synthetic) {
     for(unsigned int index{0}; index != tables.next.size(); ++index) tables.next[index] = static_cast<uint16_t>((index + 1) % tables.next.size());
-    for(unsigned int weapon{0}; weapon != definitions.size(); ++weapon)
+    for(unsigned int weapon{0}; weapon != definitions.size(); ++weapon) {
       for(unsigned int plane{0}; plane != 3; ++plane) definitions[weapon].mount_masks[plane] = static_cast<uint16_t>((weapon * 317u + plane * 193u + 0x155u) & 1023u);
+    }
   } else {
     auto const path{tfx::resources::find_game_archive(argv[1])};
     tfx::resources::executable_tables const assets{path.parent_path() / "TFX.DAT"};
@@ -31,8 +32,9 @@ int main(int const argc, char const *const argv[]) try {
       if(occupied & (1u << index)) inventory.assign(index,tfx::weapons::weapon_id::sidewinder_s);
     }
     unsigned int allowed{0};
-    if(weapon >= 0) for(unsigned int mount{0}; mount != tfx::flight::store_slots; ++mount)
+    if(weapon >= 0) for(unsigned int mount{0}; mount != tfx::flight::store_slots; ++mount) {
       if(inventory.can_fit(mount,static_cast<tfx::weapons::weapon_id>(weapon))) allowed |= 1u << mount;
+    }
     inventory.assign(slot,weapon < 0 ? std::nullopt : std::optional{static_cast<tfx::weapons::weapon_id>(weapon)});
     std::array<uint32_t,1 + tfx::flight::store_slots * 3> result{};
     result[0] = allowed;

@@ -37,7 +37,7 @@ struct cue_entry {
   uint32_t postgap{0};
 };
 
-} // namespace
+} // anonymous namespace
 
 cd_image::cd_image(std::filesystem::path const &cue) {
   std::ifstream input{cue};
@@ -128,13 +128,13 @@ bytes cd_image::read_file(std::string_view const name) const {
   auto const &data{track(1)};
   if(data.audio) throw std::runtime_error{"CD track 1 has no ISO data"};
   std::ifstream input{data.file,std::ios::binary};
-  auto const read{[&](uint32_t const sector, uint32_t const count) {
+  auto const read{[&](uint32_t const sector, uint32_t const count){
     if(sector > data.sectors || (uint64_t{count} + cd_data_bytes - 1) / cd_data_bytes > data.sectors - sector) throw std::runtime_error{"ISO extent exceeds CD data track"};
     bytes result(count);std::array<uint8_t,cd_sector_bytes> buffer{};
     for(uint32_t at{0}; at < count;) {
       input.seekg(static_cast<std::streamoff>((uint64_t{data.file_sector} + sector + at / cd_data_bytes) * data.sector_bytes));
       if(!input.read(reinterpret_cast<char*>(buffer.data()),data.sector_bytes)) throw std::runtime_error{"cannot read CD data sector"};
-      if(data.sector_bytes == cd_sector_bytes && (buffer[0] != 0 || buffer[11] != 0 || buffer[15] != 1 || !std::ranges::all_of(std::span{buffer}.subspan(1,10),[](auto v) { return v == 255; }))) throw std::runtime_error{"invalid Mode 1 CD sector"};
+      if(data.sector_bytes == cd_sector_bytes && (buffer[0] != 0 || buffer[11] != 0 || buffer[15] != 1 || !std::ranges::all_of(std::span{buffer}.subspan(1,10),[](auto v){ return v == 255; }))) throw std::runtime_error{"invalid Mode 1 CD sector"};
       auto const length{std::min(count - at,cd_data_bytes)};
       std::copy_n(buffer.begin() + (data.sector_bytes == cd_sector_bytes ? 16 : 0),length,result.begin() + at);
       at += length;
@@ -216,7 +216,7 @@ void install_reference_cd(std::filesystem::path const &cue, std::filesystem::pat
   };
   binary_view const payload{installer};
   std::filesystem::create_directories(destination);
-  auto const write{[&](std::string_view const name, std::span<uint8_t const> const bytes) {
+  auto const write{[&](std::string_view const name, std::span<uint8_t const> const bytes){
     auto const path{destination / name};
     if(std::filesystem::is_regular_file(path) && resources::read_file(path) == resources::bytes{bytes.begin(),bytes.end()}) return;
     auto temporary{path};temporary += ".installing";
@@ -236,7 +236,7 @@ void install_reference_cd(std::filesystem::path const &cue, std::filesystem::pat
     std::string_view constexpr defaults{"SOUNDFX=1\r\nMUSIC=1\r\nLANG=1\r\nCONTROL=0\r\nMODEL=3\r\nDETAIL=2\r\nREALISM=2,1,1,1,1,1,1\r\n"};
     write("TFX.CFG",{reinterpret_cast<uint8_t const*>(defaults.data()),defaults.size()});
   }
-  write("DID.DAT",archive_bytes); // Publish the archive only after its dependencies.
+  write("DID.DAT",archive_bytes);                                              // Publish the archive only after its dependencies.
 }
 
 } // namespace tfx::resources

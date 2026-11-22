@@ -5,12 +5,14 @@
 
 namespace {
 
-void require(bool const condition, char const *const message) { if(!condition) throw std::runtime_error{message}; }
+void require(bool const condition, char const *const message) {
+  if(!condition) throw std::runtime_error{message};
+}
 tfx::resources::bytes test_fonts() {
   // Test-authored tables use the native layout, without original glyph bytes.
   unsigned int constexpr data{973476}, code{0x70aa4};
   tfx::resources::bytes image(data + 0xe100);
-  auto const word{[&](unsigned int const at, uint32_t const value) { for(unsigned int byte{0}; byte != 4; ++byte) image.at(at + byte) = static_cast<uint8_t>(value >> (byte * 8)); }};
+  auto const word{[&](unsigned int const at, uint32_t const value){ for(unsigned int byte{0}; byte != 4; ++byte) image.at(at + byte) = static_cast<uint8_t>(value >> (byte * 8)); }};
   for(unsigned int i{0}; i != 64; ++i) image.at(data + 0xcc2f + i) = 255;
   image.at(data + 0xcc2f + 1) = 0;
   image.at(data + 0xcc6f) = 3;word(data + 0xcdc0,0xe000);

@@ -2,8 +2,11 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>

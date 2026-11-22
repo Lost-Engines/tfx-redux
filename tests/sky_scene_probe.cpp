@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <numbers>
@@ -39,4 +40,4 @@ int main(int const argc, char const *const argv[]) try {
       if(argc == 3) renderer.output.screenshot(std::filesystem::path{argv[2]} / (std::string{name} + '-' + std::string{tfx::world::sky_model_name(model)} + ".ppm"),tfx::render::decode_palette(game.read("colours/" + ground.lighting.palette_name + ".col")));
     }
   }
-} catch(std::exception const &error) { std::cerr << error.what() << '\n';return 1; }
+} catch(std::exception const &error) { std::cerr << error.what() << '\n';return EXIT_FAILURE; }

@@ -1,5 +1,4 @@
 #include "sample_voice.h"
-
 #include <utility>
 
 namespace tfx::audio {

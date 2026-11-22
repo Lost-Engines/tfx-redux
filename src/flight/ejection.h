@@ -17,7 +17,7 @@ struct pilot_motion {
   int32_t aircraft_speed{0};
   int32_t elapsed{0};
   bool parachute_open{false};
-  int32_t auxiliary_counter{0}; // Native 0x13398 is cleared with the launch state.
+  int32_t auxiliary_counter{0};                                                // Native 0x13398 is cleared with the launch state.
   int16_t collision{0};
   bool ended{false};
   bool fatal{false};

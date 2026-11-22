@@ -12,7 +12,7 @@ namespace tfx::platform {
 namespace {
 presentation::scene_counters counters(double const seconds) {
   double constexpr bios_divisor{65536}, text_divisor{21845}, pit_hz{1193182};
-  auto const wrapped{[](double const value) { return static_cast<uint32_t>(std::fmod(std::floor(value),4294967296.0)); }};
+  auto const wrapped{[](double const value){ return static_cast<uint32_t>(std::fmod(std::floor(value),4294967296.0)); }};
   return {
     .bios{wrapped(seconds * pit_hz / bios_divisor)},
     .text{wrapped(seconds * pit_hz / text_divisor)},
@@ -65,7 +65,7 @@ void replay_recording(window &window, resources::archive const &game,
   auto const colours{render::expand_dac_palette(infrared)};
   renderer.output.pixels.fill(0);
   std::array<bool,GLFW_KEY_LAST + 1> held{};
-  auto sample_keys{[&] {
+  auto sample_keys{[&]{
     bool pressed{false};
     for(int key{GLFW_KEY_SPACE}; key <= GLFW_KEY_LAST; ++key) {
       // Alt is reserved for host shortcuts, including Alt+Enter.

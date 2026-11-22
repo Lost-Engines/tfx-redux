@@ -20,7 +20,7 @@ struct sky_state {
   uint8_t pending_flash{0};
 };
 struct sky_context {
-  bool suppressed{false}; // Native environment bit 0x200 (twilight).
+  bool suppressed{false};                                                      // Native environment bit 0x200 (twilight).
   bool cloud_layer{false};
   bool storm{false};
   bool animate{false};

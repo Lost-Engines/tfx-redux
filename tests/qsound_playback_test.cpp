@@ -1,15 +1,16 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-#include "qsound/spatial_model.h"
 #include "audio/qsound_effect.h"
 #include "audio/sample_voice.h"
+#include "qsound/spatial_model.h"
 #include "simulation/timing.h"
 
 namespace {
@@ -194,8 +195,8 @@ void verify_playback() {
     }
     require(whole == split, "QSound playback depends on callback segmentation");
     require(!contiguous.state().active && !fragmented.state().active, "QSound stream did not complete");
-    require(std::ranges::all_of(std::span{whole}.last(48), [](float value) { return value == 0; }), "QSound tail did not drain");
-    require(std::ranges::any_of(whole, [](float value) { return value != 0; }), "QSound stream was silent");
+    require(std::ranges::all_of(std::span{whole}.last(48), [](float value){ return value == 0; }), "QSound tail did not drain");
+    require(std::ranges::any_of(whole, [](float value){ return value != 0; }), "QSound stream was silent");
     for(auto const value : whole) require(std::isfinite(value), "QSound produced a non-finite sample");
   }
   unsigned int constexpr rate{48000};
@@ -225,8 +226,8 @@ auto main()->int try {
   verify_timer();
   verify_playback();
   std::cout << "QSound: original timer cadence, endpoint clamping, DAC-rate filtering, callback boundaries, rate changes, preemption, additive mixing and tail drainage passed\n";
-  return 0;
+  return EXIT_SUCCESS;
 } catch(std::exception const &error) {
   std::cerr << error.what() << '\n';
-  return 1;
+  return EXIT_FAILURE;
 }

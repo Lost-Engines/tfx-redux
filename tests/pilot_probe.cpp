@@ -30,14 +30,14 @@ int main(int const argc, char const *const argv[]) try {
   tfx::presentation::frontend first{game,tables,scratch.path,"english",true};
   tfx::presentation::scene_input input;
   uint32_t ticks{0};
-  auto const step{[&](tfx::presentation::frontend &frontend, unsigned int const count) {
+  auto const step{[&](tfx::presentation::frontend &frontend, unsigned int const count){
     for(unsigned int index{0}; index != count; ++index) {
       auto const *action{frontend.advance({ticks++,ticks * 3},input)};
       require(!action,"front-end unexpectedly reached an external host action");
     }
   }};
   step(first,50);
-  first.press(0x1c,false); // Create, then accept each original default name.
+  first.press(0x1c,false);                                                     // Create, then accept each original default name.
   first.press(0x1c,false);
   first.press(1,false);
   first.press(0x1c,true);
@@ -45,7 +45,7 @@ int main(int const argc, char const *const argv[]) try {
   require(std::get<std::string>(first.values().at("pilotname")) == "LOOSE CANNON","surname Escape default differs");
   require(std::get<std::string>(first.values().at("callsign")) == "INFERNO","callsign default differs");
   require(std::get<uint32_t>(first.values().at("rank")) == 1,"Control qualification differs");
-  first.press(0x1c,false); // Empty slot zero.
+  first.press(0x1c,false);                                                     // Empty slot zero.
   step(first,100);
   auto saved{store.read(0,false,schema)};
   require(saved.resume && saved.resume->function == 0 && saved.resume->statement == 5,"enrolment saved the wrong native resume statement");
@@ -88,7 +88,7 @@ int main(int const argc, char const *const argv[]) try {
   tfx::presentation::frontend retired{game,tables,scratch.path,"english",true};
   step(retired,50);
   retired.press(0x50,false);retired.press(0x1c,false);retired.press(0x1c,false);
-  retired.press(0x15,false); // Delete means mark empty in the chooser, not remove the on-disk save.
+  retired.press(0x15,false);                                                   // Delete means mark empty in the chooser, not remove the on-disk save.
   require(std::filesystem::exists(scratch.path / "tfxsav.0"),"inactive pilot confirmation prematurely removed the original file");
   retired.press(0x1c,false);retired.press(0x1c,false);retired.press(0x1c,false);retired.press(0x1c,false);
   step(retired,100);
@@ -100,16 +100,16 @@ int main(int const argc, char const *const argv[]) try {
   qualified.press(0x1c,false);qualified.press(0x1c,false);qualified.press(0x1c,false);qualified.press(0x1c,false);
   require(std::get<uint32_t>(qualified.values().at("rank")) == 1,"completed training did not qualify a new pilot");
   first.values()["score"] = uint32_t{150};
-  auto const click{[&](int16_t const x, int16_t const y) {
+  auto const click{[&](int16_t const x, int16_t const y){
     input.mouse_buttons = 1;
     first.advance({ticks++,ticks * 3},input,vec2<int16_t>{x,y});
     input.mouse_buttons = 0;
     step(first,100);
   }};
-  click(145,62); // Arcade from the original main menu.
+  click(145,62);                                                               // Arcade from the original main menu.
   require(first.function_name() == "arcade","Arcade menu did not open");
   require(!store.read(0,true,schema).resume,"Arcade log unexpectedly stored a resume position");
-  click(150,123); // The original view-scores action also submits the current pilot's score.
+  click(150,123);                                                              // The original view-scores action also submits the current pilot's score.
   auto const scores{store.load_scores(tables.scores().defaults)};
   require(scores.front().score == 150 && scores.front().callsign == "INFERNO","Arcade score action did not persist the current pilot");
   require(!first.pointer_visible(),"high-score view did not suspend the original menu");
@@ -130,8 +130,8 @@ int main(int const argc, char const *const argv[]) try {
     require(!first.advance({ticks++,ticks * 3},input),"Tour intro reached an unexpected host action");
   }
   require(first.function_name() == "todselct" && first.pointer_visible(),"Tour did not reach squadron selection");
-  step(first,50); // Let the original squadron menu finish its entry fade.
-  click(100,150); // Blue Angels / Eurofighter.
+  step(first,50);                                                              // Let the original squadron menu finish its entry fade.
+  click(100,150);                                                              // Blue Angels / Eurofighter.
   launch = nullptr;
   for(unsigned int frame{0}; frame != 20000 && !launch; ++frame) {
     input.mouse_buttons = 2;

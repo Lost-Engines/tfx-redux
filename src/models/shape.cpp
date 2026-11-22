@@ -1,9 +1,9 @@
 #include "shape.h"
-#include "render/continuous_pose.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <utility>
+#include "render/continuous_pose.h"
 
 namespace tfx::models {
 namespace {
@@ -108,7 +108,7 @@ shape::shape(std::span<uint8_t const> const source) {
 
 shape_detail const *shape::detail_for_distance(int16_t const distance) const {
   if(distance < minimum_draw_distance) return nullptr;
-  auto const found{std::ranges::find_if(details,[&](auto const &detail) { return distance <= math::signed_word(static_cast<uint16_t>(detail.distance)); })};
+  auto const found{std::ranges::find_if(details,[&](auto const &detail){ return distance <= math::signed_word(static_cast<uint16_t>(detail.distance)); })};
   return found == details.end() ? nullptr : &*found;
 }
 
@@ -163,12 +163,12 @@ shape_geometry interpret(shape const &program, shape_context const &context) {
     auto const a{project(vertices[0])}, b{project(vertices[1])}, c{project(vertices[2])};
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
   }};
-  auto const facing{[&](std::span<model_vertex const> const vertices, facing_test const purpose) {
+  auto const facing{[&](std::span<model_vertex const> const vertices, facing_test const purpose){
     if(context.face_visibility) if(auto const native{context.face_visibility(vertices,purpose)}) return *native;
     return determinant(vertices) >= 0;
   }};
-  auto const wrap{[](double const value) { return std::bit_cast<int32_t>(static_cast<uint32_t>(static_cast<int64_t>(value))); }};
-  auto const transform_vertex{[&](vec3d const &value) {
+  auto const wrap{[](double const value){ return std::bit_cast<int32_t>(static_cast<uint32_t>(static_cast<int64_t>(value))); }};
+  auto const transform_vertex{[&](vec3d const &value){
     if(!context.camera) return matrix * value;
     vec3<int32_t> result;
     for(unsigned int row{0}; row != 3; ++row) {
@@ -212,7 +212,7 @@ shape_geometry interpret(shape const &program, shape_context const &context) {
     if(near) { shaded_flat = constant_ink.has_value();textured_flat = constant_ink.has_value(); }
     cursor = start + count;
   }};
-  auto const load_colour{[&](unsigned int const ink, std::span<uint16_t const> const indices, colour_load const loader = colour_load::polygon) {
+  auto const load_colour{[&](unsigned int const ink, std::span<uint16_t const> const indices, colour_load const loader = colour_load::polygon){
     if(loader == colour_load::polygon) source_colour = ink & 255;
     if(constant_ink) return;
     colour = ink & 255;
@@ -396,7 +396,7 @@ shape_geometry interpret(shape const &program, shape_context const &context) {
         auto const old_slot{attachment_slot};
         origin = *world[a[0]];
         if(context.camera) camera_origin = *camera_vertices[a[0]];
-        state = 0xf9; // Native 0xbc94c seeds carried stores independently of the parent condition byte.
+        state = 0xf9;                                                          // Native 0xbc94c seeds carried stores independently of the parent condition byte.
         if(!attachment_slot) attachment_slot = slot;
         auto const &child{*context.attachments[slot]};
         // Vertex storage and drawing state remain shared, as in the original. Only translation and condition are restored.

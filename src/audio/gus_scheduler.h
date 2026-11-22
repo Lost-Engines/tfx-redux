@@ -13,7 +13,7 @@ struct gus_sample_descriptor {
 struct gus_scheduler_state {
   bool enabled{true};
   uint8_t priority{0};
-  uint8_t resident_cursor{1}; // Native DFC1 starts at one; the first resident request selects voice two.
+  uint8_t resident_cursor{1};                                                  // Native DFC1 starts at one; the first resident request selects voice two.
 };
 struct gus_request {
   unsigned int voice;

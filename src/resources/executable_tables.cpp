@@ -46,7 +46,7 @@ executable_tables::executable_tables(std::filesystem::path const &path) {
     for(unsigned int channel{0}; channel != 3; ++channel) fixed_flight_palette[colour * 3 + channel] = view.byte(entry + 1 + channel);
   }
   hud_green = view.byte(data_file + 0xa4ec);
-  auto const native_message{[&](unsigned int const offset) {
+  auto const native_message{[&](unsigned int const offset){
     unsigned int constexpr maximum_message_length{512};
     std::string result;
     for(unsigned int index{0}; index != maximum_message_length; ++index) {
@@ -57,7 +57,7 @@ executable_tables::executable_tables(std::filesystem::path const &path) {
     throw std::runtime_error{"unterminated native gameplay message"};
   }};
   timer_expired_message = native_message(0xa8);
-  fire_permission_message = native_message(0x1850); // Both native permission-notice strings have identical text.
+  fire_permission_message = native_message(0x1850);                            // Both native permission-notice strings have identical text.
   orders_violation_message = native_message(0x678);
   ground_training_warning = native_message(0x370c);
   ground_orders_violation = native_message(0x3764);
@@ -68,7 +68,7 @@ executable_tables::executable_tables(std::filesystem::path const &path) {
     ship_target_types.push_back(type);
     if(index == 63) throw std::runtime_error{"unterminated native ship target list"};
   }
-  auto const anchor{[&](unsigned int const address) { return vec3<int16_t>{view.signed_le16(data_file + address),view.signed_le16(data_file + address + 2),view.signed_le16(data_file + address + 4)}; }};
+  auto const anchor{[&](unsigned int const address){ return vec3<int16_t>{view.signed_le16(data_file + address),view.signed_le16(data_file + address + 2),view.signed_le16(data_file + address + 4)}; }};
   unsigned int constexpr empty_record{data_file + 0x809c + weapons::empty_pylon * 48};
   arming.empty_role = static_cast<weapons::weapon_role>(view.byte(empty_record + 20));
   arming.empty_category = view.byte(empty_record + 29);
@@ -118,8 +118,12 @@ vec3<int16_t> const &executable_tables::sight_mount(flight::player_aircraft cons
   return sight_mount_data.at(std::to_underlying(aircraft) - 1).at(static_cast<unsigned int>(pylon - first_sight_pylon));
 }
 
-flight::refuel_assets const &executable_tables::refuel_parameters() const { return *refuel_data; }
-presentation::fonts const &executable_tables::presentation_fonts() const { return *font_data; }
+flight::refuel_assets const &executable_tables::refuel_parameters() const {
+  return *refuel_data;
+}
+presentation::fonts const &executable_tables::presentation_fonts() const {
+  return *font_data;
+}
 
 presentation::widget_font const &executable_tables::interface_font() const {
   return *widget_font_data;
@@ -150,7 +154,9 @@ unsigned int executable_tables::glyph_measure(unsigned char const character) con
   return character == ' ' ? 3u : measured_advances[character];
 }
 
-presentation::configuration_menu_assets const &executable_tables::configuration_widgets() const { return *configuration_data; }
+presentation::configuration_menu_assets const &executable_tables::configuration_widgets() const {
+  return *configuration_data;
+}
 
 hud_glyph const *executable_tables::glyph(unsigned char const character) const {
   auto const index{character_map[character & 63]};

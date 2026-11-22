@@ -1,11 +1,11 @@
 #pragma once
 
 #include <functional>
-#include "presentation/menu_player.h"
 #include "planning/review.h"
+#include "presentation/menu_player.h"
 #include "presentation/pilot_panel.h"
-#include "presentation/session.h"
 #include "presentation/score_player.h"
+#include "presentation/session.h"
 #include "resources/executable_tables.h"
 
 namespace tfx::presentation {

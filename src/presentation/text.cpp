@@ -66,7 +66,7 @@ prepared_text prepare_text(text_block const &source, variables const &state, pre
       .position{math::signed_word(static_cast<uint16_t>(x)),math::signed_word(static_cast<uint16_t>(y))},
       .width{width},
     });
-    if(cursor < raw.size()) cursor += raw[cursor] == '\r' ? 2 : 1; // The original consumes two bytes for CR, even without LF.
+    if(cursor < raw.size()) cursor += raw[cursor] == '\r' ? 2 : 1;             // The original consumes two bytes for CR, even without LF.
   }
   return result;
 }
@@ -88,7 +88,9 @@ bool text_reveal::advance(text_counter const counter, bool const skip) {
   return consumed;
 }
 
-reveal_progress const &text_reveal::state() const { return progress; }
+reveal_progress const &text_reveal::state() const {
+  return progress;
+}
 
 void draw_text(render::framebuffer &target, prepared_text const &text, presentation::fonts const &fonts, unsigned int characters, render::framebuffer *const coverage) {
   for(auto const &line : text.lines) {

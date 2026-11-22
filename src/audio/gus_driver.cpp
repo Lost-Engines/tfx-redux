@@ -11,8 +11,9 @@ gus_parameters load_gus_parameters(std::span<uint8_t const> const firmware) {
   if(source.le16(0) != 0x5a4d) throw std::runtime_error{"Gravis driver is not an MZ executable"};
   unsigned int const header{source.le16(8) * 16u};
   // The reference dispatcher's MOV AX,DGROUP / MOV DS,AX identifies its data.
-  if(source.byte(header + 0x438) != 0xb8 || source.le16(header + 0x43b) != 0xd88e)
+  if(source.byte(header + 0x438) != 0xb8 || source.le16(header + 0x43b) != 0xd88e) {
     throw std::runtime_error{"unexpected Gravis driver tables"};
+  }
   unsigned int const data{header + source.le16(header + 0x439) * 16u};
   gus_parameters result{
     .frequency_base{source.le16(data + 0x2c7 + gus_driver::physical_voices * 2)},

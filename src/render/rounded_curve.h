@@ -15,7 +15,7 @@ auto rounded_arc(vec2<int32_t> const &previous, vec2<int32_t> const &corner, vec
   unsigned int constexpr point_count{((quarter_turn_q16 << Subdivision) >> fraction_bits) + 2};
   unsigned int constexpr first_shift{Subdivision * 2 + 3}, second_shift{Subdivision * 2 + 4};
   int64_t constexpr one{int64_t{1} << fraction_bits}, half{one / 2};
-  auto const wrap{[](int64_t const value) { return std::bit_cast<int32_t>(static_cast<uint32_t>(value)); }};
+  auto const wrap{[](int64_t const value){ return std::bit_cast<int32_t>(static_cast<uint32_t>(value)); }};
   struct curve_axis {
     int32_t a;
     int32_t b;

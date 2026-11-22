@@ -37,8 +37,12 @@ animation_step animation_clock::advance(bios_counter const counter) {
   return result;
 }
 
-bios_counter animation_clock::last_counter() const { return previous; }
-uint16_t animation_clock::next_ordinal() const { return ordinal; }
+bios_counter animation_clock::last_counter() const {
+  return previous;
+}
+uint16_t animation_clock::next_ordinal() const {
+  return ordinal;
+}
 
 scene_wait::scene_wait(node_kind const kind, int16_t const ticks) : kind{kind}, ticks{ticks} {
   if(kind != node_kind::text && kind != node_kind::image && kind != node_kind::animation) throw std::runtime_error{"scene wait requires a visual parser node"};
@@ -51,7 +55,9 @@ bool scene_wait::advance(bool const revealing) {
   return kind == node_kind::text ? before == 0 : ticks <= 0;
 }
 
-int32_t scene_wait::remaining() const { return ticks; }
+int32_t scene_wait::remaining() const {
+  return ticks;
+}
 
 dac_palette fade_palette(dac_palette const &source, unsigned int const level, unsigned int const stages) {
   // Native 0xca2f4/35c/3c0/428 scale the six-bit DAC entries before any display RGB expansion.
