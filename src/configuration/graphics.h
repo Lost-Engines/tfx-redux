@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include "configuration/audio.h"
 #include "render/view_settings.h"
 
 namespace tfx::configuration {
@@ -19,6 +20,7 @@ enum class graphics_field {
 struct graphics_settings {
   render::view_settings video{};
   unsigned int window_scale{0};
+  audio_preferences audio{};                                                // Shared REDUX.CFG; graphics edits preserve these choices.
 };
 // Shared by the command line, saved preferences and the runtime editor.
 void set_graphics_value(graphics_settings &settings, graphics_field field, std::string_view value);

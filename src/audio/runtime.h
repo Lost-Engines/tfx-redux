@@ -19,23 +19,31 @@ private:
   bool enabled;
   std::unique_ptr<music_player> music;
   std::unique_ptr<cd_player> cd;
-  music_mode mode;
   bool music_on;
+  bool cd_on;
   bool in_flight{false};
   bool cd_flight{false};
+  bool synth_suspended{false};
+  std::optional<uint8_t> preselected{};
+  uint8_t flight_theme{10};
+  flight_audio_state flight_state{};
   int16_t cd_index{0};
   int16_t cd_poll_ticks{0};
   void play_cd();
+  void resume_flight_synth();
 
 public:
   runtime(std::span<sample_definition const> definitions, resources::archive const &game, unsigned int output_rate,
     sound_device device, std::unique_ptr<music_player> music = {}, std::optional<gus_parameters> const &gravis = {},
-    std::unique_ptr<cd_player> cd = {}, music_mode mode = music_mode::none, bool music_enabled = true, std::unique_ptr<qsound_effect> spatial = {});
+    std::unique_ptr<cd_player> cd = {}, music_mode mode = music_mode::none, bool music_enabled = true, std::unique_ptr<qsound_effect> spatial = {}, std::optional<bool> cd_music = {});
   bool sound_available() const;
   bool sound_enabled() const;
   bool music_available() const;
   bool music_enabled() const;
   void enable_music(bool enabled);
+  bool cd_music_available() const;
+  bool cd_music_enabled() const;
+  void enable_cd_music(bool enabled);
   void select_music(int16_t index);
   void select_cd(int16_t index);
   void stop_cd();

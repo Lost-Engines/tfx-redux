@@ -96,6 +96,8 @@ add_library(tfx_core
   src/configuration/save.h
   src/configuration/graphics.cpp
   src/configuration/graphics.h
+  src/configuration/audio.cpp
+  src/configuration/audio.h
   src/configuration/settings.cpp
   src/configuration/settings.h
   src/flight/player_flight.cpp
@@ -1218,6 +1220,10 @@ if(BUILD_TESTING)
   add_test(NAME flight.native_weapon_configuration COMMAND flight_configuration_probe "${PROJECT_SOURCE_DIR}/tests/fixtures/flight_configuration.txt")
 
   add_executable(configuration_save_test tests/configuration_save_test.cpp)
+  add_executable(independent_cd_music_test tests/independent_cd_music_test.cpp)
+  target_link_libraries(independent_cd_music_test PRIVATE tfx_audio tfx_core)
+  configure_first_party(independent_cd_music_test)
+  add_test(NAME audio.independent_cd_music COMMAND independent_cd_music_test)
   target_link_libraries(configuration_save_test PRIVATE tfx_core)
   configure_first_party(configuration_save_test)
   add_test(NAME configuration.preference_file_roundtrip COMMAND configuration_save_test)

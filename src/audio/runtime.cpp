@@ -24,7 +24,7 @@ std::variant<sample_voice, gus_samples> make_effects(sample_bank const &bank, un
 }
 runtime::runtime(std::span<sample_definition const> const definitions, resources::archive const &game,
     unsigned int const output_rate, sound_device const device, std::unique_ptr<music_player> music, std::optional<gus_parameters> const &gravis,
-    std::unique_ptr<cd_player> cd, music_mode mode, bool music_enabled, std::unique_ptr<qsound_effect> spatial)
+    std::unique_ptr<cd_player> cd, music_mode mode, bool music_enabled, std::unique_ptr<qsound_effect> spatial, std::optional<bool> const cd_music)
   :
     bank{definitions, game},
     effects{make_effects(bank, output_rate, gravis, std::move(spatial))},
@@ -33,8 +33,8 @@ runtime::runtime(std::span<sample_definition const> const definitions, resources
     enabled{available},
     music{std::move(music)},
     cd{std::move(cd)},
-    mode{mode},
-    music_on{this->music ? this->music->is_enabled() : music_enabled} {
+    music_on{this->music ? this->music->is_enabled() : music_enabled},
+    cd_on{cd_music.value_or(mode == music_mode::soundblaster_cd)} {
   std::visit([&](auto &output){output.enable(enabled && sampled);}, effects);
 }
 bool runtime::sound_available() const {
@@ -48,7 +48,8 @@ bool runtime::music_enabled() const {
 }
 void runtime::enable_music(bool const value) {
   music_on = value;
-  cd_flight = in_flight && cd && mode == music_mode::soundblaster_cd && value;
+  cd_flight = in_flight && cd && cd_on && value;
+  if(cd_flight) synth_suspended = true;
   if(music) {
     music->set_cd_mode(cd_flight);
     music->enable(value);
@@ -56,15 +57,55 @@ void runtime::enable_music(bool const value) {
   if(!value) {
     stop_cd();
   } else if(cd_flight) play_cd();                                              // Native enable restarts the selected track.
+  else if(in_flight && synth_suspended) resume_flight_synth();
+}
+bool runtime::cd_music_available() const {
+  return cd != nullptr;
+}
+bool runtime::cd_music_enabled() const {
+  return cd_on;
+}
+void runtime::resume_flight_synth() {
+  synth_suspended = false;
+  if(!music) return;
+  music->set_cd_mode(false);
+  music->select(flight_theme);
+  music->begin_flight(flight_state);
+}
+void runtime::enable_cd_music(bool const value) {
+  if(cd_on == value) return;
+  cd_on = value;
+  if(!in_flight) {
+    if(!value) stop_cd();
+    return;
+  }
+  bool const active{cd && cd_on && music_on};
+  if(active) {
+    cd_flight = synth_suspended = true;
+    if(music) {
+      music->set_cd_mode(true);
+      music->select(flight_theme);
+      music->begin_flight(flight_state);
+    }
+    play_cd();
+  } else {
+    stop_cd();
+    cd_flight = false;
+    if(music) music->set_cd_mode(false);
+    if(music_on && synth_suspended) resume_flight_synth();
+  }
 }
 void runtime::select_music(int16_t const index) {
+  uint8_t const requested{static_cast<uint8_t>(index)};
+  if(!preselected && requested >= 10) preselected = requested;
+  else if(preselected) preselected.reset();
   if(music) music->select(index);
 }
 void runtime::stop_music() {
   if(music) music->stop();
 }
 void runtime::play_cd() {
-  if(!cd || !music_on) return;
+  if(!cd || !music_on || !cd_on) return;
   try {
     if(cd_index < 0 || !cd->play(static_cast<unsigned int>(cd_index) + 1)) std::cerr << "CD track " << cd_index + 1 << " is unavailable.\n";
   } catch(std::exception const &error) {
@@ -79,12 +120,14 @@ void runtime::stop_cd() {
   if(cd) cd->stop();
 }
 void runtime::begin_flight(flight_audio_state const &state) {
+  flight_state = state;
+  auto const selected{music ? music->preselected_index() : preselected};
+  flight_theme = selected.value_or(10);
+  preselected.reset();
   in_flight = true;
-  cd_flight = cd && mode == music_mode::soundblaster_cd && music_on;
-  if(cd_flight) {
-    auto const selected{music ? music->preselected_index() : std::nullopt};
-    cd_index = selected ? static_cast<int16_t>(*selected - 8) : 8;
-  }
+  cd_flight = cd && cd_on && music_on;
+  synth_suspended = cd_flight;
+  cd_index = selected ? static_cast<int16_t>(*selected - 8) : 8;
   if(music) {
     music->set_cd_mode(cd_flight);
     music->begin_flight(state);
@@ -94,12 +137,14 @@ void runtime::begin_flight(flight_audio_state const &state) {
 void runtime::end_flight() {
   if(cd_flight) stop_cd();
   in_flight = cd_flight = false;
+  synth_suspended = false;
   if(music) {
     music->set_cd_mode(false);
     music->end_flight();
   }
 }
 void runtime::update_flight(flight_audio_state const &state) {
+  flight_state = state;
   if(music) music->update_flight(state);
 }
 void runtime::music_cue(uint8_t const cue) {

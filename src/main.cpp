@@ -51,9 +51,9 @@ auto main(int const argc, char const *const argv[])->int try {
   std::optional<std::filesystem::path> rom_directory;
   std::optional<std::filesystem::path> cd_cue;
   std::optional<std::filesystem::path> cd_audio_directory;
-  std::optional<uint8_t> music_override;
+  std::optional<tfx::configuration::music_engine> music_override;
+  std::optional<bool> cd_music_override;
   qsound_mode selected_qsound{qsound_mode::automatic};
-  tfx::audio::sound_canvas_model canvas_model{tfx::audio::sound_canvas_model::scc1a};
   std::string mission_name{"miss501"};
   std::string override_environment;
   std::string override_grid;
@@ -95,7 +95,9 @@ auto main(int const argc, char const *const argv[])->int try {
     ("flight-model", boost::program_options::value<std::string>()->value_name("NAME"), "arcade, simple, military-spec or realistic; overrides TFX.CFG")
     ("control", boost::program_options::value<std::string>()->value_name("NAME"), "keyboard, mouse or joystick; overrides TFX.CFG")
     ("joystick", boost::program_options::value<std::string>()->value_name("N"), "Select joystick 0..15 (default: first available); enables joystick input")
-    ("music", boost::program_options::value<std::string>()->value_name("NAME"), "none, soundblaster-cd (or cd), soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55")
+    ("music", boost::program_options::value<std::string>()->value_name("NAME"), "Synth: none, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55")
+    ("cd-music", "Use CD music during flight, independently of the selected synth")
+    ("no-cd-music", "Use the selected synth during flight instead of CD music")
     ("cd-cue", boost::program_options::value<std::string>()->value_name("FILE"), "Play CD music from a CUE/BIN image (default: fetched disc)")
     ("cd-audio-dir", boost::program_options::value<std::string>()->value_name("DIR"), "Play numbered local FLAC, Ogg, MP3 or WAV CD tracks")
     ("qsound", boost::program_options::value<std::string>()->value_name("MODE"), "auto, on or off; reconstructed Sound Blaster spatial effects (default: auto)")
@@ -203,23 +205,16 @@ auto main(int const argc, char const *const argv[])->int try {
       cd_audio_directory = value();
     } else if(key == "music") {
       auto const selected{value()};
-      if(selected == "none") {
-        music_override = 0;
-      } else if(selected == "soundblaster-cd" || selected == "cd") {
-        music_override = 1;
-      } else if(selected == "soundblaster-fm") {
-        music_override = 3;
-      } else if(selected == "roland-lapc") {
-        music_override = 2;
-      } else if(selected == "roland-scc1a") {
-        music_override = 4;
-        canvas_model = tfx::audio::sound_canvas_model::scc1a;
-      } else if(selected == "roland-sc55") {
-        music_override = 4;
-        canvas_model = tfx::audio::sound_canvas_model::sc55;
+      if(selected == "soundblaster-cd" || selected == "cd") {
+        music_override = tfx::configuration::music_engine::fm;
+        cd_music_override = true;
       } else {
-        throw std::runtime_error{"music must be none, soundblaster-cd, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55"};
+        music_override = tfx::configuration::parse_music_engine(selected);
       }
+    } else if(key == "cd-music") {
+      cd_music_override = true;
+    } else if(key == "no-cd-music") {
+      cd_music_override = false;
     } else if(key == "language") {
       language = value();
       language_selected = true;
@@ -323,15 +318,21 @@ auto main(int const argc, char const *const argv[])->int try {
     graphics = tfx::configuration::load_graphics(archive_path.parent_path());
   }
   catch(std::exception const &error) {
-    std::cerr << "Graphics preferences unavailable: " << error.what() << "; using defaults.\n";
+    std::cerr << "Redux preferences unavailable: " << error.what() << "; using defaults.\n";
     graphics = {};
   }
   for(auto const &[field, value] : graphics_overrides) tfx::configuration::set_graphics_value(graphics, field, value);
   auto preferences{tfx::configuration::load(archive_path.parent_path())};
   if(model_selected) preferences.model = model;
-  if(music_override) {
-    preferences.music = *music_override;
-  } else if(cd_cue || cd_audio_directory) preferences.music = 1;
+  if(music_override) graphics.audio.engine = *music_override;
+  if(cd_cue || cd_audio_directory) graphics.audio.cd_music = true;
+  if(cd_music_override) graphics.audio.cd_music = *cd_music_override;
+  auto const audio_settings{tfx::configuration::resolve_audio(preferences.music, graphics.audio)};
+  auto const music_mode{audio_settings.engine == tfx::configuration::music_engine::none ? tfx::audio::music_mode::none
+    : audio_settings.engine == tfx::configuration::music_engine::lapc ? tfx::audio::music_mode::lapc
+    : audio_settings.engine == tfx::configuration::music_engine::fm ? tfx::audio::music_mode::fm
+    : tfx::audio::music_mode::sound_canvas};
+  auto const canvas_model{audio_settings.engine == tfx::configuration::music_engine::sc55 ? tfx::audio::sound_canvas_model::sc55 : tfx::audio::sound_canvas_model::scc1a};
   if(control_override) preferences.preferred_control = preferences.control = *control_override;
   if(control_override == tfx::flight::control_source::joystick && preferences.model == tfx::simulation::flight_model::arcade) throw std::runtime_error{"joystick steering requires Simple, Military-spec or Realistic flight; Arcade uses relative mouse input"};
   if(control_override == tfx::flight::control_source::mouse && preferences.model == tfx::simulation::flight_model::simple) throw std::runtime_error{"the original Simple model has no mouse steering; choose keyboard or joystick"};
@@ -342,7 +343,7 @@ auto main(int const argc, char const *const argv[])->int try {
   std::unique_ptr<tfx::platform::audio_output> output;
   if(!screenshot && !inspect && !replay) {
     std::unique_ptr<tfx::audio::cd_player> cd;
-    if(preferences.music == 1) {
+    { // Keep an available CD source ready for the independent runtime switch.
       if(cd_cue || cd_audio_directory) {
         cd = std::make_unique<tfx::audio::cd_player>(cd_cue ? *cd_cue : *cd_audio_directory, tfx::platform::audio_output::sample_rate);
       } else {
@@ -353,7 +354,7 @@ auto main(int const argc, char const *const argv[])->int try {
               cd = std::make_unique<tfx::audio::cd_player>(cue, tfx::platform::audio_output::sample_rate);
             }
             catch(std::exception const &error) {
-              std::cerr << "CD image unavailable: " << error.what() << "; rerun scripts/fetch-assets to repair the disc.\n";
+              if(audio_settings.cd_music) std::cerr << "CD image unavailable: " << error.what() << "; rerun scripts/fetch-assets to repair the disc.\n";
             }
             break;
           }
@@ -361,14 +362,14 @@ auto main(int const argc, char const *const argv[])->int try {
       }
     }
     std::unique_ptr<tfx::audio::music_player> music;
-    if(preferences.music >= 1 && preferences.music <= 4) {
+    if(music_mode != tfx::audio::music_mode::none) {
       try {
         auto const launcher{tfx::resources::read_file(archive_path.parent_path() / "START.EXE")};
-        if(preferences.music == 2 || preferences.music == 4) {
+        if(music_mode == tfx::audio::music_mode::lapc || music_mode == tfx::audio::music_mode::sound_canvas) {
           std::string failure;
           for(auto const &directory : tfx::resources::rom_directories(archive_path.parent_path(), rom_directory)) {
             try {
-              if(preferences.music == 2) {
+              if(music_mode == tfx::audio::music_mode::lapc) {
                 music = std::make_unique<tfx::audio::music_player>(game, launcher, directory, tfx::platform::audio_output::sample_rate);
               } else {
                 music = std::make_unique<tfx::audio::music_player>(game, launcher,
@@ -386,7 +387,7 @@ auto main(int const argc, char const *const argv[])->int try {
         }
       } catch(std::exception const &error) {
         std::cerr << "Music unavailable: " << error.what();
-        if(preferences.music == 2 || preferences.music == 4) std::cerr << "; run "
+        if(music_mode == tfx::audio::music_mode::lapc || music_mode == tfx::audio::music_mode::sound_canvas) std::cerr << "; run "
 #ifdef _WIN32
           "scripts\\fetch-assets.bat"
 #else
@@ -396,7 +397,7 @@ auto main(int const argc, char const *const argv[])->int try {
         std::cerr << ".\n";
       }
     }
-    if(music) music->configure(static_cast<tfx::audio::music_mode>(preferences.music), preferences.sound_effects, tables.music_orders);
+    if(music) music->configure(music_mode, preferences.sound_effects, tables.music_orders);
     std::optional<tfx::audio::gus_parameters> gravis;
     auto effects_device{static_cast<tfx::audio::sound_device>(preferences.sound_effects)};
     if(preferences.sound_effects == 4) {
@@ -417,7 +418,7 @@ auto main(int const argc, char const *const argv[])->int try {
     }
     if(preferences.sound_effects || music || cd) {
       try {
-        sound = std::make_unique<tfx::audio::runtime>(tables.samples, game, tfx::platform::audio_output::sample_rate, effects_device, std::move(music), gravis, std::move(cd), static_cast<tfx::audio::music_mode>(preferences.music), preferences.music != 0, std::move(spatial));
+        sound = std::make_unique<tfx::audio::runtime>(tables.samples, game, tfx::platform::audio_output::sample_rate, effects_device, std::move(music), gravis, std::move(cd), music_mode, audio_settings.engine != tfx::configuration::music_engine::none || audio_settings.cd_music, std::move(spatial), audio_settings.cd_music);
         output = std::make_unique<tfx::platform::audio_output>([](void *const user, std::span<float> const pcm) noexcept {
           static_cast<tfx::audio::runtime*>(user)->render(pcm);
         }, sound.get());

@@ -38,6 +38,9 @@ int main() try {
     require(state.video.resolution == unchanged.video.resolution && state.video.field_of_view == unchanged.video.field_of_view && state.video.lod_scale == unchanged.video.lod_scale && state.video.draw_distance == unchanged.video.draw_distance && state.window_scale == unchanged.window_scale, "rejected edit mutated settings");
   }
   state = parse_graphics("# test\r\nRESOLUTION=1001x603\r\nFOV=97.25\nDRAW_DISTANCE=INFINITE\nLOD_SCALE=0\nWINDOW_SCALE=2\nUNKNOWN=kept out\n");
+  require(!state.audio.engine && !state.audio.cd_music, "old Redux graphics configuration changed music selection");
+  state.audio.engine = tfx::configuration::music_engine::sc55;
+  state.audio.cd_music = true;
   require(!state.video.automatic_resolution && state.video.resolution == vec2<int>{1001, 603} && state.video.field_of_view == 97.25 && state.video.draw_distance == 0 && state.video.lod_scale == 0 && state.window_scale == 2, "saved graphics parsing changed values");
   // The editor logic needs no artwork. An empty synthetic font keeps this
   // cancellation/validation test independent of the original game assets.
@@ -71,6 +74,7 @@ int main() try {
   defaults.click({260, 172});
   auto const &fresh{defaults.value()};
   require(fresh.video.automatic_resolution && fresh.video.draw_distance == 16 && fresh.video.lod_scale == .1 && fresh.video.field_of_view == graphics_settings{}.video.field_of_view && fresh.window_scale == 0, "Defaults did not restore all graphics choices");
+  require(fresh.audio.engine == state.audio.engine && fresh.audio.cd_music == state.audio.cd_music, "graphics Defaults changed audio choices");
   graphics_menu limits{font, state};
   limits.click({276, 108});
   require(limits.value().video.draw_distance == 0, "infinite distance wrapped incorrectly");
@@ -96,11 +100,14 @@ int main() try {
   save_graphics(root, state);
   auto loaded{load_graphics(root)};
   require(loaded.video.field_of_view == state.video.field_of_view && loaded.video.resolution == state.video.resolution && loaded.window_scale == state.window_scale && loaded.video.draw_distance == 0, "saved choices lost precision or values");
+  require(loaded.audio.engine == state.audio.engine && loaded.audio.cd_music == true, "graphics save lost independent CD/synth choices");
   state.video.automatic_resolution = true;
   state.video.lod_scale = .05;
+  state.audio.cd_music = false;
   save_graphics(root, state);
   loaded = load_graphics(root);
   require(loaded.video.automatic_resolution && loaded.video.lod_scale == .05, "replacement save failed");
+  require(loaded.audio.engine == tfx::configuration::music_engine::sc55 && loaded.audio.cd_music == false, "CD off was not preserved independently of the selected synth");
   std::ifstream original{root / "TFX.CFG"};
   std::string line;
   std::getline(original, line);

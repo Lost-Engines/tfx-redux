@@ -25,6 +25,7 @@ Redux prepares the game files on first launch, then opens pilot enrolment. You c
 - **Easier weapon loading.** Inspect and rotate a full-resolution aircraft, then click its pylons to place weapons. Leaving the arming screen no longer launches you straight into a mission by accident.
 - **Pause and compose a shot.** Change views, look around and zoom while the action is frozen, without a pause label covering the image. Flight recordings preserve the view and resolution you were playing with.
 - **More convenient controls.** Escape opens the flight menu, ejection asks for confirmation, and switching to another application lets a long flight continue in the background.
+- **Independent CD and synth music.** Keep the CD soundtrack for flight while choosing FM, LAPC-I, SCC-1A or SC-55 for the menus, briefings and cinematics. Switch CD music on or off from the flight menu.
 
 ## Fixes to original-game bugs
 
@@ -44,7 +45,7 @@ The [controls guide](docs/controls.md) covers weapons, autopilot, cameras, joyst
 
 ## Sound
 
-Listen to the CD soundtrack or the synthesised versions through emulated Sound Blaster FM, Roland LAPC-I, SC-55 and SCC-1A hardware. Sound Blaster and Gravis effects are supported too, along with restored QSound spatial effects through our [QSound implementation](https://github.com/Lost-Engines/qsound-cpp).
+Choose emulated Sound Blaster FM, Roland LAPC-I, SC-55 or SCC-1A for the synthesised music. Keep the CD soundtrack for flight, or use the synth throughout. Sound Blaster and Gravis effects are supported too, along with restored QSound spatial effects through our [QSound implementation](https://github.com/Lost-Engines/qsound-cpp).
 
 The setup helper supplies the necessary sound files. You can also use your own CD image or local FLAC, Ogg Vorbis, MP3 or WAV soundtrack. See [sound options](docs/controls.md#sound).
 

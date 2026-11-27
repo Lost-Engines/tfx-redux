@@ -179,7 +179,9 @@ void graphics_menu::click(vec2<int16_t> const &point) {
     return;
   }
   if(dialogue_contains(form, actions[0], point)) {
+    auto const audio{pending.audio};
     pending = {};
+    pending.audio = audio;
     editing = false;
     error.clear();
     resize_window = true;

@@ -86,16 +86,16 @@ void music_player::begin_flight(flight_audio_state const &state) {
   auto const selected{preselected.value_or(10)};
   preselected.reset();
   context.preselected = false;
-  if(context.cd_playing) {
-    stop_locked();
-    return;
-  }
   if(context.sound_device == 2) {
     // Native A5FC8 requests filename slot 17 and loads it independently of
     // music enable. Individual A6068 callers start orders in this bank.
     replace_locked(17);
     effect_bank = true;
     control.last_cue = 0;
+    return;
+  }
+  if(context.cd_playing) {
+    stop_locked();
     return;
   }
   if(!enabled) return;

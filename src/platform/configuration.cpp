@@ -104,6 +104,9 @@ presentation::configuration_action configure_flight(window &window, resources::e
     .music_available{sound && sound->music_available()},
     .sound_enabled{sound && sound->sound_enabled()},
     .music_enabled{sound && sound->music_enabled()},
+    .cd_controls{graphics && !quit_prompt},
+    .cd_available{sound && sound->cd_music_available()},
+    .cd_enabled{sound && sound->cd_music_enabled()},
   };
   presentation::configuration_menu menu{preferences, tables.configuration_widgets(), tables.interface_font(), recording_name, &audio, graphics && !quit_prompt};
   if(quit_prompt) menu.request_quit();
@@ -165,6 +168,17 @@ presentation::configuration_action configure_flight(window &window, resources::e
       // rather than replaying that command on every open-menu redraw.
       if(audio.sound_enabled != sound->sound_enabled()) sound->enable_sound(audio.sound_enabled);
       if(audio.music_enabled != sound->music_enabled()) sound->enable_music(audio.music_enabled);
+      if(audio.cd_enabled != sound->cd_music_enabled()) {
+        sound->enable_cd_music(audio.cd_enabled);
+        if(graphics) {
+          graphics->audio.cd_music = audio.cd_enabled;
+          try {
+            configuration::save_graphics(directory, *graphics);
+          } catch(std::exception const &error) {
+            std::cerr << "CD music preference could not be saved: " << error.what() << '\n';
+          }
+        }
+      }
     }
     auto image{background};
     menu.draw(image);

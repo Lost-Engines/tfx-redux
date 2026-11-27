@@ -111,6 +111,13 @@ graphics_settings parse_graphics(std::string_view text) {
     auto const equals{line.find('=')};
     if(!line.empty() && line.front() != '#' && equals != line.npos) {
       auto const key{trim(line.substr(0, equals))};
+      auto const value{trim(line.substr(equals + 1))};
+      if(key == "MUSIC_ENGINE") result.audio.engine = parse_music_engine(value);
+      if(key == "CD_MUSIC") {
+        auto const setting{lower(value)};
+        if(setting != "on" && setting != "off" && setting != "1" && setting != "0") throw std::invalid_argument{"CD_MUSIC must be ON or OFF."};
+        result.audio.cd_music = setting == "on" || setting == "1";
+      }
       for(unsigned int i{0}; i < names.size(); ++i) {
         if(key == names[i]) set_graphics_value(result, static_cast<graphics_field>(i), line.substr(equals + 1));
       }
@@ -132,7 +139,7 @@ graphics_settings load_graphics(std::filesystem::path const &directory) {
 }
 void save_graphics(std::filesystem::path const &directory, graphics_settings const &settings) {
   std::ostringstream text;
-  text << "# TFX Redux graphics. Command-line options override these at startup.\n";
+  text << "# TFX Redux preferences. Command-line options override these at startup.\n";
   for(unsigned int i{0}; i < names.size(); ++i) {
     auto const field{static_cast<graphics_field>(i)};
     // Persist full precision; the compact value shown in the menu is only a label.
@@ -141,6 +148,8 @@ void save_graphics(std::filesystem::path const &directory, graphics_settings con
     set_graphics_value(checked, field, value);
     text << names[i] << '=' << value << '\n';
   }
+  if(settings.audio.engine) text << "MUSIC_ENGINE=" << music_engine_name(*settings.audio.engine) << '\n';
+  if(settings.audio.cd_music) text << "CD_MUSIC=" << (*settings.audio.cd_music ? "ON" : "OFF") << '\n';
   auto const destination{directory / graphics_filename};
   auto temporary{destination};
   temporary += ".tmp-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());

@@ -40,6 +40,9 @@ struct configuration_audio {
   bool music_available{false};
   bool sound_enabled{false};
   bool music_enabled{false};
+  bool cd_controls{false};
+  bool cd_available{false};
+  bool cd_enabled{false};
 };
 enum class configuration_page {
   main,
@@ -79,7 +82,8 @@ enum class configuration_item {
   eject,
   cancel_eject,
   confirm_eject,
-  graphics
+  graphics,
+  cd_music
 };
 struct configuration_button {
   dialogue_widget drawing;

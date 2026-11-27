@@ -141,6 +141,10 @@ void configuration_menu::rebuild() {
       }
     }
     for(unsigned int index{0}; index != 2; ++index) add(assets.switches[index], static_cast<uint8_t>(10 + index * 3), 15, configuration_item::recovery, static_cast<uint8_t>(index), preferences.effects.recovery == index);
+    if(audio && audio->cd_controls) {
+      for(unsigned int index{0}; index != 2; ++index) add(assets.switches[index], static_cast<uint8_t>(25 + index * 3), 15,
+        configuration_item::cd_music, static_cast<uint8_t>(index), audio->cd_available && audio->cd_enabled == (index != 0), audio->cd_available);
+    }
   } else {
     for(unsigned int index{0}; index != 3; ++index) add(assets.g_levels[index], static_cast<uint8_t>(index == 0 ? 10 : index == 1 ? 14 : 19), 3, configuration_item::g_force, static_cast<uint8_t>(index), std::to_underlying(preferences.effects.g_force) == index);
     std::array<uint8_t, 5> const values{preferences.effects.precipitation, preferences.effects.crashing, preferences.effects.gear_damage, preferences.effects.wind, preferences.effects.temperature};
@@ -192,6 +196,9 @@ configuration_action configuration_menu::select(unsigned int const index) {
     break;
   case configuration_item::music:
     if(audio) audio->music_enabled = value != 0;
+    break;
+  case configuration_item::cd_music:
+    if(audio) audio->cd_enabled = value != 0;
     break;
   case configuration_item::recovery:
     preferences.effects.recovery = value;
@@ -280,7 +287,7 @@ void configuration_menu::press(uint8_t const scan, bool const shift) {
 }
 void configuration_menu::draw(render::framebuffer &target) const {
   draw_dialogue_form(target, form);
-  for(auto const &button : buttons) draw_dialogue_widget(target, font, form, button.drawing);
+  for(auto const &button : buttons) if(button.item != configuration_item::cd_music) draw_dialogue_widget(target, font, form, button.drawing);
   if(current == configuration_page::confirm_eject) {
     int const centre{(form.position.x + 1) * dialogue_cell_pixels + form.size.x * 4};
     font.draw(target, {centre - font.measure("EJECT?") / 2, 82}, "EJECT?", dialogue_palette_base + 15);
@@ -294,7 +301,7 @@ void configuration_menu::draw(render::framebuffer &target) const {
   }
   draw_dialogue_widget(target, font, form, {
     .position{16, static_cast<uint8_t>(current == configuration_page::main ? 11 : 5)},
-    .size{17, static_cast<uint8_t>(current == configuration_page::main ? 5 : 9)},
+    .size{17, static_cast<uint8_t>(current == configuration_page::main ? (audio && audio->cd_controls ? 3 : 5) : 9)},
     .background{8},
     .border{dialogue_border::outline},
   });
@@ -311,6 +318,10 @@ void configuration_menu::draw(render::framebuffer &target) const {
       .left_aligned{true},
     });
     font.draw(target, {158, 125}, assets.recording, dialogue_palette_base + 15);
+    if(audio && audio->cd_controls) {
+      font.draw(target, {158, 154}, "CD MUSIC", dialogue_palette_base + 15);
+      for(auto const &button : buttons) if(button.item == configuration_item::cd_music) draw_dialogue_widget(target, font, form, button.drawing);
+    }
   }
   font.draw(target, {161 - font.measure(assets.title) / 2, 27}, assets.title, dialogue_palette_base);
   font.draw(target, {160 - font.measure(assets.title) / 2, 26}, assets.title, dialogue_palette_base + 15);
