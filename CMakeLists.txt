@@ -32,6 +32,13 @@ function(configure_first_party target)
     $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Wpedantic;-Wconversion;-ffp-contract=off>
     $<$<AND:$<CONFIG:RelWithDebInfo>,$<CXX_COMPILER_ID:GNU,Clang,AppleClang>>:-UNDEBUG>
   )
+  if(MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+      AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16
+      AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17)
+    # GCC PR125151: C++26 Debug emits strong stdexcept copy constructors on MinGW.
+    # Use the runtime exception definitions until that compiler bug is fixed.
+    target_compile_definitions(${target} PRIVATE $<$<CONFIG:Debug>:__cpp_lib_constexpr_exceptions=0>)
+  endif()
 endfunction()
 
 add_library(tfx_audio
