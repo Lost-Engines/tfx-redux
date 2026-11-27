@@ -38,3 +38,6 @@ if(DEFINED glfw_SOURCE_DIR AND EXISTS "${glfw_SOURCE_DIR}/LICENSE.md")
   install(FILES "${glfw_SOURCE_DIR}/LICENSE.md"
     DESTINATION licenses/glfw COMPONENT Runtime)
 endif()
+
+install(FILES third_party/boost-LICENSE_1_0.txt
+  DESTINATION licenses/boost COMPONENT Runtime)

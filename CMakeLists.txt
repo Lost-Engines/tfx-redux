@@ -8,12 +8,15 @@ endif()
 # Release packages carry the compiler runtime, not a MinGW/Homebrew dependency.
 option(TFX_STATIC_RUNTIME "Link compiler runtimes statically" ${MINGW})
 if(TFX_STATIC_RUNTIME)
+  set(Boost_USE_STATIC_LIBS ON)
   if(MINGW)
     add_link_options(-static)
   else()
     add_link_options("$<$<LINK_LANG_AND_ID:CXX,GNU>:-static-libgcc;-static-libstdc++>")
   endif()
 endif()
+
+find_package(Boost 1.85 CONFIG REQUIRED COMPONENTS program_options)
 
 include(CTest)
 include(cmake/dependencies.cmake)
@@ -505,7 +508,7 @@ add_executable(tfx
   src/platform/window.cpp
   src/platform/window.h
 )
-target_link_libraries(tfx PRIVATE tfx_audio PRIVATE pcm_device PRIVATE tfx_core PRIVATE glfw PRIVATE OpenGL::GL)
+target_link_libraries(tfx PRIVATE tfx_audio PRIVATE pcm_device PRIVATE tfx_core PRIVATE glfw PRIVATE OpenGL::GL PRIVATE Boost::program_options)
 configure_first_party(tfx)
 include(cmake/install.cmake)
 
@@ -576,6 +579,9 @@ if(BUILD_TESTING)
   add_executable(redux_arming_probe tests/redux_arming_probe.cpp)
   target_link_libraries(redux_arming_probe PRIVATE tfx_core)
   configure_first_party(redux_arming_probe)
+  add_test(NAME platform.command_line_options
+    COMMAND ${CMAKE_COMMAND} -DTFX_EXECUTABLE=$<TARGET_FILE:tfx>
+      -P "${PROJECT_SOURCE_DIR}/tests/command_line.cmake")
   add_executable(campaign_journey_probe tests/campaign_journey_probe.cpp)
   target_link_libraries(campaign_journey_probe PRIVATE tfx_core)
   configure_first_party(campaign_journey_probe)

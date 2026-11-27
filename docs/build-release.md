@@ -5,7 +5,9 @@ follows the Darker projects: Debug and Release builds on Linux, Windows and
 macOS, asset-independent CTest checks, Runtime-only archives, and a generated
 release after the build matrix and asset-helper checks pass. Builds use C++26, GCC 16 on Linux/macOS, and
 MSYS2 UCRT64 GCC on Windows. The compiler cache is separate for each platform
-and configuration.
+and configuration. Boost.ProgramOptions is linked statically in packages. CI
+caches a GCC-built Boost 1.90.0 on Linux/macOS and uses the MSYS2 Boost package
+on Windows; local source builds need Boost.ProgramOptions 1.85 or newer.
 
 Linux and Windows packages target x86-64. macOS has separate Intel and Apple
 Silicon packages, built on the corresponding hardware for macOS 15 or newer.

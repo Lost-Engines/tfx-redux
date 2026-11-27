@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <boost/program_options.hpp>
 #include "platform/audio_output.h"
 #include "platform/flight.h"
 #include "platform/presentations.h"
@@ -83,87 +84,109 @@ auto main(int const argc, char const *const argv[])->int try {
 #ifndef NDEBUG
   std::optional<std::filesystem::path> capture_recipe;
 #endif // NDEBUG
-  for(int i{1}; i != argc; ++i) {
-    std::string_view const argument{argv[i]};
-    auto const equals{argument.find('=')};
-    auto const key{argument.substr(0, equals)};
-    auto const value{[&]()->std::string_view {
-      if(equals != std::string_view::npos) return argument.substr(equals + 1);
-      if(i + 1 == argc) throw std::runtime_error{"missing value for " + std::string{key}};
-      return argv[++i];
-    }};
-    if(key == "--help") {
-      std::cout << "TFX Redux — enhanced native flight simulation\n"
-                   "Usage: tfx [--data-dir DIRECTORY] [--mission 501] [--scale N]\n"
-                   "  --data-dir DIRECTORY  Original TFX 2.05 installation (DID.DAT and TFX.DAT)\n"
-                   "  --mission N           Enter a mission directly instead of the original front end\n"
-                   "  --replay FILE         Play a saved flight recording; --skip-intro omits the WNN prelude\n"
-                   "  --skip-intro          Start at pilot enrolment without the opening sequence\n"
-                   "  --language NAME       english, french, german, italian or spanish\n"
-                   "  --flight-model NAME   arcade, simple, military-spec or realistic; overrides TFX.CFG\n"
-                   "  --control NAME        keyboard, mouse or joystick; overrides TFX.CFG\n"
-                   "  --joystick N          Select joystick 0..15 (default: first available); enables joystick input\n"
-                   "  --music NAME          none, soundblaster-cd, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55\n"
-                   "  --cd-cue FILE         Play CD music from a CUE/BIN image (default: fetched disc)\n"
-                   "  --cd-audio-dir DIR    Play numbered local FLAC, Ogg, MP3 or WAV CD tracks\n"
-                   "  --qsound MODE         auto, on or off; reconstructed Sound Blaster spatial effects (default: auto)\n"
-                   "  --rom-dir DIRECTORY   Override automatic audio-firmware lookup\n"
-                   "  --resolution WxH      Fixed render size, or auto for actual window pixels\n"
-                   "  --fov DEGREES         Horizontal field of view, 10..170 (original/default: 64.01)\n"
-                   "  --draw-distance N     Terrain radius in cells (default: 16; original: 8); 0/infinite draws the whole map\n"
-                   "  --lod-scale N         Visual LOD distance multiplier; default 0.1; 0 disables mesh cutoffs, 1 is original\n"
-                   "  --scale N             Initial window scale (320x200 or --resolution); 0 fits desktop\n"
-                   "  --fullscreen          Start fullscreen; Alt+Enter toggles at any time\n"
-                   "\nGraphics: Escape/backtick > Graphics; saved in REDUX.CFG beside the game data.\n"
-                   "Command-line graphics options override saved choices at startup.\n"
-                   "\nGame files: current directory, then " << tfx::resources::default_game_directory().string() << "\n"
-                   "ROMs: selected game directory, then the same default asset directory.\n"
-                   "\nFlight: hold left/right mouse or =/- for thrust.\n"
-                   "Arcade uses mouse steering; other models use the original arrow-key controls.\n"
-                   "Keypad * raises afterburner; Alt+keypad * or keypad - lowers it; / switches it off.\n"
-                   "[ and ] toggle engines; G gear; H arrestor hook; W wheel brakes; B air brakes; Alt+B brake chute; Shift+B cut away.\n"
-                   "E/S toggle ECM/stealth on Eurofighter/F-22; Insert releases chaff; Delete releases a flare.\n"
-                   "Enter selects air-to-air weapons; Backspace/O air-to-ground; F/Ctrl selects cannon/navigation.\n"
-                   "C cycles radar/emitter targets; Z opens/locks laser designator; mouse/arrows aim; wheel or comma/period zoom.\n"
-                   "X clears targets; F1 returns to flight view; Space fires; Alt+J jettisons ground stores/tanks; T toggles accelerated time; P/Pause pauses; Escape/backtick opens menu; double Ctrl+Escape ejects; Shift+Q opens quit/enrol confirmation.\n"
-                   "M opens the tactical map; any key returns. D toggles external flight information; Shift+D restores default stores and countermeasures.\n"
-                   "1/2/3 cycle the MFDs; R changes radar range; N selects the ground-target preview.\n"
-                   "Shift+N toggles infrared night vision; Y/U adjust HUD brightness; apostrophe opens/closes the refuelling hookup.\n"
-                   "I or backslash toggles ILS; Alt+L requests automatic landing.\n"
-                   "A toggles autopilot; 7/8/9/0 choose waypoint/heading/track/speed hold; arrows adjust targets.\n"
-                   "5 toggles stick pressure; 6 selects cruise speed; Tab toggles recovery.\n"
-                   "Page Up/Down or keypad 9/3 raise and lower the cockpit.\n"
-                   "Right Shift+arrows turn the view; +Home/End change distance; +Page Up/Down roll supported views.\n"
-                   "Ctrl+arrows/Page Up/Down move the chase camera. Keypad navigation keys also work.\n"
-                   "4 saves a numbered GRAB_00.LBM screenshot in the game directory.\n"
-                   "Alt+V starts/stops recording; choose its filename in configuration. WNN replay follows mission completion.\n"
-                   "F1 cockpit; Shift+F1 full forward; F2/F3 look left/right; F4 rear; F5 chase.\n"
-                   "Mouse orbits external views; wheel zooms; selecting a camera again resets angle and distance.\n"
-                   "F6 fly-past; F7 tactical; F8 fired-store camera (twice: nose view).\n"
-                   "F9 target observer; F10 virtual cockpit/target tracking.\n";
+  boost::program_options::options_description options{"Options", 110};
+  options.add_options()
+    ("help,h", "Show command-line help")
+    ("data-dir", boost::program_options::value<std::string>()->value_name("DIRECTORY"), "Original TFX 2.05 installation (DID.DAT and TFX.DAT)")
+    ("mission", boost::program_options::value<std::string>()->value_name("N"), "Enter a mission directly instead of the original front end")
+    ("replay", boost::program_options::value<std::string>()->value_name("FILE"), "Play a saved flight recording; --skip-intro omits the WNN prelude")
+    ("skip-intro", "Start at pilot enrolment without the opening sequence")
+    ("language", boost::program_options::value<std::string>()->value_name("NAME"), "english, french, german, italian or spanish")
+    ("flight-model", boost::program_options::value<std::string>()->value_name("NAME"), "arcade, simple, military-spec or realistic; overrides TFX.CFG")
+    ("control", boost::program_options::value<std::string>()->value_name("NAME"), "keyboard, mouse or joystick; overrides TFX.CFG")
+    ("joystick", boost::program_options::value<std::string>()->value_name("N"), "Select joystick 0..15 (default: first available); enables joystick input")
+    ("music", boost::program_options::value<std::string>()->value_name("NAME"), "none, soundblaster-cd (or cd), soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55")
+    ("cd-cue", boost::program_options::value<std::string>()->value_name("FILE"), "Play CD music from a CUE/BIN image (default: fetched disc)")
+    ("cd-audio-dir", boost::program_options::value<std::string>()->value_name("DIR"), "Play numbered local FLAC, Ogg, MP3 or WAV CD tracks")
+    ("qsound", boost::program_options::value<std::string>()->value_name("MODE"), "auto, on or off; reconstructed Sound Blaster spatial effects (default: auto)")
+    ("rom-dir", boost::program_options::value<std::string>()->value_name("DIRECTORY"), "Override automatic audio-firmware lookup")
+    ("resolution", boost::program_options::value<std::string>()->value_name("WxH"), "Fixed render size, or auto for actual window pixels")
+    ("fov", boost::program_options::value<std::string>()->value_name("DEGREES"), "Horizontal field of view, 10..170 (original/default: 64.01)")
+    ("draw-distance", boost::program_options::value<std::string>()->value_name("N"), "Terrain radius in cells (default: 16; original: 8); 0/infinite draws the whole map")
+    ("lod-scale", boost::program_options::value<std::string>()->value_name("N"), "Visual LOD distance multiplier; default 0.1; 0 disables mesh cutoffs, 1 is original")
+    ("scale", boost::program_options::value<std::string>()->value_name("N"), "Initial window scale (320x200 or --resolution); 0 fits desktop")
+    ("fullscreen", "Start fullscreen; Alt+Enter toggles at any time");
+  boost::program_options::options_description allowed_options;
+  allowed_options.add(options);
 #ifndef NDEBUG
-      std::cout << "\nDeveloper options:\n"
-                   "  --career-rules        Use career permissions/stores with a direct --mission launch\n"
-                   "  --menu NAME            Run an original options menu\n"
-                   "  --presentation NAME[:FUNCTION]  Play an original presentation graph\n"
-                   "  --inspect             Free scene camera: WASD, R/F, arrows/right-drag, Shift\n"
-                   "  --flight-steps N      Advance N four-tick physics steps without intermediate drawing\n"
-                   "  --flight-frames N     Advance N complete four-tick flight frames before capture\n"
-                   "  --environment NAME    Override mission lighting/weather\n"
-                   "  --grid NAME           Inspect an alternate stored terrain grid\n"
-                   "  --cell X,Z            Inspect a particular terrain cell\n"
-                   "  --scene-radius N      Inspection neighbourhood in tiles (default 6)\n"
-                   "  --capture-scene FILE   Stage a reproducible still (requires --mission and --screenshot)\n"
-                   "  --screenshot FILE     Save the current scene as a PPM image without opening a window\n"
-                   "  --frames N            Exit the window after N frames (0 is unlimited)\n";
+  boost::program_options::options_description developer_options{"Developer options", 110};
+  developer_options.add_options()
+    ("career-rules", "Use career permissions/stores with a direct --mission launch")
+    ("menu", boost::program_options::value<std::string>()->value_name("NAME"), "Run an original options menu")
+    ("presentation", boost::program_options::value<std::string>()->value_name("NAME[:FUNCTION]"), "Play an original presentation graph")
+    ("inspect", "Free scene camera: WASD, R/F, arrows/right-drag, Shift")
+    ("flight-steps", boost::program_options::value<std::string>()->value_name("N"), "Advance N four-tick physics steps without intermediate drawing")
+    ("flight-frames", boost::program_options::value<std::string>()->value_name("N"), "Advance N complete four-tick flight frames before capture")
+    ("environment", boost::program_options::value<std::string>()->value_name("NAME"), "Override mission lighting/weather")
+    ("grid", boost::program_options::value<std::string>()->value_name("NAME"), "Inspect an alternate stored terrain grid")
+    ("cell", boost::program_options::value<std::string>()->value_name("X,Z"), "Inspect a particular terrain cell")
+    ("scene-radius", boost::program_options::value<std::string>()->value_name("N"), "Inspection neighbourhood in tiles (default 6)")
+    ("capture-scene", boost::program_options::value<std::string>()->value_name("FILE"), "Stage a reproducible still (requires --mission and --screenshot)")
+    ("screenshot", boost::program_options::value<std::string>()->value_name("FILE"), "Save the current scene as a PPM image without opening a window")
+    ("frames", boost::program_options::value<std::string>()->value_name("N"), "Exit the window after N frames (0 is unlimited)");
+  allowed_options.add(developer_options);
 #endif // NDEBUG
-      return EXIT_SUCCESS;
-    }
-    if(key == "--data-dir") {
+  boost::program_options::positional_options_description const positional_options;
+  auto parsed{boost::program_options::command_line_parser(argc, argv)
+    .options(allowed_options)
+    .positional(positional_options)
+    .style(boost::program_options::command_line_style::unix_style & ~boost::program_options::command_line_style::allow_guessing)
+    .run()};
+  // Retain the final occurrence, in argument order, as the existing launcher does.
+  // This also preserves ordered choices such as --joystick followed by --control.
+  std::vector<boost::program_options::option> selected_options;
+  for(auto const &option : parsed.options) {
+    std::erase_if(selected_options, [&](auto const &previous){ return previous.string_key == option.string_key; });
+    selected_options.push_back(option);
+  }
+  parsed.options = std::move(selected_options);
+  boost::program_options::variables_map arguments;
+  boost::program_options::store(parsed, arguments);
+  boost::program_options::notify(arguments);
+  if(arguments.contains("help")) {
+    std::cout << "TFX Redux — enhanced native flight simulation\n"
+                 "Usage: tfx [--data-dir DIRECTORY] [--mission 501] [--scale N]\n\n"
+              << options;
+    std::cout << "\nGraphics: Escape/backtick > Graphics; saved in REDUX.CFG beside the game data.\n"
+                 "Command-line graphics options override saved choices at startup.\n"
+                 "\nGame files: current directory, then " << tfx::resources::default_game_directory().string() << "\n"
+                 "ROMs: selected game directory, then the same default asset directory.\n"
+                 "\nFlight: hold left/right mouse or =/- for thrust.\n"
+                 "Arcade uses mouse steering; other models use the original arrow-key controls.\n"
+                 "Keypad * raises afterburner; Alt+keypad * or keypad - lowers it; / switches it off.\n"
+                 "[ and ] toggle engines; G gear; H arrestor hook; W wheel brakes; B air brakes; Alt+B brake chute; Shift+B cut away.\n"
+                 "E/S toggle ECM/stealth on Eurofighter/F-22; Insert releases chaff; Delete releases a flare.\n"
+                 "Enter selects air-to-air weapons; Backspace/O air-to-ground; F/Ctrl selects cannon/navigation.\n"
+                 "C cycles radar/emitter targets; Z opens/locks laser designator; mouse/arrows aim; wheel or comma/period zoom.\n"
+                 "X clears targets; F1 returns to flight view; Space fires; Alt+J jettisons ground stores/tanks; T toggles accelerated time; P/Pause pauses; Escape/backtick opens menu; double Ctrl+Escape ejects; Shift+Q opens quit/enrol confirmation.\n"
+                 "M opens the tactical map; any key returns. D toggles external flight information; Shift+D restores default stores and countermeasures.\n"
+                 "1/2/3 cycle the MFDs; R changes radar range; N selects the ground-target preview.\n"
+                 "Shift+N toggles infrared night vision; Y/U adjust HUD brightness; apostrophe opens/closes the refuelling hookup.\n"
+                 "I or backslash toggles ILS; Alt+L requests automatic landing.\n"
+                 "A toggles autopilot; 7/8/9/0 choose waypoint/heading/track/speed hold; arrows adjust targets.\n"
+                 "5 toggles stick pressure; 6 selects cruise speed; Tab toggles recovery.\n"
+                 "Page Up/Down or keypad 9/3 raise and lower the cockpit.\n"
+                 "Right Shift+arrows turn the view; +Home/End change distance; +Page Up/Down roll supported views.\n"
+                 "Ctrl+arrows/Page Up/Down move the chase camera. Keypad navigation keys also work.\n"
+                 "4 saves a numbered GRAB_00.LBM screenshot in the game directory.\n"
+                 "Alt+V starts/stops recording; choose its filename in configuration. WNN replay follows mission completion.\n"
+                 "F1 cockpit; Shift+F1 full forward; F2/F3 look left/right; F4 rear; F5 chase.\n"
+                 "Mouse orbits external views; wheel zooms; selecting a camera again resets angle and distance.\n"
+                 "F6 fly-past; F7 tactical; F8 fired-store camera (twice: nose view).\n"
+                 "F9 target observer; F10 virtual cockpit/target tracking.\n";
+#ifndef NDEBUG
+    std::cout << '\n' << developer_options;
+#endif // NDEBUG
+    return EXIT_SUCCESS;
+  }
+  for(auto const &option : parsed.options) {
+    auto const &key{option.string_key};
+    auto const value{[&]() -> std::string const& { return arguments.at(key).as<std::string>(); }};
+    if(key == "data-dir") {
       data_directory = value();
-    } else if(key == "--rom-dir") {
+    } else if(key == "rom-dir") {
       rom_directory = value();
-    } else if(key == "--qsound") {
+    } else if(key == "qsound") {
       auto const selected{value()};
       if(selected == "auto") {
         selected_qsound = qsound_mode::automatic;
@@ -174,11 +197,11 @@ auto main(int const argc, char const *const argv[])->int try {
       } else {
         throw std::runtime_error{"qsound must be auto, on or off"};
       }
-    } else if(key == "--cd-cue") {
+    } else if(key == "cd-cue") {
       cd_cue = value();
-    } else if(key == "--cd-audio-dir") {
+    } else if(key == "cd-audio-dir") {
       cd_audio_directory = value();
-    } else if(key == "--music") {
+    } else if(key == "music") {
       auto const selected{value()};
       if(selected == "none") {
         music_override = 0;
@@ -197,25 +220,25 @@ auto main(int const argc, char const *const argv[])->int try {
       } else {
         throw std::runtime_error{"music must be none, soundblaster-cd, soundblaster-fm, roland-lapc, roland-scc1a or roland-sc55"};
       }
-    } else if(key == "--language") {
+    } else if(key == "language") {
       language = value();
       language_selected = true;
       if(std::ranges::find(language_names, language) == language_names.end()) throw std::runtime_error{"unknown TFX language: " + language};
-    } else if(key == "--replay") {
+    } else if(key == "replay") {
       replay = value();
-    } else if(key == "--skip-intro") {
+    } else if(key == "skip-intro") {
       skip_intro = true;
-    } else if(key == "--fullscreen") {
+    } else if(key == "fullscreen") {
       fullscreen = true;
-    } else if(key == "--mission") {
+    } else if(key == "mission") {
       direct_mission = true;
       auto const selected{value()};
       mission_name = "miss" + std::to_string(number(selected));
-    } else if(key == "--joystick") {
+    } else if(key == "joystick") {
       joystick = number(value());
       if(*joystick > GLFW_JOYSTICK_LAST) throw std::runtime_error{"joystick index must be between 0 and 15"};
       control_override = tfx::flight::control_source::joystick;
-    } else if(key == "--control") {
+    } else if(key == "control") {
       auto const selected{value()};
       if(selected == "keyboard") {
         control_override = tfx::flight::control_source::keyboard;
@@ -226,7 +249,7 @@ auto main(int const argc, char const *const argv[])->int try {
       } else {
         throw std::runtime_error{"control must be keyboard, mouse or joystick"};
       }
-    } else if(key == "--flight-model") {
+    } else if(key == "flight-model") {
       model_selected = true;
       auto const selected{value()};
       if(selected == "arcade") {
@@ -240,43 +263,53 @@ auto main(int const argc, char const *const argv[])->int try {
       } else {
         throw std::runtime_error{"flight model must be arcade, simple, military-spec or realistic"};
       }
-    } else if(key == "--resolution" || key == "--scale" || key == "--fov" || key == "--draw-distance" || key == "--lod-scale") {
+    } else if(key == "resolution" || key == "scale" || key == "fov" || key == "draw-distance" || key == "lod-scale") {
       using tfx::configuration::graphics_field;
-      auto const field{key == "--resolution" ? graphics_field::resolution : key == "--scale" ? graphics_field::window_scale
-        : key == "--fov" ? graphics_field::field_of_view : key == "--draw-distance" ? graphics_field::draw_distance : graphics_field::lod_scale};
+      auto const field{key == "resolution" ? graphics_field::resolution : key == "scale" ? graphics_field::window_scale
+        : key == "fov" ? graphics_field::field_of_view : key == "draw-distance" ? graphics_field::draw_distance : graphics_field::lod_scale};
       auto const text{value()};
       tfx::configuration::set_graphics_value(graphics, field, text);
       graphics_overrides.emplace_back(field, text);
     }
 #ifndef NDEBUG
-    else if(key == "--career-rules") career_rules = true;
-    else if(key == "--menu") presentation = "menu:" + std::string{value()};
-    else if(key == "--presentation") {
-  auto const selection{value()};
-  auto const colon{selection.find(':')};
-  presentation = selection.substr(0, colon);
-  if(colon != std::string_view::npos) presentation_function = selection.substr(colon + 1);
-}
-    else if(key == "--capture-scene") capture_recipe = value();
-    else if(key == "--inspect") inspect = true;
-    else if(key == "--flight-steps") flight_steps = number(value());
-    else if(key == "--flight-frames") flight_frames = number(value());
-    else if(key == "--environment") override_environment = value();
-    else if(key == "--grid") override_grid = value();
-    else if(key == "--cell") {
-  auto const cell{value()};
-  auto const comma{cell.find(',')};
-  if(comma == std::string_view::npos) throw std::runtime_error{"--cell expects X,Z"};
-  inspect = true;
-  override_cell = vec2<unsigned int>{number(cell.substr(0, comma)), number(cell.substr(comma + 1))};
-  if(override_cell->x >= tfx::world::map_width || override_cell->y >= tfx::world::map_height) throw std::runtime_error{"cell must lie within 0..199 on each axis"};
-} else if(key == "--scene-radius") {
-  scene_radius = number(value());
-  if(scene_radius < 1 || scene_radius > 20) throw std::runtime_error{"scene radius must be between 1 and 20 tiles"};
-} else if(key == "--screenshot") screenshot = value();
-    else if(key == "--frames") frame_limit = number(value());
+    else if(key == "career-rules") {
+      career_rules = true;
+    } else if(key == "menu") {
+      presentation = "menu:" + value();
+    } else if(key == "presentation") {
+      auto const &selection{value()};
+      auto const colon{selection.find(':')};
+      presentation = selection.substr(0, colon);
+      if(colon != std::string::npos) presentation_function = selection.substr(colon + 1);
+    } else if(key == "capture-scene") {
+      capture_recipe = value();
+    } else if(key == "inspect") {
+      inspect = true;
+    } else if(key == "flight-steps") {
+      flight_steps = number(value());
+    } else if(key == "flight-frames") {
+      flight_frames = number(value());
+    } else if(key == "environment") {
+      override_environment = value();
+    } else if(key == "grid") {
+      override_grid = value();
+    } else if(key == "cell") {
+      auto const &cell{value()};
+      auto const comma{cell.find(',')};
+      if(comma == std::string::npos) throw std::runtime_error{"--cell expects X,Z"};
+      inspect = true;
+      override_cell = vec2<unsigned int>{number(cell.substr(0, comma)), number(cell.substr(comma + 1))};
+      if(override_cell->x >= tfx::world::map_width || override_cell->y >= tfx::world::map_height) throw std::runtime_error{"cell must lie within 0..199 on each axis"};
+    } else if(key == "scene-radius") {
+      scene_radius = number(value());
+      if(scene_radius < 1 || scene_radius > 20) throw std::runtime_error{"scene radius must be between 1 and 20 tiles"};
+    } else if(key == "screenshot") {
+      screenshot = value();
+    } else if(key == "frames") {
+      frame_limit = number(value());
+    }
 #endif // NDEBUG
-    else throw std::runtime_error{"unrecognised option: " + std::string{key} + "; use --help"};
+
   }
 #ifndef NDEBUG
   if(capture_recipe && (!direct_mission || !screenshot || inspect || flight_steps || flight_frames || !presentation.empty() || replay)) {
@@ -488,6 +521,9 @@ auto main(int const argc, char const *const argv[])->int try {
     tfx::platform::play_game(game, tables, archive_path.parent_path(), language, skip_intro, flight);
   }
   return EXIT_SUCCESS;
+} catch(boost::program_options::error const &error) {
+  std::cerr << "ERROR: " << error.what() << "; use --help\n";
+  return EXIT_FAILURE;
 } catch(std::exception const &error) {
   std::cerr << "ERROR: " << error.what() << std::endl;
   return EXIT_FAILURE;

@@ -29,3 +29,6 @@ Creative ASP/CSP QSound reconstruction is source-included from the pinned
 copyright 2026 Lost Engines contributors. Its source and acknowledgements
 remain in the fetched dependency. Original Creative firmware programs are
 external research inputs and are not distributed in source or binary packages.
+
+Boost.ProgramOptions supplies command-line parsing under the Boost Software
+License 1.0. Release packages link it statically and include its licence.

@@ -13,8 +13,8 @@ class glfw_runtime {
 public:
   glfw_runtime();
   ~glfw_runtime();
-  glfw_runtime(glfw_runtime const&) = delete;
-  glfw_runtime &operator=(glfw_runtime const&) = delete;
+  glfw_runtime(glfw_runtime const &) = delete;
+  glfw_runtime &operator=(glfw_runtime const &) = delete;
 };
 
 class window {
@@ -37,8 +37,8 @@ private:
 public:
   window(unsigned int scale, vec2<int> const &resolution = {render::screen_width, render::screen_height}, bool follow_window = false, bool fullscreen = false);
   ~window();
-  window(window const&) = delete;
-  window &operator=(window const&) = delete;
+  window(window const &) = delete;
+  window &operator=(window const &) = delete;
   GLFWwindow *get() const;
   bool focused() const;
   vec2<int> const &resolution() const;
